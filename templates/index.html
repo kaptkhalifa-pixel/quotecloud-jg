@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ operator.company_name }} — Admin</title>
-<link href="https://fonts.googleapis.com/css2?family={{ operator.branding.font_heading }}:wght@400;600;700&family={{ operator.branding.font_body }}:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: '{{ operator.branding.font_body }}', sans-serif; background: {{ operator.branding.background_color }}; color: {{ operator.branding.text_color }}; }
+body { font-family: 'Inter', sans-serif; background: #f4f6f9; color: #1a1a1a; }
 header {
-  background: {{ operator.branding.header_bg }};
-  color: {{ operator.branding.header_text }};
+  background: {{ operator.branding.primary_color }};
+  color: #fff;
   padding: 14px 24px;
   display: flex;
   align-items: center;
@@ -18,26 +18,28 @@ header {
 }
 .header-left { display: flex; align-items: center; gap: 14px; }
 .header-left img { height: 40px; }
-.header-left h1 { font-family: '{{ operator.branding.font_heading }}', sans-serif; font-size: 1.1rem; font-weight: 700; }
+.header-left h1 { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 700; }
 .header-left span { font-size: 0.8rem; opacity: 0.7; }
-.logout { color: {{ operator.branding.header_text }}; text-decoration: none; font-size: 0.85rem; opacity: 0.8; }
+.logout { color: #fff; text-decoration: none; font-size: 0.85rem; opacity: 0.8; }
 .logout:hover { opacity: 1; }
-.nav-tabs { display: flex; gap: 0; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 24px; }
+.nav-tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 24px; overflow-x: auto; }
 .nav-tab {
-  padding: 14px 24px;
+  padding: 14px 20px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.9rem;
   border-bottom: 3px solid transparent;
   margin-bottom: -2px;
   color: #666;
+  white-space: nowrap;
   transition: all 0.2s;
 }
 .nav-tab.active { color: {{ operator.branding.primary_color }}; border-bottom-color: {{ operator.branding.primary_color }}; }
 .tab-content { display: none; padding: 24px; }
 .tab-content.active { display: block; }
 .card { background: #fff; border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-.mission-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.card h3 { font-size: 1rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 16px; }
+.mission-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
 .mtab {
   padding: 8px 20px;
   border-radius: 20px;
@@ -52,6 +54,7 @@ header {
 .mtab.active { background: {{ operator.branding.primary_color }}; color: #fff; }
 .form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .form-group { flex: 1; min-width: 200px; }
+.form-group-full { width: 100%; margin-bottom: 14px; }
 label { font-size: 0.82rem; font-weight: 600; color: #555; display: block; margin-bottom: 5px; }
 input, select, textarea {
   width: 100%;
@@ -73,7 +76,7 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  font-family: '{{ operator.branding.font_heading }}', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   transition: opacity 0.2s;
 }
 .btn:hover { opacity: 0.88; }
@@ -86,27 +89,33 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
 .btn-danger { background: #dc3545; color: #fff; }
 .result-box { margin-top: 20px; }
 .ac-card { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 16px; border-left: 4px solid {{ operator.branding.primary_color }}; }
-.ac-title { font-family: '{{ operator.branding.font_heading }}', sans-serif; font-size: 1rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 12px; }
-.route-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 12px; }
+.ac-title { font-family: 'Montserrat', sans-serif; font-size: 1rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 4px; }
+.ac-meta { font-size: 0.82rem; color: #666; margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.route-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 16px; }
 .route-table th { background: {{ operator.branding.primary_color }}; color: #fff; padding: 8px 10px; text-align: left; }
-.route-table td { padding: 8px 10px; border-bottom: 1px solid #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.route-table td { padding: 8px 10px; border-bottom: 1px solid #eee; }
 .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
 .tag-rev { background: #d4edda; color: #155724; }
 .tag-pos { background: #fff3cd; color: #856404; }
 .tag-dep { background: #f8d7da; color: #721c24; }
 .tag-rep { background: #cce5ff; color: #004085; }
-.billing { background: #fff; border-radius: 8px; padding: 14px; border: 1px solid #eee; }
-.billing-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0; }
-.billing-total { font-weight: 700; font-size: 1.1rem; color: {{ operator.branding.primary_color }}; border-top: 2px solid {{ operator.branding.primary_color }}; margin-top: 6px; padding-top: 8px; }
+.tag-heli { background: #e3f2fd; color: #0d47a1; }
+.tag-fixed { background: #fce4ec; color: #880e4f; }
+.tag-direct { background: #e8f5e9; color: #1b5e20; font-size: 0.72rem; }
+.tag-standard { background: #f3e5f5; color: #4a148c; font-size: 0.72rem; }
+.billing { background: #fff; border-radius: 8px; padding: 16px; border: 1px solid #eee; margin-top: 4px; }
+.billing-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0; color: #444; }
+.billing-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; color: {{ operator.branding.primary_color }}; border-top: 2px solid {{ operator.branding.primary_color }}; margin-top: 8px; padding-top: 10px; }
 .option-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
 .otab { padding: 6px 16px; border-radius: 16px; border: 1.5px solid #999; color: #666; background: #fff; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 .otab.active { background: {{ operator.branding.accent_color }}; color: #fff; border-color: {{ operator.branding.accent_color }}; }
 .otab-content { display: none; }
 .otab-content.active { display: block; }
 .pdf-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
-.pdf-section h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; color: {{ operator.branding.primary_color }}; }
-.error-box { background: #fff0f0; border: 1px solid #ffcccc; color: #cc0000; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 0.9rem; }
+.error-box { background: #fff0f0; border: 1px solid #ffcccc; color: #cc0000; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 0.9rem; line-height: 1.6; }
 .success-box { background: #f0fff4; border: 1px solid #b2dfdb; color: #1b5e20; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 0.9rem; }
+.info-box { background: #fff8e1; border: 1px solid #ffe082; color: #856404; border-radius: 8px; padding: 12px 16px; margin-top: 10px; font-size: 0.88rem; line-height: 1.6; }
+.pickup-drop-msg { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; font-size: 0.88rem; line-height: 1.6; }
 .db-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
 .db-table th { background: {{ operator.branding.primary_color }}; color: #fff; padding: 10px 12px; text-align: left; }
 .db-table td { padding: 10px 12px; border-bottom: 1px solid #eee; }
@@ -118,10 +127,18 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
 .leg-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
 .leg-row input { flex: 1; min-width: 140px; }
 .leg-num { font-weight: 700; color: {{ operator.branding.primary_color }}; min-width: 24px; }
+.settings-section { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+.settings-section:last-child { border-bottom: none; }
+.settings-section h4 { font-size: 0.9rem; font-weight: 700; color: #333; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+.logo-preview { max-height: 60px; margin-top: 10px; border-radius: 6px; display: block; }
+.trust-bar-editor { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.trust-bar-item { display: flex; gap: 8px; align-items: center; }
+.trust-bar-item input { flex: 1; }
+.toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.toggle-row label { margin: 0; font-size: 0.9rem; font-weight: 400; }
 @media(max-width:600px) {
   .form-row { flex-direction: column; }
   .mission-tabs { flex-wrap: wrap; }
-  .nav-tabs { overflow-x: auto; }
 }
 </style>
 </head>
@@ -132,28 +149,27 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
     <img src="{{ operator.logo_url }}" alt="{{ operator.company_name }}">
     <div>
       <h1>{{ operator.company_name }}</h1>
-      <span>Admin Tool — Quotecloud v1.0.0</span>
+      <span>Admin Tool — Quotecloud v2.3.1</span>
     </div>
   </div>
   <a href="/logout" class="logout">Logout</a>
 </header>
 
 <div class="nav-tabs">
-  <div class="nav-tab active" onclick="showNav('quote')">Quote</div>
-  <div class="nav-tab" onclick="showNav('locations')">Locations DB</div>
-  <div class="nav-tab" onclick="showNav('aircraft')">Aircraft</div>
+  <div class="nav-tab active" onclick="showNav('quote',this)">Quote</div>
+  <div class="nav-tab" onclick="showNav('locations',this)">Locations DB</div>
+  <div class="nav-tab" onclick="showNav('aircraft',this)">Aircraft</div>
+  <div class="nav-tab" onclick="showNav('settings',this)">Settings</div>
 </div>
 
 <!-- QUOTE TAB -->
 <div class="tab-content active" id="nav-quote">
   <div class="card">
     <div class="mission-tabs">
-      <div class="mtab active" onclick="showMission('one_way')">One Way</div>
-      <div class="mtab" onclick="showMission('return')">Return</div>
-      <div class="mtab" onclick="showMission('safari')">Safari</div>
+      <div class="mtab active" onclick="showMission('one_way',this)">One Way</div>
+      <div class="mtab" onclick="showMission('return',this)">Return</div>
+      <div class="mtab" onclick="showMission('safari',this)">Multi-Stop Safari</div>
     </div>
-
-    <!-- ONE WAY -->
     <div id="m-one_way">
       <div class="form-row">
         <div class="form-group">
@@ -167,8 +183,6 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
       </div>
       <button class="btn" onclick="submitQuote('one_way')">Get Quote</button>
     </div>
-
-    <!-- RETURN -->
     <div id="m-return" style="display:none">
       <div class="form-row">
         <div class="form-group">
@@ -192,8 +206,6 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
       </div>
       <button class="btn" onclick="submitQuote('return')">Get Quote</button>
     </div>
-
-    <!-- SAFARI -->
     <div id="m-safari" style="display:none">
       <div id="safari-legs">
         <div class="leg-row">
@@ -209,10 +221,7 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
       </div>
     </div>
   </div>
-
   <div class="result-box" id="quote-result"></div>
-
-  <!-- PDF SECTION -->
   <div class="card pdf-section" id="pdf-section" style="display:none">
     <h3>Generate PDF</h3>
     <div class="form-row">
@@ -235,7 +244,7 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
         <input type="number" id="pdf-discount" placeholder="0" min="0" max="100">
       </div>
     </div>
-    <div class="form-group" style="margin-bottom:14px">
+    <div class="form-group-full">
       <label>Notes</label>
       <textarea id="pdf-notes" rows="2" placeholder="Special notes..."></textarea>
     </div>
@@ -249,7 +258,7 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
 <!-- LOCATIONS TAB -->
 <div class="tab-content" id="nav-locations">
   <div class="card">
-    <h3 style="margin-bottom:16px;color:{{ operator.branding.primary_color }}">Add Location</h3>
+    <h3>Add Location</h3>
     <div class="form-row">
       <div class="form-group">
         <label>Name</label>
@@ -280,12 +289,11 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
     <button class="btn" onclick="addLocation()">Add Location</button>
     <div id="loc-msg"></div>
   </div>
-
   <div class="card">
     <div class="search-bar">
       <input type="text" id="loc-search" placeholder="Search locations..." oninput="filterLocations()">
     </div>
-    <table class="db-table" id="loc-table">
+    <table class="db-table">
       <thead><tr><th>Name</th><th>Lat</th><th>Lon</th><th>Alias</th><th>Type</th><th>Actions</th></tr></thead>
       <tbody id="loc-tbody"></tbody>
     </table>
@@ -295,33 +303,282 @@ input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.p
 <!-- AIRCRAFT TAB -->
 <div class="tab-content" id="nav-aircraft">
   <div class="card">
-    <h3 style="margin-bottom:16px;color:{{ operator.branding.primary_color }}">Aircraft Fleet</h3>
+    <h3>Aircraft Fleet</h3>
     <div id="aircraft-list"></div>
-    <button class="btn" style="margin-top:16px" onclick="addAircraftRow()">+ Add Aircraft</button>
-    <button class="btn btn-outline" style="margin-top:16px;margin-left:10px" onclick="saveAircraft()">Save All</button>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn" onclick="addAircraftRow()">+ Add Aircraft</button>
+      <button class="btn btn-outline" onclick="saveAircraft()">Save All</button>
+    </div>
     <div id="ac-msg"></div>
   </div>
 </div>
 
+<!-- SETTINGS TAB -->
+<div class="tab-content" id="nav-settings">
+
+  <div class="card">
+    <h3>Branding & Identity</h3>
+    <div class="settings-section">
+      <h4>Logo & Company</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Company Name</label>
+          <input type="text" id="s-company-name">
+        </div>
+        <div class="form-group">
+          <label>Tagline</label>
+          <input type="text" id="s-tagline">
+        </div>
+      </div>
+      <div class="form-group-full">
+        <label>Logo URL</label>
+        <input type="text" id="s-logo-url" oninput="previewLogo()">
+        <img id="logo-preview" class="logo-preview" src="" style="display:none">
+      </div>
+      <div class="form-group-full">
+        <label>Footer Tagline (client quote page)</label>
+        <input type="text" id="s-footer-tagline">
+      </div>
+    </div>
+    <div class="settings-section">
+      <h4>Colors</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Primary Color</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="color" id="s-primary-color" style="width:60px;height:40px;padding:2px">
+            <input type="text" id="s-primary-color-hex" placeholder="#0D47A1" style="flex:1" oninput="syncColor('primary')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Accent Color</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="color" id="s-accent-color" style="width:60px;height:40px;padding:2px">
+            <input type="text" id="s-accent-color-hex" placeholder="#e8a020" style="flex:1" oninput="syncColor('accent')">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h4>Trust Bar (client page)</h4>
+      <div class="trust-bar-editor" id="trust-bar-editor"></div>
+    </div>
+    <div class="settings-section">
+      <h4>Social Links</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Website</label>
+          <input type="text" id="s-website">
+        </div>
+        <div class="form-group">
+          <label>Instagram</label>
+          <input type="text" id="s-instagram">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Facebook</label>
+          <input type="text" id="s-facebook">
+        </div>
+        <div class="form-group">
+          <label>Twitter / X</label>
+          <input type="text" id="s-twitter">
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h4>Aircraft Mode</h4>
+      <div class="form-group">
+        <label>Mode</label>
+        <select id="s-aircraft-mode" onchange="toggleDisclaimer()">
+          <option value="helicopter">Helicopter Only</option>
+          <option value="fixed_wing">Fixed Wing Only</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+      <div id="disclaimer-field">
+        <div class="form-group-full">
+          <label>Fixed Wing Landing Field Disclaimer</label>
+          <textarea id="s-disclaimer" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+    <button class="btn" onclick="saveBranding()">Save Branding</button>
+    <div id="branding-msg"></div>
+  </div>
+
+  <div class="card">
+    <h3>Company Details</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" id="s-phone">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp Number (digits only)</label>
+        <input type="text" id="s-whatsapp">
+      </div>
+    </div>
+    <div class="form-group-full">
+      <label>WhatsApp Greeting Message</label>
+      <input type="text" id="s-whatsapp-greeting">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="text" id="s-email">
+      </div>
+      <div class="form-group">
+        <label>Base Airport Key (e.g. wilson)</label>
+        <input type="text" id="s-base-airport">
+      </div>
+    </div>
+    <div class="form-group-full">
+      <label>Address</label>
+      <input type="text" id="s-address">
+    </div>
+    <button class="btn" onclick="saveCompany()">Save Company Details</button>
+    <div id="company-msg"></div>
+  </div>
+
+  <div class="card">
+    <h3>Quoting Rules</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Minimum Flight Hours</label>
+        <input type="number" id="s-min-hours" step="0.5" min="0.5">
+      </div>
+      <div class="form-group">
+        <label>Max Nights Before Pick & Drop</label>
+        <input type="number" id="s-max-nights" min="1" max="10">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Max Flight Hours Per Day (safari)</label>
+        <input type="number" id="s-max-hours-day" step="0.5" min="1">
+      </div>
+      <div class="form-group">
+        <label>Max Idle Days Between Legs (safari)</label>
+        <input type="number" id="s-max-idle-days" min="0" max="7">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Quote Validity (hours)</label>
+        <input type="number" id="s-quote-validity" min="1">
+      </div>
+    </div>
+    <div class="settings-section" style="margin-top:16px;padding-top:16px">
+      <h4>Client Display Options</h4>
+      <div class="toggle-row">
+        <input type="checkbox" id="s-show-nm" style="width:auto;margin:0">
+        <label for="s-show-nm">Show distance in Nautical Miles (nm) on client quote page</label>
+      </div>
+    </div>
+    <button class="btn" onclick="saveQuotingRules()">Save Quoting Rules</button>
+    <div id="rules-msg"></div>
+  </div>
+
+  <div class="card">
+    <h3>Bank Details</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Account Name</label>
+        <input type="text" id="s-bank-name">
+      </div>
+      <div class="form-group">
+        <label>Bank Name</label>
+        <input type="text" id="s-bank-bank">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>KES Account</label>
+        <input type="text" id="s-bank-kes">
+      </div>
+      <div class="form-group">
+        <label>USD Account</label>
+        <input type="text" id="s-bank-usd">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>SWIFT</label>
+        <input type="text" id="s-bank-swift">
+      </div>
+      <div class="form-group">
+        <label>Branch</label>
+        <input type="text" id="s-bank-branch">
+      </div>
+      <div class="form-group">
+        <label>Paybill</label>
+        <input type="text" id="s-bank-paybill">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Invoice Prefix</label>
+        <input type="text" id="s-invoice-prefix">
+      </div>
+    </div>
+    <div class="form-group-full">
+      <label>Invoice Terms</label>
+      <textarea id="s-invoice-terms" rows="3"></textarea>
+    </div>
+    <button class="btn" onclick="saveBank()">Save Bank Details</button>
+    <div id="bank-msg"></div>
+  </div>
+
+  <div class="card">
+    <h3>Change Password</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" id="s-current-pass">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="s-new-pass">
+      </div>
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <input type="password" id="s-confirm-pass">
+      </div>
+    </div>
+    <button class="btn" onclick="changePassword()">Change Password</button>
+    <div id="pass-msg"></div>
+  </div>
+
+</div>
+
 <script>
+// Quotecloud Admin v2.3.1
+// BUG-01: Pick & Drop message improved
+// BUG-02: dist_nm always shown on admin side
+// BUG-03: Aircraft mode enforced server side
+// BUG-04: Routing mode per aircraft (direct/standard)
+
 let lastResults = [];
 let allLocations = [];
 let aircraftData = {};
+let operatorConfig = {};
 
-// Nav
-function showNav(tab) {
-  document.querySelectorAll('.nav-tab').forEach((t,i) => t.classList.remove('active'));
+function showNav(tab, el) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+  el.classList.add('active');
   document.getElementById('nav-' + tab).classList.add('active');
   if (tab === 'locations') loadLocations();
   if (tab === 'aircraft') loadAircraft();
+  if (tab === 'settings') loadSettings();
 }
 
-// Mission tabs
-function showMission(m) {
+function showMission(m, el) {
   document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+  el.classList.add('active');
   ['one_way','return','safari'].forEach(id => {
     document.getElementById('m-' + id).style.display = id === m ? 'block' : 'none';
   });
@@ -329,7 +586,6 @@ function showMission(m) {
   document.getElementById('pdf-section').style.display = 'none';
 }
 
-// Smart date parse
 function parseSmartDate(s) {
   s = s.trim().replace(/(\d+)(st|nd|rd|th)/gi, '$1');
   const fmts = [
@@ -355,7 +611,6 @@ function parseSmartDate(s) {
   return s;
 }
 
-// Safari legs
 function addLeg() {
   let n = document.querySelectorAll('#safari-legs .leg-row').length + 1;
   let div = document.createElement('div');
@@ -368,7 +623,6 @@ function addLeg() {
   document.getElementById('safari-legs').appendChild(div);
 }
 
-// Submit quote
 async function submitQuote(mission) {
   let body = { mission };
   if (mission === 'one_way') {
@@ -379,7 +633,7 @@ async function submitQuote(mission) {
     body.dropoff = document.getElementById('rt-dropoff').value;
     body.depart = parseSmartDate(document.getElementById('rt-depart').value);
     body.return_date = parseSmartDate(document.getElementById('rt-return').value);
-  } else if (mission === 'safari') {
+  } else {
     body.legs = [];
     document.querySelectorAll('#safari-legs .leg-row').forEach(row => {
       body.legs.push({
@@ -402,7 +656,7 @@ async function submitQuote(mission) {
       return;
     }
     lastResults = data.results || [];
-    renderResults(lastResults, mission);
+    renderResults(lastResults);
     document.getElementById('pdf-section').style.display = 'block';
   } catch(e) {
     document.getElementById('quote-result').innerHTML = `<div class="error-box">Network error: ${e.message}</div>`;
@@ -417,54 +671,121 @@ function renderSegments(segs) {
   if (!segs || !segs.length) return '';
   let rows = segs.map(s => `<tr>
     <td><span class="tag ${tagClass(s.type)}">${s.type}</span></td>
-    <td>${s.origin || ''}</td>
-    <td>${s.destination || ''}</td>
-    <td>${s.dist_nm || ''} nm</td>
-    <td>${s.hours || ''} hr</td>
-    <td>$${(s.cost_usd||0).toLocaleString()}</td>
-    <td>${s.date || ''}</td>
+    <td>${s.origin||''}</td>
+    <td>${s.destination||''}</td>
+    <td>${s.dist_nm ? s.dist_nm + ' nm' : '-'}</td>
+    <td>${s.hours ? s.hours + ' hr' : '-'}</td>
+    <td>${s.date||''}</td>
   </tr>`).join('');
   return `<table class="route-table">
-    <thead><tr><th>Type</th><th>From</th><th>To</th><th>Dist</th><th>Hours</th><th>Cost</th><th>Date</th></tr></thead>
+    <thead><tr><th>Type</th><th>From</th><th>To</th><th>Dist (nm)</th><th>Hours</th><th>Date</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
 
-function renderBilling(res) {
+function calcTotalHours(segs) {
+  let total = 0;
+  (segs || []).forEach(s => { if (s.hours) total += parseFloat(s.hours); });
+  return Math.round(total * 10) / 10;
+}
+
+function renderBilling(res, extraSegs) {
+  let rate = res.rate_usd || 0;
+  let allSegs = extraSegs ? [...(res.segments||[]), ...extraSegs] : (res.segments || []);
+  let totalHrs = calcTotalHours(allSegs);
   let rows = '';
-  if (res.subtotal_usd) rows += `<div class="billing-row"><span>Flight Cost</span><span>$${res.subtotal_usd.toLocaleString()}</span></div>`;
-  if (res.overnight_cost_usd) rows += `<div class="billing-row"><span>Overnight Per Diem</span><span>$${res.overnight_cost_usd.toLocaleString()}</span></div>`;
-  if (res.idle_cost_usd) rows += `<div class="billing-row"><span>Idle Day Charge</span><span>$${res.idle_cost_usd.toLocaleString()}</span></div>`;
-  if (res.pax_fee_usd) rows += `<div class="billing-row"><span>Pax / Admin Fee</span><span>$${res.pax_fee_usd.toLocaleString()}</span></div>`;
-  rows += `<div class="billing-row billing-total"><span>TOTAL</span><span>USD $${(res.total_usd||0).toLocaleString()}</span></div>`;
-  return `<div class="billing">${rows}</div>`;
+
+  if (totalHrs > 0 && rate > 0) {
+    let flightCost = Math.round(totalHrs * rate * 100) / 100;
+    rows += `<div class="billing-row">
+      <span>Aircraft Rental (${totalHrs} hrs @ $${rate.toLocaleString()}/hr)</span>
+      <span>USD $${flightCost.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+    </div>`;
+  }
+
+  let fee = res.pax_fee_usd || res.pax_fee_usd_display || 0;
+  if (fee > 0) {
+    rows += `<div class="billing-row"><span>Fees & Taxes</span><span>USD $${parseFloat(fee).toLocaleString()}</span></div>`;
+  }
+
+  if (res.overnight_cost_usd && res.overnight_cost_usd > 0) {
+    let nights = res.overnights || res.wait_days || 0;
+    let oRate = res.overnight_rate_usd || 0;
+    rows += `<div class="billing-row">
+      <span>Overnight Per Diem (${nights} night${nights!==1?'s':''} @ $${oRate}/night)</span>
+      <span>USD $${res.overnight_cost_usd.toLocaleString()}</span>
+    </div>`;
+  }
+
+  if (res.idle_cost_usd && res.idle_cost_usd > 0) {
+    rows += `<div class="billing-row"><span>Idle Day Charge</span><span>USD $${res.idle_cost_usd.toLocaleString()}</span></div>`;
+  }
+
+  return `<div class="billing">
+    ${rows}
+    <div class="billing-total">
+      <span>TOTAL ESTIMATE</span>
+      <span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+    </div>
+  </div>`;
 }
 
 function renderOneAc(res) {
   if (res.error) return `<div class="error-box">${res.error}</div>`;
+
+  let typeBadge = res.ac_type === 'fixed_wing'
+    ? `<span class="tag tag-fixed">Fixed Wing</span>`
+    : `<span class="tag tag-heli">Helicopter</span>`;
+  let routeBadge = res.routing_mode === 'direct'
+    ? `<span class="tag tag-direct">Direct Routing</span>`
+    : `<span class="tag tag-standard">Standard Routing</span>`;
+  let homeInfo = res.home_airstrip ? `Base: ${res.home_airstrip}` : '';
+  let disclaimer = res.ac_type === 'fixed_wing'
+    ? `<div class="info-box">This aircraft requires a runway. This quote is not a confirmation of service. The operator will confirm landing field availability before finalising your booking.</div>` : '';
+
+  let content = '';
+
   if (res.mission === 'return_both') {
     let wd = res.wait_days;
-    if (wd >= 3) {
+    let maxN = res.max_nights || 3;
+    if (wd >= maxN) {
       let b = res.option_b;
-      return `<div style="margin-bottom:8px;font-size:0.85rem;color:#856404;background:#fff3cd;padding:8px 12px;border-radius:6px">Stay is ${wd} nights — Pick &amp; Drop only</div>
-        <b>Drop Off</b>${renderSegments(b.drop.segments)}
-        <b>Pick Up</b>${renderSegments(b.pick.segments)}
-        ${renderBilling({subtotal_usd: b.total_usd, pax_fee_usd: 0, total_usd: b.total_usd})}`;
+      let combinedSegs = [...(b.drop.segments||[]), ...(b.pick.segments||[])];
+      let bRes = {
+        segments: combinedSegs,
+        rate_usd: res.rate_usd,
+        overnight_rate_usd: res.overnight_rate_usd,
+        pax_fee_usd_display: res.pax_fee_usd_display,
+        total_usd: b.total_usd
+      };
+      content = `<div class="pickup-drop-msg">${res.pickup_drop_msg || 'Pick & Drop only for this duration.'}</div>
+        <b style="font-size:0.82rem;color:#555">Drop Off Flight</b>
+        ${renderSegments(b.drop.segments)}
+        <b style="font-size:0.82rem;color:#555">Pick Up Flight</b>
+        ${renderSegments(b.pick.segments)}
+        ${renderBilling(bRes)}`;
+    } else {
+      let optARes = {...res.option_a, rate_usd: res.rate_usd, overnight_rate_usd: res.overnight_rate_usd, pax_fee_usd_display: res.pax_fee_usd_display};
+      let optBSegs = [...(res.option_b.drop.segments||[]), ...(res.option_b.pick.segments||[])];
+      let optBRes = {segments: optBSegs, rate_usd: res.rate_usd, pax_fee_usd_display: res.pax_fee_usd_display, total_usd: res.option_b.total_usd};
+      content = `<div class="option-tabs">
+        <div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A - Aircraft Waits</div>
+        <div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B - Pick & Drop</div>
+      </div>
+      <div class="otab-content active" id="oa-${res.ac_key}">
+        ${renderSegments(res.option_a.segments)}${renderBilling(optARes)}
+      </div>
+      <div class="otab-content" id="ob-${res.ac_key}">
+        <b style="font-size:0.82rem;color:#555">Drop Off Flight</b>${renderSegments(res.option_b.drop.segments)}
+        <b style="font-size:0.82rem;color:#555">Pick Up Flight</b>${renderSegments(res.option_b.pick.segments)}
+        ${renderBilling(optBRes)}
+      </div>`;
     }
-    return `<div class="option-tabs">
-      <div class="otab active" onclick="switchOtab(this,'oa')">Option A - Aircraft Waits</div>
-      <div class="otab" onclick="switchOtab(this,'ob')">Option B - Pick &amp; Drop</div>
-    </div>
-    <div class="otab-content active" id="oa">
-      ${renderSegments(res.option_a.segments)}${renderBilling(res.option_a)}
-    </div>
-    <div class="otab-content" id="ob">
-      <b>Drop Off</b>${renderSegments(res.option_b.drop.segments)}
-      <b>Pick Up</b>${renderSegments(res.option_b.pick.segments)}
-      ${renderBilling({subtotal_usd: res.option_b.total_usd, pax_fee_usd: 0, total_usd: res.option_b.total_usd})}
-    </div>`;
+  } else {
+    content = renderSegments(res.segments) + renderBilling(res);
   }
-  return renderSegments(res.segments) + renderBilling(res);
+
+  return `<div class="ac-meta">${typeBadge} ${routeBadge} ${homeInfo ? '| ' + homeInfo : ''}</div>` + content + disclaimer;
 }
 
 function switchOtab(el, id) {
@@ -472,83 +793,69 @@ function switchOtab(el, id) {
   parent.querySelectorAll('.otab').forEach(t => t.classList.remove('active'));
   parent.querySelectorAll('.otab-content').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  parent.querySelector('#' + id).classList.add('active');
+  document.getElementById(id).classList.add('active');
 }
 
-function renderResults(results, mission) {
+function renderResults(results) {
   let html = results.map(res => `
     <div class="ac-card">
-      <div class="ac-title">${res.ac_label || ''}</div>
+      <div class="ac-title">${res.ac_label||''}</div>
       ${renderOneAc(res)}
     </div>`).join('');
   document.getElementById('quote-result').innerHTML = html;
 }
 
-// PDF
 async function generatePDF(docType) {
   if (!lastResults.length) return alert('Run a quote first.');
   let res = lastResults[0];
   let result = res.mission === 'return_both' ? res.option_a : res;
   let body = {
     doc_type: docType,
-    name: document.getElementById('pdf-name').value,
-    email: document.getElementById('pdf-email').value,
-    phone: document.getElementById('pdf-phone').value,
+    client_name: document.getElementById('pdf-name').value,
+    client_email: document.getElementById('pdf-email').value,
+    client_phone: document.getElementById('pdf-phone').value,
     discount: document.getElementById('pdf-discount').value || 0,
     note: document.getElementById('pdf-notes').value,
     result: result
   };
   try {
-    let r = await fetch('/pdf', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(body)
-    });
-    if (!r.ok) { let e = await r.json(); return alert(e.error || 'PDF failed'); }
+    let r = await fetch('/pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    if (!r.ok) { let e = await r.json(); return alert(e.error||'PDF failed'); }
     let blob = await r.blob();
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
-    a.href = url; a.download = docType.toLowerCase() + '.pdf'; a.click();
-  } catch(e) { alert('PDF error: ' + e.message); }
+    a.href = url; a.download = docType.toLowerCase()+'.pdf'; a.click();
+  } catch(e) { alert('PDF error: '+e.message); }
 }
 
-// Locations
 async function loadLocations() {
   let r = await fetch('/airports');
-  allLocations = await r.json();
+  let data = await r.json();
+  allLocations = Object.entries(data).map(([k,v]) => ({...v, key:k}));
   renderLocations(allLocations);
 }
 
 function filterLocations() {
   let q = document.getElementById('loc-search').value.toLowerCase();
-  renderLocations(allLocations.filter(l => l.name.toLowerCase().includes(q) || (l.alias||'').includes(q)));
+  renderLocations(allLocations.filter(l => (l.name||'').toLowerCase().includes(q)));
 }
 
 function renderLocations(locs) {
-  let tbody = document.getElementById('loc-tbody');
-  tbody.innerHTML = locs.map(l => `<tr>
-    <td>${l.name}</td>
-    <td>${l.lat}</td>
-    <td>${l.lon}</td>
-    <td>${l.alias || '-'}</td>
-    <td><span class="${l.system ? 'badge-system' : 'badge-user'}">${l.system ? 'System' : 'User'}</span></td>
-    <td>${l.system ? '' : `
-      <button class="btn btn-outline btn-sm" onclick="editLocation('${l.name}',${l.lat},${l.lon},'${l.alias||''}')">Edit</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteLocation('${l.name}')">Delete</button>`}
-    </td>
+  document.getElementById('loc-tbody').innerHTML = locs.map(l => `<tr>
+    <td>${l.name||l.key}</td><td>${l.lat||''}</td><td>${l.lon||''}</td>
+    <td>${(l.aliases||[]).join(', ')||'-'}</td>
+    <td><span class="${l.source==='system'?'badge-system':'badge-user'}">${l.source==='system'?'System':'User'}</span></td>
+    <td>${l.source==='user'?`<button class="btn btn-danger btn-sm" onclick="deleteLocation('${l.name||l.key}')">Delete</button>`:''}</td>
   </tr>`).join('');
 }
 
 async function resolveMapPin() {
   let url = document.getElementById('loc-maps').value.trim();
   if (!url) return;
-  let r = await fetch('/resolve_pin', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({url})
-  });
+  let r = await fetch('/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url}) });
   let data = await r.json();
-  if (data.error) { showLocMsg(data.error, 'error'); return; }
-  document.getElementById('loc-name').value = data.name;
+  if (!data.found) { showMsg('loc-msg','Could not resolve pin.','error'); return; }
+  document.getElementById('loc-name').value = data.display;
   document.getElementById('loc-lat').value = data.lat;
   document.getElementById('loc-lon').value = data.lon;
 }
@@ -558,42 +865,22 @@ async function addLocation() {
   let lat = document.getElementById('loc-lat').value.trim();
   let lon = document.getElementById('loc-lon').value.trim();
   let alias = document.getElementById('loc-alias').value.trim();
-  if (!name || !lat || !lon) return showLocMsg('Name, lat and lon are required.', 'error');
-  let r = await fetch('/add_airport', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({name, lat: parseFloat(lat), lon: parseFloat(lon), alias})
-  });
+  if (!name||!lat||!lon) return showMsg('loc-msg','Name, lat and lon required.','error');
+  let r = await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name, lat:parseFloat(lat), lon:parseFloat(lon), aliases:alias?[alias]:[]}) });
   let data = await r.json();
-  if (data.ok) { showLocMsg('Location added.', 'success'); loadLocations(); }
-  else showLocMsg(data.error || 'Error', 'error');
-}
-
-function editLocation(name, lat, lon, alias) {
-  document.getElementById('loc-name').value = name;
-  document.getElementById('loc-lat').value = lat;
-  document.getElementById('loc-lon').value = lon;
-  document.getElementById('loc-alias').value = alias;
-  showNav2('locations');
+  if (data.success) { showMsg('loc-msg','Location added.','success'); loadLocations(); }
+  else showMsg('loc-msg',data.error||'Error','error');
 }
 
 async function deleteLocation(name) {
   if (!confirm(`Delete ${name}?`)) return;
-  let r = await fetch('/delete_airport', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({name})
-  });
+  let r = await fetch('/delete_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
   let data = await r.json();
-  if (data.ok) loadLocations();
-  else alert(data.error || 'Error');
+  if (data.success) loadLocations();
+  else alert(data.error||'Error');
 }
 
-function showLocMsg(msg, type) {
-  let el = document.getElementById('loc-msg');
-  el.innerHTML = `<div class="${type === 'error' ? 'error-box' : 'success-box'}" style="margin-top:10px">${msg}</div>`;
-  setTimeout(() => el.innerHTML = '', 3000);
-}
-
-// Aircraft
 async function loadAircraft() {
   let r = await fetch('/aircraft');
   aircraftData = await r.json();
@@ -601,74 +888,288 @@ async function loadAircraft() {
 }
 
 function renderAircraft() {
-  let html = Object.entries(aircraftData).map(([key, ac]) => `
-    <div class="ac-card" data-key="${key}">
+  let html = Object.entries(aircraftData).map(([key, ac]) => {
+    let isNew = key.startsWith('aircraft_');
+    return `<div class="ac-card" data-key="${key}">
       <div class="form-row">
-        <div class="form-group"><label>Key</label><input class="ac-key" value="${key}" readonly style="background:#f5f5f5"></div>
-        <div class="form-group"><label>Label</label><input class="ac-label" value="${ac.label}"></div>
-        <div class="form-group"><label>Seats</label><input class="ac-seater" type="number" value="${ac.seater}"></div>
+        <div class="form-group">
+          <label>Key (no spaces)</label>
+          <input class="ac-key" value="${key}" ${isNew?'':'readonly style="background:#f5f5f5"'}>
+        </div>
+        <div class="form-group">
+          <label>Label</label>
+          <input class="ac-label" value="${ac.label}">
+        </div>
+        <div class="form-group">
+          <label>Type</label>
+          <select class="ac-type">
+            <option value="helicopter" ${ac.type==='helicopter'?'selected':''}>Helicopter</option>
+            <option value="fixed_wing" ${ac.type==='fixed_wing'?'selected':''}>Fixed Wing</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Routing</label>
+          <select class="ac-routing">
+            <option value="standard" ${(ac.routing_mode||'standard')==='standard'?'selected':''}>Standard (Mt Kenya / Lane)</option>
+            <option value="direct" ${ac.routing_mode==='direct'?'selected':''}>Direct (Point to Point)</option>
+          </select>
+        </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Speed (KTAS)</label><input class="ac-speed" type="number" value="${ac.speed}"></div>
-        <div class="form-group"><label>Rate (USD/hr)</label><input class="ac-rate" type="number" value="${ac.rate}"></div>
-        <div class="form-group"><label>Pax Fee (USD)</label><input class="ac-pax" type="number" value="${ac.pax_fee}"></div>
-        <div class="form-group"><label>Active</label>
+        <div class="form-group">
+          <label>Home Airstrip / Base</label>
+          <input class="ac-home" value="${ac.home_airstrip||'Wilson Airport, Nairobi'}">
+        </div>
+        <div class="form-group">
+          <label>Seats</label>
+          <input class="ac-seater" type="number" value="${ac.seater}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Speed (KTAS)</label>
+          <input class="ac-speed" type="number" value="${ac.speed}">
+        </div>
+        <div class="form-group">
+          <label>Rate (USD/hr)</label>
+          <input class="ac-rate" type="number" value="${ac.rate}">
+        </div>
+        <div class="form-group">
+          <label>Pax Fee (USD)</label>
+          <input class="ac-pax" type="number" value="${ac.pax_fee}">
+        </div>
+        <div class="form-group">
+          <label>Overnight Rate (USD/night)</label>
+          <input class="ac-overnight" type="number" value="${ac.overnight_rate||300}">
+        </div>
+        <div class="form-group">
+          <label>Active</label>
           <select class="ac-active">
-            <option value="true" ${ac.active ? 'selected' : ''}>Active</option>
-            <option value="false" ${!ac.active ? 'selected' : ''}>Inactive</option>
+            <option value="true" ${ac.active?'selected':''}>Active</option>
+            <option value="false" ${!ac.active?'selected':''}>Inactive</option>
           </select>
         </div>
       </div>
       <button class="btn btn-danger btn-sm" onclick="removeAcRow(this)">Remove</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('aircraft-list').innerHTML = html;
 }
 
 function addAircraftRow() {
   let key = 'aircraft_' + Date.now();
-  aircraftData[key] = {label: 'New Aircraft', seater: 4, speed: 120, rate: 1500, pax_fee: 100, active: true};
+  aircraftData[key] = {
+    label:'New Aircraft', seater:4, speed:120, rate:1500,
+    pax_fee:100, overnight_rate:300, active:true,
+    type:'helicopter', home_airstrip:'Wilson Airport, Nairobi',
+    routing_mode:'standard'
+  };
   renderAircraft();
 }
 
 function removeAcRow(btn) {
   let card = btn.closest('.ac-card');
-  let key = card.dataset.key;
-  delete aircraftData[key];
+  delete aircraftData[card.dataset.key];
   card.remove();
 }
 
 async function saveAircraft() {
   let data = {};
   document.querySelectorAll('#aircraft-list .ac-card').forEach(card => {
-    let key = card.querySelector('.ac-key').value;
+    let key = card.querySelector('.ac-key').value.trim();
     data[key] = {
       label: card.querySelector('.ac-label').value,
       seater: parseInt(card.querySelector('.ac-seater').value),
       speed: parseFloat(card.querySelector('.ac-speed').value),
       rate: parseFloat(card.querySelector('.ac-rate').value),
       pax_fee: parseFloat(card.querySelector('.ac-pax').value),
-      active: card.querySelector('.ac-active').value === 'true'
+      overnight_rate: parseFloat(card.querySelector('.ac-overnight').value),
+      active: card.querySelector('.ac-active').value === 'true',
+      type: card.querySelector('.ac-type').value,
+      home_airstrip: card.querySelector('.ac-home').value,
+      routing_mode: card.querySelector('.ac-routing').value
     };
   });
-  let r = await fetch('/aircraft/save', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(data)
-  });
+  let r = await fetch('/aircraft/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
   let res = await r.json();
-  let msg = document.getElementById('ac-msg');
-  if (res.ok) {
-    msg.innerHTML = '<div class="success-box" style="margin-top:10px">Aircraft saved.</div>';
-    setTimeout(() => msg.innerHTML = '', 3000);
-  } else {
-    msg.innerHTML = `<div class="error-box" style="margin-top:10px">${res.error}</div>`;
-  }
+  showMsg('ac-msg', res.success?'Aircraft saved.':(res.error||'Error'), res.success?'success':'error');
 }
 
-function showNav2(tab) {
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-tab')[tab === 'locations' ? 1 : 0].classList.add('active');
-  document.getElementById('nav-' + tab).classList.add('active');
+async function loadSettings() {
+  let r = await fetch('/settings/config');
+  operatorConfig = await r.json();
+  let b = operatorConfig.branding || {};
+  let c = operatorConfig.contact || {};
+  let bk = operatorConfig.bank || {};
+  let inv = operatorConfig.invoice || {};
+  let s = operatorConfig.social || {};
+  let qr = operatorConfig.quoting_rules || {};
+
+  document.getElementById('s-company-name').value = operatorConfig.company_name || '';
+  document.getElementById('s-tagline').value = operatorConfig.tagline || '';
+  document.getElementById('s-logo-url').value = operatorConfig.logo_url || '';
+  document.getElementById('s-footer-tagline').value = operatorConfig.footer_tagline || '';
+  previewLogo();
+
+  document.getElementById('s-primary-color').value = b.primary_color || '#0D47A1';
+  document.getElementById('s-primary-color-hex').value = b.primary_color || '#0D47A1';
+  document.getElementById('s-accent-color').value = b.accent_color || '#e8a020';
+  document.getElementById('s-accent-color-hex').value = b.accent_color || '#e8a020';
+
+  let trustBar = operatorConfig.trust_bar || ['','','',''];
+  document.getElementById('trust-bar-editor').innerHTML = trustBar.map((item,i) => `
+    <div class="trust-bar-item">
+      <span style="font-size:0.82rem;color:#888;min-width:20px">${i+1}.</span>
+      <input type="text" class="trust-bar-input" value="${item}">
+    </div>`).join('');
+
+  document.getElementById('s-website').value = s.website || '';
+  document.getElementById('s-instagram').value = s.instagram || '';
+  document.getElementById('s-facebook').value = s.facebook || '';
+  document.getElementById('s-twitter').value = s.twitter || '';
+
+  document.getElementById('s-aircraft-mode').value = operatorConfig.aircraft_mode || 'helicopter';
+  document.getElementById('s-disclaimer').value = operatorConfig.landing_field_disclaimer || '';
+
+  document.getElementById('s-phone').value = c.phone || '';
+  document.getElementById('s-whatsapp').value = c.whatsapp || '';
+  document.getElementById('s-whatsapp-greeting').value = c.whatsapp_greeting || '';
+  document.getElementById('s-email').value = c.email || '';
+  document.getElementById('s-address').value = c.address || '';
+  document.getElementById('s-base-airport').value = operatorConfig.base_airport || '';
+
+  document.getElementById('s-min-hours').value = qr.min_flight_hours || 1.0;
+  document.getElementById('s-max-nights').value = qr.max_nights_before_pickup_drop || 3;
+  document.getElementById('s-max-hours-day').value = qr.max_flight_hours_per_day || 10;
+  document.getElementById('s-max-idle-days').value = qr.max_idle_days_between_legs || 1;
+  document.getElementById('s-quote-validity').value = qr.quote_validity_hours || 48;
+  document.getElementById('s-show-nm').checked = qr.show_distance_to_client || false;
+
+  document.getElementById('s-bank-name').value = bk.account_name || '';
+  document.getElementById('s-bank-bank').value = bk.bank_name || '';
+  document.getElementById('s-bank-kes').value = bk.kes_account || '';
+  document.getElementById('s-bank-usd').value = bk.usd_account || '';
+  document.getElementById('s-bank-swift').value = bk.swift || '';
+  document.getElementById('s-bank-branch').value = bk.branch || '';
+  document.getElementById('s-bank-paybill').value = bk.paybill || '';
+  document.getElementById('s-invoice-prefix').value = inv.prefix || '';
+  document.getElementById('s-invoice-terms').value = inv.terms || '';
+}
+
+function previewLogo() {
+  let url = document.getElementById('s-logo-url').value.trim();
+  let img = document.getElementById('logo-preview');
+  if (url) { img.src = url; img.style.display = 'block'; }
+  else { img.style.display = 'none'; }
+}
+
+function syncColor(type) {
+  let hex = document.getElementById(`s-${type}-color-hex`).value.trim();
+  if (/^#[0-9A-Fa-f]{6}$/.test(hex)) document.getElementById(`s-${type}-color`).value = hex;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('s-primary-color').addEventListener('input', function() {
+    document.getElementById('s-primary-color-hex').value = this.value;
+  });
+  document.getElementById('s-accent-color').addEventListener('input', function() {
+    document.getElementById('s-accent-color-hex').value = this.value;
+  });
+});
+
+function toggleDisclaimer() {
+  let mode = document.getElementById('s-aircraft-mode').value;
+  document.getElementById('disclaimer-field').style.display =
+    (mode === 'fixed_wing' || mode === 'both') ? 'block' : 'none';
+}
+
+async function saveBranding() {
+  operatorConfig.company_name = document.getElementById('s-company-name').value;
+  operatorConfig.tagline = document.getElementById('s-tagline').value;
+  operatorConfig.logo_url = document.getElementById('s-logo-url').value;
+  operatorConfig.footer_tagline = document.getElementById('s-footer-tagline').value;
+  operatorConfig.aircraft_mode = document.getElementById('s-aircraft-mode').value;
+  operatorConfig.landing_field_disclaimer = document.getElementById('s-disclaimer').value;
+  operatorConfig.branding = operatorConfig.branding || {};
+  operatorConfig.branding.primary_color = document.getElementById('s-primary-color-hex').value || document.getElementById('s-primary-color').value;
+  operatorConfig.branding.accent_color = document.getElementById('s-accent-color-hex').value || document.getElementById('s-accent-color').value;
+  operatorConfig.trust_bar = Array.from(document.querySelectorAll('.trust-bar-input')).map(i => i.value.trim());
+  operatorConfig.social = {
+    website: document.getElementById('s-website').value,
+    instagram: document.getElementById('s-instagram').value,
+    facebook: document.getElementById('s-facebook').value,
+    twitter: document.getElementById('s-twitter').value
+  };
+  await saveConfig('branding-msg');
+}
+
+async function saveCompany() {
+  operatorConfig.contact = operatorConfig.contact || {};
+  operatorConfig.contact.phone = document.getElementById('s-phone').value;
+  operatorConfig.contact.whatsapp = document.getElementById('s-whatsapp').value;
+  operatorConfig.contact.whatsapp_greeting = document.getElementById('s-whatsapp-greeting').value;
+  operatorConfig.contact.email = document.getElementById('s-email').value;
+  operatorConfig.contact.address = document.getElementById('s-address').value;
+  operatorConfig.base_airport = document.getElementById('s-base-airport').value;
+  await saveConfig('company-msg');
+}
+
+async function saveQuotingRules() {
+  operatorConfig.quoting_rules = operatorConfig.quoting_rules || {};
+  operatorConfig.quoting_rules.min_flight_hours = parseFloat(document.getElementById('s-min-hours').value) || 1.0;
+  operatorConfig.quoting_rules.max_nights_before_pickup_drop = parseInt(document.getElementById('s-max-nights').value) || 3;
+  operatorConfig.quoting_rules.max_flight_hours_per_day = parseFloat(document.getElementById('s-max-hours-day').value) || 10;
+  operatorConfig.quoting_rules.max_idle_days_between_legs = parseInt(document.getElementById('s-max-idle-days').value) || 1;
+  operatorConfig.quoting_rules.quote_validity_hours = parseInt(document.getElementById('s-quote-validity').value) || 48;
+  operatorConfig.quoting_rules.show_distance_to_client = document.getElementById('s-show-nm').checked;
+  await saveConfig('rules-msg');
+}
+
+async function saveBank() {
+  operatorConfig.bank = operatorConfig.bank || {};
+  operatorConfig.bank.account_name = document.getElementById('s-bank-name').value;
+  operatorConfig.bank.bank_name = document.getElementById('s-bank-bank').value;
+  operatorConfig.bank.kes_account = document.getElementById('s-bank-kes').value;
+  operatorConfig.bank.usd_account = document.getElementById('s-bank-usd').value;
+  operatorConfig.bank.swift = document.getElementById('s-bank-swift').value;
+  operatorConfig.bank.branch = document.getElementById('s-bank-branch').value;
+  operatorConfig.bank.paybill = document.getElementById('s-bank-paybill').value;
+  operatorConfig.invoice = operatorConfig.invoice || {};
+  operatorConfig.invoice.prefix = document.getElementById('s-invoice-prefix').value;
+  operatorConfig.invoice.terms = document.getElementById('s-invoice-terms').value;
+  await saveConfig('bank-msg');
+}
+
+async function saveConfig(msgId) {
+  try {
+    let r = await fetch('/settings/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(operatorConfig) });
+    let data = await r.json();
+    showMsg(msgId, data.success?'Saved successfully.':(data.error||'Error'), data.success?'success':'error');
+  } catch(e) { showMsg(msgId,'Network error.','error'); }
+}
+
+async function changePassword() {
+  let body = {
+    current_password: document.getElementById('s-current-pass').value,
+    new_password: document.getElementById('s-new-pass').value,
+    confirm_password: document.getElementById('s-confirm-pass').value
+  };
+  try {
+    let r = await fetch('/settings/change_password', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    let data = await r.json();
+    showMsg('pass-msg', data.success?'Password changed.':(data.error||'Error'), data.success?'success':'error');
+    if (data.success) {
+      document.getElementById('s-current-pass').value = '';
+      document.getElementById('s-new-pass').value = '';
+      document.getElementById('s-confirm-pass').value = '';
+    }
+  } catch(e) { showMsg('pass-msg','Network error.','error'); }
+}
+
+function showMsg(id, msg, type) {
+  let el = document.getElementById(id);
+  el.innerHTML = `<div class="${type==='error'?'error-box':'success-box'}" style="margin-top:10px">${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 4000);
 }
 </script>
 </body>

@@ -2,9 +2,25 @@
   "as350": {
     "label": "Airbus AS350",
     "seater": 5,
-    "speed": 120.0,
-    "rate": 2200.0,
-    "pax_fee": 100.0,
-    "active": true
+    "speed": 120,
+    "rate": 2200,
+    "pax_fee": 100,
+    "overnight_rate": 300,
+    "active": true,
+    "type": "helicopter",
+    "home_airstrip": "Wilson Airport, Nairobi",
+    "routing_mode": "direct"
+  },
+  "PA32": {
+    "label": "Piper PA32",
+    "seater": 4,
+    "speed": 120,
+    "rate": 600,
+    "pax_fee": 50,
+    "overnight_rate": 150,
+    "active": true,
+    "type": "fixed_wing",
+    "home_airstrip": "Wilson Airport, Nairobi",
+    "routing_mode": "standard"
   }
 }

@@ -1,62 +1,75 @@
 {
-  "operator_id": "heliflight",
+  "aircraft_mode": "both",
+  "bank": {
+    "account_name": "Heliflight Air Africa Ltd",
+    "bank_name": "Family Bank",
+    "branch": "Kenyatta Ave (012), Bank Code 070",
+    "kes_account": "012000070043",
+    "paybill": "222111",
+    "swift": "FABLKENA",
+    "usd_account": "012000070044"
+  },
+  "base_airport": "wilson",
+  "branding": {
+    "accent_color": "#e8a020",
+    "background_color": "#f4f6f9",
+    "button_color": "#e8a020",
+    "button_text": "#ffffff",
+    "font_body": "Inter",
+    "font_heading": "Montserrat",
+    "header_bg": "#0D47A1",
+    "header_text": "#ffffff",
+    "primary_color": "#0D47A1",
+    "text_color": "#1a1a1a",
+    "theme": "light"
+  },
   "company_name": "Heli Flight Air Africa Ltd",
-  "tagline": "Private Charters. Anywhere in Kenya.",
-  "logo_url": "https://i.ibb.co/hFfr0RDx/IMG-4294.jpg",
-  "favicon_url": "",
-
   "contact": {
+    "address": "TALC Centre, Ground Floor, Wilson Airport, Nairobi, Kenya",
     "email": "info@heliflightafrica.com",
     "phone": "+254 721 888 885",
     "whatsapp": "254721888885",
-    "address": "TALC Centre, Ground Floor, Wilson Airport, Nairobi, Kenya"
+    "whatsapp_greeting": "Hi Heli Flight! I would like to request a charter quote."
   },
-
-  "base_airport": "wilson",
-
-  "branding": {
-    "primary_color": "#1a3c6e",
-    "accent_color": "#e8a020",
-    "background_color": "#f5f7fa",
-    "text_color": "#1a1a2e",
-    "header_bg": "#1a3c6e",
-    "header_text": "#ffffff",
-    "button_color": "#e8a020",
-    "button_text": "#ffffff",
-    "font_heading": "Montserrat",
-    "font_body": "Inter",
-    "theme": "light"
+  "env": {
+    "admin_pass": "jetman2026",
+    "admin_user": "heliflight",
+    "secret_key": "hf2026xK9mP"
   },
-
+  "favicon_url": "",
+  "footer": {
+    "powered_by": "Powered by Jetman Global",
+    "powered_url": "https://jetmanglobal.com"
+  },
+  "footer_tagline": "Fly anywhere in Kenya. Fast, private, unforgettable.",
+  "invoice": {
+    "prefix": "HF",
+    "terms": "Payment due within 7 days of invoice date. All prices in USD unless stated. 50% deposit required to confirm booking. Balance due prior to flight."
+  },
+  "landing_field_disclaimer": "Please note: This aircraft requires a runway for landing and take-off. This quote is an estimate only and is not a confirmation of service. The operator will confirm availability and suitability of a landing field at your requested destination before finalising your booking. Tap WhatsApp below to proceed.",
+  "logo_url": "https://i.ibb.co/hFfr0RDx/IMG-4294.jpg",
+  "operator_id": "heliflight",
+  "quoting_rules": {
+    "currency": "USD",
+    "currency_symbol": "$",
+    "max_flight_hours_per_day": 10,
+    "max_idle_days_between_legs": 1,
+    "max_nights_before_pickup_drop": 3,
+    "min_flight_hours": 1,
+    "quote_validity_hours": 48,
+    "show_distance_to_client": false
+  },
+  "social": {
+    "website": "https://heliflightafrica.com",
+    "instagram": "https://instagram.com/heliflightafrica",
+    "facebook": "",
+    "twitter": ""
+  },
+  "tagline": "Private Charters. Anywhere in Kenya.",
   "trust_bar": [
     "Private Charters",
     "Anywhere in Kenya",
     "Instant Quotes",
     "Licensed & Insured"
-  ],
-
-  "bank": {
-    "account_name": "Heliflight Air Africa Ltd",
-    "bank_name": "Family Bank",
-    "kes_account": "012000070043",
-    "usd_account": "012000070044",
-    "swift": "FABLKENA",
-    "branch": "Kenyatta Ave (012), Bank Code 070",
-    "paybill": "222111"
-  },
-
-  "invoice": {
-    "prefix": "HF",
-    "terms": "Payment due within 7 days of invoice date. All prices in USD unless stated. 50% deposit required to confirm booking. Balance due prior to flight."
-  },
-
-  "footer": {
-    "powered_by": "Powered by Jetman Global",
-    "powered_url": "https://jetmanglobal.com"
-  },
-
-  "env": {
-    "admin_user": "heliflight",
-    "secret_key": "hf2026xK9mP"
-  }
+  ]
 }

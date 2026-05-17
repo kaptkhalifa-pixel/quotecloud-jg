@@ -1,10 +1,12 @@
 # =========================================================
 # QUOTECLOUD BY JETMAN GLOBAL
-# app.py v2.0.0
-# White-label charter quote platform
-# Baseline: heliflight app.py v1.7.3
+# app.py v2.3.2
+# v2.3.2 fix:
+#   - BUG: Removed hq.route_distance patch (not in engine)
+#   - Routing mode stored per aircraft, ready for engine fix
+#   - All other v2.3.1 fixes retained
 # =========================================================
-import sys, os, json, re, urllib.parse, pathlib
+import sys, os, json, re, urllib.parse, pathlib, datetime
 sys.path.insert(0, os.path.dirname(__file__))
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 from functools import wraps
@@ -12,9 +14,6 @@ import quotecloud_engine as hq
 
 app = Flask(__name__)
 
-# ------------------------------------------------------------------
-# Load operator config
-# ------------------------------------------------------------------
 OPERATOR_CONFIG_FILE = "operator_config.json"
 
 def load_operator_config():
@@ -32,15 +31,34 @@ app.secret_key = os.environ.get("SECRET_KEY", OPERATOR.get("env", {}).get("secre
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyByT9tWG6pHLXslzp5aJFElULC9oJwXu5o")
 INVGEN_API_KEY = os.environ.get("INVGEN_API_KEY", "sk_elcdkPBJLZnAMEghIVyDc6llmS0iOraY")
-ADMIN_USER = os.environ.get("ADMIN_USER", OPERATOR.get("env", {}).get("admin_user", "admin"))
-ADMIN_PASS = os.environ.get("ADMIN_PASS", OPERATOR.get("env", {}).get("admin_pass", "changeme"))
 AIRCRAFT_CONFIG_FILE = "hf_aircraft.json"
+
+def get_admin_user():
+    return os.environ.get("ADMIN_USER", OPERATOR.get("env", {}).get("admin_user", "admin"))
+
+def get_admin_pass():
+    return os.environ.get("ADMIN_PASS", OPERATOR.get("env", {}).get("admin_pass", "changeme"))
+
+def get_quoting_rules():
+    return OPERATOR.get("quoting_rules", {
+        "min_flight_hours": 1.0,
+        "max_nights_before_pickup_drop": 3,
+        "max_flight_hours_per_day": 10.0,
+        "max_idle_days_between_legs": 1,
+        "show_distance_to_client": False,
+        "currency": "USD",
+        "currency_symbol": "$",
+        "quote_validity_hours": 48
+    })
+
+def get_whatsapp():
+    return OPERATOR.get("contact", {}).get("whatsapp", "")
+
+def get_aircraft_mode():
+    return OPERATOR.get("aircraft_mode", "helicopter")
 
 hq.load_airports()
 
-# ------------------------------------------------------------------
-# Auth
-# ------------------------------------------------------------------
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -53,8 +71,8 @@ def login_required(f):
 def login():
     error = None
     if request.method == "POST":
-        if (request.form.get("username") == ADMIN_USER and
-                request.form.get("password") == ADMIN_PASS):
+        if (request.form.get("username") == get_admin_user() and
+                request.form.get("password") == get_admin_pass()):
             session["logged_in"] = True
             return redirect(url_for("index"))
         error = "Invalid credentials. Please try again."
@@ -65,20 +83,6 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-# ------------------------------------------------------------------
-# Aircraft
-# ------------------------------------------------------------------
-DEFAULT_AIRCRAFT = {
-    "as350": {
-        "label": "Airbus AS350",
-        "seater": 5,
-        "speed": 120.0,
-        "rate": 2200.0,
-        "pax_fee": 100.0,
-        "active": True
-    }
-}
-
 def load_aircraft():
     p = pathlib.Path(AIRCRAFT_CONFIG_FILE)
     if p.exists():
@@ -86,14 +90,24 @@ def load_aircraft():
             return json.loads(p.read_text())
         except Exception:
             pass
-    return DEFAULT_AIRCRAFT.copy()
+    return {
+        "as350": {
+            "label": "Airbus AS350",
+            "seater": 5,
+            "speed": 120.0,
+            "rate": 2200.0,
+            "pax_fee": 100.0,
+            "overnight_rate": 300.0,
+            "active": True,
+            "type": "helicopter",
+            "home_airstrip": "Wilson Airport, Nairobi",
+            "routing_mode": "standard"
+        }
+    }
 
 def save_aircraft(data):
     pathlib.Path(AIRCRAFT_CONFIG_FILE).write_text(json.dumps(data, indent=2))
 
-# ------------------------------------------------------------------
-# Geocoding
-# ------------------------------------------------------------------
 def reverse_geocode(lat, lon):
     try:
         import requests as req
@@ -206,29 +220,86 @@ def apply_display_names(result, display_map):
             apply_display_names(result[key], display_map)
     return result
 
-# ------------------------------------------------------------------
-# Quote engine
-# ------------------------------------------------------------------
+def enrich_segments(segments, speed, rate):
+    for s in (segments or []):
+        if not s.get("dist_nm") and s.get("hours") and speed:
+            s["dist_nm"] = round(float(s["hours"]) * float(speed), 1)
+        if not s.get("hours") and s.get("dist_nm") and speed:
+            s["hours"] = round(float(s["dist_nm"]) / float(speed), 2)
+        if not s.get("cost_usd") and s.get("hours") and rate:
+            s["cost_usd"] = round(float(s["hours"]) * float(rate), 2)
+    return segments
+
+def enrich_result(result, speed, rate):
+    if not result:
+        return result
+    result["segments"] = enrich_segments(result.get("segments", []), speed, rate)
+    for key in ("drop", "pick", "option_a", "option_b"):
+        if result.get(key):
+            enrich_result(result[key], speed, rate)
+    return result
+
+def validate_safari_legs(legs, rules):
+    wa = get_whatsapp()
+    max_idle = int(rules.get("max_idle_days_between_legs", 1))
+    wa_msg = f" For assistance, WhatsApp us: +{wa}" if wa else ""
+
+    dates = []
+    for L in legs:
+        if L.get("date"):
+            try:
+                dates.append(datetime.datetime.strptime(L["date"], "%d/%m/%y").date())
+            except Exception:
+                pass
+
+    if dates:
+        span = (max(dates) - min(dates)).days
+        if span > 7:
+            return f"This safari itinerary spans {span} days which exceeds the maximum of 7 days. Please restructure your itinerary or contact us for a custom quote.{wa_msg}"
+
+        sorted_dates = sorted(dates)
+        prev_date = None
+        for d in sorted_dates:
+            if prev_date:
+                gap = (d - prev_date).days
+                idle = gap - 1
+                if idle > max_idle:
+                    return f"This itinerary has {idle} idle day(s) between legs which exceeds the maximum of {max_idle} day(s) allowed. Please adjust your dates or contact us for assistance.{wa_msg}"
+            prev_date = d
+
+    return None
+
 def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
                           depart=None, ret=None, legs=None, display_map=None):
+    rules = get_quoting_rules()
+    overnight_rate = float(ac_cfg.get("overnight_rate", 300.0))
+    max_nights = int(rules.get("max_nights_before_pickup_drop", 3))
+    speed = float(ac_cfg["speed"])
+    rate = float(ac_cfg["rate"])
+    routing_mode = ac_cfg.get("routing_mode", "standard")
+    wa = get_whatsapp()
+
     orig = hq.AIRCRAFT.copy()
     orig_pax = hq.PAX_ADMIN_FEE_USD
     hq.AIRCRAFT[ac_key] = {
         "label": f"{ac_cfg['label']} ({ac_cfg['seater']} seater)",
-        "speed": float(ac_cfg["speed"]),
-        "rate": float(ac_cfg["rate"]),
-        "overnight": 300.0,
-        "idle_day": float(ac_cfg["rate"]),
+        "speed": speed,
+        "rate": rate,
+        "overnight": overnight_rate,
+        "idle_day": rate,
     }
     hq.PAX_ADMIN_FEE_USD = float(ac_cfg["pax_fee"])
+
     try:
         if mission == "one_way":
             result = hq.compute_one_way(pickup_coord, dropoff_coord, ac_key)
+
         elif mission == "return":
-            import datetime as dt
-            d0 = dt.datetime.strptime(depart, "%d/%m/%y").date()
-            d1 = dt.datetime.strptime(ret, "%d/%m/%y").date()
+            d0 = datetime.datetime.strptime(depart, "%d/%m/%y").date()
+            d1 = datetime.datetime.strptime(ret, "%d/%m/%y").date()
             wait_days = max((d1 - d0).days, 0)
+            wa_msg = f" For questions, WhatsApp us: +{wa}" if wa else ""
+
             option_a = hq.compute_return(pickup_coord, dropoff_coord, depart, ret, ac_key)
             drop = hq.compute_one_way(pickup_coord, dropoff_coord, ac_key)
             for sg in drop["segments"]:
@@ -238,6 +309,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
             for sg in pick["segments"]:
                 if sg.get("type") == "revenue":
                     sg["date"] = d1.strftime("%d/%m/%y")
+
             option_b = {
                 "mission": "pick_and_drop",
                 "drop": drop,
@@ -245,37 +317,77 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
                 "warning": "",
                 "total_usd": round(drop["total_usd"] + pick["total_usd"], 2)
             }
+
+            pickup_drop_msg = (
+                f"This return trip exceeds {max_nights} night(s). Based on our aircraft "
+                f"utilization schedule and operational commitments, only the Pick & Drop "
+                f"option is available for stays of this duration. Our team will coordinate "
+                f"both flights to ensure a seamless experience.{wa_msg}"
+            )
+
             result = {
                 "mission": "return_both",
                 "option_a": option_a,
                 "option_b": option_b,
-                "wait_days": wait_days
+                "wait_days": wait_days,
+                "max_nights": max_nights,
+                "pickup_drop_msg": pickup_drop_msg
             }
+
         elif mission == "safari":
             result = hq.compute_safari(legs, ac_key)
         else:
             result = {"error": "Unknown mission"}
+
         if display_map:
             apply_display_names(result, display_map)
+
+        enrich_result(result, speed, rate)
+
         result["ac_label"] = f"{ac_cfg['label']} ({ac_cfg['seater']} seater)"
         result["ac_key"] = ac_key
+        result["ac_type"] = ac_cfg.get("type", "helicopter")
+        result["home_airstrip"] = ac_cfg.get("home_airstrip", "")
+        result["rate_usd"] = rate
+        result["overnight_rate_usd"] = overnight_rate
+        result["pax_fee_usd_display"] = float(ac_cfg["pax_fee"])
+        result["routing_mode"] = routing_mode
+
     except Exception as e:
         result = {
             "error": str(e),
             "ac_label": f"{ac_cfg['label']} ({ac_cfg['seater']} seater)",
-            "ac_key": ac_key
+            "ac_key": ac_key,
+            "ac_type": ac_cfg.get("type", "helicopter"),
+            "home_airstrip": ac_cfg.get("home_airstrip", "")
         }
     finally:
         hq.AIRCRAFT = orig
         hq.PAX_ADMIN_FEE_USD = orig_pax
+
     return result
+
+def get_active_aircraft(ac_type_filter="all"):
+    aircraft_cfg = load_aircraft()
+    mode = get_aircraft_mode()
+    if mode == "helicopter":
+        type_filter = "helicopter"
+    elif mode == "fixed_wing":
+        type_filter = "fixed_wing"
+    else:
+        type_filter = ac_type_filter
+    return {k: v for k, v in aircraft_cfg.items()
+            if v.get("active") and
+            (type_filter == "all" or v.get("type", "helicopter") == type_filter)}
 
 def run_quote_engine(data):
     mission = data.get("mission")
-    aircraft_cfg = load_aircraft()
-    active = {k: v for k, v in aircraft_cfg.items() if v.get("active")}
+    rules = get_quoting_rules()
+    ac_type_filter = data.get("ac_type_filter", "all")
+    active = get_active_aircraft(ac_type_filter)
     if not active:
-        return {"error": "No aircraft available."}, 400
+        return {"error": "No aircraft available for the selected type."}, 400
+
     display_map = {}
     try:
         if mission == "one_way":
@@ -291,6 +403,7 @@ def run_quote_engine(data):
             display_map[d_coord] = d_disp
             results = [compute_for_aircraft("one_way", k, v, p_coord, d_coord,
                                             display_map=display_map) for k, v in active.items()]
+
         elif mission == "return":
             raw_p = data.get("pickup", "")
             raw_d = data.get("dropoff", "")
@@ -306,6 +419,7 @@ def run_quote_engine(data):
                                             depart=data.get("depart", ""),
                                             ret=data.get("return_date", ""),
                                             display_map=display_map) for k, v in active.items()]
+
         elif mission == "safari":
             legs = []
             for L in (data.get("legs") or []):
@@ -320,17 +434,21 @@ def run_quote_engine(data):
                 display_map[o_coord] = o_disp
                 display_map[d_coord2] = d_disp2
                 legs.append({"origin": o_coord, "destination": d_coord2, "date": L.get("date", "")})
+
+            safari_error = validate_safari_legs(legs, rules)
+            if safari_error:
+                return {"error": safari_error}, 400
+
             results = [compute_for_aircraft("safari", k, v, None, None,
                                             legs=legs, display_map=display_map) for k, v in active.items()]
         else:
             return {"error": "Unknown mission type"}, 400
+
         return {"multi": True, "results": results}, 200
+
     except Exception as e:
         return {"error": str(e)}, 400
 
-# ------------------------------------------------------------------
-# Routes
-# ------------------------------------------------------------------
 @app.route("/")
 @login_required
 def index():
@@ -475,24 +593,66 @@ def save_aircraft_route():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-# ------------------------------------------------------------------
-# Operator config routes
-# ------------------------------------------------------------------
-@app.route("/operator/config", methods=["GET"])
+@app.route("/settings/config", methods=["GET"])
 @login_required
-def get_operator_config():
+def get_config():
     return jsonify(OPERATOR)
 
-@app.route("/operator/config/save", methods=["POST"])
+@app.route("/settings/save", methods=["POST"])
 @login_required
-def save_operator_config():
+def save_settings():
+    global OPERATOR
     data = request.get_json()
     try:
         pathlib.Path(OPERATOR_CONFIG_FILE).write_text(json.dumps(data, indent=2))
+        OPERATOR = data
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ------------------------------------------------------------------
+@app.route("/settings/change_password", methods=["POST"])
+@login_required
+def change_password():
+    global OPERATOR
+    data = request.get_json()
+    current = data.get("current_password", "")
+    new_pass = data.get("new_password", "")
+    confirm = data.get("confirm_password", "")
+    if current != get_admin_pass():
+        return jsonify({"error": "Current password is incorrect."}), 400
+    if not new_pass or len(new_pass) < 6:
+        return jsonify({"error": "New password must be at least 6 characters."}), 400
+    if new_pass != confirm:
+        return jsonify({"error": "Passwords do not match."}), 400
+    try:
+        OPERATOR["env"]["admin_pass"] = new_pass
+        pathlib.Path(OPERATOR_CONFIG_FILE).write_text(json.dumps(OPERATOR, indent=2))
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/fx/rates", methods=["GET"])
+def fx_rates():
+    try:
+        import requests as req
+        r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
+        data = r.json()
+        if data.get("result") == "success":
+            rates = data.get("rates", {})
+            return jsonify({
+                "success": True,
+                "rates": {
+                    "KES": rates.get("KES", 0),
+                    "EUR": rates.get("EUR", 0),
+                    "GBP": rates.get("GBP", 0),
+                    "TZS": rates.get("TZS", 0),
+                    "UGX": rates.get("UGX", 0)
+                },
+                "updated": data.get("time_last_update_utc", "")
+            })
+    except Exception:
+        pass
+    return jsonify({"success": False, "rates": {}})
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
