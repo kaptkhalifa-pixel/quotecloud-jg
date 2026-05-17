@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ operator.company_name }} — Instant Quote</title>
+<link href="https://fonts.googleapis.com/css2?family={{ operator.branding.font_heading }}:wght@400;600;700&family={{ operator.branding.font_body }}:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: '{{ operator.branding.font_body }}', sans-serif; background: {{ operator.branding.background_color }}; color: {{ operator.branding.text_color }}; }
+header {
+  background: {{ operator.branding.header_bg }};
+  color: {{ operator.branding.header_text }};
+  padding: 16px 24px;
+  text-align: center;
+}
+header img { height: 52px; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto; }
+header h1 { font-family: '{{ operator.branding.font_heading }}', sans-serif; font-size: 1.3rem; font-weight: 700; }
+header p { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
+.trust-bar {
+  background: {{ operator.branding.accent_color }};
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+  padding: 10px 16px;
+}
+.trust-item { padding: 4px 16px; font-size: 0.82rem; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.4); }
+.trust-item:last-child { border-right: none; }
+.main { max-width: 680px; margin: 24px auto; padding: 0 16px 40px; }
+.card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.mission-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.mtab {
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: 2px solid {{ operator.branding.primary_color }};
+  color: {{ operator.branding.primary_color }};
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.mtab.active { background: {{ operator.branding.primary_color }}; color: #fff; }
+.form-group { margin-bottom: 14px; }
+label { font-size: 0.82rem; font-weight: 600; color: #555; display: block; margin-bottom: 5px; }
+input, select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  font-family: inherit;
+  transition: border 0.2s;
+}
+input:focus, select:focus { border-color: {{ operator.branding.primary_color }}; }
+.btn {
+  width: 100%;
+  padding: 14px;
+  background: {{ operator.branding.button_color }};
+  color: {{ operator.branding.button_text }};
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: '{{ operator.branding.font_heading }}', sans-serif;
+  transition: opacity 0.2s;
+  margin-top: 4px;
+}
+.btn:hover { opacity: 0.9; }
+.btn-outline {
+  background: #fff;
+  color: {{ operator.branding.primary_color }};
+  border: 2px solid {{ operator.branding.primary_color }};
+}
+.btn-sm { padding: 8px 16px; font-size: 0.88rem; width: auto; }
+.btn-whatsapp { background: #25d366; color: #fff; margin-top: 12px; }
+.btn-call { background: {{ operator.branding.primary_color }}; color: #fff; margin-top: 8px; }
+.btn-reset { background: #f5f5f5; color: #333; border: 1px solid #ddd; margin-top: 8px; }
+.result-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.ac-block { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+.ac-block:last-child { border-bottom: none; margin-bottom: 0; }
+.ac-title { font-family: '{{ operator.branding.font_heading }}', sans-serif; font-weight: 700; font-size: 1rem; color: {{ operator.branding.primary_color }}; margin-bottom: 12px; }
+.route-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 12px; overflow-x: auto; display: block; }
+.route-table th { background: {{ operator.branding.primary_color }}; color: #fff; padding: 8px 10px; text-align: left; white-space: nowrap; }
+.route-table td { padding: 8px 10px; border-bottom: 1px solid #eee; white-space: nowrap; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
+.tag-rev { background: #d4edda; color: #155724; }
+.tag-pos { background: #fff3cd; color: #856404; }
+.tag-dep { background: #f8d7da; color: #721c24; }
+.tag-rep { background: #cce5ff; color: #004085; }
+.billing { background: #f8f9fa; border-radius: 8px; padding: 14px; }
+.billing-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.9rem; border-bottom: 1px solid #eee; }
+.billing-total { font-weight: 700; font-size: 1.15rem; color: {{ operator.branding.primary_color }}; border-top: 2px solid {{ operator.branding.primary_color }}; margin-top: 6px; padding-top: 8px; }
+.option-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.otab { padding: 6px 16px; border-radius: 16px; border: 1.5px solid #999; color: #666; background: #fff; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+.otab.active { background: {{ operator.branding.accent_color }}; color: #fff; border-color: {{ operator.branding.accent_color }}; }
+.otab-content { display: none; }
+.otab-content.active { display: block; }
+.disclaimer { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; font-size: 0.85rem; color: #856404; margin-bottom: 12px; }
+.error-box { background: #fff0f0; border: 1px solid #ffcccc; color: #cc0000; border-radius: 8px; padding: 12px 16px; font-size: 0.9rem; }
+.leg-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+.leg-num { font-weight: 700; color: {{ operator.branding.primary_color }}; min-width: 20px; }
+.leg-row input { flex: 1; min-width: 120px; padding: 10px 12px; font-size: 0.9rem; }
+footer {
+  background: {{ operator.branding.header_bg }};
+  color: rgba(255,255,255,0.7);
+  text-align: center;
+  padding: 20px;
+  font-size: 0.8rem;
+  margin-top: 40px;
+}
+footer a { color: rgba(255,255,255,0.7); text-decoration: none; }
+footer strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="{{ operator.logo_url }}" alt="{{ operator.company_name }}">
+  <h1>{{ operator.company_name }}</h1>
+  <p>{{ operator.tagline }}</p>
+</header>
+
+<div class="trust-bar">
+  {% for item in operator.trust_bar %}
+  <div class="trust-item">{{ item }}</div>
+  {% endfor %}
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="mission-tabs">
+      <div class="mtab active" onclick="showMission('one_way',this)">One Way</div>
+      <div class="mtab" onclick="showMission('return',this)">Return</div>
+      <div class="mtab" onclick="showMission('safari',this)">Safari</div>
+    </div>
+
+    <!-- ONE WAY -->
+    <div id="m-one_way">
+      <div class="form-group">
+        <label>From</label>
+        <input type="text" id="ow-pickup" placeholder="Location name, GPS or Google Maps link">
+      </div>
+      <div class="form-group">
+        <label>To</label>
+        <input type="text" id="ow-dropoff" placeholder="Location name, GPS or Google Maps link">
+      </div>
+      <button class="btn" onclick="submitQuote('one_way')">Get Instant Quote</button>
+    </div>
+
+    <!-- RETURN -->
+    <div id="m-return" style="display:none">
+      <div class="form-group">
+        <label>From</label>
+        <input type="text" id="rt-pickup" placeholder="Location name, GPS or Google Maps link">
+      </div>
+      <div class="form-group">
+        <label>To</label>
+        <input type="text" id="rt-dropoff" placeholder="Location name, GPS or Google Maps link">
+      </div>
+      <div class="form-group">
+        <label>Departure Date</label>
+        <input type="text" id="rt-depart" placeholder="e.g. 25/06/25 or 25 June 2025">
+      </div>
+      <div class="form-group">
+        <label>Return Date</label>
+        <input type="text" id="rt-return" placeholder="e.g. 27/06/25 or 27 June 2025">
+      </div>
+      <button class="btn" onclick="submitQuote('return')">Get Instant Quote</button>
+    </div>
+
+    <!-- SAFARI -->
+    <div id="m-safari" style="display:none">
+      <div id="safari-legs">
+        <div class="leg-row">
+          <span class="leg-num">1</span>
+          <input type="text" placeholder="From" class="leg-origin">
+          <input type="text" placeholder="To" class="leg-dest">
+          <input type="text" placeholder="Date e.g. 25/06/25" class="leg-date" style="max-width:140px">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;margin-bottom:14px">
+        <button class="btn btn-outline btn-sm" onclick="addLeg()">+ Add Leg</button>
+      </div>
+      <button class="btn" onclick="submitQuote('safari')">Get Instant Quote</button>
+    </div>
+  </div>
+
+  <div id="result-area"></div>
+</div>
+
+<footer>
+  <strong>{{ operator.company_name }}</strong><br>
+  {{ operator.contact.address }}<br>
+  {{ operator.contact.phone }} &nbsp;|&nbsp; {{ operator.contact.email }}<br>
+  <br>
+  <a href="{{ operator.footer.powered_url }}">{{ operator.footer.powered_by }}</a>
+</footer>
+
+<script>
+let lastResults = [];
+let currentMission = 'one_way';
+
+function showMission(m, el) {
+  document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  ['one_way','return','safari'].forEach(id => {
+    document.getElementById('m-' + id).style.display = id === m ? 'block' : 'none';
+  });
+  currentMission = m;
+  document.getElementById('result-area').innerHTML = '';
+}
+
+function parseSmartDate(s) {
+  s = s.trim().replace(/(\d+)(st|nd|rd|th)/gi, '$1');
+  const fmts = [
+    { r: /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/, fn: m => {
+      let y = m[3].length === 2 ? '20' + m[3] : m[3];
+      return new Date(`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`);
+    }},
+    { r: /^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/, fn: m => new Date(`${m[2]} ${m[1]} ${m[3]}`) },
+    { r: /^([A-Za-z]+)\s+(\d{1,2})\s+(\d{4})$/, fn: m => new Date(`${m[1]} ${m[2]} ${m[3]}`) },
+  ];
+  for (let f of fmts) {
+    let m = s.match(f.r);
+    if (m) {
+      let d = f.fn(m);
+      if (!isNaN(d)) {
+        let dd = String(d.getDate()).padStart(2,'0');
+        let mm = String(d.getMonth()+1).padStart(2,'0');
+        let yy = String(d.getFullYear()).slice(-2);
+        return `${dd}/${mm}/${yy}`;
+      }
+    }
+  }
+  return s;
+}
+
+function addLeg() {
+  let n = document.querySelectorAll('#safari-legs .leg-row').length + 1;
+  let div = document.createElement('div');
+  div.className = 'leg-row';
+  div.innerHTML = `<span class="leg-num">${n}</span>
+    <input type="text" placeholder="From" class="leg-origin">
+    <input type="text" placeholder="To" class="leg-dest">
+    <input type="text" placeholder="Date e.g. 25/06/25" class="leg-date" style="max-width:140px">
+    <button class="btn btn-sm" style="background:#dc3545;color:#fff;width:auto;padding:8px 12px" onclick="this.parentElement.remove()">x</button>`;
+  document.getElementById('safari-legs').appendChild(div);
+}
+
+async function submitQuote(mission) {
+  let body = { mission };
+  if (mission === 'one_way') {
+    body.pickup = document.getElementById('ow-pickup').value;
+    body.dropoff = document.getElementById('ow-dropoff').value;
+  } else if (mission === 'return') {
+    body.pickup = document.getElementById('rt-pickup').value;
+    body.dropoff = document.getElementById('rt-dropoff').value;
+    body.depart = parseSmartDate(document.getElementById('rt-depart').value);
+    body.return_date = parseSmartDate(document.getElementById('rt-return').value);
+  } else if (mission === 'safari') {
+    body.legs = [];
+    document.querySelectorAll('#safari-legs .leg-row').forEach(row => {
+      body.legs.push({
+        origin: row.querySelector('.leg-origin').value,
+        destination: row.querySelector('.leg-dest').value,
+        date: parseSmartDate(row.querySelector('.leg-date').value)
+      });
+    });
+  }
+
+  document.getElementById('result-area').innerHTML = '<div class="card" style="text-align:center;color:#888;padding:24px">Calculating your quote...</div>';
+
+  try {
+    let r = await fetch('/quote/calculate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    let data = await r.json();
+    if (!r.ok) {
+      document.getElementById('result-area').innerHTML = `<div class="error-box">${data.error || 'Could not calculate quote. Please try again.'}</div>`;
+      return;
+    }
+    lastResults = data.results || [];
+    renderResults(lastResults, mission, body);
+  } catch(e) {
+    document.getElementById('result-area').innerHTML = `<div class="error-box">Network error. Please try again.</div>`;
+  }
+}
+
+function tagClass(t) {
+  return t === 'revenue' ? 'tag-rev' : t === 'positioning' ? 'tag-pos' : t === 'depositioning' ? 'tag-dep' : 'tag-rep';
+}
+
+function renderSegments(segs) {
+  if (!segs || !segs.length) return '';
+  let rows = segs.map(s => `<tr>
+    <td><span class="tag ${tagClass(s.type)}">${s.type}</span></td>
+    <td>${s.origin || ''}</td>
+    <td>${s.destination || ''}</td>
+    <td>${s.date || ''}</td>
+  </tr>`).join('');
+  return `<table class="route-table">
+    <thead><tr><th>Type</th><th>From</th><th>To</th><th>Date</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderBilling(res) {
+  let rows = '';
+  if (res.subtotal_usd) rows += `<div class="billing-row"><span>Flight Cost</span><span>$${res.subtotal_usd.toLocaleString()}</span></div>`;
+  if (res.overnight_cost_usd) rows += `<div class="billing-row"><span>Overnight Per Diem</span><span>$${res.overnight_cost_usd.toLocaleString()}</span></div>`;
+  if (res.idle_cost_usd) rows += `<div class="billing-row"><span>Idle Day Charge</span><span>$${res.idle_cost_usd.toLocaleString()}</span></div>`;
+  if (res.pax_fee_usd) rows += `<div class="billing-row"><span>Pax / Admin Fee</span><span>$${res.pax_fee_usd.toLocaleString()}</span></div>`;
+  rows += `<div class="billing-row billing-total"><span>TOTAL</span><span>USD $${(res.total_usd||0).toLocaleString()}</span></div>`;
+  return `<div class="billing">${rows}</div>`;
+}
+
+function buildWhatsApp(results, mission, body) {
+  let msg = `Hello ${('{{ operator.company_name }}')},\n\nI would like a quote for the following:\n\n`;
+  results.forEach(res => {
+    msg += `Aircraft: ${res.ac_label}\n`;
+    if (res.mission === 'return_both') {
+      let wd = res.wait_days;
+      if (wd >= 3) {
+        msg += `Mission: Return (Pick & Drop)\n`;
+        msg += `From: ${body.pickup}\nTo: ${body.dropoff}\n`;
+        msg += `Out: ${body.depart} | Return: ${body.return_date}\n`;
+        msg += `Total: USD $${res.option_b.total_usd.toLocaleString()}\n`;
+      } else {
+        msg += `Mission: Return\n`;
+        msg += `From: ${body.pickup}\nTo: ${body.dropoff}\n`;
+        msg += `Out: ${body.depart} | Return: ${body.return_date}\n`;
+        msg += `Option A (waits): USD $${res.option_a.total_usd.toLocaleString()}\n`;
+        msg += `Option B (pick & drop): USD $${res.option_b.total_usd.toLocaleString()}\n`;
+      }
+    } else if (res.mission === 'safari') {
+      msg += `Mission: Safari\n`;
+      (body.legs||[]).forEach((l,i) => {
+        msg += `Leg ${i+1}: ${l.origin} to ${l.destination} on ${l.date}\n`;
+      });
+      msg += `Total: USD $${res.total_usd.toLocaleString()}\n`;
+    } else {
+      msg += `Mission: One Way\n`;
+      msg += `From: ${body.pickup}\nTo: ${body.dropoff}\n`;
+      msg += `Total: USD $${res.total_usd.toLocaleString()}\n`;
+    }
+    msg += '\n';
+  });
+  msg += 'Please confirm availability. Thank you.';
+  return msg;
+}
+
+function renderResults(results, mission, body) {
+  let blocks = results.map(res => {
+    let inner = '';
+    if (res.error) {
+      inner = `<div class="error-box">${res.error}</div>`;
+    } else if (res.mission === 'return_both') {
+      let wd = res.wait_days;
+      if (wd >= 3) {
+        inner = `<div class="disclaimer">Stay is ${wd} nights — Pick &amp; Drop pricing applies. The aircraft drops you off and returns separately to pick you up on your return date.</div>
+          <b style="font-size:0.85rem">Drop Off</b>${renderSegments(res.option_b.drop.segments)}
+          <b style="font-size:0.85rem">Pick Up</b>${renderSegments(res.option_b.pick.segments)}
+          ${renderBilling({subtotal_usd: res.option_b.total_usd, total_usd: res.option_b.total_usd})}`;
+      } else {
+        inner = `<div class="option-tabs">
+          <div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A - Aircraft Waits</div>
+          <div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B - Pick &amp; Drop</div>
+        </div>
+        <div class="otab-content active" id="oa-${res.ac_key}">
+          ${renderSegments(res.option_a.segments)}${renderBilling(res.option_a)}
+        </div>
+        <div class="otab-content" id="ob-${res.ac_key}">
+          <b style="font-size:0.85rem">Drop Off</b>${renderSegments(res.option_b.drop.segments)}
+          <b style="font-size:0.85rem">Pick Up</b>${renderSegments(res.option_b.pick.segments)}
+          ${renderBilling({subtotal_usd: res.option_b.total_usd, total_usd: res.option_b.total_usd})}
+        </div>`;
+      }
+    } else {
+      inner = renderSegments(res.segments) + renderBilling(res);
+    }
+    return `<div class="ac-block"><div class="ac-title">${res.ac_label}</div>${inner}</div>`;
+  }).join('');
+
+  let waMsg = encodeURIComponent(buildWhatsApp(results, mission, body));
+  let waNum = '{{ operator.contact.whatsapp }}';
+  let phone = '{{ operator.contact.phone }}';
+
+  let html = `<div class="result-card">
+    ${blocks}
+    <button class="btn btn-whatsapp" onclick="window.open('https://wa.me/${waNum}?text=' + '${waMsg}','_blank')">
+      WhatsApp Us This Quote
+    </button>
+    <button class="btn btn-call" onclick="window.location='tel:${phone}'">
+      Call Us — ${phone}
+    </button>
+    <button class="btn btn-reset" onclick="location.reload()">New Quote</button>
+  </div>`;
+
+  document.getElementById('result-area').innerHTML = html;
+}
+
+function switchOtab(el, id) {
+  let parent = el.closest('.result-card');
+  parent.querySelectorAll('.otab').forEach(t => t.classList.remove('active'));
+  parent.querySelectorAll('.otab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "as350": {
+    "label": "Airbus AS350",
+    "seater": 5,
+    "speed": 120.0,
+    "rate": 2200.0,
+    "pax_fee": 100.0,
+    "active": true
+  }
+}

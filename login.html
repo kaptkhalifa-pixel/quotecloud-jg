@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ operator.company_name }} — Login</title>
+<link href="https://fonts.googleapis.com/css2?family={{ operator.branding.font_heading }}:wght@400;600;700&family={{ operator.branding.font_body }}:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: '{{ operator.branding.font_body }}', sans-serif;
+    background: {{ operator.branding.primary_color }};
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .login-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+  }
+  .logo { max-height: 70px; margin-bottom: 24px; }
+  h1 {
+    font-family: '{{ operator.branding.font_heading }}', sans-serif;
+    font-size: 1.4rem;
+    color: {{ operator.branding.primary_color }};
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 32px;
+  }
+  .field { margin-bottom: 16px; text-align: left; }
+  label { font-size: 0.85rem; font-weight: 500; color: #444; display: block; margin-bottom: 6px; }
+  input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+  input:focus { border-color: {{ operator.branding.primary_color }}; }
+  .btn {
+    width: 100%;
+    padding: 13px;
+    background: {{ operator.branding.button_color }};
+    color: {{ operator.branding.button_text }};
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: '{{ operator.branding.font_heading }}', sans-serif;
+    transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.9; }
+  .error {
+    background: #fff0f0;
+    border: 1px solid #ffcccc;
+    color: #cc0000;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+  .powered {
+    margin-top: 32px;
+    font-size: 0.78rem;
+    color: #aaa;
+  }
+  .powered a { color: #aaa; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="login-card">
+  <img src="{{ operator.logo_url }}" class="logo" alt="{{ operator.company_name }}">
+  <h1>Admin Login</h1>
+  <p class="subtitle">{{ operator.company_name }}</p>
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+  <form method="POST" action="/login">
+    <div class="field">
+      <label>Username</label>
+      <input type="text" name="username" autocomplete="username" required>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" name="password" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btn">Sign In</button>
+  </form>
+  <p class="powered">
+    <a href="{{ operator.footer.powered_url }}" target="_blank">{{ operator.footer.powered_by }}</a>
+  </p>
+</div>
+</body>
+</html>
