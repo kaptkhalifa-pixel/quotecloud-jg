@@ -20,33 +20,11 @@
     "result_summary": {
       "ac_label": "Piper PA32 (4 seater)",
       "mission": "one_way"
-    }
-  },
-  {
-    "number": "HF-2026-003",
-    "type": "Quotation",
-    "client_name": "khalif",
-    "client_email": "",
-    "amount": 2300,
-    "date": "18/05/2026",
-    "timestamp": "2026-05-18T14:32:59.261823",
-    "result_summary": {
-      "ac_label": "Airbus AS350 (5 seater)",
-      "mission": "one_way"
-    }
-  },
-  {
-    "number": "HF-2026-004",
-    "type": "Quotation",
-    "client_name": "jose",
-    "client_email": "",
-    "amount": 3460,
-    "date": "18/05/2026",
-    "timestamp": "2026-05-18T14:38:13.599330",
-    "result_summary": {
-      "ac_label": "",
-      "mission": "pick_and_drop"
-    }
+    },
+    "paid": true,
+    "paid_amount": 650.0,
+    "paid_date": "18/05/2026",
+    "receipt_number": "HF-R-2026-002"
   },
   {
     "number": "HF-Q-2026-001",
@@ -58,19 +36,6 @@
     "timestamp": "2026-05-18T15:33:18.664227",
     "result_summary": {
       "ac_label": "Piper PA32 (4 seater)",
-      "mission": "one_way"
-    }
-  },
-  {
-    "number": "HF-Q-2026-002",
-    "type": "Quotation",
-    "client_name": "john",
-    "client_email": "john@john",
-    "amount": 6700,
-    "date": "18/05/2026",
-    "timestamp": "2026-05-18T15:33:22.036484",
-    "result_summary": {
-      "ac_label": "Pilatus pc12 (8 seater)",
       "mission": "one_way"
     }
   },
@@ -164,5 +129,87 @@
       "ac_label": "Piper PA32 (4 seater)",
       "mission": "one_way"
     }
+  },
+  {
+    "number": "HF-R-2026-001",
+    "type": "Receipt",
+    "client_name": "khalif",
+    "client_email": "",
+    "amount": 500.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T20:58:05.789362",
+    "result_summary": {},
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "receipt_number": ""
+  },
+  {
+    "number": "HF-R-2026-002",
+    "type": "Receipt",
+    "client_name": "khalif",
+    "client_email": "",
+    "amount": 650.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T20:58:50.472409",
+    "result_summary": {},
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "receipt_number": ""
+  },
+  {
+    "number": "HF-I-2026-001",
+    "type": "Invoice",
+    "client_name": "Victor Wanyama",
+    "client_email": "wanyama@gmail.com",
+    "amount": 1730,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T21:20:21.330280",
+    "result_summary": {
+      "ac_label": "Piper PA32 (4 seater)",
+      "mission": "one_way"
+    },
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": ""
+  },
+  {
+    "number": "HF-I-2026-002",
+    "type": "Invoice",
+    "client_name": "Victor Wanyama",
+    "client_email": "wanyama@gmail.com",
+    "amount": 1730,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T21:20:53.376347",
+    "result_summary": {
+      "ac_label": "Piper PA32 (4 seater)",
+      "mission": "one_way"
+    },
+    "paid": false,
+    "paid_amount": 1000.0,
+    "paid_date": "18/05/2026",
+    "payment_mode": "Cash",
+    "payment_ref": "usd",
+    "receipt_number": "HF-R-2026-003"
+  },
+  {
+    "number": "HF-R-2026-003",
+    "type": "Receipt",
+    "client_name": "Victor Wanyama",
+    "client_email": "wanyama@gmail.com",
+    "amount": 1000.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T21:21:45.218109",
+    "result_summary": {},
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": ""
   }
 ]

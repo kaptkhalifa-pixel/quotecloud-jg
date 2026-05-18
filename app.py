@@ -1,10 +1,13 @@
 # =========================================================
 # QUOTECLOUD BY JETMAN GLOBAL
-# app.py v2.4.4
-# v2.4.4 fixes:
-#   - BUG-01: Removed ship_to, client details in "to" block
-#   - BUG-03: Bank details multiline preserved via \n
-#   - All v2.4.3 features retained
+# app.py v2.4.6
+# v2.4.6 changes:
+#   - FEAT-01: amount_paid field to invoice-generator API
+#   - FEAT-02: Payment description with mode, reference, date
+#   - FEAT-03: Smart modal showing remaining balance
+#   - FEAT-04: Password required to delete paid records
+#   - FEAT-05: Payment mode dropdown
+#   - FIX-01: Receipt payload cleaned, API handles balance
 # =========================================================
 import sys, os, json, re, pathlib, datetime
 sys.path.insert(0, os.path.dirname(__file__))
@@ -188,9 +191,9 @@ def next_record_number(doc_type="Quotation"):
                f"-{type_code}-" in r.get("number", "")]) + 1
     return f"{prefix}-{type_code}-{year}-{seq:03d}"
 
-def save_record(record_type, client_name, client_email, amount, doc_number, result=None):
+def save_record(record_type, client_name, client_email, amount, doc_number, result=None, extra=None):
     records = load_records()
-    records.append({
+    rec = {
         "number": doc_number,
         "type": record_type,
         "client_name": client_name,
@@ -198,8 +201,17 @@ def save_record(record_type, client_name, client_email, amount, doc_number, resu
         "amount": amount,
         "date": datetime.date.today().strftime("%d/%m/%Y"),
         "timestamp": datetime.datetime.now().isoformat(),
-        "result_summary": result or {}
-    })
+        "result_summary": result or {},
+        "paid": False,
+        "paid_amount": 0,
+        "paid_date": "",
+        "payment_mode": "",
+        "payment_ref": "",
+        "receipt_number": ""
+    }
+    if extra:
+        rec.update(extra)
+    records.append(rec)
     save_records(records)
 
 def check_geo_lock(lat, lon):
@@ -225,10 +237,8 @@ def reverse_geocode(lat, lon):
         data = r.json()
         if data.get("status") == "OK":
             components = data["results"][0]["address_components"]
-            locality = next((c["long_name"] for c in components
-                             if "locality" in c["types"]), None)
-            admin = next((c["long_name"] for c in components
-                          if "administrative_area_level_1" in c["types"]), None)
+            locality = next((c["long_name"] for c in components if "locality" in c["types"]), None)
+            admin = next((c["long_name"] for c in components if "administrative_area_level_1" in c["types"]), None)
             if locality and admin and "+" not in locality:
                 return f"Pin, {locality}, {admin}"
             if locality and "+" not in locality:
@@ -251,8 +261,7 @@ def resolve_location(s, user_label=None):
     if "goo.gl" in s or "maps.app" in s:
         try:
             import requests as req
-            r = req.get(s, allow_redirects=True, timeout=5,
-                        headers={"User-Agent": "Mozilla/5.0"})
+            r = req.get(s, allow_redirects=True, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
             s = r.url
         except Exception:
             pass
@@ -289,8 +298,7 @@ def resolve_location(s, user_label=None):
         region = OPERATOR.get("geo_lock", {}).get("region_name", "Kenya")
         query = clean if region.lower() in clean.lower() else clean + f" {region}"
         r = req.get("https://maps.googleapis.com/maps/api/geocode/json",
-                    params={"address": query, "key": GOOGLE_API_KEY, "region": "ke"},
-                    timeout=5)
+                    params={"address": query, "key": GOOGLE_API_KEY, "region": "ke"}, timeout=5)
         data = r.json()
         if data.get("status") == "OK":
             loc = data["results"][0]["geometry"]["location"]
@@ -627,7 +635,6 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             "unit_cost": str(ei.get("unit_cost", "0"))
         })
 
-    # BUG-01: client details in to block, no ship_to
     to_block = "\n".join(filter(None, [client_name, client_email, client_phone]))
     bank_block = get_bank_details_block()
     terms = OPERATOR.get("invoice", {}).get("terms", "")
@@ -792,7 +799,6 @@ def manual_invoice():
             })
             total += qty * unit
 
-        # BUG-01: client details in to block, no ship_to
         to_block = "\n".join(filter(None, [client_name, client_email, client_phone]))
         bank_block = bank_override if bank_override else get_bank_details_block()
         terms = terms_override if terms_override else OPERATOR.get("invoice", {}).get("terms", "")
@@ -834,10 +840,126 @@ def get_records():
 def delete_record_route():
     data = request.get_json()
     number = data.get("number", "")
+    password = data.get("password", "")
     records = load_records()
+    rec = next((r for r in records if r.get("number") == number), None)
+    if rec and (rec.get("paid") or float(rec.get("paid_amount", 0)) > 0):
+        if password != get_admin_pass():
+            return jsonify({"error": "Password required to delete a paid record."}), 403
     records = [r for r in records if r.get("number") != number]
     save_records(records)
     return jsonify({"success": True})
+
+@app.route("/records/mark_paid", methods=["POST"])
+@login_required
+def mark_paid():
+    data = request.get_json()
+    number = data.get("number", "")
+    paid_amount = float(data.get("paid_amount", 0))
+    paid_date = data.get("paid_date", datetime.date.today().strftime("%d/%m/%Y"))
+    payment_mode = data.get("payment_mode", "")
+    payment_ref = data.get("payment_ref", "")
+
+    records = load_records()
+    rec = next((r for r in records if r.get("number") == number), None)
+    if not rec:
+        return jsonify({"error": "Record not found"}), 404
+
+    total = float(rec.get("amount", 0))
+    rec["paid"] = paid_amount >= total
+    rec["paid_amount"] = round(paid_amount, 2)
+    rec["paid_date"] = paid_date
+    rec["payment_mode"] = payment_mode
+    rec["payment_ref"] = payment_ref
+    save_records(records)
+    return jsonify({"success": True, "balance": round(total - paid_amount, 2)})
+
+@app.route("/records/get_one", methods=["POST"])
+@login_required
+def get_one_record():
+    data = request.get_json()
+    number = data.get("number", "")
+    records = load_records()
+    rec = next((r for r in records if r.get("number") == number), None)
+    if not rec:
+        return jsonify({"error": "Record not found"}), 404
+    return jsonify(rec)
+
+@app.route("/records/generate_receipt", methods=["POST"])
+@login_required
+def generate_receipt():
+    data = request.get_json()
+    number = data.get("number", "")
+    paid_amount = float(data.get("paid_amount", 0))
+    paid_date = data.get("paid_date", datetime.date.today().strftime("%d/%m/%Y"))
+    payment_mode = data.get("payment_mode", "")
+    payment_ref = data.get("payment_ref", "")
+
+    records = load_records()
+    rec = next((r for r in records if r.get("number") == number), None)
+    if not rec:
+        return jsonify({"error": "Record not found"}), 404
+
+    total = float(rec.get("amount", 0))
+    balance = round(total - paid_amount, 2)
+    receipt_number = next_record_number("Receipt")
+
+    to_block = "\n".join(filter(None, [
+        rec.get("client_name", ""),
+        rec.get("client_email", ""),
+    ]))
+
+    # Payment description block
+    payment_desc_lines = ["Amount invoiced"]
+    if payment_mode:
+        payment_desc_lines.append(f"Mode: {payment_mode}")
+    if payment_ref:
+        payment_desc_lines.append(f"Reference: {payment_ref}")
+    payment_desc_lines.append(f"Date: {paid_date}")
+    payment_desc_lines.append(f"Invoice Ref: {number}")
+
+    items = [{
+        "name": "\n".join(payment_desc_lines),
+        "quantity": "1",
+        "unit_cost": str(total)
+    }]
+
+    bank_block = get_bank_details_block()
+    terms = OPERATOR.get("invoice", {}).get("terms", "")
+
+    payload = {
+        "logo": OPERATOR.get("logo_url", ""),
+        "from": get_company_from_block(),
+        "to": to_block,
+        "number": receipt_number,
+        "date": datetime.date.today().strftime("%d %b %Y"),
+        "items": items,
+        "amount_paid": paid_amount,
+        "notes": bank_block,
+        "notes_title": "BANK DETAILS",
+        "terms": terms,
+        "terms_title": "TERMS & CONDITIONS",
+        "currency": "USD",
+        "header": "Receipt"
+    }
+
+    out_path = f"/tmp/{receipt_number}.pdf"
+    hq.generate_pdf(payload, out_path)
+
+    rec["paid"] = paid_amount >= total
+    rec["paid_amount"] = round(paid_amount, 2)
+    rec["paid_date"] = paid_date
+    rec["payment_mode"] = payment_mode
+    rec["payment_ref"] = payment_ref
+    rec["receipt_number"] = receipt_number
+    save_records(records)
+
+    save_record("Receipt", rec.get("client_name", ""), rec.get("client_email", ""),
+                paid_amount, receipt_number)
+
+    return send_file(out_path, as_attachment=True,
+                     download_name=f"{receipt_number}.pdf",
+                     mimetype="application/pdf")
 
 @app.route("/airports", methods=["GET"])
 @login_required
