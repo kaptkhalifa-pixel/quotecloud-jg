@@ -192,9 +192,9 @@
     "paid": false,
     "paid_amount": 1000.0,
     "paid_date": "18/05/2026",
-    "payment_mode": "Cash",
-    "payment_ref": "usd",
-    "receipt_number": "HF-R-2026-003"
+    "payment_mode": "M-Pesa",
+    "payment_ref": "dghgjy766",
+    "receipt_number": "HF-R-2026-005"
   },
   {
     "number": "HF-R-2026-003",
@@ -211,5 +211,268 @@
     "payment_mode": "",
     "payment_ref": "",
     "receipt_number": ""
+  },
+  {
+    "number": "HF-R-2026-004",
+    "type": "Receipt",
+    "client_name": "Victor Wanyama",
+    "client_email": "wanyama@gmail.com",
+    "amount": 730.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T21:30:17.508207",
+    "result_summary": {},
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": ""
+  },
+  {
+    "number": "HF-R-2026-005",
+    "type": "Receipt",
+    "client_name": "Victor Wanyama",
+    "client_email": "wanyama@gmail.com",
+    "amount": 1000.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T21:31:02.445103",
+    "result_summary": {},
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": ""
+  },
+  {
+    "number": "HF-Q-2026-009",
+    "type": "Quotation",
+    "client_name": "grace njeri",
+    "client_email": "grace@mail.com",
+    "amount": 1610,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T21:48:55.748189",
+    "result_summary": {
+      "ac_label": "Piper PA32 (4 seater)",
+      "mission": "one_way"
+    },
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": ""
+  },
+  {
+    "number": "HF-I-2026-003",
+    "type": "Invoice",
+    "client_name": "grace njeri",
+    "client_email": "grace@mail.com",
+    "amount": 1610,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T21:49:09.858770",
+    "result_summary": {
+      "ac_label": "Piper PA32 (4 seater)",
+      "mission": "one_way"
+    },
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": ""
+  },
+  {
+    "number": "HF-I-2026-004",
+    "type": "Invoice",
+    "client_name": "grace njeri",
+    "client_email": "grace@mail.com",
+    "amount": 1610,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T21:50:57.294355",
+    "result_summary": {
+      "ac_label": "Piper PA32 (4 seater)",
+      "mission": "one_way"
+    },
+    "paid": false,
+    "paid_amount": 1500.0,
+    "paid_date": "18/05/2026",
+    "payment_mode": "M-Pesa",
+    "payment_ref": "edfghjj",
+    "receipt_number": ""
+  },
+  {
+    "number": "HF-I-2026-005",
+    "type": "Invoice",
+    "client_name": "leo kairo",
+    "client_email": "leo@myspace.com",
+    "amount": 2510.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T22:05:40.656851",
+    "result_summary": {
+      "ac_label": "Piper PA32 (4 seater)",
+      "mission": "one_way"
+    },
+    "paid": false,
+    "paid_amount": 2300.0,
+    "paid_date": "18/05/2026",
+    "payment_mode": "Cash",
+    "payment_ref": "usd",
+    "receipt_number": "",
+    "payment_log": [
+      {
+        "date": "18/05/2026",
+        "amount": 2300.0,
+        "mode": "M-Pesa",
+        "ref": "sdfg",
+        "recorded_at": "18/05/2026 22:06"
+      },
+      {
+        "date": "18/05/2026",
+        "amount": 210.0,
+        "mode": "Cash",
+        "ref": "usd",
+        "recorded_at": "18/05/2026 22:07"
+      },
+      {
+        "date": "18/05/2026",
+        "amount": 2300.0,
+        "mode": "Cash",
+        "ref": "usd",
+        "recorded_at": "18/05/2026 22:08"
+      }
+    ]
+  },
+  {
+    "number": "HF-I-2026-006",
+    "type": "Invoice",
+    "client_name": "Simon Spitz",
+    "client_email": "headoffice@lincoln.com",
+    "amount": 300000.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T22:14:35.602673",
+    "result_summary": {},
+    "paid": true,
+    "paid_amount": 300000.0,
+    "paid_date": "18/05/2026",
+    "payment_mode": "Bank Transfer / RTGS",
+    "payment_ref": "intl wire transfer",
+    "receipt_number": "HF-R-2026-006",
+    "payment_log": [
+      {
+        "date": "18/05/2026",
+        "amount": 300000.0,
+        "mode": "Bank Transfer / RTGS",
+        "ref": "intl wire transfer",
+        "recorded_at": "18/05/2026 23:46"
+      },
+      {
+        "date": "18/05/2026",
+        "amount": 300000.0,
+        "mode": "Bank Transfer / RTGS",
+        "ref": "intl wire transfer",
+        "recorded_at": "18/05/2026 23:46",
+        "receipt": "HF-R-2026-006"
+      }
+    ]
+  },
+  {
+    "number": "HF-Q-2026-010",
+    "type": "Quotation",
+    "client_name": "sam chui",
+    "client_email": "sam@samchui.com",
+    "amount": 3998.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T22:19:04.554607",
+    "result_summary": {
+      "ac_label": "Piper PA32 (4 seater)",
+      "mission": "pick_and_drop"
+    },
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": "",
+    "payment_log": []
+  },
+  {
+    "number": "HF-R-2026-006",
+    "type": "Receipt",
+    "client_name": "Simon Spitz",
+    "client_email": "headoffice@lincoln.com",
+    "amount": 300000.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T23:46:45.972450",
+    "result_summary": {},
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": "",
+    "payment_log": []
+  },
+  {
+    "number": "HF-I-2026-007",
+    "type": "Invoice",
+    "client_name": "wan tam",
+    "client_email": "tamwan@gmail.com",
+    "amount": 2750.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T23:49:35.348770",
+    "result_summary": {
+      "ac_label": "Piper PA32 (4 seater)",
+      "mission": "return"
+    },
+    "paid": true,
+    "paid_amount": 2750.0,
+    "paid_date": "18/05/2026",
+    "payment_mode": "Cash",
+    "payment_ref": "kes",
+    "receipt_number": "",
+    "payment_log": [
+      {
+        "date": "18/05/2026",
+        "amount": 500.0,
+        "mode": "Cash",
+        "ref": "kes",
+        "recorded_at": "18/05/2026 23:51"
+      },
+      {
+        "date": "18/05/2026",
+        "amount": 300.0,
+        "mode": "Cash",
+        "ref": "kes",
+        "recorded_at": "18/05/2026 23:52"
+      },
+      {
+        "date": "18/05/2026",
+        "amount": 1950.0,
+        "mode": "Cash",
+        "ref": "kes",
+        "recorded_at": "18/05/2026 23:52"
+      }
+    ]
+  },
+  {
+    "number": "HF-Q-2026-011",
+    "type": "Quotation",
+    "client_name": "wan tam",
+    "client_email": "tamwan@gmail.com",
+    "amount": 2750.0,
+    "date": "18/05/2026",
+    "timestamp": "2026-05-18T23:53:29.526974",
+    "result_summary": {
+      "ac_label": "Piper PA32 (4 seater)",
+      "mission": "return"
+    },
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": "",
+    "payment_log": []
   }
 ]

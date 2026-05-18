@@ -40,6 +40,7 @@ textarea { resize: vertical; }
 .btn-success { background: #28a745; color: #fff; border: none; }
 .btn-amber { background: #e8a020; color: #fff; border: none; }
 .btn-grey { background: #6c757d; color: #fff; border: none; }
+.btn-info { background: #17a2b8; color: #fff; border: none; }
 .btn-clear { background: #fff; color: #dc3545; border: 2px solid #dc3545; }
 .result-box { margin-top: 20px; }
 .ac-card { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 16px; border-left: 4px solid {{ operator.branding.primary_color }}; }
@@ -57,6 +58,8 @@ textarea { resize: vertical; }
 .tag-fixed { background: #fce4ec; color: #880e4f; }
 .tag-direct { background: #e8f5e9; color: #1b5e20; font-size: 0.72rem; }
 .tag-standard { background: #f3e5f5; color: #4a148c; font-size: 0.72rem; }
+.tag-idle { background: #fff3e0; color: #e65100; font-size: 0.75rem; }
+.tag-overnight { background: #ede7f6; color: #4527a0; font-size: 0.75rem; }
 .billing { background: #fff; border-radius: 8px; padding: 16px; border: 1px solid #eee; margin-top: 4px; }
 .billing-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0; color: #444; }
 .billing-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; color: {{ operator.branding.primary_color }}; border-top: 2px solid {{ operator.branding.primary_color }}; margin-top: 8px; padding-top: 10px; }
@@ -106,13 +109,14 @@ textarea { resize: vertical; }
 .balance-summary { background: #f8f9fa; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
 .balance-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.9rem; color: #555; }
 .balance-row.remaining { font-weight: 700; color: {{ operator.branding.primary_color }}; font-size: 1rem; border-top: 1px solid #ddd; margin-top: 6px; padding-top: 8px; }
+.payment-log-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 8px; }
+.payment-log-table th { background: #f0f0f0; color: #333; padding: 8px 10px; text-align: left; font-weight: 600; }
+.payment-log-table td { padding: 8px 10px; border-bottom: 1px solid #eee; }
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
 .modal-overlay.active { display: flex; }
-.modal { background: #fff; border-radius: 12px; padding: 28px; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+.modal { background: #fff; border-radius: 12px; padding: 28px; width: 100%; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
 .modal h4 { font-size: 1rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 16px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-.delete-confirm { background: #fff0f0; border: 1px solid #ffcccc; border-radius: 8px; padding: 14px; margin-top: 12px; display: none; }
-.delete-confirm label { color: #cc0000; }
 @media(max-width:600px) { .form-row { flex-direction: column; } .mission-tabs { flex-wrap: wrap; } }
 </style>
 </head>
@@ -123,7 +127,7 @@ textarea { resize: vertical; }
     <img src="{{ operator.logo_url }}" alt="{{ operator.company_name }}">
     <div>
       <h1>{{ operator.company_name }}</h1>
-      <span>Admin Tool — Quotecloud v2.4.6</span>
+      <span>Admin Tool — Quotecloud v2.4.8</span>
     </div>
   </div>
   <a href="/logout" class="logout">Logout</a>
@@ -494,26 +498,17 @@ textarea { resize: vertical; }
   <div class="modal">
     <h4 id="paid-modal-title">Mark as Paid</h4>
     <input type="hidden" id="paid-record-number">
-
-    <div class="balance-summary" id="balance-summary">
+    <div class="balance-summary">
       <div class="balance-row"><span>Invoice Total</span><span id="bs-total">-</span></div>
       <div class="balance-row" id="bs-prev-row" style="display:none"><span>Previously Paid</span><span id="bs-prev">-</span></div>
       <div class="balance-row remaining"><span>Remaining Balance</span><span id="bs-remaining">-</span></div>
     </div>
-
     <div class="form-row">
-      <div class="form-group">
-        <label>Amount Paid (USD)</label>
-        <input type="number" id="paid-amount" placeholder="Enter amount" min="0" step="0.01">
-      </div>
-      <div class="form-group">
-        <label>Payment Date</label>
-        <input type="text" id="paid-date" placeholder="DD/MM/YYYY">
-      </div>
+      <div class="form-group"><label>Amount Paid (USD)</label><input type="number" id="paid-amount" placeholder="Enter amount" min="0" step="0.01"></div>
+      <div class="form-group"><label>Payment Date</label><input type="text" id="paid-date" placeholder="DD/MM/YYYY"></div>
     </div>
     <div class="form-row">
-      <div class="form-group">
-        <label>Mode of Payment</label>
+      <div class="form-group"><label>Mode of Payment</label>
         <select id="paid-mode">
           <option value="">-- Select --</option>
           <option value="M-Pesa">M-Pesa</option>
@@ -530,13 +525,51 @@ textarea { resize: vertical; }
       <label>Reference / Transaction ID</label>
       <input type="text" id="paid-ref" placeholder="e.g. M-Pesa code, Cheque no, RTGS ref...">
     </div>
-
     <div class="modal-actions">
-      <button class="btn btn-success btn-sm" onclick="confirmMarkPaid(false)">Mark Paid Only</button>
-      <button class="btn btn-sm" onclick="confirmMarkPaid(true)">Mark Paid + Receipt</button>
+      <button class="btn btn-success btn-sm" id="btn-save-payment" onclick="confirmMarkPaid(false)">Save Payment</button>
+      <button class="btn btn-sm" id="btn-gen-receipt" onclick="confirmMarkPaid(true)" style="display:none">Generate Receipt</button>
       <button class="btn btn-grey btn-sm" onclick="closePaidModal()">Cancel</button>
     </div>
     <div id="paid-msg"></div>
+  </div>
+</div>
+
+<!-- PAYMENT LOG MODAL -->
+<div class="modal-overlay" id="log-modal">
+  <div class="modal">
+    <h4>Payment History</h4>
+    <p id="log-record-info" style="font-size:0.85rem;color:#666;margin-bottom:16px"></p>
+    <div id="log-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-grey btn-sm" onclick="closeLogModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT RECORD MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h4>Edit Record</h4>
+    <input type="hidden" id="edit-record-number">
+    <div class="form-row">
+      <div class="form-group"><label>Client Name</label><input type="text" id="edit-client-name"></div>
+      <div class="form-group"><label>Email</label><input type="text" id="edit-client-email"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Amount (USD)</label><input type="number" id="edit-amount" step="0.01" min="0"></div>
+      <div class="form-group"><label>Date</label><input type="text" id="edit-date" placeholder="DD/MM/YYYY"></div>
+    </div>
+    <div id="edit-password-section" style="display:none">
+      <div class="form-group" style="margin-bottom:14px">
+        <label style="color:#cc0000">Admin Password Required (paid record)</label>
+        <input type="password" id="edit-password" placeholder="Enter password">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-success btn-sm" onclick="confirmEdit()">Save Changes</button>
+      <button class="btn btn-grey btn-sm" onclick="closeEditModal()">Cancel</button>
+    </div>
+    <div id="edit-msg"></div>
   </div>
 </div>
 
@@ -559,7 +592,7 @@ textarea { resize: vertical; }
 </div>
 
 <script>
-// Quotecloud Admin v2.4.6
+// Quotecloud Admin v2.4.8
 let lastResults = [];
 let allLocations = [];
 let aircraftData = {};
@@ -715,6 +748,7 @@ function getSelectedResult() {
   let actual = res.mission === 'return_both' ? res.option_a : res;
   actual.rate_usd = res.rate_usd;
   actual.overnight_rate_usd = res.overnight_rate_usd;
+  actual.idle_day_rate_usd = res.idle_day_rate_usd;
   actual.pax_fee_usd_display = res.pax_fee_usd_display;
   actual.ac_label = res.ac_label;
   actual.ac_key = res.ac_key;
@@ -742,30 +776,48 @@ function getExtraItems() {
   return items;
 }
 
-function tagClass(t) {
+function tagClass(t, note) {
+  if (note) {
+    if (note.toLowerCase().includes('idle')) return 'tag-idle';
+    return 'tag-overnight';
+  }
   return t==='revenue'?'tag-rev':t==='positioning'?'tag-pos':t==='depositioning'?'tag-dep':'tag-rep';
 }
 
 function renderSegments(segs) {
   if (!segs || !segs.length) return '';
   let rows = segs.map(s => {
+    let isNote = s.note && !s.type;
     let nm = s.nm || s.dist_nm || 0;
+    if (isNote) {
+      let isIdle = s.note.toLowerCase().includes('idle');
+      let label = isIdle ? 'idle day' : 'overnight';
+      let cost = s.cost ? `$${parseFloat(s.cost).toLocaleString(undefined,{minimumFractionDigits:2})}` : '-';
+      return `<tr style="background:#fafafa">
+        <td><span class="tag ${tagClass(null, s.note)}">${label}</span></td>
+        <td colspan="2" style="color:#666;font-size:0.82rem">${s.note}</td>
+        <td>-</td>
+        <td style="font-weight:600;color:#333">${cost}</td>
+        <td>-</td>
+      </tr>`;
+    }
     return `<tr>
-      <td><span class="tag ${tagClass(s.type)}">${s.type}</span></td>
-      <td>${s.origin||''}</td><td>${s.destination||''}</td>
+      <td><span class="tag ${tagClass(s.type, null)}">${s.type}</span></td>
+      <td>${s.origin||''}</td>
+      <td>${s.destination||''}</td>
       <td>${nm ? nm + ' nm' : '-'}</td>
       <td>${s.hours ? s.hours + ' hr' : '-'}</td>
       <td>${s.date||''}</td>
     </tr>`;
   }).join('');
   return `<table class="route-table">
-    <thead><tr><th>Type</th><th>From</th><th>To</th><th>Dist (nm)</th><th>Hours</th><th>Date</th></tr></thead>
+    <thead><tr><th>Type</th><th>From</th><th>To</th><th>Dist (nm)</th><th>Hours / Cost</th><th>Date</th></tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
 
 function calcTotalHours(segs) {
   let total = 0;
-  (segs||[]).forEach(s => { if (s.hours) total += parseFloat(s.hours); });
+  (segs||[]).forEach(s => { if (s.hours && s.type) total += parseFloat(s.hours); });
   return Math.round(total * 10) / 10;
 }
 
@@ -780,14 +832,21 @@ function renderBilling(res, extraSegs) {
   }
   let fee = res.pax_fee_usd || res.pax_fee_usd_display || 0;
   if (fee > 0) rows += `<div class="billing-row"><span>Fees & Taxes</span><span>USD $${parseFloat(fee).toLocaleString()}</span></div>`;
-  if (res.overnight_cost_usd && res.overnight_cost_usd > 0) {
-    let nights = res.overnights || res.wait_days || 0;
-    let oRate = res.overnight_rate_usd || 0;
-    rows += `<div class="billing-row"><span>Overnight Per Diem (${nights} night${nights!==1?'s':''} @ $${oRate}/night)</span><span>USD $${res.overnight_cost_usd.toLocaleString()}</span></div>`;
+
+  let overnightUsd = res.overnight_usd || res.overnight_cost_usd || 0;
+  let oRate = res.overnight_rate_usd || 0;
+  if (overnightUsd > 0 && oRate > 0) {
+    let nights = Math.round(overnightUsd / oRate);
+    rows += `<div class="billing-row"><span>Overnight Per Diem (${nights} night${nights!==1?'s':''} @ $${oRate}/night)</span><span>USD $${parseFloat(overnightUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-  if (res.idle_cost_usd && res.idle_cost_usd > 0) {
-    rows += `<div class="billing-row"><span>Idle Day Charge</span><span>USD $${res.idle_cost_usd.toLocaleString()}</span></div>`;
+
+  let waitingUsd = res.waiting_usd || res.idle_cost_usd || 0;
+  let idleRate = res.idle_day_rate_usd || 0;
+  if (waitingUsd > 0) {
+    let idleDays = idleRate > 0 ? Math.round(waitingUsd / idleRate) : 1;
+    rows += `<div class="billing-row"><span>Idle Day Charge (${idleDays} day${idleDays!==1?'s':''} @ $${idleRate.toLocaleString()}/day)</span><span>USD $${parseFloat(waitingUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
+
   return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div></div>`;
 }
 
@@ -798,19 +857,38 @@ function renderOneAc(res) {
   let homeInfo = res.home_airstrip ? `| Base: ${res.home_airstrip}` : '';
   let disclaimer = res.ac_type==='fixed_wing'?`<div class="info-box">This aircraft requires a runway. Quote is not a confirmation of service.</div>`:'';
   let content = '';
+
   if (res.mission === 'return_both') {
     let wd = res.wait_days;
     let maxN = res.max_nights || 3;
     if (wd >= maxN) {
       let b = res.option_b;
-      let bRes = {segments:[...(b.drop.segments||[]),...(b.pick.segments||[])], rate_usd:res.rate_usd, overnight_rate_usd:res.overnight_rate_usd, pax_fee_usd_display:res.pax_fee_usd_display, total_usd:b.total_usd};
+      let bRes = {
+        segments:[...(b.drop.segments||[]),...(b.pick.segments||[])],
+        rate_usd:res.rate_usd,
+        overnight_rate_usd:res.overnight_rate_usd,
+        idle_day_rate_usd:res.idle_day_rate_usd,
+        pax_fee_usd_display:res.pax_fee_usd_display,
+        total_usd:b.total_usd
+      };
       content = `<div class="pickup-drop-msg">${res.pickup_drop_msg||'Pick & Drop only.'}</div>
         <b style="font-size:0.82rem;color:#555">Drop Off</b>${renderSegments(b.drop.segments)}
         <b style="font-size:0.82rem;color:#555">Pick Up</b>${renderSegments(b.pick.segments)}
         ${renderBilling(bRes)}`;
     } else {
-      let optARes = {...res.option_a, rate_usd:res.rate_usd, overnight_rate_usd:res.overnight_rate_usd, pax_fee_usd_display:res.pax_fee_usd_display};
-      let optBRes = {segments:[...(res.option_b.drop.segments||[]),...(res.option_b.pick.segments||[])], rate_usd:res.rate_usd, pax_fee_usd_display:res.pax_fee_usd_display, total_usd:res.option_b.total_usd};
+      let optARes = {...res.option_a,
+        rate_usd:res.rate_usd,
+        overnight_rate_usd:res.overnight_rate_usd,
+        idle_day_rate_usd:res.idle_day_rate_usd,
+        pax_fee_usd_display:res.pax_fee_usd_display
+      };
+      let optBRes = {
+        segments:[...(res.option_b.drop.segments||[]),...(res.option_b.pick.segments||[])],
+        rate_usd:res.rate_usd,
+        idle_day_rate_usd:res.idle_day_rate_usd,
+        pax_fee_usd_display:res.pax_fee_usd_display,
+        total_usd:res.option_b.total_usd
+      };
       content = `<div class="option-tabs">
         <div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A - Waits</div>
         <div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B - Pick & Drop</div>
@@ -972,6 +1050,7 @@ function renderAircraft() {
         <div class="form-group"><label>Rate (USD/hr)</label><input class="ac-rate" type="number" value="${ac.rate}"></div>
         <div class="form-group"><label>Pax Fee (USD)</label><input class="ac-pax" type="number" value="${ac.pax_fee}"></div>
         <div class="form-group"><label>Overnight Rate (USD/night)</label><input class="ac-overnight" type="number" value="${ac.overnight_rate||300}"></div>
+        <div class="form-group"><label>Idle Day Rate (USD/day)</label><input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}"></div>
         <div class="form-group"><label>Active</label>
           <select class="ac-active">
             <option value="true" ${ac.active?'selected':''}>Active</option>
@@ -986,7 +1065,7 @@ function renderAircraft() {
 
 function addAircraftRow() {
   let key = 'aircraft_' + Date.now();
-  aircraftData[key] = {label:'New Aircraft',seater:4,speed:120,rate:1500,pax_fee:100,overnight_rate:300,active:true,type:'helicopter',home_airstrip:'Wilson Airport, Nairobi',routing_mode:'standard'};
+  aircraftData[key] = {label:'New Aircraft',seater:4,speed:120,rate:1500,pax_fee:100,overnight_rate:300,idle_day_rate:1500,active:true,type:'helicopter',home_airstrip:'Wilson Airport, Nairobi',routing_mode:'standard'};
   renderAircraft();
 }
 
@@ -1007,6 +1086,7 @@ async function saveAircraft() {
       rate: parseFloat(card.querySelector('.ac-rate').value),
       pax_fee: parseFloat(card.querySelector('.ac-pax').value),
       overnight_rate: parseFloat(card.querySelector('.ac-overnight').value),
+      idle_day_rate: parseFloat(card.querySelector('.ac-idle').value),
       active: card.querySelector('.ac-active').value === 'true',
       type: card.querySelector('.ac-type').value,
       home_airstrip: card.querySelector('.ac-home').value,
@@ -1072,12 +1152,16 @@ function getPaymentActions(rec) {
   let total = parseFloat(rec.amount || 0);
   let paid = parseFloat(rec.paid_amount || 0);
   let fullyPaid = paid >= total && total > 0;
+  let hasLog = (rec.payment_log || []).length > 0;
+  let viewBtn = hasLog ? `<button class="btn btn-info btn-sm" onclick="openLogModal('${rec.number}')">Log</button>` : '';
   if (fullyPaid && rec.receipt_number) {
-    return `<span style="font-size:0.78rem;color:#888">${rec.receipt_number}</span>`;
+    return `${viewBtn} <span style="font-size:0.78rem;color:#1b5e20;font-weight:600">${rec.receipt_number}</span>`;
   }
-  let label = paid > 0 ? 'Update Payment' : 'Mark Paid';
-  let color = paid > 0 && !fullyPaid ? 'btn-amber' : 'btn-amber';
-  return `<button class="btn ${color} btn-sm" onclick="openPaidModal('${rec.number}')">${label}</button>`;
+  if (fullyPaid && !rec.receipt_number) {
+    return `${viewBtn} <button class="btn btn-success btn-sm" onclick="openPaidModal('${rec.number}')">Generate Receipt</button>`;
+  }
+  let label = paid > 0 ? 'Update' : 'Mark Paid';
+  return `${viewBtn} <button class="btn btn-amber btn-sm" onclick="openPaidModal('${rec.number}')">${label}</button>`;
 }
 
 function renderRecords(records) {
@@ -1094,9 +1178,10 @@ function renderRecords(records) {
       <td>${r.client_name||'-'}</td>
       <td>USD $${parseFloat(r.amount||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
       <td>${getPaymentBadge(r)}</td>
-      <td style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <td style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
         ${getPaymentActions(r)}
-        <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.number}')">Delete</button>
+        <button class="btn btn-outline btn-sm" onclick="openEditModal('${r.number}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.number}')">Del</button>
       </td>
     </tr>`;
   }).join('');
@@ -1106,15 +1191,13 @@ async function openPaidModal(number) {
   let r = await fetch('/records/get_one', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({number}) });
   let rec = await r.json();
   if (rec.error) { alert(rec.error); return; }
-
   let total = parseFloat(rec.amount || 0);
   let prevPaid = parseFloat(rec.paid_amount || 0);
   let remaining = Math.max(total - prevPaid, 0);
-
+  let isFullyPaid = prevPaid >= total && total > 0;
   document.getElementById('paid-record-number').value = number;
   document.getElementById('bs-total').textContent = `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   document.getElementById('bs-remaining').textContent = `USD $${remaining.toLocaleString(undefined,{minimumFractionDigits:2})}`;
-
   let prevRow = document.getElementById('bs-prev-row');
   if (prevPaid > 0) {
     prevRow.style.display = 'flex';
@@ -1122,23 +1205,25 @@ async function openPaidModal(number) {
   } else {
     prevRow.style.display = 'none';
   }
-
   document.getElementById('paid-amount').value = remaining > 0 ? remaining : total;
   document.getElementById('paid-mode').value = rec.payment_mode || '';
   document.getElementById('paid-ref').value = rec.payment_ref || '';
-
   let today = new Date();
-  document.getElementById('paid-date').value = rec.paid_date ||
-    `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
-
-  document.getElementById('paid-modal-title').textContent = prevPaid > 0 ? 'Update Payment' : 'Mark as Paid';
+  document.getElementById('paid-date').value = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+  if (isFullyPaid) {
+    document.getElementById('paid-modal-title').textContent = 'Generate Receipt';
+    document.getElementById('btn-save-payment').style.display = 'none';
+    document.getElementById('btn-gen-receipt').style.display = 'inline-block';
+  } else {
+    document.getElementById('paid-modal-title').textContent = prevPaid > 0 ? 'Update Payment' : 'Mark as Paid';
+    document.getElementById('btn-save-payment').style.display = 'inline-block';
+    document.getElementById('btn-gen-receipt').style.display = 'none';
+  }
   document.getElementById('paid-msg').innerHTML = '';
   document.getElementById('paid-modal').classList.add('active');
 }
 
-function closePaidModal() {
-  document.getElementById('paid-modal').classList.remove('active');
-}
+function closePaidModal() { document.getElementById('paid-modal').classList.remove('active'); }
 
 async function confirmMarkPaid(generateReceipt) {
   let number = document.getElementById('paid-record-number').value;
@@ -1146,31 +1231,97 @@ async function confirmMarkPaid(generateReceipt) {
   let paidDate = document.getElementById('paid-date').value;
   let paymentMode = document.getElementById('paid-mode').value;
   let paymentRef = document.getElementById('paid-ref').value;
-
   if (!paidAmount) { showMsg('paid-msg','Enter amount paid.','error'); return; }
-
   let endpoint = generateReceipt ? '/records/generate_receipt' : '/records/mark_paid';
   showMsg('paid-msg', generateReceipt ? 'Generating receipt...' : 'Saving...', 'success');
-
   try {
     let r = await fetch(endpoint, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ number, paid_amount: paidAmount, paid_date: paidDate, payment_mode: paymentMode, payment_ref: paymentRef })
     });
-
     if (generateReceipt && r.ok) {
       let blob = await r.blob();
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a'); a.href = url; a.download = 'receipt.pdf'; a.click();
-      closePaidModal();
-      loadRecords();
+      closePaidModal(); loadRecords();
     } else {
       let data = await r.json();
-      if (data.success) { closePaidModal(); loadRecords(); }
-      else showMsg('paid-msg', data.error||'Error','error');
+      if (data.success) {
+        if (data.fully_paid) {
+          // Refresh modal to show receipt button
+          closePaidModal();
+          loadRecords();
+        } else {
+          closePaidModal(); loadRecords();
+        }
+      } else showMsg('paid-msg', data.error||'Error','error');
     }
   } catch(e) { showMsg('paid-msg','Error: '+e.message,'error'); }
+}
+
+async function openLogModal(number) {
+  let r = await fetch('/records/get_one', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({number}) });
+  let rec = await r.json();
+  if (rec.error) { alert(rec.error); return; }
+  document.getElementById('log-record-info').textContent =
+    `${rec.number} — ${rec.client_name} — Total: USD $${parseFloat(rec.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  let log = rec.payment_log || [];
+  if (!log.length) {
+    document.getElementById('log-content').innerHTML = '<p style="color:#aaa;padding:12px 0">No payment history yet.</p>';
+  } else {
+    let rows = log.map(entry => `<tr>
+      <td>${entry.date||'-'}</td>
+      <td>USD $${parseFloat(entry.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td>${entry.mode||'-'}</td>
+      <td>${entry.ref||'-'}</td>
+      <td>${entry.receipt||'-'}</td>
+      <td style="font-size:0.78rem;color:#999">${entry.recorded_at||''}</td>
+    </tr>`).join('');
+    document.getElementById('log-content').innerHTML = `
+      <table class="payment-log-table">
+        <thead><tr><th>Date</th><th>Amount</th><th>Mode</th><th>Ref</th><th>Receipt</th><th>Recorded</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+  document.getElementById('log-modal').classList.add('active');
+}
+
+function closeLogModal() { document.getElementById('log-modal').classList.remove('active'); }
+
+async function openEditModal(number) {
+  let r = await fetch('/records/get_one', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({number}) });
+  let rec = await r.json();
+  if (rec.error) { alert(rec.error); return; }
+  document.getElementById('edit-record-number').value = number;
+  document.getElementById('edit-client-name').value = rec.client_name || '';
+  document.getElementById('edit-client-email').value = rec.client_email || '';
+  document.getElementById('edit-amount').value = rec.amount || 0;
+  document.getElementById('edit-date').value = rec.date || '';
+  document.getElementById('edit-password').value = '';
+  document.getElementById('edit-msg').innerHTML = '';
+  let isPaid = rec.paid || parseFloat(rec.paid_amount || 0) > 0;
+  document.getElementById('edit-password-section').style.display = isPaid ? 'block' : 'none';
+  document.getElementById('edit-modal').classList.add('active');
+}
+
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('active'); }
+
+async function confirmEdit() {
+  let number = document.getElementById('edit-record-number').value;
+  let password = document.getElementById('edit-password').value;
+  let body = {
+    number, password,
+    client_name: document.getElementById('edit-client-name').value,
+    client_email: document.getElementById('edit-client-email').value,
+    amount: parseFloat(document.getElementById('edit-amount').value) || 0,
+    date: document.getElementById('edit-date').value
+  };
+  try {
+    let r = await fetch('/records/edit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    let data = await r.json();
+    if (data.success) { closeEditModal(); loadRecords(); }
+    else showMsg('edit-msg', data.error||'Error', 'error');
+  } catch(e) { showMsg('edit-msg','Error: '+e.message,'error'); }
 }
 
 function promptDelete(number) {
@@ -1185,9 +1336,7 @@ function promptDelete(number) {
   }
 }
 
-function closeDeleteModal() {
-  document.getElementById('delete-modal').classList.remove('active');
-}
+function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('active'); }
 
 async function confirmDelete() {
   let number = document.getElementById('delete-record-number').value;
@@ -1198,17 +1347,12 @@ async function confirmDelete() {
 
 async function deleteRecord(number, password) {
   let r = await fetch('/records/delete', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ number, password })
   });
   let data = await r.json();
-  if (data.success) {
-    closeDeleteModal();
-    loadRecords();
-  } else {
-    showMsg('delete-msg', data.error||'Error', 'error');
-  }
+  if (data.success) { closeDeleteModal(); loadRecords(); }
+  else showMsg('delete-msg', data.error||'Error', 'error');
 }
 
 function addMiItem() {
@@ -1263,7 +1407,6 @@ async function loadSettings() {
   let s = operatorConfig.social || {};
   let qr = operatorConfig.quoting_rules || {};
   let geo = operatorConfig.geo_lock || {};
-
   document.getElementById('s-company-name').value = operatorConfig.company_name || '';
   document.getElementById('s-tagline').value = operatorConfig.tagline || '';
   document.getElementById('s-logo-url').value = operatorConfig.logo_url || '';
@@ -1273,14 +1416,12 @@ async function loadSettings() {
   document.getElementById('s-primary-color-hex').value = b.primary_color || '#0D47A1';
   document.getElementById('s-accent-color').value = b.accent_color || '#e8a020';
   document.getElementById('s-accent-color-hex').value = b.accent_color || '#e8a020';
-
   let trustBar = operatorConfig.trust_bar || ['','','',''];
   document.getElementById('trust-bar-editor').innerHTML = trustBar.map((item,i) => `
     <div class="trust-bar-item">
       <span style="font-size:0.82rem;color:#888;min-width:20px">${i+1}.</span>
       <input type="text" class="trust-bar-input" value="${item}">
     </div>`).join('');
-
   document.getElementById('s-website').value = s.website || '';
   document.getElementById('s-instagram').value = s.instagram || '';
   document.getElementById('s-facebook').value = s.facebook || '';
@@ -1368,11 +1509,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('s-accent-color').addEventListener('input', function() {
     document.getElementById('s-accent-color-hex').value = this.value;
   });
-  document.getElementById('paid-modal').addEventListener('click', function(e) {
-    if (e.target === this) closePaidModal();
-  });
-  document.getElementById('delete-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteModal();
+  ['paid-modal','log-modal','edit-modal','delete-modal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('active');
+    });
   });
   loadStateFromStorage();
 });

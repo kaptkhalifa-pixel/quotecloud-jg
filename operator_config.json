@@ -18,7 +18,7 @@
     "font_heading": "Montserrat",
     "header_bg": "#0D47A1",
     "header_text": "#ffffff",
-    "primary_color": "#0D47A1",
+    "primary_color": "#6ab5fb",
     "text_color": "#1a1a1a",
     "theme": "light"
   },
@@ -70,10 +70,10 @@
     "show_distance_to_client": false
   },
   "social": {
-    "facebook": "",
+    "website": "https://heliflightafrica.com",
     "instagram": "https://instagram.com/heliflightafrica",
-    "twitter": "",
-    "website": "https://heliflightafrica.com"
+    "facebook": "",
+    "twitter": ""
   },
   "tagline": "Private Charters. Anywhere in Kenya.",
   "trust_bar": [

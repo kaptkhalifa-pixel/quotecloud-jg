@@ -1,13 +1,14 @@
 # =========================================================
 # QUOTECLOUD BY JETMAN GLOBAL
-# app.py v2.4.6
-# v2.4.6 changes:
-#   - FEAT-01: amount_paid field to invoice-generator API
-#   - FEAT-02: Payment description with mode, reference, date
-#   - FEAT-03: Smart modal showing remaining balance
-#   - FEAT-04: Password required to delete paid records
-#   - FEAT-05: Payment mode dropdown
-#   - FIX-01: Receipt payload cleaned, API handles balance
+# app.py v2.4.8
+# v2.4.8 changes:
+#   - BUG-01: Discount field fix - passes correctly to API
+#   - BUG-02: Pick & Drop routing shows in PDF
+#   - BUG-03: undefined segment tag fixed (note-based segments)
+#   - FEAT-01: Idle day rate per aircraft
+#   - FEAT-02: Idle day rate passed to engine
+#   - FEAT-03: Overnight Per Diem as line item qty x rate
+#   - FEAT-04: Idle Day Charge as line item qty x rate
 # =========================================================
 import sys, os, json, re, pathlib, datetime
 sys.path.insert(0, os.path.dirname(__file__))
@@ -150,6 +151,7 @@ def load_aircraft():
             "rate": 2200.0,
             "pax_fee": 100.0,
             "overnight_rate": 300.0,
+            "idle_day_rate": 2200.0,
             "active": True,
             "type": "helicopter",
             "home_airstrip": "Wilson Airport, Nairobi",
@@ -198,7 +200,7 @@ def save_record(record_type, client_name, client_email, amount, doc_number, resu
         "type": record_type,
         "client_name": client_name,
         "client_email": client_email,
-        "amount": amount,
+        "amount": round(float(amount), 2),
         "date": datetime.date.today().strftime("%d/%m/%Y"),
         "timestamp": datetime.datetime.now().isoformat(),
         "result_summary": result or {},
@@ -207,7 +209,8 @@ def save_record(record_type, client_name, client_email, amount, doc_number, resu
         "paid_date": "",
         "payment_mode": "",
         "payment_ref": "",
-        "receipt_number": ""
+        "receipt_number": "",
+        "payment_log": []
     }
     if extra:
         rec.update(extra)
@@ -397,6 +400,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
                           depart=None, ret=None, legs=None, display_map=None):
     rules = get_quoting_rules()
     overnight_rate = float(ac_cfg.get("overnight_rate", 300.0))
+    idle_day_rate = float(ac_cfg.get("idle_day_rate", ac_cfg.get("rate", 1500.0)))
     max_nights = int(rules.get("max_nights_before_pickup_drop", 3))
     speed = float(ac_cfg["speed"])
     rate = float(ac_cfg["rate"])
@@ -413,7 +417,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         "speed": speed,
         "rate": rate,
         "overnight": overnight_rate,
-        "idle_day": rate,
+        "idle_day": idle_day_rate,
     }
     hq.PAX_ADMIN_FEE_USD = float(ac_cfg["pax_fee"])
 
@@ -462,9 +466,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
 
         if display_map:
             apply_display_names(result, display_map)
-
         enrich_result(result)
-
         if buffer_hours > 0:
             apply_ground_time_buffer(result, buffer_hours)
 
@@ -474,6 +476,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         result["home_airstrip"] = ac_cfg.get("home_airstrip", "")
         result["rate_usd"] = rate
         result["overnight_rate_usd"] = overnight_rate
+        result["idle_day_rate_usd"] = idle_day_rate
         result["pax_fee_usd_display"] = float(ac_cfg["pax_fee"])
         result["routing_mode"] = routing_mode
 
@@ -569,16 +572,31 @@ def run_quote_engine(data):
     except Exception as e:
         return {"error": str(e)}, 400
 
-def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
-                                   client_phone, note, discount, extra_items):
-    segments = result.get("segments", [])
-    items = []
-    total_hrs = sum(float(s.get("hours", 0)) for s in segments)
-    rate = result.get("rate_usd", 0)
-    ac_label = result.get("ac_label", "Aircraft")
+def calc_pdf_total(result, extra_items, discount):
+    base = float(result.get("total_usd", 0))
+    extras_total = sum(
+        float(ei.get("quantity", 1)) * float(ei.get("unit_cost", 0))
+        for ei in (extra_items or [])
+    )
+    disc = float(discount) if discount else 0
+    return round(base + extras_total - disc, 2)
 
-    routing_lines = []
+def get_flight_segments(result):
+    """Extract only flying segments for routing display - excludes idle/overnight note segments."""
+    segs = result.get("segments", [])
+    return [s for s in segs if s.get("type") and s.get("origin")]
+
+def get_note_segments(result):
+    """Extract idle/overnight note segments."""
+    segs = result.get("segments", [])
+    return [s for s in segs if s.get("note") and not s.get("type")]
+
+def build_routing_lines(segments):
+    """Build routing text from flight segments only."""
+    lines = []
     for s in segments:
+        if not s.get("type") or not s.get("origin"):
+            continue
         nm = s.get("nm") or s.get("dist_nm") or 0
         hrs = s.get("hours", 0)
         seg_type = s.get("type", "").title()
@@ -586,12 +604,40 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         dest = s.get("destination", "")
         date = s.get("date", "")
         date_str = f"{date} " if date else ""
-        routing_lines.append(
+        lines.append(
             f"{date_str}{origin} -> {dest} {float(hrs):.1f} hrs | {float(nm):.1f} NM ({seg_type})"
         )
+    return lines
+
+def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
+                                   client_phone, note, discount, extra_items):
+    items = []
+    ac_label = result.get("ac_label", "Aircraft")
+    rate = result.get("rate_usd", 0)
+    overnight_rate = result.get("overnight_rate_usd", 0)
+    idle_day_rate = result.get("idle_day_rate_usd", 0)
+
+    # Collect all flight segments - handle pick & drop mission
+    mission = result.get("mission", "")
+    if mission == "pick_and_drop":
+        drop_segs = result.get("drop", {}).get("segments", [])
+        pick_segs = result.get("pick", {}).get("segments", [])
+        all_segments = drop_segs + pick_segs
+        flight_total_usd = (result.get("drop", {}).get("total_usd", 0) +
+                           result.get("pick", {}).get("total_usd", 0))
+    else:
+        all_segments = result.get("segments", [])
+        flight_total_usd = result.get("total_usd", 0)
+
+    # Flying segments only for routing
+    flying_segs = [s for s in all_segments if s.get("type") and s.get("origin")]
+    total_hrs = sum(float(s.get("hours", 0)) for s in flying_segs)
+
+    routing_lines = build_routing_lines(flying_segs)
     routing_text = "Routing:\n" + "\n".join(routing_lines) if routing_lines else ""
     note_line = f"Note: {note}" if note else ""
 
+    # Line item 1: Aircraft Charter
     if total_hrs > 0 and rate > 0:
         item_parts = [f"Equipment: {ac_label}"]
         if routing_text:
@@ -604,6 +650,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             "unit_cost": str(rate)
         })
 
+    # Passenger fees
     pax_fee = result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0
     if pax_fee > 0:
         items.append({
@@ -612,22 +659,29 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             "unit_cost": str(pax_fee)
         })
 
-    if result.get("overnight_cost_usd", 0) > 0:
-        nights = result.get("overnights") or result.get("wait_days") or 0
-        o_rate = result.get("overnight_rate_usd", 0)
-        items.append({
-            "name": f"Overnight Per Diem x{nights} nights",
-            "quantity": str(nights),
-            "unit_cost": str(o_rate)
-        })
+    # Overnight Per Diem - explicit line item with qty x rate
+    overnight_usd = result.get("overnight_usd") or result.get("overnight_cost_usd") or 0
+    if overnight_usd > 0 and overnight_rate > 0:
+        nights = round(float(overnight_usd) / float(overnight_rate))
+        if nights > 0:
+            items.append({
+                "name": f"Overnight Per Diem\n{nights} night{'s' if nights != 1 else ''} away from base",
+                "quantity": str(nights),
+                "unit_cost": str(overnight_rate)
+            })
 
-    if result.get("idle_cost_usd", 0) > 0:
-        items.append({
-            "name": "Idle Day Charge",
-            "quantity": "1",
-            "unit_cost": str(result["idle_cost_usd"])
-        })
+    # Idle Day Charge - explicit line item with qty x rate
+    waiting_usd = result.get("waiting_usd") or result.get("idle_cost_usd") or 0
+    if waiting_usd > 0 and idle_day_rate > 0:
+        idle_days = round(float(waiting_usd) / float(idle_day_rate))
+        if idle_days > 0:
+            items.append({
+                "name": f"Idle Day Charge\nAircraft on ground, not utilised",
+                "quantity": str(idle_days),
+                "unit_cost": str(idle_day_rate)
+            })
 
+    # Extra line items
     for ei in (extra_items or []):
         items.append({
             "name": ei.get("name", "Additional Charge"),
@@ -639,6 +693,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     bank_block = get_bank_details_block()
     terms = OPERATOR.get("invoice", {}).get("terms", "")
     doc_number = next_record_number(doc_type)
+    disc = float(discount) if discount else 0
 
     payload = {
         "logo": OPERATOR.get("logo_url", ""),
@@ -648,7 +703,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         "date": datetime.date.today().strftime("%d %b %Y"),
         "due_date": (datetime.date.today() + datetime.timedelta(days=7)).strftime("%d %b %Y"),
         "items": items,
-        "discounts": float(discount) if discount else 0,
+        "discounts": disc,
+        "fields": {"tax": False, "discounts": True, "shipping": False},
         "notes": bank_block,
         "notes_title": "BANK DETAILS",
         "terms": terms,
@@ -702,11 +758,11 @@ def pdf():
         out_path = f"/tmp/{doc_number}.pdf"
         hq.generate_pdf(payload, out_path)
 
-        save_record(doc_type, client_name, client_email,
-                    result.get("total_usd", 0), doc_number, {
-                        "ac_label": result.get("ac_label", ""),
-                        "mission": result.get("mission", "")
-                    })
+        total = calc_pdf_total(result, extra_items, discount)
+        save_record(doc_type, client_name, client_email, total, doc_number, {
+            "ac_label": result.get("ac_label", ""),
+            "mission": result.get("mission", "")
+        })
 
         return send_file(out_path, as_attachment=True,
                          download_name=f"{doc_number}.pdf",
@@ -732,9 +788,22 @@ def pdf_all():
         for res in results:
             if res.get("error"):
                 continue
-            actual = res.get("option_a", res) if res.get("mission") == "return_both" else res
+
+            # Handle return_both - use option_a or pick_and_drop
+            if res.get("mission") == "return_both":
+                wd = res.get("wait_days", 0)
+                max_n = res.get("max_nights", 3)
+                if wd >= max_n:
+                    actual = res["option_b"]
+                    actual["mission"] = "pick_and_drop"
+                else:
+                    actual = res["option_a"]
+            else:
+                actual = res
+
             actual["rate_usd"] = res.get("rate_usd", actual.get("rate_usd", 0))
             actual["overnight_rate_usd"] = res.get("overnight_rate_usd", 0)
+            actual["idle_day_rate_usd"] = res.get("idle_day_rate_usd", 0)
             actual["pax_fee_usd_display"] = res.get("pax_fee_usd_display", 0)
             actual["ac_label"] = res.get("ac_label", "")
             actual["ac_key"] = res.get("ac_key", "")
@@ -746,11 +815,11 @@ def pdf_all():
             out_path = f"/tmp/{doc_number}.pdf"
             hq.generate_pdf(payload, out_path)
 
-            save_record(doc_type, client_name, client_email,
-                        actual.get("total_usd", 0), doc_number, {
-                            "ac_label": res.get("ac_label", ""),
-                            "mission": actual.get("mission", "")
-                        })
+            total = calc_pdf_total(actual, extra_items, discount)
+            save_record(doc_type, client_name, client_email, total, doc_number, {
+                "ac_label": res.get("ac_label", ""),
+                "mission": actual.get("mission", "")
+            })
             generated.append({
                 "number": doc_number,
                 "path": out_path,
@@ -799,6 +868,9 @@ def manual_invoice():
             })
             total += qty * unit
 
+        disc = float(discount) if discount else 0
+        total = round(total - disc, 2)
+
         to_block = "\n".join(filter(None, [client_name, client_email, client_phone]))
         bank_block = bank_override if bank_override else get_bank_details_block()
         terms = terms_override if terms_override else OPERATOR.get("invoice", {}).get("terms", "")
@@ -811,7 +883,8 @@ def manual_invoice():
             "date": datetime.date.today().strftime("%d %b %Y"),
             "due_date": (datetime.date.today() + datetime.timedelta(days=7)).strftime("%d %b %Y"),
             "items": items,
-            "discounts": float(discount) if discount else 0,
+            "discounts": disc,
+            "fields": {"tax": False, "discounts": True, "shipping": False},
             "notes": bank_block,
             "notes_title": "BANK DETAILS",
             "terms": terms,
@@ -834,6 +907,17 @@ def manual_invoice():
 @login_required
 def get_records():
     return jsonify(load_records())
+
+@app.route("/records/get_one", methods=["POST"])
+@login_required
+def get_one_record():
+    data = request.get_json()
+    number = data.get("number", "")
+    records = load_records()
+    rec = next((r for r in records if r.get("number") == number), None)
+    if not rec:
+        return jsonify({"error": "Record not found"}), 404
+    return jsonify(rec)
 
 @app.route("/records/delete", methods=["POST"])
 @login_required
@@ -866,24 +950,33 @@ def mark_paid():
         return jsonify({"error": "Record not found"}), 404
 
     total = float(rec.get("amount", 0))
-    rec["paid"] = paid_amount >= total
-    rec["paid_amount"] = round(paid_amount, 2)
+
+    # Block overpayment
+    prev_paid = float(rec.get("paid_amount", 0))
+    remaining = round(total - prev_paid, 2)
+    if paid_amount > remaining:
+        return jsonify({"error": f"Amount exceeds remaining balance of USD ${remaining:,.2f}"}), 400
+
+    new_total_paid = round(prev_paid + paid_amount, 2)
+    rec["paid"] = new_total_paid >= total
+    rec["paid_amount"] = new_total_paid
     rec["paid_date"] = paid_date
     rec["payment_mode"] = payment_mode
     rec["payment_ref"] = payment_ref
-    save_records(records)
-    return jsonify({"success": True, "balance": round(total - paid_amount, 2)})
 
-@app.route("/records/get_one", methods=["POST"])
-@login_required
-def get_one_record():
-    data = request.get_json()
-    number = data.get("number", "")
-    records = load_records()
-    rec = next((r for r in records if r.get("number") == number), None)
-    if not rec:
-        return jsonify({"error": "Record not found"}), 404
-    return jsonify(rec)
+    if "payment_log" not in rec:
+        rec["payment_log"] = []
+    rec["payment_log"].append({
+        "date": paid_date,
+        "amount": round(paid_amount, 2),
+        "mode": payment_mode,
+        "ref": payment_ref,
+        "recorded_at": datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    })
+
+    save_records(records)
+    return jsonify({"success": True, "balance": round(total - new_total_paid, 2),
+                    "fully_paid": new_total_paid >= total})
 
 @app.route("/records/generate_receipt", methods=["POST"])
 @login_required
@@ -901,7 +994,6 @@ def generate_receipt():
         return jsonify({"error": "Record not found"}), 404
 
     total = float(rec.get("amount", 0))
-    balance = round(total - paid_amount, 2)
     receipt_number = next_record_number("Receipt")
 
     to_block = "\n".join(filter(None, [
@@ -909,8 +1001,7 @@ def generate_receipt():
         rec.get("client_email", ""),
     ]))
 
-    # Payment description block
-    payment_desc_lines = ["Amount invoiced"]
+    payment_desc_lines = ["Amount Invoiced"]
     if payment_mode:
         payment_desc_lines.append(f"Mode: {payment_mode}")
     if payment_ref:
@@ -952,14 +1043,53 @@ def generate_receipt():
     rec["payment_mode"] = payment_mode
     rec["payment_ref"] = payment_ref
     rec["receipt_number"] = receipt_number
-    save_records(records)
 
+    if "payment_log" not in rec:
+        rec["payment_log"] = []
+    rec["payment_log"].append({
+        "date": paid_date,
+        "amount": round(paid_amount, 2),
+        "mode": payment_mode,
+        "ref": payment_ref,
+        "recorded_at": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "receipt": receipt_number
+    })
+
+    save_records(records)
     save_record("Receipt", rec.get("client_name", ""), rec.get("client_email", ""),
                 paid_amount, receipt_number)
 
     return send_file(out_path, as_attachment=True,
                      download_name=f"{receipt_number}.pdf",
                      mimetype="application/pdf")
+
+@app.route("/records/edit", methods=["POST"])
+@login_required
+def edit_record():
+    data = request.get_json()
+    number = data.get("number", "")
+    password = data.get("password", "")
+
+    records = load_records()
+    rec = next((r for r in records if r.get("number") == number), None)
+    if not rec:
+        return jsonify({"error": "Record not found"}), 404
+
+    if rec.get("paid") or float(rec.get("paid_amount", 0)) > 0:
+        if password != get_admin_pass():
+            return jsonify({"error": "Password required to edit a paid record."}), 403
+
+    if data.get("client_name"):
+        rec["client_name"] = data["client_name"]
+    if data.get("client_email") is not None:
+        rec["client_email"] = data["client_email"]
+    if data.get("amount") is not None:
+        rec["amount"] = round(float(data["amount"]), 2)
+    if data.get("date"):
+        rec["date"] = data["date"]
+
+    save_records(records)
+    return jsonify({"success": True})
 
 @app.route("/airports", methods=["GET"])
 @login_required
