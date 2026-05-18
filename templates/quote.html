@@ -3,136 +3,186 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ operator.company_name }} — Instant Quote</title>
-<link href="https://fonts.googleapis.com/css2?family={{ operator.branding.font_heading }}:wght@400;600;700&family={{ operator.branding.font_body }}:wght@400;500&display=swap" rel="stylesheet">
+<title id="page-title">Charter Quotes</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+:root {
+  --primary: #0D47A1;
+  --accent: #e8a020;
+  --btn-text: #ffffff;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: '{{ operator.branding.font_body }}', sans-serif; background: {{ operator.branding.background_color }}; color: {{ operator.branding.text_color }}; }
-header {
-  background: {{ operator.branding.header_bg }};
-  color: {{ operator.branding.header_text }};
-  padding: 16px 24px;
-  text-align: center;
-}
-header img { height: 52px; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto; }
-header h1 { font-family: '{{ operator.branding.font_heading }}', sans-serif; font-size: 1.3rem; font-weight: 700; }
-header p { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
-.trust-bar {
-  background: {{ operator.branding.accent_color }};
-  color: #fff;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0;
-  padding: 10px 16px;
-}
-.trust-item { padding: 4px 16px; font-size: 0.82rem; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.4); }
-.trust-item:last-child { border-right: none; }
-.main { max-width: 680px; margin: 24px auto; padding: 0 16px 40px; }
-.card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.mission-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-.mtab {
-  padding: 8px 20px;
-  border-radius: 20px;
-  border: 2px solid {{ operator.branding.primary_color }};
-  color: {{ operator.branding.primary_color }};
-  background: #fff;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-.mtab.active { background: {{ operator.branding.primary_color }}; color: #fff; }
-.form-group { margin-bottom: 14px; }
-label { font-size: 0.82rem; font-weight: 600; color: #555; display: block; margin-bottom: 5px; }
-input, select {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-  outline: none;
-  font-family: inherit;
-  transition: border 0.2s;
-}
-input:focus, select:focus { border-color: {{ operator.branding.primary_color }}; }
-.btn {
-  width: 100%;
-  padding: 14px;
-  background: {{ operator.branding.button_color }};
-  color: {{ operator.branding.button_text }};
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: '{{ operator.branding.font_heading }}', sans-serif;
-  transition: opacity 0.2s;
-  margin-top: 4px;
-}
-.btn:hover { opacity: 0.9; }
-.btn-outline {
-  background: #fff;
-  color: {{ operator.branding.primary_color }};
-  border: 2px solid {{ operator.branding.primary_color }};
-}
-.btn-sm { padding: 8px 16px; font-size: 0.88rem; width: auto; }
-.btn-whatsapp { background: #25d366; color: #fff; margin-top: 12px; }
-.btn-call { background: {{ operator.branding.primary_color }}; color: #fff; margin-top: 8px; }
-.btn-reset { background: #f5f5f5; color: #333; border: 1px solid #ddd; margin-top: 8px; }
-.result-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.ac-block { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
-.ac-block:last-child { border-bottom: none; margin-bottom: 0; }
-.ac-title { font-family: '{{ operator.branding.font_heading }}', sans-serif; font-weight: 700; font-size: 1rem; color: {{ operator.branding.primary_color }}; margin-bottom: 12px; }
-.route-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 12px; overflow-x: auto; display: block; }
-.route-table th { background: {{ operator.branding.primary_color }}; color: #fff; padding: 8px 10px; text-align: left; white-space: nowrap; }
-.route-table td { padding: 8px 10px; border-bottom: 1px solid #eee; white-space: nowrap; }
-.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
+body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1a1a1a; min-height: 100vh; }
+
+/* HERO */
+.hero { background: var(--primary); padding: 0 0 48px; position: relative; overflow: hidden; }
+.hero::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 40px; background: #f0f4f8; border-radius: 40px 40px 0 0; }
+
+/* HEADER */
+.header { display: flex; align-items: center; gap: 14px; padding: 20px 24px 32px; }
+.header img { height: 46px; border-radius: 6px; }
+.header-text h1 { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 700; color: #fff; }
+.header-text p { font-size: 0.78rem; color: rgba(255,255,255,0.65); margin-top: 2px; }
+
+/* HERO TEXT */
+.hero-text { text-align: center; padding: 0 24px 28px; }
+.hero-text h2 { font-family: 'Montserrat', sans-serif; font-size: 1.7rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 8px; }
+.hero-text p { font-size: 0.88rem; color: rgba(255,255,255,0.65); }
+
+/* FLOATING CARD */
+.quote-card { background: #fff; border-radius: 20px; margin: 0 16px; padding: 22px 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); position: relative; z-index: 2; margin-top: -8px; }
+
+/* TRUST BAR */
+.trust-bar { display: flex; gap: 6px; overflow-x: auto; padding: 20px 16px 4px; justify-content: center; flex-wrap: wrap; }
+.trust-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; color: #555; white-space: nowrap; padding: 5px 12px; background: #fff; border-radius: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.trust-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+/* MAIN */
+.main { max-width: 760px; margin: 0 auto; padding: 0 0 80px; }
+.inner { padding: 0 16px; }
+
+/* MISSION TABS */
+.mission-tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+.mtab { flex: 1; padding: 9px 6px; border-radius: 10px; border: none; background: #f0f4f8; color: #666; cursor: pointer; font-weight: 600; font-size: 0.82rem; transition: all 0.2s; text-align: center; font-family: 'Inter', sans-serif; }
+.mtab.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(13,71,161,0.25); }
+
+/* FORM */
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.form-group { flex: 1; min-width: 180px; }
+label { font-size: 0.75rem; font-weight: 700; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+input, select { width: 100%; padding: 12px 14px; border: 1.5px solid #e8ecf0; border-radius: 10px; font-size: 0.95rem; outline: none; font-family: inherit; transition: all 0.2s; background: #f8fafc; color: #1a1a1a; }
+input:focus, select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(13,71,161,0.08); }
+input::placeholder { color: #bbb; }
+
+.btn-quote { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif; transition: all 0.2s; margin-top: 6px; letter-spacing: 0.3px; box-shadow: 0 4px 14px rgba(232,160,32,0.35); }
+.btn-quote:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,160,32,0.45); }
+.btn-quote:active { transform: translateY(0); }
+.btn-quote:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* LEG ROWS */
+.leg-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.leg-row input { flex: 1; min-width: 120px; }
+.leg-num { font-weight: 700; color: var(--primary); min-width: 18px; font-size: 0.82rem; }
+.btn-add-leg { padding: 8px 16px; border-radius: 8px; border: 1.5px solid var(--primary); color: var(--primary); background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+.btn-add-leg:hover { background: var(--primary); color: #fff; }
+
+/* SECTION LABEL */
+.section-label { font-size: 0.72rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; margin: 20px 0 12px; }
+
+/* RESULT CARDS */
+.ac-card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); border: 1px solid #f0f0f0; overflow: hidden; }
+.ac-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #f4f4f4; }
+.ac-title { font-family: 'Montserrat', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--primary); flex: 1; }
+.ac-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+.badge-heli { background: #e3f2fd; color: #0d47a1; }
+.badge-fixed { background: #fce4ec; color: #880e4f; }
+
+/* ROUTE TABLE */
+.route-wrap { overflow-x: auto; margin-bottom: 14px; border-radius: 10px; border: 1px solid #f0f0f0; }
+.route-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 400px; }
+.route-table th { background: var(--primary); color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.3px; }
+.route-table th:first-child { border-radius: 0; }
+.route-table td { padding: 9px 10px; border-bottom: 1px solid #f8f8f8; color: #333; }
+.route-table tr:last-child td { border-bottom: none; }
+.route-table tr:hover td { background: #fafcff; }
+
+/* TAGS */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
 .tag-rev { background: #d4edda; color: #155724; }
 .tag-pos { background: #fff3cd; color: #856404; }
 .tag-dep { background: #f8d7da; color: #721c24; }
 .tag-rep { background: #cce5ff; color: #004085; }
-.billing { background: #f8f9fa; border-radius: 8px; padding: 14px; }
-.billing-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.9rem; border-bottom: 1px solid #eee; }
-.billing-total { font-weight: 700; font-size: 1.15rem; color: {{ operator.branding.primary_color }}; border-top: 2px solid {{ operator.branding.primary_color }}; margin-top: 6px; padding-top: 8px; }
+.tag-idle { background: #fff3e0; color: #e65100; }
+.tag-overnight { background: #ede7f6; color: #4527a0; }
+
+/* BILLING */
+.billing { background: #f8fafc; border-radius: 12px; padding: 14px 16px; }
+.billing-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px solid #f0f0f0; color: #555; }
+.billing-row:last-of-type { border-bottom: none; }
+.billing-divider { height: 1px; background: var(--primary); margin: 10px 0; opacity: 0.2; }
+.billing-total { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.05rem; color: var(--primary); padding-top: 4px; }
+.billing-total span:last-child { font-family: 'Montserrat', sans-serif; }
+
+/* OPTION TABS */
 .option-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-.otab { padding: 6px 16px; border-radius: 16px; border: 1.5px solid #999; color: #666; background: #fff; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
-.otab.active { background: {{ operator.branding.accent_color }}; color: #fff; border-color: {{ operator.branding.accent_color }}; }
+.otab { flex: 1; padding: 8px 10px; border-radius: 10px; border: 1.5px solid #e0e0e0; color: #666; background: #fff; cursor: pointer; font-size: 0.8rem; font-weight: 600; text-align: center; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+.otab.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 8px rgba(13,71,161,0.2); }
 .otab-content { display: none; }
 .otab-content.active { display: block; }
-.disclaimer { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; font-size: 0.85rem; color: #856404; margin-bottom: 12px; }
-.error-box { background: #fff0f0; border: 1px solid #ffcccc; color: #cc0000; border-radius: 8px; padding: 12px 16px; font-size: 0.9rem; }
-.leg-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
-.leg-num { font-weight: 700; color: {{ operator.branding.primary_color }}; min-width: 20px; }
-.leg-row input { flex: 1; min-width: 120px; padding: 10px 12px; font-size: 0.9rem; }
-footer {
-  background: {{ operator.branding.header_bg }};
-  color: rgba(255,255,255,0.7);
-  text-align: center;
-  padding: 20px;
-  font-size: 0.8rem;
-  margin-top: 40px;
+
+/* BOXES */
+.info-box { background: #fffbec; border-left: 3px solid var(--accent); color: #7a5c00; border-radius: 8px; padding: 11px 14px; margin: 10px 0; font-size: 0.82rem; line-height: 1.6; }
+.error-card { background: #fff0f0; border-left: 3px solid #e53935; color: #b71c1c; border-radius: 12px; padding: 16px; margin: 16px 0; font-size: 0.88rem; line-height: 1.6; }
+.pickup-drop-msg { background: #e8f4fd; border-left: 3px solid var(--primary); color: #0d47a1; border-radius: 8px; padding: 11px 14px; margin-bottom: 12px; font-size: 0.82rem; line-height: 1.6; }
+.validity-notice { background: #fff; border-radius: 10px; padding: 10px 16px; margin-top: 6px; font-size: 0.78rem; color: #aaa; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+
+/* LOADING */
+.loading-card { background: #fff; border-radius: 16px; padding: 40px 20px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 14px; }
+.spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e8ecf0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { color: #888; font-size: 0.9rem; }
+
+/* CTA */
+.cta-block { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.btn-whatsapp { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: #25D366; color: #fff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 14px rgba(37,211,102,0.3); }
+.btn-whatsapp:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,0.4); }
+.btn-call { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 13px; background: #fff; color: var(--primary); border: 2px solid var(--primary); border-radius: 12px; font-size: 0.92rem; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif; text-decoration: none; transition: all 0.2s; }
+.btn-call:hover { background: var(--primary); color: #fff; }
+.btn-reset { padding: 11px; background: transparent; color: #999; border: 1.5px solid #ddd; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+.btn-reset:hover { border-color: #999; color: #555; }
+
+/* FX WIDGET */
+.fx-widget { background: #fff; border-radius: 14px; padding: 16px 18px; margin-top: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.fx-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.fx-title { font-size: 0.72rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; }
+.fx-input-wrap { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1.5px solid #e8ecf0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
+.fx-input-wrap span { font-weight: 700; color: #555; font-size: 0.88rem; }
+.fx-input-wrap input { border: none; background: transparent; font-size: 1rem; font-weight: 700; flex: 1; outline: none; font-family: 'Montserrat', sans-serif; }
+.fx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fx-item { background: #f8fafc; border-radius: 10px; padding: 10px 12px; border: 1px solid #f0f0f0; }
+.fx-currency { font-size: 0.7rem; font-weight: 700; color: #aaa; margin-bottom: 2px; }
+.fx-amount { font-size: 0.92rem; font-weight: 700; color: #1a1a1a; font-family: 'Montserrat', sans-serif; }
+.fx-updated { font-size: 0.7rem; color: #ccc; text-align: right; margin-top: 8px; }
+
+/* FOOTER */
+.footer { background: #0a0f1e; color: #666; padding: 32px 20px; text-align: center; font-size: 0.8rem; line-height: 2; }
+.footer-company { color: #aaa; font-weight: 600; font-size: 0.88rem; margin-bottom: 4px; }
+.footer a { color: #555; text-decoration: none; }
+.footer-powered { margin-top: 16px; padding-top: 16px; border-top: 1px solid #1a1f2e; font-size: 0.72rem; color: #444; }
+.footer-powered a { color: #666; }
+
+/* DIVIDER LABEL */
+.drop-label { font-size: 0.72rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; margin: 10px 0 6px; }
+
+@media(max-width:480px) {
+  .hero-text h2 { font-size: 1.4rem; }
+  .form-row { flex-direction: column; }
+  .fx-grid { grid-template-columns: repeat(2, 1fr); }
+  .mission-tabs .mtab { font-size: 0.76rem; padding: 8px 4px; }
+  .quote-card { margin: 0 12px; padding: 18px 16px; }
 }
-footer a { color: rgba(255,255,255,0.7); text-decoration: none; }
-footer strong { color: #fff; }
 </style>
 </head>
 <body>
 
-<header>
-  <img src="{{ operator.logo_url }}" alt="{{ operator.company_name }}">
-  <h1>{{ operator.company_name }}</h1>
-  <p>{{ operator.tagline }}</p>
-</header>
-
-<div class="trust-bar">
-  {% for item in operator.trust_bar %}
-  <div class="trust-item">{{ item }}</div>
-  {% endfor %}
+<!-- HERO -->
+<div class="hero">
+  <div class="header">
+    <img id="header-logo" src="" alt="">
+    <div class="header-text">
+      <h1 id="header-company"></h1>
+      <p id="header-tagline"></p>
+    </div>
+  </div>
+  <div class="hero-text">
+    <h2>Where do you<br>want to fly?</h2>
+    <p id="hero-sub">Instant charter quotes across Kenya</p>
+  </div>
 </div>
 
+<!-- FLOATING QUOTE CARD -->
 <div class="main">
-  <div class="card">
+  <div class="quote-card" id="quote-card">
     <div class="mission-tabs">
       <div class="mtab active" onclick="showMission('one_way',this)">One Way</div>
       <div class="mtab" onclick="showMission('return',this)">Return</div>
@@ -141,36 +191,42 @@ footer strong { color: #fff; }
 
     <!-- ONE WAY -->
     <div id="m-one_way">
-      <div class="form-group">
-        <label>From</label>
-        <input type="text" id="ow-pickup" placeholder="Location name, GPS or Google Maps link">
+      <div class="form-row">
+        <div class="form-group">
+          <label>From</label>
+          <input type="text" id="ow-pickup" placeholder="City, airstrip or Maps link">
+        </div>
+        <div class="form-group">
+          <label>To</label>
+          <input type="text" id="ow-dropoff" placeholder="City, airstrip or Maps link">
+        </div>
       </div>
-      <div class="form-group">
-        <label>To</label>
-        <input type="text" id="ow-dropoff" placeholder="Location name, GPS or Google Maps link">
-      </div>
-      <button class="btn" onclick="submitQuote('one_way')">Get Instant Quote</button>
+      <button class="btn-quote" onclick="submitQuote('one_way')">Get Instant Quote</button>
     </div>
 
     <!-- RETURN -->
     <div id="m-return" style="display:none">
-      <div class="form-group">
-        <label>From</label>
-        <input type="text" id="rt-pickup" placeholder="Location name, GPS or Google Maps link">
+      <div class="form-row">
+        <div class="form-group">
+          <label>From</label>
+          <input type="text" id="rt-pickup" placeholder="City, airstrip or Maps link">
+        </div>
+        <div class="form-group">
+          <label>To</label>
+          <input type="text" id="rt-dropoff" placeholder="City, airstrip or Maps link">
+        </div>
       </div>
-      <div class="form-group">
-        <label>To</label>
-        <input type="text" id="rt-dropoff" placeholder="Location name, GPS or Google Maps link">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Departure Date</label>
+          <input type="text" id="rt-depart" placeholder="e.g. 25 Jun 2026">
+        </div>
+        <div class="form-group">
+          <label>Return Date</label>
+          <input type="text" id="rt-return" placeholder="e.g. 28 Jun 2026">
+        </div>
       </div>
-      <div class="form-group">
-        <label>Departure Date</label>
-        <input type="text" id="rt-depart" placeholder="e.g. 25/06/25 or 25 June 2025">
-      </div>
-      <div class="form-group">
-        <label>Return Date</label>
-        <input type="text" id="rt-return" placeholder="e.g. 27/06/25 or 27 June 2025">
-      </div>
-      <button class="btn" onclick="submitQuote('return')">Get Instant Quote</button>
+      <button class="btn-quote" onclick="submitQuote('return')">Get Instant Quote</button>
     </div>
 
     <!-- SAFARI -->
@@ -180,59 +236,177 @@ footer strong { color: #fff; }
           <span class="leg-num">1</span>
           <input type="text" placeholder="From" class="leg-origin">
           <input type="text" placeholder="To" class="leg-dest">
-          <input type="text" placeholder="Date e.g. 25/06/25" class="leg-date" style="max-width:140px">
+          <input type="text" placeholder="Date" class="leg-date" style="max-width:110px">
         </div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:10px;margin-bottom:14px">
-        <button class="btn btn-outline btn-sm" onclick="addLeg()">+ Add Leg</button>
-      </div>
-      <button class="btn" onclick="submitQuote('safari')">Get Instant Quote</button>
+      <button class="btn-add-leg" onclick="addLeg()" style="margin:10px 0 14px">+ Add Leg</button>
+      <button class="btn-quote" onclick="submitQuote('safari')">Get Instant Quote</button>
     </div>
   </div>
 
-  <div id="result-area"></div>
+  <!-- TRUST BAR -->
+  <div class="trust-bar" id="trust-bar"></div>
+
+  <div class="inner">
+    <!-- LOADING -->
+    <div id="loading" style="display:none;margin-top:20px">
+      <div class="loading-card">
+        <div class="spinner"></div>
+        <div class="loading-text">Calculating your quote...</div>
+      </div>
+    </div>
+
+    <!-- ERROR -->
+    <div id="error-box" style="display:none;margin-top:16px"></div>
+
+    <!-- RESULTS -->
+    <div id="results" style="display:none;margin-top:20px">
+      <div class="section-label" id="results-label">Your Quote</div>
+      <div id="results-inner"></div>
+      <div class="validity-notice" id="validity-notice"></div>
+
+      <!-- FX -->
+      <div class="fx-widget" id="fx-widget" style="display:none">
+        <div class="fx-header">
+          <span class="fx-title">Live Currency Conversion</span>
+        </div>
+        <div class="fx-input-wrap">
+          <span>USD</span>
+          <input type="number" id="fx-input" value="0" oninput="updateFX()">
+        </div>
+        <div class="fx-grid" id="fx-grid"></div>
+        <div class="fx-updated" id="fx-updated"></div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-block" id="cta-block">
+        <a id="btn-whatsapp" class="btn-whatsapp" href="#" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp Us to Book
+        </a>
+        <a id="btn-call" class="btn-call" href="#">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+          Call Us
+        </a>
+        <button class="btn-reset" onclick="resetQuote()">Start a New Quote</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<footer>
-  <strong>{{ operator.company_name }}</strong><br>
-  {{ operator.contact.address }}<br>
-  {{ operator.contact.phone }} &nbsp;|&nbsp; {{ operator.contact.email }}<br>
-  <br>
-  <a href="{{ operator.footer.powered_url }}">{{ operator.footer.powered_by }}</a>
-</footer>
+<!-- FOOTER -->
+<div class="footer" id="site-footer">
+  <div class="footer-company" id="footer-company"></div>
+  <div id="footer-contact"></div>
+  <div class="footer-powered">Powered by <a href="https://jetmanglobal.com" target="_blank">Quotecloud — Jetman Global</a></div>
+</div>
 
 <script>
+// Quotecloud Client v2.4.9
+let config = {};
+let fxRates = {};
 let lastResults = [];
-let currentMission = 'one_way';
+
+async function init() {
+  try {
+    let r = await fetch('/settings/config/public');
+    config = await r.json();
+    applyBranding();
+    loadFX();
+  } catch(e) { console.error('Config load failed:', e); }
+}
+
+function applyBranding() {
+  let b = config.branding || {};
+  let primary = b.primary_color || '#0D47A1';
+  let accent = b.accent_color || '#e8a020';
+  document.documentElement.style.setProperty('--primary', primary);
+  document.documentElement.style.setProperty('--accent', accent);
+
+  document.getElementById('page-title').textContent = (config.company_name || 'Charter') + ' — Instant Quotes';
+  let logo = document.getElementById('header-logo');
+  if (config.logo_url) { logo.src = config.logo_url; logo.alt = config.company_name || ''; }
+  else logo.style.display = 'none';
+  document.getElementById('header-company').textContent = config.company_name || '';
+  document.getElementById('header-tagline').textContent = config.tagline || 'Private Charter Flights';
+  let region = (config.geo_lock || {}).region_name || 'Kenya';
+  document.getElementById('hero-sub').textContent = `Instant charter quotes across ${region}`;
+
+  // Trust bar
+  let tb = (config.trust_bar || []).filter(Boolean);
+  let tbEl = document.getElementById('trust-bar');
+  if (tb.length) {
+    tbEl.innerHTML = tb.map(item => `<div class="trust-item"><span class="trust-dot"></span>${item}</div>`).join('');
+  } else {
+    tbEl.style.display = 'none';
+  }
+
+  // CTAs
+  let wa = (config.contact || {}).whatsapp || '';
+  let phone = (config.contact || {}).phone || '';
+  let greeting = (config.contact || {}).whatsapp_greeting || "Hi, I'd like to enquire about a charter flight.";
+  if (wa) document.getElementById('btn-whatsapp').href = `https://wa.me/${wa}?text=${encodeURIComponent(greeting)}`;
+  else document.getElementById('btn-whatsapp').style.display = 'none';
+  if (phone) document.getElementById('btn-call').href = `tel:${phone}`;
+  else document.getElementById('btn-call').style.display = 'none';
+
+  // Footer
+  let c = config.contact || {};
+  document.getElementById('footer-company').textContent = config.company_name || '';
+  let parts = [c.address, c.email, c.phone].filter(Boolean);
+  document.getElementById('footer-contact').innerHTML = parts.join(' &nbsp;·&nbsp; ');
+  if (config.footer_tagline) {
+    let ft = document.createElement('div');
+    ft.style.cssText = 'margin-top:6px;color:#555;font-size:0.78rem';
+    ft.textContent = config.footer_tagline;
+    document.getElementById('site-footer').insertBefore(ft, document.querySelector('.footer-powered'));
+  }
+}
+
+async function loadFX() {
+  try {
+    let r = await fetch('/fx/rates');
+    let data = await r.json();
+    if (data.success) {
+      fxRates = data.rates;
+      if (data.updated) document.getElementById('fx-updated').textContent =
+        'Rates: ' + new Date(data.updated).toLocaleDateString();
+    }
+  } catch(e) {}
+}
+
+function updateFX() {
+  let usd = parseFloat(document.getElementById('fx-input').value) || 0;
+  let currencies = ['KES','EUR','GBP','TZS','UGX'];
+  document.getElementById('fx-grid').innerHTML = currencies.map(c => {
+    let rate = fxRates[c] || 0;
+    let amount = usd * rate;
+    let fmt = amount >= 1000 ? amount.toLocaleString(undefined,{maximumFractionDigits:0}) : amount.toLocaleString(undefined,{maximumFractionDigits:2});
+    return `<div class="fx-item"><div class="fx-currency">${c}</div><div class="fx-amount">${fmt}</div></div>`;
+  }).join('');
+}
 
 function showMission(m, el) {
   document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
-  if (el) el.classList.add('active');
+  el.classList.add('active');
   ['one_way','return','safari'].forEach(id => {
-    document.getElementById('m-' + id).style.display = id === m ? 'block' : 'none';
+    document.getElementById('m-'+id).style.display = id===m ? 'block' : 'none';
   });
-  currentMission = m;
-  document.getElementById('result-area').innerHTML = '';
 }
 
 function parseSmartDate(s) {
-  s = s.trim().replace(/(\d+)(st|nd|rd|th)/gi, '$1');
+  s = s.trim().replace(/(\d+)(st|nd|rd|th)/gi,'$1');
   const fmts = [
-    { r: /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/, fn: m => {
-      let y = m[3].length === 2 ? '20' + m[3] : m[3];
-      return new Date(`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`);
-    }},
-    { r: /^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/, fn: m => new Date(`${m[2]} ${m[1]} ${m[3]}`) },
-    { r: /^([A-Za-z]+)\s+(\d{1,2})\s+(\d{4})$/, fn: m => new Date(`${m[1]} ${m[2]} ${m[3]}`) },
+    { r:/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/, fn:m=>{ let y=m[3].length===2?'20'+m[3]:m[3]; return new Date(`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`); }},
+    { r:/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/, fn:m=>new Date(`${m[2]} ${m[1]} ${m[3]}`) },
+    { r:/^([A-Za-z]+)\s+(\d{1,2})\s+(\d{4})$/, fn:m=>new Date(`${m[1]} ${m[2]} ${m[3]}`) },
   ];
   for (let f of fmts) {
     let m = s.match(f.r);
     if (m) {
       let d = f.fn(m);
       if (!isNaN(d)) {
-        let dd = String(d.getDate()).padStart(2,'0');
-        let mm = String(d.getMonth()+1).padStart(2,'0');
-        let yy = String(d.getFullYear()).slice(-2);
+        let dd=String(d.getDate()).padStart(2,'0'), mm=String(d.getMonth()+1).padStart(2,'0'), yy=String(d.getFullYear()).slice(-2);
         return `${dd}/${mm}/${yy}`;
       }
     }
@@ -247,172 +421,260 @@ function addLeg() {
   div.innerHTML = `<span class="leg-num">${n}</span>
     <input type="text" placeholder="From" class="leg-origin">
     <input type="text" placeholder="To" class="leg-dest">
-    <input type="text" placeholder="Date e.g. 25/06/25" class="leg-date" style="max-width:140px">
-    <button class="btn btn-sm" style="background:#dc3545;color:#fff;width:auto;padding:8px 12px" onclick="this.parentElement.remove()">x</button>`;
+    <input type="text" placeholder="Date" class="leg-date" style="max-width:110px">
+    <button onclick="this.parentElement.remove()" style="padding:6px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;cursor:pointer;font-weight:700;font-size:0.85rem">x</button>`;
   document.getElementById('safari-legs').appendChild(div);
 }
 
 async function submitQuote(mission) {
   let body = { mission };
   if (mission === 'one_way') {
-    body.pickup = document.getElementById('ow-pickup').value;
-    body.dropoff = document.getElementById('ow-dropoff').value;
+    body.pickup = document.getElementById('ow-pickup').value.trim();
+    body.dropoff = document.getElementById('ow-dropoff').value.trim();
+    if (!body.pickup || !body.dropoff) return showError('Please enter both From and To locations.');
   } else if (mission === 'return') {
-    body.pickup = document.getElementById('rt-pickup').value;
-    body.dropoff = document.getElementById('rt-dropoff').value;
+    body.pickup = document.getElementById('rt-pickup').value.trim();
+    body.dropoff = document.getElementById('rt-dropoff').value.trim();
     body.depart = parseSmartDate(document.getElementById('rt-depart').value);
     body.return_date = parseSmartDate(document.getElementById('rt-return').value);
-  } else if (mission === 'safari') {
+    if (!body.pickup || !body.dropoff) return showError('Please enter both From and To locations.');
+    if (!body.depart || !body.return_date) return showError('Please enter departure and return dates.');
+  } else {
     body.legs = [];
     document.querySelectorAll('#safari-legs .leg-row').forEach(row => {
-      body.legs.push({
-        origin: row.querySelector('.leg-origin').value,
-        destination: row.querySelector('.leg-dest').value,
-        date: parseSmartDate(row.querySelector('.leg-date').value)
-      });
+      let o = row.querySelector('.leg-origin').value.trim();
+      let d = row.querySelector('.leg-dest').value.trim();
+      let dt = parseSmartDate(row.querySelector('.leg-date').value);
+      if (o && d) body.legs.push({ origin: o, destination: d, date: dt });
     });
+    if (!body.legs.length) return showError('Please add at least one leg.');
   }
 
-  document.getElementById('result-area').innerHTML = '<div class="card" style="text-align:center;color:#888;padding:24px">Calculating your quote...</div>';
+  showLoading(true);
+  hideError();
+  document.getElementById('results').style.display = 'none';
 
   try {
     let r = await fetch('/quote/calculate', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(body)
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
     });
     let data = await r.json();
-    if (!r.ok) {
-      document.getElementById('result-area').innerHTML = `<div class="error-box">${data.error || 'Could not calculate quote. Please try again.'}</div>`;
-      return;
-    }
+    showLoading(false);
+    if (!r.ok) { showError(data.error || 'Unable to calculate. Please try again.'); return; }
     lastResults = data.results || [];
-    renderResults(lastResults, mission, body);
+    renderResults(lastResults, mission);
   } catch(e) {
-    document.getElementById('result-area').innerHTML = `<div class="error-box">Network error. Please try again.</div>`;
+    showLoading(false);
+    showError('Network error. Please check your connection and try again.');
   }
 }
 
-function tagClass(t) {
-  return t === 'revenue' ? 'tag-rev' : t === 'positioning' ? 'tag-pos' : t === 'depositioning' ? 'tag-dep' : 'tag-rep';
+function showLoading(show) {
+  document.getElementById('loading').style.display = show ? 'block' : 'none';
 }
 
-function renderSegments(segs) {
+function showError(msg) {
+  let el = document.getElementById('error-box');
+  el.innerHTML = `<div class="error-card">⚠ ${msg}</div>`;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function hideError() {
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('error-box').innerHTML = '';
+}
+
+function tagClass(t, note) {
+  if (note) return note.toLowerCase().includes('idle') ? 'tag-idle' : 'tag-overnight';
+  return t==='revenue'?'tag-rev':t==='positioning'?'tag-pos':t==='depositioning'?'tag-dep':'tag-rep';
+}
+
+function renderSegments(segs, showDist) {
   if (!segs || !segs.length) return '';
-  let rows = segs.map(s => `<tr>
-    <td><span class="tag ${tagClass(s.type)}">${s.type}</span></td>
-    <td>${s.origin || ''}</td>
-    <td>${s.destination || ''}</td>
-    <td>${s.date || ''}</td>
-  </tr>`).join('');
-  return `<table class="route-table">
-    <thead><tr><th>Type</th><th>From</th><th>To</th><th>Date</th></tr></thead>
+  let rows = segs.map(s => {
+    let isNote = s.note && !s.type;
+    if (isNote) {
+      let isIdle = s.note.toLowerCase().includes('idle');
+      let label = isIdle ? 'idle day' : 'overnight';
+      let cost = s.cost ? `$${parseFloat(s.cost).toLocaleString(undefined,{minimumFractionDigits:2})}` : '-';
+      return `<tr>
+        <td><span class="tag ${tagClass(null,s.note)}">${label}</span></td>
+        <td colspan="2" style="color:#888;font-size:0.78rem">${s.note}</td>
+        ${showDist?'<td>-</td>':''}
+        <td style="font-weight:700">${cost}</td>
+        <td>-</td>
+      </tr>`;
+    }
+    let nm = s.nm || s.dist_nm || 0;
+    return `<tr>
+      <td><span class="tag ${tagClass(s.type,null)}">${s.type}</span></td>
+      <td>${s.origin||''}</td>
+      <td>${s.destination||''}</td>
+      ${showDist?`<td>${nm?nm+' nm':'-'}</td>`:''}
+      <td>${s.hours?s.hours+' hr':'-'}</td>
+      <td>${s.date||'-'}</td>
+    </tr>`;
+  }).join('');
+  let dh = showDist ? '<th>Dist</th>' : '';
+  return `<div class="route-wrap"><table class="route-table">
+    <thead><tr><th>Type</th><th>From</th><th>To</th>${dh}<th>Hours</th><th>Date</th></tr></thead>
     <tbody>${rows}</tbody>
-  </table>`;
+  </table></div>`;
+}
+
+function calcHours(segs) {
+  let t = 0;
+  (segs||[]).forEach(s => { if (s.hours && s.type) t += parseFloat(s.hours); });
+  return Math.round(t * 10) / 10;
 }
 
 function renderBilling(res) {
+  let rate = res.rate_usd || 0;
+  let hrs = calcHours(res.segments || []);
   let rows = '';
-  if (res.subtotal_usd) rows += `<div class="billing-row"><span>Flight Cost</span><span>$${res.subtotal_usd.toLocaleString()}</span></div>`;
-  if (res.overnight_cost_usd) rows += `<div class="billing-row"><span>Overnight Per Diem</span><span>$${res.overnight_cost_usd.toLocaleString()}</span></div>`;
-  if (res.idle_cost_usd) rows += `<div class="billing-row"><span>Idle Day Charge</span><span>$${res.idle_cost_usd.toLocaleString()}</span></div>`;
-  if (res.pax_fee_usd) rows += `<div class="billing-row"><span>Pax / Admin Fee</span><span>$${res.pax_fee_usd.toLocaleString()}</span></div>`;
-  rows += `<div class="billing-row billing-total"><span>TOTAL</span><span>USD $${(res.total_usd||0).toLocaleString()}</span></div>`;
-  return `<div class="billing">${rows}</div>`;
+  if (hrs > 0 && rate > 0) {
+    let fc = Math.round(hrs * rate * 100) / 100;
+    rows += `<div class="billing-row"><span>Aircraft Charter &nbsp;<span style="color:#aaa;font-size:0.78rem">${hrs}hrs @ $${rate.toLocaleString()}/hr</span></span><span>$${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+  }
+  let fee = res.pax_fee_usd || res.pax_fee_usd_display || 0;
+  if (fee > 0) rows += `<div class="billing-row"><span>Taxes & Admin</span><span>$${parseFloat(fee).toLocaleString()}</span></div>`;
+  let ov = res.overnight_usd || res.overnight_cost_usd || 0;
+  let oRate = res.overnight_rate_usd || 0;
+  if (ov > 0 && oRate > 0) {
+    let n = Math.round(ov / oRate);
+    rows += `<div class="billing-row"><span>Overnight Per Diem &nbsp;<span style="color:#aaa;font-size:0.78rem">${n} night${n!==1?'s':''} @ $${oRate}</span></span><span>$${parseFloat(ov).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+  }
+  let wu = res.waiting_usd || res.idle_cost_usd || 0;
+  let ir = res.idle_day_rate_usd || 0;
+  if (wu > 0) {
+    let days = ir > 0 ? Math.round(wu / ir) : 1;
+    rows += `<div class="billing-row"><span>Idle Day &nbsp;<span style="color:#aaa;font-size:0.78rem">${days} day${days!==1?'s':''} @ $${ir.toLocaleString()}</span></span><span>$${parseFloat(wu).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+  }
+  return `<div class="billing">${rows}<div class="billing-divider"></div><div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div></div>`;
 }
 
-function buildWhatsApp(results, mission, body) {
-  let msg = `Hello ${('{{ operator.company_name }}')},\n\nI would like a quote for the following:\n\n`;
-  results.forEach(res => {
-    msg += `Aircraft: ${res.ac_label}\n`;
-    if (res.mission === 'return_both') {
-      let wd = res.wait_days;
-      if (wd >= 3) {
-        msg += `Mission: Return (Pick & Drop)\n`;
-        msg += `From: ${body.pickup}\nTo: ${body.dropoff}\n`;
-        msg += `Out: ${body.depart} | Return: ${body.return_date}\n`;
-        msg += `Total: USD $${res.option_b.total_usd.toLocaleString()}\n`;
-      } else {
-        msg += `Mission: Return\n`;
-        msg += `From: ${body.pickup}\nTo: ${body.dropoff}\n`;
-        msg += `Out: ${body.depart} | Return: ${body.return_date}\n`;
-        msg += `Option A (waits): USD $${res.option_a.total_usd.toLocaleString()}\n`;
-        msg += `Option B (pick & drop): USD $${res.option_b.total_usd.toLocaleString()}\n`;
-      }
-    } else if (res.mission === 'safari') {
-      msg += `Mission: Safari\n`;
-      (body.legs||[]).forEach((l,i) => {
-        msg += `Leg ${i+1}: ${l.origin} to ${l.destination} on ${l.date}\n`;
-      });
-      msg += `Total: USD $${res.total_usd.toLocaleString()}\n`;
+function renderOneAc(res, showDist) {
+  if (res.error) return `<div class="error-card">⚠ ${res.error}</div>`;
+  let badge = res.ac_type==='fixed_wing' ?
+    `<span class="ac-badge badge-fixed">✈ Fixed Wing</span>` :
+    `<span class="ac-badge badge-heli">🚁 Helicopter</span>`;
+  let disclaimer = res.ac_type === 'fixed_wing' ? `<div class="info-box">${config.landing_field_disclaimer || 'This is a fixed wing aircraft and requires a runway for take off / landing. The quote is not a confirmation of service to quoted location. Contact us via WhatsApp for final reservation and confirmation of runway suitability.'}</div>` : '';
+  let content = '';
+
+  if (res.mission === 'return_both') {
+    let wd = res.wait_days;
+    let maxN = res.max_nights || 3;
+    if (wd >= maxN) {
+      let b = res.option_b;
+      let bRes = { segments:[...(b.drop.segments||[]),...(b.pick.segments||[])], rate_usd:res.rate_usd, overnight_rate_usd:res.overnight_rate_usd, idle_day_rate_usd:res.idle_day_rate_usd, pax_fee_usd_display:res.pax_fee_usd_display, total_usd:b.total_usd };
+      content = `<div class="pickup-drop-msg">${res.pickup_drop_msg || 'Pick & Drop applies for this trip duration.'}</div>
+        <div class="drop-label">Drop Off</div>${renderSegments(b.drop.segments, showDist)}
+        <div class="drop-label">Pick Up</div>${renderSegments(b.pick.segments, showDist)}
+        ${renderBilling(bRes)}`;
     } else {
-      msg += `Mission: One Way\n`;
-      msg += `From: ${body.pickup}\nTo: ${body.dropoff}\n`;
-      msg += `Total: USD $${res.total_usd.toLocaleString()}\n`;
-    }
-    msg += '\n';
-  });
-  msg += 'Please confirm availability. Thank you.';
-  return msg;
-}
-
-function renderResults(results, mission, body) {
-  let blocks = results.map(res => {
-    let inner = '';
-    if (res.error) {
-      inner = `<div class="error-box">${res.error}</div>`;
-    } else if (res.mission === 'return_both') {
-      let wd = res.wait_days;
-      if (wd >= 3) {
-        inner = `<div class="disclaimer">Stay is ${wd} nights — Pick &amp; Drop pricing applies. The aircraft drops you off and returns separately to pick you up on your return date.</div>
-          <b style="font-size:0.85rem">Drop Off</b>${renderSegments(res.option_b.drop.segments)}
-          <b style="font-size:0.85rem">Pick Up</b>${renderSegments(res.option_b.pick.segments)}
-          ${renderBilling({subtotal_usd: res.option_b.total_usd, total_usd: res.option_b.total_usd})}`;
-      } else {
-        inner = `<div class="option-tabs">
-          <div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A - Aircraft Waits</div>
-          <div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B - Pick &amp; Drop</div>
+      let aRes = {...res.option_a, rate_usd:res.rate_usd, overnight_rate_usd:res.overnight_rate_usd, idle_day_rate_usd:res.idle_day_rate_usd, pax_fee_usd_display:res.pax_fee_usd_display};
+      let bRes2 = { segments:[...(res.option_b.drop.segments||[]),...(res.option_b.pick.segments||[])], rate_usd:res.rate_usd, idle_day_rate_usd:res.idle_day_rate_usd, pax_fee_usd_display:res.pax_fee_usd_display, total_usd:res.option_b.total_usd };
+      content = `<div class="info-box">Aircraft availability for the wait option is subject to schedule. Please review both options before confirming.</div>
+        <div class="option-tabs">
+          <div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A — Waits</div>
+          <div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B — Pick & Drop</div>
         </div>
-        <div class="otab-content active" id="oa-${res.ac_key}">
-          ${renderSegments(res.option_a.segments)}${renderBilling(res.option_a)}
-        </div>
+        <div class="otab-content active" id="oa-${res.ac_key}">${renderSegments(res.option_a.segments, showDist)}${renderBilling(aRes)}</div>
         <div class="otab-content" id="ob-${res.ac_key}">
-          <b style="font-size:0.85rem">Drop Off</b>${renderSegments(res.option_b.drop.segments)}
-          <b style="font-size:0.85rem">Pick Up</b>${renderSegments(res.option_b.pick.segments)}
-          ${renderBilling({subtotal_usd: res.option_b.total_usd, total_usd: res.option_b.total_usd})}
+          <div class="drop-label">Drop Off</div>${renderSegments(res.option_b.drop.segments, showDist)}
+          <div class="drop-label">Pick Up</div>${renderSegments(res.option_b.pick.segments, showDist)}
+          ${renderBilling(bRes2)}
         </div>`;
-      }
-    } else {
-      inner = renderSegments(res.segments) + renderBilling(res);
     }
-    return `<div class="ac-block"><div class="ac-title">${res.ac_label}</div>${inner}</div>`;
-  }).join('');
+  } else {
+    content = renderSegments(res.segments, showDist) + renderBilling(res);
+  }
 
-  let waMsg = encodeURIComponent(buildWhatsApp(results, mission, body));
-  let waNum = '{{ operator.contact.whatsapp }}';
-  let phone = '{{ operator.contact.phone }}';
-
-  let html = `<div class="result-card">
-    ${blocks}
-    <button class="btn btn-whatsapp" onclick="window.open('https://wa.me/${waNum}?text=' + '${waMsg}','_blank')">
-      WhatsApp Us This Quote
-    </button>
-    <button class="btn btn-call" onclick="window.location='tel:${phone}'">
-      Call Us — ${phone}
-    </button>
-    <button class="btn btn-reset" onclick="location.reload()">New Quote</button>
-  </div>`;
-
-  document.getElementById('result-area').innerHTML = html;
+  return `<div class="ac-header">
+    <div class="ac-title">${res.ac_label||''}</div>
+    ${badge}
+  </div>${content}${disclaimer}`;
 }
 
 function switchOtab(el, id) {
-  let parent = el.closest('.result-card');
+  let parent = el.closest('.ac-card');
   parent.querySelectorAll('.otab').forEach(t => t.classList.remove('active'));
   parent.querySelectorAll('.otab-content').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   document.getElementById(id).classList.add('active');
 }
+
+function renderResults(results, mission) {
+  let showDist = (config.quoting_rules || {}).show_distance_to_client || false;
+  document.getElementById('results-inner').innerHTML = results.map(res =>
+    `<div class="ac-card">${renderOneAc(res, showDist)}</div>`
+  ).join('');
+
+  let hours = (config.quoting_rules || {}).quote_validity_hours || 48;
+  document.getElementById('validity-notice').textContent =
+    `Quote valid for ${hours} hours. Prices subject to change and aircraft availability.`;
+
+  // FX
+  let firstTotal = 0;
+  if (results.length) {
+    let f = results[0];
+    firstTotal = f.mission === 'return_both' ? (f.option_a?.total_usd || 0) : (f.total_usd || 0);
+  }
+  if (firstTotal > 0 && Object.keys(fxRates).length) {
+    document.getElementById('fx-input').value = firstTotal;
+    document.getElementById('fx-widget').style.display = 'block';
+    updateFX();
+  }
+
+  buildWhatsApp(results, mission);
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function buildWhatsApp(results, mission) {
+  let wa = (config.contact || {}).whatsapp || '';
+  if (!wa) return;
+  let greeting = (config.contact || {}).whatsapp_greeting || "Hi, I'd like to enquire about a charter quote.";
+  let lines = [greeting, ''];
+  results.forEach(res => {
+    if (res.error) return;
+    lines.push(`*${res.ac_label}*`);
+    if (res.mission === 'return_both') {
+      let wd = res.wait_days, maxN = res.max_nights || 3;
+      if (wd >= maxN) {
+        let b = res.option_b;
+        lines.push(`Pick & Drop — USD $${(b.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+        (b.drop?.segments||[]).filter(s=>s.type==='revenue').forEach(s=>lines.push(`Drop: ${s.origin} → ${s.destination}${s.date?' on '+s.date:''}`));
+        (b.pick?.segments||[]).filter(s=>s.type==='revenue').forEach(s=>lines.push(`Pick: ${s.origin} → ${s.destination}${s.date?' on '+s.date:''}`));
+      } else {
+        lines.push(`Option A (Waits) — USD $${(res.option_a?.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+        lines.push(`Option B (Pick & Drop) — USD $${(res.option_b?.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+        (res.option_a?.segments||[]).filter(s=>s.type==='revenue').forEach(s=>lines.push(`${s.origin} → ${s.destination}${s.date?' on '+s.date:''}`));
+      }
+    } else {
+      lines.push(`USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+      (res.segments||[]).filter(s=>s.type==='revenue').forEach(s=>lines.push(`${s.origin} → ${s.destination}${s.date?' on '+s.date:''}`));
+    }
+    lines.push('');
+  });
+  lines.push('Please confirm availability and next steps. Thank you.');
+  document.getElementById('btn-whatsapp').href = `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;
+}
+
+function resetQuote() {
+  document.getElementById('results').style.display = 'none';
+  hideError();
+  lastResults = [];
+  ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','rt-depart','rt-return'].forEach(id => {
+    let el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('quote-card').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+init();
 </script>
 </body>
 </html>
