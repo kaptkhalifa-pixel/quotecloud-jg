@@ -1,11 +1,10 @@
 # =========================================================
 # QUOTECLOUD BY JETMAN GLOBAL
-# app.py v2.4.3
-# v2.4.3 fixes:
-#   - BANK DETAILS / TERMS & CONDITIONS titles via API fields
-#   - Removed duplicate titles from body text
-#   - Indentation errors fixed
-#   - All v2.4.2 features retained
+# app.py v2.4.4
+# v2.4.4 fixes:
+#   - BUG-01: Removed ship_to, client details in "to" block
+#   - BUG-03: Bank details multiline preserved via \n
+#   - All v2.4.3 features retained
 # =========================================================
 import sys, os, json, re, pathlib, datetime
 sys.path.insert(0, os.path.dirname(__file__))
@@ -628,6 +627,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             "unit_cost": str(ei.get("unit_cost", "0"))
         })
 
+    # BUG-01: client details in to block, no ship_to
+    to_block = "\n".join(filter(None, [client_name, client_email, client_phone]))
     bank_block = get_bank_details_block()
     terms = OPERATOR.get("invoice", {}).get("terms", "")
     doc_number = next_record_number(doc_type)
@@ -635,8 +636,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     payload = {
         "logo": OPERATOR.get("logo_url", ""),
         "from": get_company_from_block(),
-        "to": client_name,
-        "ship_to": f"Tel: {client_phone}" if client_phone else "",
+        "to": to_block,
         "number": doc_number,
         "date": datetime.date.today().strftime("%d %b %Y"),
         "due_date": (datetime.date.today() + datetime.timedelta(days=7)).strftime("%d %b %Y"),
@@ -792,14 +792,15 @@ def manual_invoice():
             })
             total += qty * unit
 
+        # BUG-01: client details in to block, no ship_to
+        to_block = "\n".join(filter(None, [client_name, client_email, client_phone]))
         bank_block = bank_override if bank_override else get_bank_details_block()
         terms = terms_override if terms_override else OPERATOR.get("invoice", {}).get("terms", "")
 
         payload = {
             "logo": OPERATOR.get("logo_url", ""),
             "from": get_company_from_block(),
-            "to": client_name,
-            "ship_to": f"Tel: {client_phone}" if client_phone else "",
+            "to": to_block,
             "number": doc_number,
             "date": datetime.date.today().strftime("%d %b %Y"),
             "due_date": (datetime.date.today() + datetime.timedelta(days=7)).strftime("%d %b %Y"),
