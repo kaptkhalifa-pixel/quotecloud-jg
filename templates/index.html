@@ -127,7 +127,7 @@ textarea { resize: vertical; }
     <img src="{{ operator.logo_url }}" alt="{{ operator.company_name }}">
     <div>
       <h1>{{ operator.company_name }}</h1>
-      <span>Admin Tool — Quotecloud v2.4.8</span>
+      <span>Admin Tool — Quotecloud v2.4.9</span>
     </div>
   </div>
   <a href="/logout" class="logout">Logout</a>
@@ -189,7 +189,14 @@ textarea { resize: vertical; }
       <button class="btn btn-clear btn-sm" onclick="clearQuote()">Clear Quote</button>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Select Aircraft</label><select id="pdf-aircraft-select"></select></div>
+      <div class="form-group"><label>Select Aircraft</label><select id="pdf-aircraft-select" onchange="updateOptionSelector()"></select></div>
+      <div class="form-group" id="pdf-option-group" style="display:none">
+        <label>Quote Option</label>
+        <select id="pdf-option-select">
+          <option value="option_a">Option A — Aircraft Waits</option>
+          <option value="option_b">Option B — Pick & Drop</option>
+        </select>
+      </div>
       <div class="form-group"><label>Document Type</label>
         <select id="pdf-doc-type">
           <option value="Quotation">Quotation</option>
@@ -592,7 +599,7 @@ textarea { resize: vertical; }
 </div>
 
 <script>
-// Quotecloud Admin v2.4.8
+// Quotecloud Admin v2.4.9
 let lastResults = [];
 let allLocations = [];
 let aircraftData = {};
@@ -738,6 +745,21 @@ function populatePdfAircraftSelector() {
       sel.appendChild(opt);
     }
   });
+  updateOptionSelector();
+}
+
+function updateOptionSelector() {
+  let sel = document.getElementById('pdf-aircraft-select');
+  let idx = parseInt(sel.value) || 0;
+  let res = lastResults[idx];
+  let group = document.getElementById('pdf-option-group');
+  if (res && res.mission === 'return_both') {
+    let wd = res.wait_days || 0;
+    let maxN = res.max_nights || 3;
+    group.style.display = wd < maxN ? 'block' : 'none';
+  } else {
+    group.style.display = 'none';
+  }
 }
 
 function getSelectedResult() {
@@ -745,7 +767,27 @@ function getSelectedResult() {
   let idx = parseInt(sel.value) || 0;
   let res = lastResults[idx];
   if (!res) return null;
-  let actual = res.mission === 'return_both' ? res.option_a : res;
+
+  let actual;
+  if (res.mission === 'return_both') {
+    let wd = res.wait_days || 0;
+    let maxN = res.max_nights || 3;
+    if (wd >= maxN) {
+      actual = res.option_b;
+      actual.mission = 'pick_and_drop';
+    } else {
+      let optSel = document.getElementById('pdf-option-select').value;
+      if (optSel === 'option_b') {
+        actual = res.option_b;
+        actual.mission = 'pick_and_drop';
+      } else {
+        actual = res.option_a;
+      }
+    }
+  } else {
+    actual = res;
+  }
+
   actual.rate_usd = res.rate_usd;
   actual.overnight_rate_usd = res.overnight_rate_usd;
   actual.idle_day_rate_usd = res.idle_day_rate_usd;
@@ -832,21 +874,18 @@ function renderBilling(res, extraSegs) {
   }
   let fee = res.pax_fee_usd || res.pax_fee_usd_display || 0;
   if (fee > 0) rows += `<div class="billing-row"><span>Fees & Taxes</span><span>USD $${parseFloat(fee).toLocaleString()}</span></div>`;
-
   let overnightUsd = res.overnight_usd || res.overnight_cost_usd || 0;
   let oRate = res.overnight_rate_usd || 0;
   if (overnightUsd > 0 && oRate > 0) {
     let nights = Math.round(overnightUsd / oRate);
     rows += `<div class="billing-row"><span>Overnight Per Diem (${nights} night${nights!==1?'s':''} @ $${oRate}/night)</span><span>USD $${parseFloat(overnightUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-
   let waitingUsd = res.waiting_usd || res.idle_cost_usd || 0;
   let idleRate = res.idle_day_rate_usd || 0;
   if (waitingUsd > 0) {
     let idleDays = idleRate > 0 ? Math.round(waitingUsd / idleRate) : 1;
     rows += `<div class="billing-row"><span>Idle Day Charge (${idleDays} day${idleDays!==1?'s':''} @ $${idleRate.toLocaleString()}/day)</span><span>USD $${parseFloat(waitingUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-
   return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div></div>`;
 }
 
@@ -855,7 +894,7 @@ function renderOneAc(res) {
   let typeBadge = res.ac_type==='fixed_wing'?`<span class="tag tag-fixed">Fixed Wing</span>`:`<span class="tag tag-heli">Helicopter</span>`;
   let routeBadge = res.routing_mode==='direct'?`<span class="tag tag-direct">Direct</span>`:`<span class="tag tag-standard">Standard</span>`;
   let homeInfo = res.home_airstrip ? `| Base: ${res.home_airstrip}` : '';
-  let disclaimer = res.ac_type==='fixed_wing'?`<div class="info-box">This aircraft requires a runway. Quote is not a confirmation of service.</div>`:'';
+  let disclaimer = res.ac_type==='fixed_wing' ? `<div class="info-box">This is a fixed wing aircraft and requires a runway for take off / landing. The quote is not a confirmation of service to quoted location. Contact us via WhatsApp for final reservation and confirmation of runway suitability.</div>` : '';
   let content = '';
 
   if (res.mission === 'return_both') {
@@ -893,7 +932,10 @@ function renderOneAc(res) {
         <div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A - Waits</div>
         <div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B - Pick & Drop</div>
       </div>
-      <div class="otab-content active" id="oa-${res.ac_key}">${renderSegments(res.option_a.segments)}${renderBilling(optARes)}</div>
+      <div class="otab-content active" id="oa-${res.ac_key}">
+        <div class="info-box" style="margin-bottom:12px">Note: Aircraft availability for the wait option is subject to operational schedule. We recommend the client also reviews Option B (Pick & Drop) as an alternative.</div>
+        ${renderSegments(res.option_a.segments)}${renderBilling(optARes)}
+      </div>
       <div class="otab-content" id="ob-${res.ac_key}">
         <b style="font-size:0.82rem;color:#555">Drop Off</b>${renderSegments(res.option_b.drop.segments)}
         <b style="font-size:0.82rem;color:#555">Pick Up</b>${renderSegments(res.option_b.pick.segments)}
@@ -1246,15 +1288,8 @@ async function confirmMarkPaid(generateReceipt) {
       closePaidModal(); loadRecords();
     } else {
       let data = await r.json();
-      if (data.success) {
-        if (data.fully_paid) {
-          // Refresh modal to show receipt button
-          closePaidModal();
-          loadRecords();
-        } else {
-          closePaidModal(); loadRecords();
-        }
-      } else showMsg('paid-msg', data.error||'Error','error');
+      if (data.success) { closePaidModal(); loadRecords(); }
+      else showMsg('paid-msg', data.error||'Error','error');
     }
   } catch(e) { showMsg('paid-msg','Error: '+e.message,'error'); }
 }
