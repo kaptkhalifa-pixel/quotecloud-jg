@@ -664,11 +664,15 @@ async function reverseGeocode(lat, lng) {
 
 async function resolveMapsShortUrl(url) {
   try {
-    // Step 1: Expand short URL via CORS proxy
-    let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    let proxyRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+        // Step 1: Expand short URL via our own proxy
+    let proxyRes = await fetch('/expand_maps_url', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url}),
+      signal: AbortSignal.timeout(8000)
+    });
     let proxyData = await proxyRes.json();
-    let finalUrl = proxyData.status?.url || '';
+    let finalUrl = proxyData.final_url || '';
 
     // Step 2: Try coords from expanded URL
     if (finalUrl) {
