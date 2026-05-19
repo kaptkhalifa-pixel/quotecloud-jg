@@ -259,8 +259,54 @@ def resolve_location(s, user_label=None):
     if "goo.gl" in s or "maps.app" in s:
         try:
             import requests as req
-            r = req.get(s, allow_redirects=True, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
-            s = r.url
+            r = req.get(s, allow_redirects=True, timeout=8, headers={"User-Agent": "Mozilla/5.0"})
+            expanded = r.url
+            # Try coords directly from expanded URL
+            try:
+                lat, lon = hq.parse_map_pin(expanded)
+                if check_geo_lock(lat, lon):
+                    display = reverse_geocode(lat, lon) or f"Pin, {lat:.5f}, {lon:.5f}"
+                    return display, f"{lat},{lon}"
+            except Exception:
+                pass
+            # Try ftid Place ID
+            import re as re2
+            ftid_match = re2.search(r'ftid=([^&]+)', expanded)
+            if ftid_match:
+                try:
+                    gr = req.get("https://maps.googleapis.com/maps/api/geocode/json",
+                                params={"place_id": ftid_match.group(1), "key": GOOGLE_API_KEY},
+                                timeout=5)
+                    gdata = gr.json()
+                    if gdata.get("status") == "OK":
+                        loc = gdata["results"][0]["geometry"]["location"]
+                        lat, lon = float(loc["lat"]), float(loc["lng"])
+                        if check_geo_lock(lat, lon):
+                            display = reverse_geocode(lat, lon) or f"Pin, {lat:.5f}, {lon:.5f}"
+                            return display, f"{lat},{lon}"
+                except Exception:
+                    pass
+            # Try q parameter
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(expanded)
+            params = parse_qs(parsed.query)
+            q = (params.get('q') or params.get('query') or [''])[0]
+            if q:
+                region = OPERATOR.get("geo_lock", {}).get("region_name", "Kenya")
+                query = q if region.lower() in q.lower() else f"{q} {region}"
+                try:
+                    gr = req.get("https://maps.googleapis.com/maps/api/geocode/json",
+                                params={"address": query, "key": GOOGLE_API_KEY, "region": "ke"},
+                                timeout=5)
+                    gdata = gr.json()
+                    if gdata.get("status") == "OK":
+                        loc = gdata["results"][0]["geometry"]["location"]
+                        lat, lon = float(loc["lat"]), float(loc["lng"])
+                        if check_geo_lock(lat, lon):
+                            return original_input.strip().title(), f"{lat},{lon}"
+                except Exception:
+                    pass
+            s = expanded
         except Exception:
             pass
     s = s.replace(",+", ",").replace("%2C+", ",")
