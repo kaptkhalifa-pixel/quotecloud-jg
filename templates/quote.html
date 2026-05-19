@@ -664,13 +664,13 @@ async function reverseGeocode(lat, lng) {
 
 async function resolveMapsShortUrl(url) {
   try {
-    // Step 1: Expand short URL via CORS proxy to get full URL with coords
+    // Step 1: Expand short URL via CORS proxy
     let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
     let proxyRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
     let proxyData = await proxyRes.json();
     let finalUrl = proxyData.status?.url || '';
 
-    // Step 2: Try to extract coords from expanded URL
+    // Step 2: Try coords from expanded URL
     if (finalUrl) {
       let coords = extractCoordsFromUrl(finalUrl);
       if (coords) {
@@ -679,9 +679,23 @@ async function resolveMapsShortUrl(url) {
       }
     }
 
-    // Step 3: Try place name from URL
-    let urlObj = new URL(url);
-    let q = urlObj.searchParams.get('q') || urlObj.searchParams.get('query') || '';
+    // Step 3: Try ftid (Place ID) via Places API
+    let ftidMatch = finalUrl.match(/ftid=([^&]+)/);
+    if (ftidMatch && GAPI_KEY) {
+      let ftid = ftidMatch[1];
+      // Convert ftid to place_id format and use Places API
+      let r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?place_id=${encodeURIComponent(ftid)}&key=${GAPI_KEY}`);
+      let data = await r.json();
+      if (data.status === 'OK') {
+        let loc = data.results[0].geometry.location;
+        let display = await reverseGeocode(loc.lat, loc.lng);
+        return { coords: `${loc.lat},${loc.lng}`, display };
+      }
+    }
+
+    // Step 4: Try place name from q parameter
+    let expandedObj = finalUrl ? new URL(finalUrl) : new URL(url);
+    let q = expandedObj.searchParams.get('q') || expandedObj.searchParams.get('query') || '';
     if (!q) {
       let pathMatch = url.match(/place\/([^\/\?@]+)/);
       if (pathMatch) q = decodeURIComponent(pathMatch[1].replace(/\+/g, ' '));
@@ -697,7 +711,7 @@ async function resolveMapsShortUrl(url) {
         return { coords: `${loc.lat},${loc.lng}`, display };
       }
     }
-  } catch(e) {}
+  } catch(e) { console.error('Maps resolve error:', e); }
   return null;
 }
 
