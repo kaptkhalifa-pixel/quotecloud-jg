@@ -1,14 +1,9 @@
 # =========================================================
 # QUOTECLOUD BY JETMAN GLOBAL
-# app.py v2.4.8
-# v2.4.8 changes:
-#   - BUG-01: Discount field fix - passes correctly to API
-#   - BUG-02: Pick & Drop routing shows in PDF
-#   - BUG-03: undefined segment tag fixed (note-based segments)
-#   - FEAT-01: Idle day rate per aircraft
-#   - FEAT-02: Idle day rate passed to engine
-#   - FEAT-03: Overnight Per Diem as line item qty x rate
-#   - FEAT-04: Idle Day Charge as line item qty x rate
+# app.py v2.4.9
+# v2.4.9 changes:
+#   - Added /expand_maps_url route for client-side Maps resolution
+#   - Fixed missing @app.route decorator on /fx/rates
 # =========================================================
 import sys, os, json, re, pathlib, datetime
 sys.path.insert(0, os.path.dirname(__file__))
@@ -582,17 +577,14 @@ def calc_pdf_total(result, extra_items, discount):
     return round(base + extras_total - disc, 2)
 
 def get_flight_segments(result):
-    """Extract only flying segments for routing display - excludes idle/overnight note segments."""
     segs = result.get("segments", [])
     return [s for s in segs if s.get("type") and s.get("origin")]
 
 def get_note_segments(result):
-    """Extract idle/overnight note segments."""
     segs = result.get("segments", [])
     return [s for s in segs if s.get("note") and not s.get("type")]
 
 def build_routing_lines(segments):
-    """Build routing text from flight segments only."""
     lines = []
     for s in segments:
         if not s.get("type") or not s.get("origin"):
@@ -617,7 +609,6 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     overnight_rate = result.get("overnight_rate_usd", 0)
     idle_day_rate = result.get("idle_day_rate_usd", 0)
 
-    # Collect all flight segments - handle pick & drop mission
     mission = result.get("mission", "")
     if mission == "pick_and_drop":
         drop_segs = result.get("drop", {}).get("segments", [])
@@ -629,7 +620,6 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         all_segments = result.get("segments", [])
         flight_total_usd = result.get("total_usd", 0)
 
-    # Flying segments only for routing
     flying_segs = [s for s in all_segments if s.get("type") and s.get("origin")]
     total_hrs = sum(float(s.get("hours", 0)) for s in flying_segs)
 
@@ -637,7 +627,6 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     routing_text = "Routing:\n" + "\n".join(routing_lines) if routing_lines else ""
     note_line = f"Note: {note}" if note else ""
 
-    # Line item 1: Aircraft Charter
     if total_hrs > 0 and rate > 0:
         item_parts = [f"Equipment: {ac_label}"]
         if routing_text:
@@ -650,7 +639,6 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             "unit_cost": str(rate)
         })
 
-    # Passenger fees
     pax_fee = result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0
     if pax_fee > 0:
         items.append({
@@ -659,7 +647,6 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             "unit_cost": str(pax_fee)
         })
 
-    # Overnight Per Diem - explicit line item with qty x rate
     overnight_usd = result.get("overnight_usd") or result.get("overnight_cost_usd") or 0
     if overnight_usd > 0 and overnight_rate > 0:
         nights = round(float(overnight_usd) / float(overnight_rate))
@@ -670,7 +657,6 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
                 "unit_cost": str(overnight_rate)
             })
 
-    # Idle Day Charge - explicit line item with qty x rate
     waiting_usd = result.get("waiting_usd") or result.get("idle_cost_usd") or 0
     if waiting_usd > 0 and idle_day_rate > 0:
         idle_days = round(float(waiting_usd) / float(idle_day_rate))
@@ -681,7 +667,6 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
                 "unit_cost": str(idle_day_rate)
             })
 
-    # Extra line items
     for ei in (extra_items or []):
         items.append({
             "name": ei.get("name", "Additional Charge"),
@@ -788,8 +773,6 @@ def pdf_all():
         for res in results:
             if res.get("error"):
                 continue
-
-            # Handle return_both - use option_a or pick_and_drop
             if res.get("mission") == "return_both":
                 wd = res.get("wait_days", 0)
                 max_n = res.get("max_nights", 3)
@@ -950,8 +933,6 @@ def mark_paid():
         return jsonify({"error": "Record not found"}), 404
 
     total = float(rec.get("amount", 0))
-
-    # Block overpayment
     prev_paid = float(rec.get("paid_amount", 0))
     remaining = round(total - prev_paid, 2)
     if paid_amount > remaining:
@@ -1184,9 +1165,9 @@ def get_config_public():
         "landing_field_disclaimer": OPERATOR.get("landing_field_disclaimer", ""),
         "geo_lock": {"region_name": get_region_name()},
         "quoting_rules": {
-            "show_distance_to_client": OPERATOR.get("quoting_rules", {}).get("show_distance_to_client", False)
-        },
-        "footer": OPERATOR.get("footer", {})
+            "show_distance_to_client": OPERATOR.get("quoting_rules", {}).get("show_distance_to_client", False),
+            "quote_validity_hours": OPERATOR.get("quoting_rules", {}).get("quote_validity_hours", 48)
+        }
     }
     return jsonify(safe)
 
@@ -1226,6 +1207,22 @@ def change_password():
 @app.route("/get_maps_key", methods=["GET"])
 def get_maps_key():
     return jsonify({"key": GOOGLE_API_KEY})
+
+@app.route("/expand_maps_url", methods=["POST"])
+def expand_maps_url():
+    data = request.get_json()
+    url = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "URL required"}), 400
+    try:
+        import requests as req
+        r = req.get(url, allow_redirects=True, timeout=8,
+                    headers={"User-Agent": "Mozilla/5.0"})
+        return jsonify({"final_url": r.url, "success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route("/fx/rates", methods=["GET"])
 def fx_rates():
     try:
         import requests as req
