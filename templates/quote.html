@@ -664,18 +664,34 @@ async function reverseGeocode(lat, lng) {
 
 async function resolveMapsShortUrl(url) {
   try {
+    // Step 1: Expand short URL via CORS proxy to get full URL with coords
+    let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    let proxyRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+    let proxyData = await proxyRes.json();
+    let finalUrl = proxyData.status?.url || '';
+
+    // Step 2: Try to extract coords from expanded URL
+    if (finalUrl) {
+      let coords = extractCoordsFromUrl(finalUrl);
+      if (coords) {
+        let display = await reverseGeocode(coords.lat, coords.lng);
+        return { coords: `${coords.lat},${coords.lng}`, display };
+      }
+    }
+
+    // Step 3: Try place name from URL
     let urlObj = new URL(url);
-    let q = urlObj.searchParams.get('q')||urlObj.searchParams.get('query')||'';
+    let q = urlObj.searchParams.get('q') || urlObj.searchParams.get('query') || '';
     if (!q) {
       let pathMatch = url.match(/place\/([^\/\?@]+)/);
-      if (pathMatch) q = decodeURIComponent(pathMatch[1].replace(/\+/g,' '));
+      if (pathMatch) q = decodeURIComponent(pathMatch[1].replace(/\+/g, ' '));
     }
-    if (q&&GAPI_KEY) {
-      let region = (config.geo_lock||{}).region_name||'Kenya';
+    if (q && GAPI_KEY) {
+      let region = (config.geo_lock||{}).region_name || 'Kenya';
       let query = q.toLowerCase().includes(region.toLowerCase()) ? q : `${q} ${region}`;
       let r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GAPI_KEY}&region=ke`);
       let data = await r.json();
-      if (data.status==='OK') {
+      if (data.status === 'OK') {
         let loc = data.results[0].geometry.location;
         let display = await reverseGeocode(loc.lat, loc.lng);
         return { coords: `${loc.lat},${loc.lng}`, display };
