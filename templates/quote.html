@@ -3,196 +3,497 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="page-title">Charter Quotes</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<title id="page-title">Jetman Global — Instant Quotes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary: #0D47A1;
-  --accent: #e8a020;
-  --btn-text: #ffffff;
+  --black: #0a0a0a;
+  --white: #ffffff;
+  --grey: #f5f5f3;
+  --mid: #888888;
+  --border: #e0e0e0;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1a1a1a; min-height: 100vh; }
-.hero { background: var(--primary); padding: 0 0 48px; position: relative; overflow: hidden; }
-.hero::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 40px; background: #f0f4f8; border-radius: 40px 40px 0 0; }
-.header { display: flex; align-items: center; gap: 14px; padding: 20px 24px 32px; }
-.header img { height: 46px; border-radius: 6px; }
-.header-text h1 { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 700; color: #fff; }
-.header-text p { font-size: 0.78rem; color: rgba(255,255,255,0.65); margin-top: 2px; }
-.hero-text { text-align: center; padding: 0 24px 28px; }
-.hero-text h2 { font-family: 'Montserrat', sans-serif; font-size: 1.7rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 8px; }
-.hero-text p { font-size: 0.88rem; color: rgba(255,255,255,0.65); }
-.quote-card { background: #fff; border-radius: 20px; margin: 0 16px; padding: 22px 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); position: relative; z-index: 2; margin-top: -8px; }
-.trust-bar { display: flex; gap: 6px; overflow-x: auto; padding: 20px 16px 4px; justify-content: center; flex-wrap: wrap; }
-.trust-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; color: #555; white-space: nowrap; padding: 5px 12px; background: #fff; border-radius: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-.trust-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-.main { max-width: 760px; margin: 0 auto; padding: 0 0 80px; }
-.inner { padding: 0 16px; }
-.mission-tabs { display: flex; gap: 6px; margin-bottom: 18px; }
-.mtab { flex: 1; padding: 9px 6px; border-radius: 10px; border: none; background: #f0f4f8; color: #666; cursor: pointer; font-weight: 600; font-size: 0.82rem; transition: all 0.2s; text-align: center; font-family: 'Inter', sans-serif; }
-.mtab.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(13,71,161,0.25); }
-.form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-.form-group { flex: 1; min-width: 180px; }
-label { font-size: 0.75rem; font-weight: 700; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
-input, select { width: 100%; padding: 12px 14px; border: 1.5px solid #e8ecf0; border-radius: 10px; font-size: 0.95rem; outline: none; font-family: inherit; transition: all 0.2s; background: #f8fafc; color: #1a1a1a; }
-input:focus, select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(13,71,161,0.08); }
-input::placeholder { color: #bbb; }
-.btn-quote { width: 100%; padding: 15px; background: var(--accent, #e8a020); color: #fff; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif; transition: all 0.2s; margin-top: 6px; letter-spacing: 0.3px; box-shadow: 0 4px 14px rgba(232,160,32,0.35); }
-.btn-quote:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,160,32,0.45); }
-.btn-quote:active { transform: translateY(0); }
-.btn-quote:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-.leg-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-.leg-row input { flex: 1; min-width: 120px; }
-.leg-num { font-weight: 700; color: var(--primary); min-width: 18px; font-size: 0.82rem; }
-.btn-add-leg { padding: 8px 16px; border-radius: 8px; border: 1.5px solid var(--primary); color: var(--primary); background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
-.btn-add-leg:hover { background: var(--primary); color: #fff; }
-.section-label { font-size: 0.72rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; margin: 20px 0 12px; }
-.ac-card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); border: 1px solid #f0f0f0; overflow: hidden; }
-.ac-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #f4f4f4; }
-.ac-title { font-family: 'Montserrat', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--primary); flex: 1; }
-.ac-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
-.badge-heli { background: #e3f2fd; color: #0d47a1; }
-.badge-fixed { background: #fce4ec; color: #880e4f; }
-.route-wrap { overflow-x: auto; margin-bottom: 14px; border-radius: 10px; border: 1px solid #f0f0f0; }
-.route-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 400px; }
-.route-table th { background: var(--primary); color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.3px; }
-.route-table td { padding: 9px 10px; border-bottom: 1px solid #f8f8f8; color: #333; }
+body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--black); min-height: 100vh; overflow-x: hidden; }
+
+/* TEXTURES */
+.dot-grid {
+  position: absolute;
+  width: 180px; height: 180px;
+  background-image: radial-gradient(circle, #ccc 1px, transparent 1px);
+  background-size: 12px 12px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.hatch {
+  position: absolute;
+  width: 120px; height: 120px;
+  background-image: repeating-linear-gradient(45deg, #ccc 0, #ccc 1px, transparent 0, transparent 50%);
+  background-size: 8px 8px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.blob {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+  background: var(--black);
+  opacity: 0.06;
+}
+
+/* HERO */
+.hero {
+  position: relative;
+  background: var(--white);
+  padding: 0;
+  overflow: hidden;
+  min-height: 340px;
+  border-bottom: 1px solid var(--border);
+}
+.hero-blob-1 {
+  width: 280px; height: 280px;
+  top: -60px; right: -60px;
+  background: var(--black);
+  opacity: 0.08;
+  border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+}
+.hero-blob-2 {
+  width: 160px; height: 160px;
+  bottom: -40px; left: -20px;
+  background: var(--black);
+  opacity: 0.05;
+  border-radius: 40% 60% 45% 55% / 60% 40% 60% 40%;
+}
+.hero-dot {
+  top: 40px; left: 20px;
+}
+.hero-hatch {
+  bottom: 20px; right: 30px;
+}
+
+.header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px 0;
+}
+.logo-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  padding: 7px 14px;
+  background: var(--white);
+}
+.logo-pill img {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  filter: grayscale(100%) contrast(200%);
+}
+.logo-pill span {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--black);
+}
+.header-tagline {
+  font-size: 0.7rem;
+  color: var(--mid);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 32px 24px 36px;
+}
+.hero-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mid);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-label::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--mid);
+}
+.hero-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--black);
+  margin-bottom: 14px;
+  letter-spacing: -0.5px;
+}
+.hero-sub {
+  font-size: 0.82rem;
+  color: var(--mid);
+  letter-spacing: 0.3px;
+  font-weight: 400;
+}
+
+/* WATERMARK LOGO */
+.logo-watermark {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  right: -10px;
+  transform: translateY(-50%);
+  opacity: 0.04;
+  filter: grayscale(100%) contrast(200%);
+  height: 200px;
+  width: auto;
+  pointer-events: none;
+}
+
+/* QUOTE CARD */
+.quote-section {
+  background: var(--white);
+  padding: 0 20px;
+  margin-top: -1px;
+}
+.quote-card {
+  background: var(--white);
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  padding: 24px 20px;
+  margin-top: -20px;
+  position: relative;
+  z-index: 3;
+}
+.mission-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 22px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.mtab {
+  flex: 1;
+  padding: 10px 6px;
+  border: none;
+  background: var(--white);
+  color: var(--mid);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.15s;
+  border-right: 1px solid var(--black);
+}
+.mtab:last-child { border-right: none; }
+.mtab.active { background: var(--black); color: var(--white); }
+
+/* FORM */
+.field-group { margin-bottom: 16px; }
+.field-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  display: block;
+  margin-bottom: 6px;
+}
+.field-input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 0.95rem;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  background: var(--white);
+  color: var(--black);
+  transition: border 0.15s;
+}
+.field-input:focus { border-color: var(--black); }
+.field-input::placeholder { color: #ccc; font-size: 0.88rem; }
+.form-row { display: flex; gap: 10px; }
+.form-row .field-group { flex: 1; }
+
+.btn-quote {
+  width: 100%;
+  padding: 16px;
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: 3px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: opacity 0.15s;
+  margin-top: 8px;
+}
+.btn-quote:hover { opacity: 0.85; }
+.btn-quote:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* LEG ROWS */
+.leg-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+.leg-row input { flex: 1; min-width: 100px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 3px; font-size: 0.88rem; font-family: 'Inter', sans-serif; outline: none; background: var(--white); }
+.leg-row input:focus { border-color: var(--black); }
+.leg-num { font-weight: 700; color: var(--mid); min-width: 16px; font-size: 0.78rem; }
+.btn-add-leg { padding: 8px 14px; border: 1px solid var(--black); border-radius: 3px; background: var(--white); color: var(--black); font-size: 0.72rem; font-weight: 700; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; font-family: 'Inter', sans-serif; margin: 8px 0 12px; }
+
+/* TRUST BAR */
+.trust-bar { display: flex; gap: 6px; padding: 16px 20px 4px; flex-wrap: wrap; justify-content: center; }
+.trust-item { font-size: 0.7rem; font-weight: 600; color: var(--mid); letter-spacing: 0.8px; text-transform: uppercase; padding: 4px 12px; border: 1px solid var(--border); border-radius: 2px; }
+
+/* MAIN */
+.main { max-width: 720px; margin: 0 auto; padding: 0 0 80px; }
+.inner { padding: 0 20px; }
+
+/* SECTION LABEL */
+.section-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 24px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* RESULT CARDS */
+.ac-card {
+  background: var(--white);
+  border: 1px solid var(--black);
+  border-radius: 3px;
+  padding: 20px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.ac-card-dot {
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 100px; height: 100px;
+  background-image: radial-gradient(circle, #ddd 1px, transparent 1px);
+  background-size: 8px 8px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.ac-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.ac-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--black);
+}
+.ac-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border: 1px solid var(--black);
+  border-radius: 2px;
+  color: var(--black);
+}
+
+/* ROUTE TABLE */
+.route-wrap { overflow-x: auto; margin-bottom: 14px; }
+.route-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 380px; }
+.route-table th { background: var(--black); color: var(--white); padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
+.route-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: #333; }
 .route-table tr:last-child td { border-bottom: none; }
-.route-table tr:hover td { background: #fafcff; }
-.tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
-.tag-rev { background: #d4edda; color: #155724; }
-.tag-pos { background: #fff3cd; color: #856404; }
-.tag-dep { background: #f8d7da; color: #721c24; }
-.tag-rep { background: #cce5ff; color: #004085; }
-.tag-idle { background: #fff3e0; color: #e65100; }
-.tag-overnight { background: #ede7f6; color: #4527a0; }
-.billing { background: #f8fafc; border-radius: 12px; padding: 14px 16px; }
-.billing-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px solid #f0f0f0; color: #555; }
+
+/* TAGS */
+.tag { display: inline-block; padding: 2px 7px; border-radius: 2px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid; }
+.tag-rev { border-color: #155724; color: #155724; background: transparent; }
+.tag-pos { border-color: #856404; color: #856404; background: transparent; }
+.tag-dep { border-color: #721c24; color: #721c24; background: transparent; }
+.tag-rep { border-color: #004085; color: #004085; background: transparent; }
+.tag-idle { border-color: #e65100; color: #e65100; background: transparent; }
+.tag-overnight { border-color: #4527a0; color: #4527a0; background: transparent; }
+
+/* BILLING */
+.billing { background: var(--grey); border-radius: 3px; padding: 14px 16px; }
+.billing-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.82rem; border-bottom: 1px solid var(--border); color: #555; }
 .billing-row:last-of-type { border-bottom: none; }
-.billing-divider { height: 1px; background: var(--primary); margin: 10px 0; opacity: 0.2; }
-.billing-total { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.05rem; color: var(--primary); padding-top: 4px; }
-.billing-total span:last-child { font-family: 'Montserrat', sans-serif; }
-.option-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-.otab { flex: 1; padding: 8px 10px; border-radius: 10px; border: 1.5px solid #e0e0e0; color: #666; background: #fff; cursor: pointer; font-size: 0.8rem; font-weight: 600; text-align: center; transition: all 0.2s; font-family: 'Inter', sans-serif; }
-.otab.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 8px rgba(13,71,161,0.2); }
+.billing-divider { height: 1px; background: var(--black); margin: 10px 0; }
+.billing-total { display: flex; justify-content: space-between; font-weight: 800; font-size: 1rem; color: var(--black); padding-top: 4px; font-family: 'Playfair Display', serif; }
+
+/* OPTION TABS */
+.option-tabs { display: flex; gap: 0; margin-bottom: 12px; border: 1px solid var(--black); border-radius: 3px; overflow: hidden; }
+.otab { flex: 1; padding: 8px 10px; border: none; background: var(--white); color: var(--mid); cursor: pointer; font-size: 0.72rem; font-weight: 700; text-align: center; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Inter', sans-serif; border-right: 1px solid var(--black); }
+.otab:last-child { border-right: none; }
+.otab.active { background: var(--black); color: var(--white); }
 .otab-content { display: none; }
 .otab-content.active { display: block; }
-.info-box { background: #fffbec; border-left: 3px solid var(--accent); color: #7a5c00; border-radius: 8px; padding: 11px 14px; margin: 10px 0; font-size: 0.82rem; line-height: 1.6; }
-.error-card { background: #fff0f0; border-left: 3px solid #e53935; color: #b71c1c; border-radius: 12px; padding: 16px; margin: 16px 0; font-size: 0.88rem; line-height: 1.6; }
-.pickup-drop-msg { background: #e8f4fd; border-left: 3px solid var(--primary); color: #0d47a1; border-radius: 8px; padding: 11px 14px; margin-bottom: 12px; font-size: 0.82rem; line-height: 1.6; }
-.validity-notice { background: #fff; border-radius: 10px; padding: 10px 16px; margin-top: 6px; font-size: 0.78rem; color: #aaa; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.resolving-bar { background: #e8f4fd; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; font-size: 0.82rem; color: #0d47a1; display: none; }
-.loading-card { background: #fff; border-radius: 16px; padding: 40px 20px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 14px; }
-.spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e8ecf0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px; }
+
+/* BOXES */
+.info-box { border-left: 2px solid var(--black); background: var(--grey); color: #555; padding: 10px 14px; margin: 10px 0; font-size: 0.8rem; line-height: 1.6; border-radius: 0 3px 3px 0; }
+.error-card { border-left: 2px solid #cc0000; background: #fff8f8; color: #cc0000; padding: 14px 16px; margin: 14px 0; font-size: 0.85rem; line-height: 1.6; border-radius: 0 3px 3px 0; }
+.pickup-drop-msg { border-left: 2px solid var(--black); background: var(--grey); color: #333; padding: 10px 14px; margin-bottom: 12px; font-size: 0.8rem; line-height: 1.6; border-radius: 0 3px 3px 0; }
+.validity-notice { border: 1px solid var(--border); border-radius: 3px; padding: 10px 16px; margin-top: 8px; font-size: 0.72rem; color: var(--mid); text-align: center; letter-spacing: 0.3px; }
+.resolving-bar { background: var(--grey); border-radius: 3px; padding: 10px 14px; margin-bottom: 10px; font-size: 0.8rem; color: var(--mid); display: none; letter-spacing: 0.3px; }
+
+/* LOADING */
+.loading-card { background: var(--white); border: 1px solid var(--border); border-radius: 3px; padding: 40px 20px; text-align: center; margin-bottom: 12px; }
+.spinner { display: inline-block; width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--black); border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { color: #888; font-size: 0.9rem; }
+.loading-text { color: var(--mid); font-size: 0.78rem; letter-spacing: 1px; text-transform: uppercase; }
+
+/* CTA */
 .cta-block { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-.btn-whatsapp { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: #25D366; color: #fff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 14px rgba(37,211,102,0.3); }
-.btn-whatsapp:hover { transform: translateY(-1px); }
-.btn-call { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 13px; background: #fff; color: var(--primary); border: 2px solid var(--primary); border-radius: 12px; font-size: 0.92rem; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif; text-decoration: none; transition: all 0.2s; }
-.btn-call:hover { background: var(--primary); color: #fff; }
-.btn-reset { padding: 11px; background: transparent; color: #999; border: 1.5px solid #ddd; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
-.btn-reset:hover { border-color: #999; color: #555; }
-.fx-widget { background: #fff; border-radius: 14px; padding: 16px 18px; margin-top: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-.fx-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.fx-title { font-size: 0.72rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; }
-.fx-input-wrap { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1.5px solid #e8ecf0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
-.fx-input-wrap span { font-weight: 700; color: #555; font-size: 0.88rem; }
-.fx-input-wrap input { border: none; background: transparent; font-size: 1rem; font-weight: 700; flex: 1; outline: none; font-family: 'Montserrat', sans-serif; }
+.btn-whatsapp { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: var(--black); color: var(--white); border: none; border-radius: 3px; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; transition: opacity 0.15s; }
+.btn-whatsapp:hover { opacity: 0.85; }
+.btn-call { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 13px; background: var(--white); color: var(--black); border: 1.5px solid var(--black); border-radius: 3px; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; transition: all 0.15s; }
+.btn-call:hover { background: var(--black); color: var(--white); }
+.btn-reset { padding: 11px; background: transparent; color: var(--mid); border: 1px solid var(--border); border-radius: 3px; font-size: 0.72rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+
+/* FX */
+.fx-widget { background: var(--white); border: 1px solid var(--border); border-radius: 3px; padding: 16px 18px; margin-top: 14px; }
+.fx-title { font-size: 0.62rem; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+.fx-input-wrap { display: flex; align-items: center; gap: 8px; background: var(--grey); border: 1px solid var(--border); border-radius: 3px; padding: 10px 14px; margin-bottom: 12px; }
+.fx-input-wrap span { font-weight: 700; color: var(--mid); font-size: 0.78rem; letter-spacing: 1px; }
+.fx-input-wrap input { border: none; background: transparent; font-size: 1rem; font-weight: 700; flex: 1; outline: none; font-family: 'Playfair Display', serif; color: var(--black); }
 .fx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.fx-item { background: #f8fafc; border-radius: 10px; padding: 10px 12px; border: 1px solid #f0f0f0; }
-.fx-currency { font-size: 0.7rem; font-weight: 700; color: #aaa; margin-bottom: 2px; }
-.fx-amount { font-size: 0.92rem; font-weight: 700; color: #1a1a1a; font-family: 'Montserrat', sans-serif; }
-.fx-updated { font-size: 0.7rem; color: #ccc; text-align: right; margin-top: 8px; }
-.footer { background: #0a0f1e; color: #666; padding: 32px 20px; text-align: center; font-size: 0.8rem; line-height: 2; }
-.footer-company { color: #aaa; font-weight: 600; font-size: 0.88rem; margin-bottom: 4px; }
+.fx-item { background: var(--grey); border-radius: 3px; padding: 10px 12px; border: 1px solid var(--border); }
+.fx-currency { font-size: 0.62rem; font-weight: 700; color: var(--mid); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+.fx-amount { font-size: 0.9rem; font-weight: 700; color: var(--black); font-family: 'Playfair Display', serif; }
+.fx-updated { font-size: 0.65rem; color: #ccc; text-align: right; margin-top: 8px; }
+.drop-label { font-size: 0.62rem; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: 1.5px; margin: 10px 0 6px; }
+
+/* FOOTER */
+.footer { background: var(--black); color: #666; padding: 32px 20px; text-align: center; font-size: 0.75rem; line-height: 2; }
+.footer-company { color: #aaa; font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 6px; }
 .footer a { color: #555; text-decoration: none; }
-.footer-powered { margin-top: 16px; padding-top: 16px; border-top: 1px solid #1a1f2e; font-size: 0.72rem; color: #444; }
-.footer-powered a { color: #666; }
-.drop-label { font-size: 0.72rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; margin: 10px 0 6px; }
+.footer-powered { margin-top: 16px; padding-top: 16px; border-top: 1px solid #1a1a1a; font-size: 0.65rem; color: #444; letter-spacing: 0.5px; }
+.footer-powered a { color: #555; }
+
 @media(max-width:480px) {
-  .hero-text h2 { font-size: 1.4rem; }
+  .hero-headline { font-size: 1.9rem; }
   .form-row { flex-direction: column; }
   .fx-grid { grid-template-columns: repeat(2, 1fr); }
-  .mission-tabs .mtab { font-size: 0.76rem; padding: 8px 4px; }
-  .quote-card { margin: 0 12px; padding: 18px 16px; }
+  .quote-card { padding: 18px 16px; }
+  .hero-content { padding: 24px 20px 28px; }
 }
 </style>
 </head>
 <body>
 
+<!-- HERO -->
 <div class="hero">
+  <div class="blob hero-blob-1"></div>
+  <div class="blob hero-blob-2"></div>
+  <div class="dot-grid hero-dot"></div>
+  <div class="hatch hero-hatch"></div>
+  <img class="logo-watermark" id="logo-watermark" src="" alt="">
+
   <div class="header">
-    <img id="header-logo" src="" alt="">
-    <div class="header-text">
-      <h1 id="header-company"></h1>
-      <p id="header-tagline"></p>
+    <div class="logo-pill">
+      <img id="header-logo" src="" alt="">
+      <span id="header-company">JETMAN GLOBAL</span>
     </div>
+    <span class="header-tagline" id="header-tagline">Aircraft Management</span>
   </div>
-  <div class="hero-text">
-    <h2>Where do you<br>want to fly?</h2>
-    <p id="hero-sub">Instant charter quotes across Kenya</p>
+
+  <div class="hero-content">
+    <div class="hero-label">Private Charter</div>
+    <h2 class="hero-headline">Where do you<br>want to fly?</h2>
+    <p class="hero-sub" id="hero-sub">Instant quotes across East Africa</p>
   </div>
 </div>
 
+<!-- MAIN -->
 <div class="main">
-  <div class="quote-card" id="quote-card">
-    <div id="resolving-bar" class="resolving-bar">📍 Resolving location pin...</div>
-    <div class="mission-tabs">
-      <div class="mtab active" onclick="showMission('one_way',this)">One Way</div>
-      <div class="mtab" onclick="showMission('return',this)">Return</div>
-      <div class="mtab" onclick="showMission('safari',this)">Safari</div>
-    </div>
+  <div style="padding: 0 20px;">
+    <div class="quote-card" id="quote-card">
+      <div id="resolving-bar" class="resolving-bar">Resolving location...</div>
+      <div class="mission-tabs">
+        <div class="mtab active" onclick="showMission('one_way',this)">One Way</div>
+        <div class="mtab" onclick="showMission('return',this)">Return</div>
+        <div class="mtab" onclick="showMission('safari',this)">Safari</div>
+      </div>
 
-    <div id="m-one_way">
-      <div class="form-row">
-        <div class="form-group">
-          <label>From</label>
-          <input type="text" id="ow-pickup" placeholder="City, airstrip or Maps link">
+      <div id="m-one_way">
+        <div class="field-group">
+          <label class="field-label">From</label>
+          <input type="text" class="field-input" id="ow-pickup" placeholder="City, airstrip or Maps link">
         </div>
-        <div class="form-group">
-          <label>To</label>
-          <input type="text" id="ow-dropoff" placeholder="City, airstrip or Maps link">
+        <div class="field-group">
+          <label class="field-label">To</label>
+          <input type="text" class="field-input" id="ow-dropoff" placeholder="City, airstrip or Maps link">
         </div>
+        <button class="btn-quote" onclick="submitQuote('one_way')">Get Instant Quote</button>
       </div>
-      <button class="btn-quote" onclick="submitQuote('one_way')">Get Instant Quote</button>
-    </div>
 
-    <div id="m-return" style="display:none">
-      <div class="form-row">
-        <div class="form-group">
-          <label>From</label>
-          <input type="text" id="rt-pickup" placeholder="City, airstrip or Maps link">
+      <div id="m-return" style="display:none">
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">From</label>
+            <input type="text" class="field-input" id="rt-pickup" placeholder="City or airstrip">
+          </div>
+          <div class="field-group">
+            <label class="field-label">To</label>
+            <input type="text" class="field-input" id="rt-dropoff" placeholder="City or airstrip">
+          </div>
         </div>
-        <div class="form-group">
-          <label>To</label>
-          <input type="text" id="rt-dropoff" placeholder="City, airstrip or Maps link">
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">Departure</label>
+            <input type="text" class="field-input" id="rt-depart" placeholder="25 Jun 2026">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Return</label>
+            <input type="text" class="field-input" id="rt-return" placeholder="28 Jun 2026">
+          </div>
         </div>
+        <button class="btn-quote" onclick="submitQuote('return')">Get Instant Quote</button>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Departure Date</label>
-          <input type="text" id="rt-depart" placeholder="e.g. 25 Jun 2026">
-        </div>
-        <div class="form-group">
-          <label>Return Date</label>
-          <input type="text" id="rt-return" placeholder="e.g. 28 Jun 2026">
-        </div>
-      </div>
-      <button class="btn-quote" onclick="submitQuote('return')">Get Instant Quote</button>
-    </div>
 
-    <div id="m-safari" style="display:none">
-      <div id="safari-legs">
-        <div class="leg-row">
-          <span class="leg-num">1</span>
-          <input type="text" placeholder="From" class="leg-origin">
-          <input type="text" placeholder="To" class="leg-dest">
-          <input type="text" placeholder="Date" class="leg-date" style="max-width:110px">
+      <div id="m-safari" style="display:none">
+        <div id="safari-legs">
+          <div class="leg-row">
+            <span class="leg-num">1</span>
+            <input type="text" placeholder="From" class="leg-origin">
+            <input type="text" placeholder="To" class="leg-dest">
+            <input type="text" placeholder="Date" class="leg-date" style="max-width:100px">
+          </div>
         </div>
+        <button class="btn-add-leg" onclick="addLeg()">+ Add Leg</button>
+        <button class="btn-quote" onclick="submitQuote('safari')">Get Instant Quote</button>
       </div>
-      <button class="btn-add-leg" onclick="addLeg()" style="margin:10px 0 14px">+ Add Leg</button>
-      <button class="btn-quote" onclick="submitQuote('safari')">Get Instant Quote</button>
     </div>
   </div>
 
@@ -202,21 +503,19 @@ input::placeholder { color: #bbb; }
     <div id="loading" style="display:none;margin-top:20px">
       <div class="loading-card">
         <div class="spinner"></div>
-        <div class="loading-text" id="loading-text">Calculating your quote...</div>
+        <div class="loading-text" id="loading-text">Calculating</div>
       </div>
     </div>
 
     <div id="error-box" style="display:none;margin-top:16px"></div>
 
-    <div id="results" style="display:none;margin-top:20px">
+    <div id="results" style="display:none;margin-top:4px">
       <div class="section-label">Your Quote</div>
       <div id="results-inner"></div>
       <div class="validity-notice" id="validity-notice"></div>
 
       <div class="fx-widget" id="fx-widget" style="display:none">
-        <div class="fx-header">
-          <span class="fx-title">Live Currency Conversion</span>
-        </div>
+        <div class="fx-title">Live Currency Conversion</div>
         <div class="fx-input-wrap">
           <span>USD</span>
           <input type="number" id="fx-input" value="0" oninput="updateFX()">
@@ -227,27 +526,28 @@ input::placeholder { color: #bbb; }
 
       <div class="cta-block">
         <a id="btn-whatsapp" class="btn-whatsapp" href="#" target="_blank">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          WhatsApp Us to Book
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp to Book
         </a>
         <a id="btn-call" class="btn-call" href="#">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
           Call Us
         </a>
-        <button class="btn-reset" onclick="resetQuote()">Start a New Quote</button>
+        <button class="btn-reset" onclick="resetQuote()">New Quote</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- FOOTER -->
 <div class="footer" id="site-footer">
-  <div class="footer-company" id="footer-company"></div>
+  <div class="footer-company" id="footer-company">Jetman Global</div>
   <div id="footer-contact"></div>
   <div class="footer-powered">Powered by <a href="https://jetmanglobal.com" target="_blank">Quotecloud — Jetman Global</a></div>
 </div>
 
 <script>
-// Quotecloud Client v2.5.0 - client-side Maps URL resolution
+// Quotecloud Jetman Client v2.5.0
 let config = {};
 let fxRates = {};
 let lastResults = [];
@@ -257,7 +557,6 @@ async function init() {
   try {
     let r = await fetch('/settings/config/public');
     config = await r.json();
-    // Get API key for client-side geocoding
     let kr = await fetch('/get_maps_key');
     let kd = await kr.json();
     GAPI_KEY = kd.key || '';
@@ -267,37 +566,43 @@ async function init() {
 }
 
 function applyBranding() {
-  let b = config.branding || {};
-  let primary = b.primary_color || '#0D47A1';
-  let accent = b.accent_color || '#e8a020';
-  document.documentElement.style.setProperty('--primary', primary);
-  document.documentElement.style.setProperty('--accent', accent);
-  document.getElementById('page-title').textContent = (config.company_name||'Charter') + ' — Instant Quotes';
+  let c = config.contact || {};
+  document.getElementById('page-title').textContent = (config.company_name||'Jetman Global') + ' — Instant Quotes';
+
   let logo = document.getElementById('header-logo');
-  if (config.logo_url) { logo.src = config.logo_url; logo.alt = config.company_name||''; }
-  else logo.style.display = 'none';
-  document.getElementById('header-company').textContent = config.company_name||'';
-  document.getElementById('header-tagline').textContent = config.tagline||'Private Charter Flights';
-  let region = (config.geo_lock||{}).region_name||'Kenya';
-  document.getElementById('hero-sub').textContent = `Instant charter quotes across ${region}`;
+  let watermark = document.getElementById('logo-watermark');
+  if (config.logo_url) {
+    logo.src = config.logo_url;
+    watermark.src = config.logo_url;
+  } else {
+    logo.style.display = 'none';
+    watermark.style.display = 'none';
+  }
+
+  document.getElementById('header-company').textContent = (config.company_name||'JETMAN GLOBAL').toUpperCase();
+  document.getElementById('header-tagline').textContent = config.tagline || 'Aircraft Management';
+  let region = (config.geo_lock||{}).region_name || 'East Africa';
+  document.getElementById('hero-sub').textContent = `Instant quotes across ${region}`;
+
   let tb = (config.trust_bar||[]).filter(Boolean);
   let tbEl = document.getElementById('trust-bar');
-  if (tb.length) tbEl.innerHTML = tb.map(item=>`<div class="trust-item"><span class="trust-dot"></span>${item}</div>`).join('');
+  if (tb.length) tbEl.innerHTML = tb.map(item=>`<div class="trust-item">${item}</div>`).join('');
   else tbEl.style.display = 'none';
-  let wa = (config.contact||{}).whatsapp||'';
-  let phone = (config.contact||{}).phone||'';
-  let greeting = (config.contact||{}).whatsapp_greeting||"Hi, I'd like to enquire about a charter flight.";
+
+  let wa = c.whatsapp || '';
+  let phone = c.phone || '';
+  let greeting = c.whatsapp_greeting || "Hi, I'd like to enquire about a charter flight.";
   if (wa) document.getElementById('btn-whatsapp').href = `https://wa.me/${wa}?text=${encodeURIComponent(greeting)}`;
   else document.getElementById('btn-whatsapp').style.display = 'none';
   if (phone) document.getElementById('btn-call').href = `tel:${phone}`;
   else document.getElementById('btn-call').style.display = 'none';
-  let c = config.contact||{};
-  document.getElementById('footer-company').textContent = config.company_name||'';
+
+  document.getElementById('footer-company').textContent = config.company_name || 'Jetman Global';
   let parts = [c.address, c.email, c.phone].filter(Boolean);
   document.getElementById('footer-contact').innerHTML = parts.join(' &nbsp;·&nbsp; ');
   if (config.footer_tagline) {
     let ft = document.createElement('div');
-    ft.style.cssText = 'margin-top:6px;color:#555;font-size:0.78rem';
+    ft.style.cssText = 'margin-top:6px;color:#444;font-size:0.72rem;letter-spacing:0.5px';
     ft.textContent = config.footer_tagline;
     document.getElementById('site-footer').insertBefore(ft, document.querySelector('.footer-powered'));
   }
@@ -326,63 +631,51 @@ function updateFX() {
 }
 
 function isMapsUrl(s) {
-  return s && (s.includes('maps.app.goo.gl') || s.includes('goo.gl') || s.includes('google.com/maps') || s.includes('maps.google'));
+  return s && (s.includes('maps.app.goo.gl')||s.includes('goo.gl')||s.includes('google.com/maps')||s.includes('maps.google'));
 }
 
-// Extract coords directly from a fully expanded Maps URL
 function extractCoordsFromUrl(url) {
-  // Try @lat,lng format
   let m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
-  // Try !3d lat !4d lng format
   let m2 = url.match(/!3d(-?\d+\.\d+).*?!4d(-?\d+\.\d+)/);
   if (m2) return { lat: parseFloat(m2[1]), lng: parseFloat(m2[2]) };
-  // Try ll= format
   let m3 = url.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (m3) return { lat: parseFloat(m3[1]), lng: parseFloat(m3[2]) };
   return null;
 }
 
-// Reverse geocode using Google API from browser
 async function reverseGeocode(lat, lng) {
   if (!GAPI_KEY) return `${lat},${lng}`;
   try {
     let r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GAPI_KEY}&region=ke`);
     let data = await r.json();
-    if (data.status === 'OK') {
+    if (data.status==='OK') {
       let components = data.results[0].address_components;
-      let locality = components.find(c => c.types.includes('locality'));
-      let admin = components.find(c => c.types.includes('administrative_area_level_1'));
-      if (locality && admin) return `Pin, ${locality.long_name}, ${admin.long_name}`;
+      let locality = components.find(c=>c.types.includes('locality'));
+      let admin = components.find(c=>c.types.includes('administrative_area_level_1'));
+      if (locality&&admin) return `Pin, ${locality.long_name}, ${admin.long_name}`;
       if (locality) return `Pin, ${locality.long_name}`;
       let addr = data.results[0].formatted_address;
-      if (addr && !addr.includes('+')) return `Pin, ${addr}`;
+      if (addr&&!addr.includes('+')) return `Pin, ${addr}`;
     }
   } catch(e) {}
   return `Pin, ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 }
 
-// Resolve a Maps short URL by fetching the redirect in the browser
 async function resolveMapsShortUrl(url) {
-  // Try fetching via a no-cors HEAD to get redirected URL
-  // Since we can't follow redirects in browser fetch due to CORS,
-  // we use our own /resolve_pin endpoint but pass it as already-resolved
-  // Strategy: use Google Places API to geocode the place name from URL
   try {
-    // Extract place name from URL query string
     let urlObj = new URL(url);
-    let q = urlObj.searchParams.get('q') || urlObj.searchParams.get('query') || '';
+    let q = urlObj.searchParams.get('q')||urlObj.searchParams.get('query')||'';
     if (!q) {
-      // Try to extract from path
       let pathMatch = url.match(/place\/([^\/\?@]+)/);
-      if (pathMatch) q = decodeURIComponent(pathMatch[1].replace(/\+/g, ' '));
+      if (pathMatch) q = decodeURIComponent(pathMatch[1].replace(/\+/g,' '));
     }
-    if (q && GAPI_KEY) {
+    if (q&&GAPI_KEY) {
       let region = (config.geo_lock||{}).region_name||'Kenya';
       let query = q.toLowerCase().includes(region.toLowerCase()) ? q : `${q} ${region}`;
       let r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GAPI_KEY}&region=ke`);
       let data = await r.json();
-      if (data.status === 'OK') {
+      if (data.status==='OK') {
         let loc = data.results[0].geometry.location;
         let display = await reverseGeocode(loc.lat, loc.lng);
         return { coords: `${loc.lat},${loc.lng}`, display };
@@ -392,34 +685,26 @@ async function resolveMapsShortUrl(url) {
   return null;
 }
 
-// Main location resolver - handles Maps URLs client-side
 async function resolveLocationClientSide(input) {
-  if (!input || !input.trim()) return null;
+  if (!input||!input.trim()) return null;
   let s = input.trim();
-
-  // If it's a Maps URL - resolve client side
   if (isMapsUrl(s)) {
-    // First try to extract coords directly from URL (works for long Google Maps URLs)
     let coords = extractCoordsFromUrl(s);
     if (coords) {
       let display = await reverseGeocode(coords.lat, coords.lng);
       return { resolved: `${coords.lat},${coords.lng}`, display };
     }
-    // For short URLs (maps.app.goo.gl) - try to geocode from URL content
     let resolved = await resolveMapsShortUrl(s);
     if (resolved) return { resolved: resolved.coords, display: resolved.display };
-    // If still can't resolve, return null to let server try
     return null;
   }
-
-  // Not a Maps URL - pass through as-is, server will handle
   return { resolved: s, display: s };
 }
 
 function showMission(m, el) {
-  document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  ['one_way','return','safari'].forEach(id => {
+  ['one_way','return','safari'].forEach(id=>{
     document.getElementById('m-'+id).style.display = id===m?'block':'none';
   });
 }
@@ -451,103 +736,83 @@ function addLeg() {
   div.innerHTML = `<span class="leg-num">${n}</span>
     <input type="text" placeholder="From" class="leg-origin">
     <input type="text" placeholder="To" class="leg-dest">
-    <input type="text" placeholder="Date" class="leg-date" style="max-width:110px">
-    <button onclick="this.parentElement.remove()" style="padding:6px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;cursor:pointer;font-weight:700;font-size:0.85rem">x</button>`;
+    <input type="text" placeholder="Date" class="leg-date" style="max-width:100px">
+    <button onclick="this.parentElement.remove()" style="padding:5px 9px;border:1px solid #ccc;background:#fff;color:#999;border-radius:2px;cursor:pointer;font-size:0.8rem">x</button>`;
   document.getElementById('safari-legs').appendChild(div);
 }
 
-function showResolving(show, text) {
-  let bar = document.getElementById('resolving-bar');
-  bar.style.display = show ? 'block' : 'none';
-  if (text) bar.textContent = text;
+function showResolving(show) {
+  document.getElementById('resolving-bar').style.display = show ? 'block' : 'none';
 }
 
 async function submitQuote(mission) {
   let body = { mission };
-
-  showLoading(true, 'Resolving locations...');
+  showLoading(true, 'Calculating');
   hideError();
   document.getElementById('results').style.display = 'none';
-
   try {
-    if (mission === 'one_way') {
+    if (mission==='one_way') {
       let rawP = document.getElementById('ow-pickup').value.trim();
       let rawD = document.getElementById('ow-dropoff').value.trim();
-      if (!rawP || !rawD) { showLoading(false); return showError('Please enter both From and To locations.'); }
-
-      showResolving(true, '📍 Resolving locations...');
+      if (!rawP||!rawD) { showLoading(false); return showError('Please enter both From and To locations.'); }
+      showResolving(true);
       let p = await resolveLocationClientSide(rawP);
       let d = await resolveLocationClientSide(rawD);
       showResolving(false);
-
-      body.pickup = (p && isMapsUrl(rawP)) ? p.resolved : rawP;
-      body.dropoff = (d && isMapsUrl(rawD)) ? d.resolved : rawD;
-
-    } else if (mission === 'return') {
+      body.pickup = (p&&isMapsUrl(rawP)) ? p.resolved : rawP;
+      body.dropoff = (d&&isMapsUrl(rawD)) ? d.resolved : rawD;
+    } else if (mission==='return') {
       let rawP = document.getElementById('rt-pickup').value.trim();
       let rawD = document.getElementById('rt-dropoff').value.trim();
-      if (!rawP || !rawD) { showLoading(false); return showError('Please enter both From and To locations.'); }
-
-      showResolving(true, '📍 Resolving locations...');
+      if (!rawP||!rawD) { showLoading(false); return showError('Please enter both From and To locations.'); }
+      showResolving(true);
       let p = await resolveLocationClientSide(rawP);
       let d = await resolveLocationClientSide(rawD);
       showResolving(false);
-
-      body.pickup = (p && isMapsUrl(rawP)) ? p.resolved : rawP;
-      body.dropoff = (d && isMapsUrl(rawD)) ? d.resolved : rawD;
+      body.pickup = (p&&isMapsUrl(rawP)) ? p.resolved : rawP;
+      body.dropoff = (d&&isMapsUrl(rawD)) ? d.resolved : rawD;
       body.depart = parseSmartDate(document.getElementById('rt-depart').value);
       body.return_date = parseSmartDate(document.getElementById('rt-return').value);
-      if (!body.depart || !body.return_date) { showLoading(false); return showError('Please enter departure and return dates.'); }
-
+      if (!body.depart||!body.return_date) { showLoading(false); return showError('Please enter departure and return dates.'); }
     } else {
       body.legs = [];
       let rows = document.querySelectorAll('#safari-legs .leg-row');
-      showResolving(true, '📍 Resolving locations...');
+      showResolving(true);
       for (let row of rows) {
         let rawO = row.querySelector('.leg-origin').value.trim();
         let rawD2 = row.querySelector('.leg-dest').value.trim();
         let dt = parseSmartDate(row.querySelector('.leg-date').value);
-        if (rawO && rawD2) {
+        if (rawO&&rawD2) {
           let o = await resolveLocationClientSide(rawO);
           let d2 = await resolveLocationClientSide(rawD2);
-          body.legs.push({
-            origin: (o && isMapsUrl(rawO)) ? o.resolved : rawO,
-            destination: (d2 && isMapsUrl(rawD2)) ? d2.resolved : rawD2,
-            date: dt
-          });
+          body.legs.push({ origin:(o&&isMapsUrl(rawO))?o.resolved:rawO, destination:(d2&&isMapsUrl(rawD2))?d2.resolved:rawD2, date:dt });
         }
       }
       showResolving(false);
       if (!body.legs.length) { showLoading(false); return showError('Please add at least one leg.'); }
     }
-
-    showLoading(true, 'Calculating your quote...');
-
-    let r = await fetch('/quote/calculate', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
-    });
+    let r = await fetch('/quote/calculate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     let data = await r.json();
     showLoading(false);
     if (!r.ok) { showError(data.error||'Unable to calculate. Please try again.'); return; }
     lastResults = data.results||[];
     renderResults(lastResults, mission);
   } catch(e) {
-    showLoading(false);
-    showResolving(false);
+    showLoading(false); showResolving(false);
     showError('Network error. Please check your connection and try again.');
   }
 }
 
 function showLoading(show, text) {
-  document.getElementById('loading').style.display = show ? 'block' : 'none';
+  document.getElementById('loading').style.display = show?'block':'none';
   if (text) document.getElementById('loading-text').textContent = text;
 }
 
 function showError(msg) {
   let el = document.getElementById('error-box');
-  el.innerHTML = `<div class="error-card">⚠ ${msg}</div>`;
+  el.innerHTML = `<div class="error-card">${msg}</div>`;
   el.style.display = 'block';
-  el.scrollIntoView({ behavior:'smooth', block:'center' });
+  el.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
 function hideError() {
@@ -556,113 +821,75 @@ function hideError() {
 }
 
 function tagClass(t, note) {
-  if (note) return note.toLowerCase().includes('idle') ? 'tag-idle' : 'tag-overnight';
+  if (note) return note.toLowerCase().includes('idle')?'tag-idle':'tag-overnight';
   return t==='revenue'?'tag-rev':t==='positioning'?'tag-pos':t==='depositioning'?'tag-dep':'tag-rep';
 }
 
 function renderSegments(segs, showDist) {
   if (!segs||!segs.length) return '';
-  let rows = segs.map(s => {
-    let isNote = s.note && !s.type;
+  let rows = segs.map(s=>{
+    let isNote = s.note&&!s.type;
     if (isNote) {
-      let isIdle = s.note.toLowerCase().includes('idle');
-      let label = isIdle ? 'idle day' : 'overnight';
-      let cost = s.cost ? `$${parseFloat(s.cost).toLocaleString(undefined,{minimumFractionDigits:2})}` : '-';
-      return `<tr>
-        <td><span class="tag ${tagClass(null,s.note)}">${label}</span></td>
-        <td colspan="2" style="color:#888;font-size:0.78rem">${s.note}</td>
-        ${showDist?'<td>-</td>':''}
-        <td style="font-weight:700">${cost}</td>
-        <td>-</td>
-      </tr>`;
+      let label = s.note.toLowerCase().includes('idle')?'Idle Day':'Overnight';
+      let cost = s.cost?`$${parseFloat(s.cost).toLocaleString(undefined,{minimumFractionDigits:2})}`:'—';
+      return `<tr><td><span class="tag ${tagClass(null,s.note)}">${label}</span></td><td colspan="2" style="color:#888;font-size:0.75rem">${s.note}</td>${showDist?'<td>—</td>':''}<td style="font-weight:700">${cost}</td><td>—</td></tr>`;
     }
     let nm = s.nm||s.dist_nm||0;
-    return `<tr>
-      <td><span class="tag ${tagClass(s.type,null)}">${s.type}</span></td>
-      <td>${s.origin||''}</td>
-      <td>${s.destination||''}</td>
-      ${showDist?`<td>${nm?nm+' nm':'-'}</td>`:''}
-      <td>${s.hours?s.hours+' hr':'-'}</td>
-      <td>${s.date||'-'}</td>
-    </tr>`;
+    return `<tr><td><span class="tag ${tagClass(s.type,null)}">${s.type}</span></td><td>${s.origin||''}</td><td>${s.destination||''}</td>${showDist?`<td>${nm?nm+' nm':'—'}</td>`:''}<td>${s.hours?s.hours+' hr':'—'}</td><td>${s.date||'—'}</td></tr>`;
   }).join('');
-  let dh = showDist ? '<th>Dist</th>' : '';
-  return `<div class="route-wrap"><table class="route-table">
-    <thead><tr><th>Type</th><th>From</th><th>To</th>${dh}<th>Hours</th><th>Date</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table></div>`;
+  let dh = showDist?'<th>Dist</th>':'';
+  return `<div class="route-wrap"><table class="route-table"><thead><tr><th>Type</th><th>From</th><th>To</th>${dh}<th>Hours</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function calcHours(segs) {
-  let t = 0;
-  (segs||[]).forEach(s => { if (s.hours&&s.type) t += parseFloat(s.hours); });
-  return Math.round(t*10)/10;
+  let t=0; (segs||[]).forEach(s=>{if(s.hours&&s.type)t+=parseFloat(s.hours);}); return Math.round(t*10)/10;
 }
 
 function renderBilling(res) {
-  let rate = res.rate_usd||0;
-  let hrs = calcHours(res.segments||[]);
-  let rows = '';
+  let rate=res.rate_usd||0, hrs=calcHours(res.segments||[]), rows='';
   if (hrs>0&&rate>0) {
-    let fc = Math.round(hrs*rate*100)/100;
-    rows += `<div class="billing-row"><span>Aircraft Charter &nbsp;<span style="color:#aaa;font-size:0.78rem">${hrs}hrs @ $${rate.toLocaleString()}/hr</span></span><span>$${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    let fc=Math.round(hrs*rate*100)/100;
+    rows+=`<div class="billing-row"><span>Aircraft Charter <span style="color:#aaa;font-size:0.75rem">${hrs}hrs @ $${rate.toLocaleString()}/hr</span></span><span>$${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-  let fee = res.pax_fee_usd||res.pax_fee_usd_display||0;
-  if (fee>0) rows += `<div class="billing-row"><span>Taxes & Admin</span><span>$${parseFloat(fee).toLocaleString()}</span></div>`;
-  let ov = res.overnight_usd||res.overnight_cost_usd||0;
-  let oRate = res.overnight_rate_usd||0;
+  let fee=res.pax_fee_usd||res.pax_fee_usd_display||0;
+  if (fee>0) rows+=`<div class="billing-row"><span>Taxes & Admin</span><span>$${parseFloat(fee).toLocaleString()}</span></div>`;
+  let ov=res.overnight_usd||res.overnight_cost_usd||0, oRate=res.overnight_rate_usd||0;
   if (ov>0&&oRate>0) {
-    let n = Math.round(ov/oRate);
-    rows += `<div class="billing-row"><span>Overnight Per Diem &nbsp;<span style="color:#aaa;font-size:0.78rem">${n} night${n!==1?'s':''} @ $${oRate}</span></span><span>$${parseFloat(ov).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    let n=Math.round(ov/oRate);
+    rows+=`<div class="billing-row"><span>Overnight Per Diem <span style="color:#aaa;font-size:0.75rem">${n} night${n!==1?'s':''} @ $${oRate}</span></span><span>$${parseFloat(ov).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-  let wu = res.waiting_usd||res.idle_cost_usd||0;
-  let ir = res.idle_day_rate_usd||0;
+  let wu=res.waiting_usd||res.idle_cost_usd||0, ir=res.idle_day_rate_usd||0;
   if (wu>0) {
-    let days = ir>0?Math.round(wu/ir):1;
-    rows += `<div class="billing-row"><span>Idle Day &nbsp;<span style="color:#aaa;font-size:0.78rem">${days} day${days!==1?'s':''} @ $${ir.toLocaleString()}</span></span><span>$${parseFloat(wu).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    let days=ir>0?Math.round(wu/ir):1;
+    rows+=`<div class="billing-row"><span>Idle Day <span style="color:#aaa;font-size:0.75rem">${days} day${days!==1?'s':''} @ $${ir.toLocaleString()}</span></span><span>$${parseFloat(wu).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-  return `<div class="billing">${rows}<div class="billing-divider"></div><div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div></div>`;
+  return `<div class="billing">${rows}<div class="billing-divider"></div><div class="billing-total"><span>Total Estimate</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div></div>`;
 }
 
 function renderOneAc(res, showDist) {
-  if (res.error) return `<div class="error-card">⚠ ${res.error}</div>`;
-  let badge = res.ac_type==='fixed_wing' ?
-    `<span class="ac-badge badge-fixed">✈ Fixed Wing</span>` :
-    `<span class="ac-badge badge-heli">🚁 Helicopter</span>`;
-  let disclaimer = res.ac_type==='fixed_wing' ? `<div class="info-box">${config.landing_field_disclaimer||'This is a fixed wing aircraft and requires a runway for take off / landing. The quote is not a confirmation of service to quoted location. Contact us via WhatsApp for final reservation and confirmation of runway suitability.'}</div>` : '';
-  let content = '';
+  if (res.error) return `<div class="error-card">${res.error}</div>`;
+  let badge = res.ac_type==='fixed_wing'?`<span class="ac-badge">Fixed Wing</span>`:`<span class="ac-badge">Helicopter</span>`;
+  let disclaimer = res.ac_type==='fixed_wing'?`<div class="info-box">${config.landing_field_disclaimer||'Fixed wing aircraft. Runway required. Quote is not confirmation of service. Contact us to confirm runway suitability.'}</div>`:'';
+  let content='';
   if (res.mission==='return_both') {
     let wd=res.wait_days, maxN=res.max_nights||3;
     if (wd>=maxN) {
       let b=res.option_b;
       let bRes={segments:[...(b.drop.segments||[]),...(b.pick.segments||[])],rate_usd:res.rate_usd,overnight_rate_usd:res.overnight_rate_usd,idle_day_rate_usd:res.idle_day_rate_usd,pax_fee_usd_display:res.pax_fee_usd_display,total_usd:b.total_usd};
-      content=`<div class="pickup-drop-msg">${res.pickup_drop_msg||'Pick & Drop applies for this trip duration.'}</div>
-        <div class="drop-label">Drop Off</div>${renderSegments(b.drop.segments,showDist)}
-        <div class="drop-label">Pick Up</div>${renderSegments(b.pick.segments,showDist)}
-        ${renderBilling(bRes)}`;
+      content=`<div class="pickup-drop-msg">${res.pickup_drop_msg||'Pick & Drop applies for this duration.'}</div><div class="drop-label">Drop Off</div>${renderSegments(b.drop.segments,showDist)}<div class="drop-label">Pick Up</div>${renderSegments(b.pick.segments,showDist)}${renderBilling(bRes)}`;
     } else {
       let aRes={...res.option_a,rate_usd:res.rate_usd,overnight_rate_usd:res.overnight_rate_usd,idle_day_rate_usd:res.idle_day_rate_usd,pax_fee_usd_display:res.pax_fee_usd_display};
       let bRes2={segments:[...(res.option_b.drop.segments||[]),...(res.option_b.pick.segments||[])],rate_usd:res.rate_usd,idle_day_rate_usd:res.idle_day_rate_usd,pax_fee_usd_display:res.pax_fee_usd_display,total_usd:res.option_b.total_usd};
-      content=`<div class="info-box">Aircraft availability for the wait option is subject to schedule. Please review both options before confirming.</div>
-        <div class="option-tabs">
-          <div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A — Waits</div>
-          <div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B — Pick & Drop</div>
-        </div>
-        <div class="otab-content active" id="oa-${res.ac_key}">${renderSegments(res.option_a.segments,showDist)}${renderBilling(aRes)}</div>
-        <div class="otab-content" id="ob-${res.ac_key}">
-          <div class="drop-label">Drop Off</div>${renderSegments(res.option_b.drop.segments,showDist)}
-          <div class="drop-label">Pick Up</div>${renderSegments(res.option_b.pick.segments,showDist)}
-          ${renderBilling(bRes2)}
-        </div>`;
+      content=`<div class="info-box">Aircraft availability for the wait option is subject to schedule. Please review both options.</div><div class="option-tabs"><div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A — Waits</div><div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B — Pick & Drop</div></div><div class="otab-content active" id="oa-${res.ac_key}">${renderSegments(res.option_a.segments,showDist)}${renderBilling(aRes)}</div><div class="otab-content" id="ob-${res.ac_key}"><div class="drop-label">Drop Off</div>${renderSegments(res.option_b.drop.segments,showDist)}<div class="drop-label">Pick Up</div>${renderSegments(res.option_b.pick.segments,showDist)}${renderBilling(bRes2)}</div>`;
     }
   } else {
-    content = renderSegments(res.segments,showDist) + renderBilling(res);
+    content = renderSegments(res.segments,showDist)+renderBilling(res);
   }
-  return `<div class="ac-header"><div class="ac-title">${res.ac_label||''}</div>${badge}</div>${content}${disclaimer}`;
+  return `<div class="ac-card-dot"></div><div class="ac-header"><div class="ac-title">${res.ac_label||''}</div>${badge}</div>${content}${disclaimer}`;
 }
 
 function switchOtab(el, id) {
-  let parent = el.closest('.ac-card');
+  let parent=el.closest('.ac-card');
   parent.querySelectorAll('.otab').forEach(t=>t.classList.remove('active'));
   parent.querySelectorAll('.otab-content').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
@@ -670,33 +897,28 @@ function switchOtab(el, id) {
 }
 
 function renderResults(results, mission) {
-  let showDist = (config.quoting_rules||{}).show_distance_to_client||false;
-  document.getElementById('results-inner').innerHTML = results.map(res=>
-    `<div class="ac-card">${renderOneAc(res,showDist)}</div>`
-  ).join('');
-  let hours = (config.quoting_rules||{}).quote_validity_hours||48;
-  document.getElementById('validity-notice').textContent = `Quote valid for ${hours} hours. Prices subject to change and aircraft availability.`;
-  let firstTotal = 0;
-  if (results.length) {
-    let f = results[0];
-    firstTotal = f.mission==='return_both'?(f.option_a?.total_usd||0):(f.total_usd||0);
-  }
-  if (firstTotal>0 && Object.keys(fxRates).length) {
-    document.getElementById('fx-input').value = firstTotal;
-    document.getElementById('fx-widget').style.display = 'block';
+  let showDist=(config.quoting_rules||{}).show_distance_to_client||false;
+  document.getElementById('results-inner').innerHTML = results.map(res=>`<div class="ac-card">${renderOneAc(res,showDist)}</div>`).join('');
+  let hours=(config.quoting_rules||{}).quote_validity_hours||48;
+  document.getElementById('validity-notice').textContent=`Quote valid for ${hours} hours. Subject to availability and change.`;
+  let firstTotal=0;
+  if (results.length) { let f=results[0]; firstTotal=f.mission==='return_both'?(f.option_a?.total_usd||0):(f.total_usd||0); }
+  if (firstTotal>0&&Object.keys(fxRates).length) {
+    document.getElementById('fx-input').value=firstTotal;
+    document.getElementById('fx-widget').style.display='block';
     updateFX();
   }
   buildWhatsApp(results, mission);
-  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').style.display='block';
   document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function buildWhatsApp(results, mission) {
-  let wa = (config.contact||{}).whatsapp||'';
+  let wa=(config.contact||{}).whatsapp||'';
   if (!wa) return;
-  let greeting = (config.contact||{}).whatsapp_greeting||"Hi, I'd like to enquire about a charter quote.";
-  let lines = [greeting,''];
-  results.forEach(res => {
+  let greeting=(config.contact||{}).whatsapp_greeting||"Hi, I'd like to enquire about a charter quote.";
+  let lines=[greeting,''];
+  results.forEach(res=>{
     if (res.error) return;
     lines.push(`*${res.ac_label}*`);
     if (res.mission==='return_both') {
@@ -717,17 +939,15 @@ function buildWhatsApp(results, mission) {
     }
     lines.push('');
   });
-  lines.push('Please confirm availability and next steps. Thank you.');
-  document.getElementById('btn-whatsapp').href = `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;
+  lines.push('Please confirm availability and next steps.');
+  document.getElementById('btn-whatsapp').href=`https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;
 }
 
 function resetQuote() {
-  document.getElementById('results').style.display = 'none';
-  hideError();
-  lastResults = [];
+  document.getElementById('results').style.display='none';
+  hideError(); lastResults=[];
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','rt-depart','rt-return'].forEach(id=>{
-    let el = document.getElementById(id);
-    if (el) el.value = '';
+    let el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('quote-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
