@@ -7,117 +7,222 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', sans-serif; background: #f4f6f9; color: #1a1a1a; }
-header { background: {{ operator.branding.primary_color }}; color: #fff; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
-.header-left { display: flex; align-items: center; gap: 14px; }
-.header-left img { height: 40px; }
-.header-left h1 { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 700; }
-.header-left span { font-size: 0.8rem; opacity: 0.7; }
-.logout { color: #fff; text-decoration: none; font-size: 0.85rem; opacity: 0.8; }
-.logout:hover { opacity: 1; }
-.nav-tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 24px; overflow-x: auto; }
-.nav-tab { padding: 14px 20px; cursor: pointer; font-weight: 600; font-size: 0.9rem; border-bottom: 3px solid transparent; margin-bottom: -2px; color: #666; white-space: nowrap; transition: all 0.2s; }
+body { font-family: 'Inter', sans-serif; background: #f4f6f9; color: #1a1a1a; padding-bottom: 70px; }
+
+/* HEADER */
+header { background: {{ operator.branding.primary_color }}; color: #fff; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-left img { height: 36px; border-radius: 4px; }
+.header-left h1 { font-family: 'Montserrat', sans-serif; font-size: 0.95rem; font-weight: 700; }
+.header-left span { font-size: 0.7rem; opacity: 0.7; display: block; }
+.logout { color: #fff; text-decoration: none; font-size: 0.82rem; opacity: 0.8; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 6px; white-space: nowrap; }
+.logout:hover { opacity: 1; background: rgba(255,255,255,0.25); }
+
+/* DESKTOP NAV */
+.nav-tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.nav-tab { padding: 14px 16px; cursor: pointer; font-weight: 600; font-size: 0.88rem; border-bottom: 3px solid transparent; margin-bottom: -2px; color: #666; white-space: nowrap; transition: all 0.2s; }
 .nav-tab.active { color: {{ operator.branding.primary_color }}; border-bottom-color: {{ operator.branding.primary_color }}; }
-.tab-content { display: none; padding: 24px; }
+
+/* MOBILE BOTTOM NAV */
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e0e0e0; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+.mobile-nav-inner { display: flex; }
+.mobile-nav-tab { flex: 1; padding: 10px 4px 8px; cursor: pointer; font-weight: 600; font-size: 0.62rem; color: #999; text-align: center; transition: all 0.2s; letter-spacing: 0.3px; text-transform: uppercase; border-top: 2px solid transparent; }
+.mobile-nav-tab.active { color: {{ operator.branding.primary_color }}; border-top-color: {{ operator.branding.primary_color }}; }
+.mobile-nav-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+
+/* TAB CONTENT */
+.tab-content { display: none; padding: 16px; }
 .tab-content.active { display: block; }
-.card { background: #fff; border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-.card h3 { font-size: 1rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 16px; }
-.mission-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-.mtab { padding: 8px 20px; border-radius: 20px; border: 2px solid {{ operator.branding.primary_color }}; color: {{ operator.branding.primary_color }}; background: #fff; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
-.mtab.active { background: {{ operator.branding.primary_color }}; color: #fff; }
+
+/* CARDS */
+.card { background: #fff; border-radius: 12px; padding: 18px 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.card h3 { font-size: 0.95rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 16px; }
+
+/* MISSION TABS */
+.mission-tabs { display: flex; gap: 6px; margin-bottom: 20px; background: #f4f6f9; border-radius: 10px; padding: 4px; }
+.mtab { flex: 1; padding: 10px 6px; border-radius: 8px; border: none; color: #888; background: transparent; cursor: pointer; font-weight: 600; font-size: 0.78rem; transition: all 0.2s; text-align: center; font-family: inherit; }
+.mtab.active { background: {{ operator.branding.primary_color }}; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+
+/* FORMS */
 .form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .form-group { flex: 1; min-width: 200px; }
 .form-group-full { width: 100%; margin-bottom: 14px; }
-label { font-size: 0.82rem; font-weight: 600; color: #555; display: block; margin-bottom: 5px; }
-input, select, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 0.95rem; outline: none; font-family: inherit; transition: border 0.2s; }
-input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.primary_color }}; }
-textarea { resize: vertical; }
-.btn { padding: 10px 24px; background: {{ operator.branding.button_color }}; color: {{ operator.branding.button_text }}; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; font-family: 'Montserrat', sans-serif; transition: opacity 0.2s; }
+label { font-size: 0.78rem; font-weight: 600; color: #555; display: block; margin-bottom: 6px; }
+
+/* INPUTS — mobile optimized */
+input, select, textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px; /* prevents iOS zoom */
+  outline: none;
+  font-family: inherit;
+  transition: border 0.2s;
+  background: #fff;
+  min-height: 48px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: {{ operator.branding.primary_color }}; box-shadow: 0 0 0 3px rgba(13,71,161,0.08); }
+textarea { resize: vertical; min-height: 80px; font-size: 15px; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+/* BUTTONS */
+.btn { padding: 12px 20px; background: {{ operator.branding.button_color }}; color: {{ operator.branding.button_text }}; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: 'Montserrat', sans-serif; transition: opacity 0.2s; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .btn:hover { opacity: 0.88; }
+.btn:active { transform: scale(0.98); }
 .btn-outline { background: #fff; color: {{ operator.branding.primary_color }}; border: 2px solid {{ operator.branding.primary_color }}; }
-.btn-sm { padding: 6px 14px; font-size: 0.82rem; }
+.btn-sm { padding: 8px 14px; font-size: 0.8rem; min-height: 36px; border-radius: 8px; }
 .btn-danger { background: #dc3545; color: #fff; border: none; }
 .btn-success { background: #28a745; color: #fff; border: none; }
 .btn-amber { background: #e8a020; color: #fff; border: none; }
 .btn-grey { background: #6c757d; color: #fff; border: none; }
 .btn-info { background: #17a2b8; color: #fff; border: none; }
 .btn-clear { background: #fff; color: #dc3545; border: 2px solid #dc3545; }
-.result-box { margin-top: 20px; }
-.ac-card { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 16px; border-left: 4px solid {{ operator.branding.primary_color }}; }
-.ac-title { font-family: 'Montserrat', sans-serif; font-size: 1rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 4px; }
-.ac-meta { font-size: 0.82rem; color: #666; margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.route-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 16px; }
-.route-table th { background: {{ operator.branding.primary_color }}; color: #fff; padding: 8px 10px; text-align: left; }
-.route-table td { padding: 8px 10px; border-bottom: 1px solid #eee; }
-.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
+.btn-block { width: 100%; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+/* RESULT BOX */
+.result-box { margin-top: 16px; }
+.ac-card { background: #f8f9fa; border-radius: 10px; padding: 16px; margin-bottom: 16px; border-left: 4px solid {{ operator.branding.primary_color }}; }
+.ac-title { font-family: 'Montserrat', sans-serif; font-size: 0.95rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 6px; }
+.ac-meta { font-size: 0.78rem; color: #666; margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ROUTE TABLE */
+.route-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid #eee; margin-bottom: 14px; }
+.route-table-wrap::after { content: ''; position: sticky; right: 0; top: 0; width: 20px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.8)); pointer-events: none; }
+.route-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 480px; }
+.route-table th { background: {{ operator.branding.primary_color }}; color: #fff; padding: 9px 10px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+.route-table td { padding: 9px 10px; border-bottom: 1px solid #eee; white-space: nowrap; }
+.route-table tr:last-child td { border-bottom: none; }
+
+/* TAGS */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 600; }
 .tag-rev { background: #d4edda; color: #155724; }
 .tag-pos { background: #fff3cd; color: #856404; }
 .tag-dep { background: #f8d7da; color: #721c24; }
 .tag-rep { background: #cce5ff; color: #004085; }
 .tag-heli { background: #e3f2fd; color: #0d47a1; }
 .tag-fixed { background: #fce4ec; color: #880e4f; }
-.tag-direct { background: #e8f5e9; color: #1b5e20; font-size: 0.72rem; }
-.tag-standard { background: #f3e5f5; color: #4a148c; font-size: 0.72rem; }
-.tag-idle { background: #fff3e0; color: #e65100; font-size: 0.75rem; }
-.tag-overnight { background: #ede7f6; color: #4527a0; font-size: 0.75rem; }
-.billing { background: #fff; border-radius: 8px; padding: 16px; border: 1px solid #eee; margin-top: 4px; }
-.billing-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0; color: #444; }
-.billing-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; color: {{ operator.branding.primary_color }}; border-top: 2px solid {{ operator.branding.primary_color }}; margin-top: 8px; padding-top: 10px; }
+.tag-direct { background: #e8f5e9; color: #1b5e20; font-size: 0.68rem; }
+.tag-standard { background: #f3e5f5; color: #4a148c; font-size: 0.68rem; }
+.tag-idle { background: #fff3e0; color: #e65100; font-size: 0.72rem; }
+.tag-overnight { background: #ede7f6; color: #4527a0; font-size: 0.72rem; }
+
+/* BILLING */
+.billing { background: #fff; border-radius: 10px; padding: 14px; border: 1px solid #eee; margin-top: 4px; }
+.billing-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 0.85rem; border-bottom: 1px solid #f0f0f0; color: #444; gap: 8px; }
+.billing-row span:first-child { flex: 1; }
+.billing-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 1rem; color: {{ operator.branding.primary_color }}; border-top: 2px solid {{ operator.branding.primary_color }}; margin-top: 8px; padding-top: 10px; }
+
+/* OPTION TABS */
 .option-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-.otab { padding: 6px 16px; border-radius: 16px; border: 1.5px solid #999; color: #666; background: #fff; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+.otab { flex: 1; padding: 9px 10px; border-radius: 8px; border: 1.5px solid #ddd; color: #666; background: #fff; cursor: pointer; font-size: 0.8rem; font-weight: 600; text-align: center; transition: all 0.2s; min-height: 40px; }
 .otab.active { background: {{ operator.branding.accent_color }}; color: #fff; border-color: {{ operator.branding.accent_color }}; }
 .otab-content { display: none; }
 .otab-content.active { display: block; }
-.pdf-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
-.error-box { background: #fff0f0; border: 1px solid #ffcccc; color: #cc0000; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 0.9rem; line-height: 1.6; }
-.success-box { background: #f0fff4; border: 1px solid #b2dfdb; color: #1b5e20; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 0.9rem; }
-.info-box { background: #fff8e1; border: 1px solid #ffe082; color: #856404; border-radius: 8px; padding: 12px 16px; margin-top: 10px; font-size: 0.88rem; line-height: 1.6; }
-.pickup-drop-msg { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; font-size: 0.88rem; line-height: 1.6; }
-.db-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-.db-table th { background: {{ operator.branding.primary_color }}; color: #fff; padding: 10px 12px; text-align: left; }
+
+/* PDF SECTION */
+.pdf-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee; }
+
+/* MESSAGES */
+.error-box { background: #fff0f0; border: 1px solid #ffcccc; color: #cc0000; border-radius: 10px; padding: 12px 16px; margin-top: 12px; font-size: 0.88rem; line-height: 1.6; }
+.success-box { background: #f0fff4; border: 1px solid #b2dfdb; color: #1b5e20; border-radius: 10px; padding: 12px 16px; margin-top: 12px; font-size: 0.88rem; }
+.info-box { background: #fff8e1; border: 1px solid #ffe082; color: #856404; border-radius: 10px; padding: 12px 16px; margin-top: 10px; font-size: 0.85rem; line-height: 1.6; }
+.pickup-drop-msg { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; font-size: 0.85rem; line-height: 1.6; }
+
+/* DB TABLE */
+.db-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.db-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; min-width: 500px; }
+.db-table th { background: {{ operator.branding.primary_color }}; color: #fff; padding: 10px 12px; text-align: left; white-space: nowrap; }
 .db-table td { padding: 10px 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
 .db-table tr:hover td { background: #f8f9fa; }
-.badge-system { background: #e3e8f0; color: #444; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; }
-.badge-user { background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; }
-.badge-quotation { background: #e3f2fd; color: #0d47a1; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; }
-.badge-invoice { background: #f3e5f5; color: #4a148c; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; }
-.badge-receipt { background: #e8f5e9; color: #1b5e20; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; }
-.badge-unpaid { background: #fdecea; color: #c62828; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
-.badge-partial { background: #fff3e0; color: #e65100; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
-.badge-paid { background: #e8f5e9; color: #1b5e20; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+
+/* BADGES */
+.badge-system { background: #e3e8f0; color: #444; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; }
+.badge-user { background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; }
+.badge-quotation { background: #e3f2fd; color: #0d47a1; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; }
+.badge-invoice { background: #f3e5f5; color: #4a148c; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; }
+.badge-receipt { background: #e8f5e9; color: #1b5e20; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; }
+.badge-unpaid { background: #fdecea; color: #c62828; padding: 3px 10px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; display: inline-block; }
+.badge-partial { background: #fff3e0; color: #e65100; padding: 3px 10px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; display: inline-block; }
+.badge-paid { background: #e8f5e9; color: #1b5e20; padding: 3px 10px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; display: inline-block; }
+
+/* FILTER TABS */
 .filter-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-.filter-tab { padding: 6px 16px; border-radius: 16px; border: 1.5px solid #ddd; color: #666; background: #fff; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+.filter-tab { padding: 8px 14px; border-radius: 20px; border: 1.5px solid #ddd; color: #666; background: #fff; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; min-height: 38px; }
 .filter-tab.active { background: {{ operator.branding.primary_color }}; color: #fff; border-color: {{ operator.branding.primary_color }}; }
+
+/* SEARCH BAR */
 .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
 .search-bar input { flex: 1; }
-.leg-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-.leg-row input { flex: 1; min-width: 140px; }
-.leg-num { font-weight: 700; color: {{ operator.branding.primary_color }}; min-width: 24px; }
-.settings-section { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+
+/* LEG ROWS */
+.leg-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.leg-row input { flex: 1; min-width: 120px; }
+.leg-num { font-weight: 700; color: {{ operator.branding.primary_color }}; min-width: 22px; font-size: 0.85rem; }
+
+/* SETTINGS */
+.settings-section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
 .settings-section:last-child { border-bottom: none; }
-.settings-section h4 { font-size: 0.9rem; font-weight: 700; color: #333; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+.settings-section h4 { font-size: 0.85rem; font-weight: 700; color: #333; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
 .logo-preview { max-height: 60px; margin-top: 10px; border-radius: 6px; display: block; }
 .trust-bar-editor { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 .trust-bar-item { display: flex; gap: 8px; align-items: center; }
 .trust-bar-item input { flex: 1; }
 .toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.toggle-row label { margin: 0; font-size: 0.9rem; font-weight: 400; }
-.line-item-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
-.line-item-row textarea { flex: 1; min-height: 60px; resize: vertical; }
-.line-item-row input.qty { max-width: 70px; }
-.line-item-row input.amount { max-width: 130px; }
-.balance-summary { background: #f8f9fa; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
-.balance-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.9rem; color: #555; }
-.balance-row.remaining { font-weight: 700; color: {{ operator.branding.primary_color }}; font-size: 1rem; border-top: 1px solid #ddd; margin-top: 6px; padding-top: 8px; }
-.payment-log-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 8px; }
+.toggle-row input[type=checkbox] { width: 20px; height: 20px; margin: 0; cursor: pointer; }
+.toggle-row label { margin: 0; font-size: 0.88rem; font-weight: 400; cursor: pointer; }
+.line-item-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start; flex-wrap: wrap; }
+.line-item-row textarea { flex: 1; min-width: 180px; min-height: 70px; }
+.line-item-row input.qty { max-width: 70px; min-width: 60px; }
+.line-item-row input.amount { max-width: 130px; min-width: 100px; }
+
+/* BALANCE SUMMARY */
+.balance-summary { background: #f8f9fa; border-radius: 10px; padding: 14px; margin-bottom: 16px; border: 1px solid #eee; }
+.balance-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.88rem; color: #555; }
+.balance-row.remaining { font-weight: 700; color: {{ operator.branding.primary_color }}; font-size: 1rem; border-top: 1px solid #ddd; margin-top: 8px; padding-top: 10px; }
+
+/* PAYMENT LOG */
+.payment-log-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 8px; min-width: 400px; }
 .payment-log-table th { background: #f0f0f0; color: #333; padding: 8px 10px; text-align: left; font-weight: 600; }
 .payment-log-table td { padding: 8px 10px; border-bottom: 1px solid #eee; }
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; }
 .modal-overlay.active { display: flex; }
-.modal { background: #fff; border-radius: 12px; padding: 28px; width: 100%; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+.modal { background: #fff; border-radius: 20px 20px 0 0; padding: 24px 20px 32px; width: 100%; max-width: 560px; box-shadow: 0 -8px 32px rgba(0,0,0,0.2); max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.modal-handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 20px; }
 .modal h4 { font-size: 1rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 16px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-@media(max-width:600px) { .form-row { flex-direction: column; } .mission-tabs { flex-wrap: wrap; } }
+.modal-actions .btn { flex: 1; min-width: 100px; }
+
+/* COLOR PICKER ROW */
+.color-row { display: flex; align-items: center; gap: 10px; }
+.color-row input[type=color] { width: 52px; height: 44px; padding: 2px; border-radius: 8px; cursor: pointer; border: 1.5px solid #ddd; flex-shrink: 0; }
+.color-row input[type=text] { flex: 1; }
+
+/* RESPONSIVE */
+@media(max-width:640px) {
+  .nav-tabs { display: none; }
+  .mobile-nav { display: block; }
+  body { padding-bottom: 80px; }
+  .form-row { flex-direction: column; gap: 0; }
+  .form-row .form-group { min-width: 100%; margin-bottom: 12px; }
+  .tab-content { padding: 12px; }
+  .card { padding: 16px 14px; border-radius: 10px; }
+  .btn-row { flex-direction: column; }
+  .btn-row .btn { width: 100%; }
+  .modal { border-radius: 20px 20px 0 0; }
+  .line-item-row { flex-direction: column; }
+  .line-item-row input.qty, .line-item-row input.amount { max-width: 100%; }
+}
+@media(min-width:641px) {
+  .modal { border-radius: 16px; margin: auto; }
+  .modal-overlay { align-items: center; }
+  .modal-handle { display: none; }
+}
 </style>
 </head>
 <body>
@@ -127,18 +232,30 @@ textarea { resize: vertical; }
     <img src="{{ operator.logo_url }}" alt="{{ operator.company_name }}">
     <div>
       <h1>{{ operator.company_name }}</h1>
-      <span>Admin Tool — Quotecloud v2.4.9</span>
+      <span>Quotecloud Admin</span>
     </div>
   </div>
   <a href="/logout" class="logout">Logout</a>
 </header>
 
+<!-- DESKTOP NAV -->
 <div class="nav-tabs">
-  <div class="nav-tab active" onclick="showNav('quote',this)">Quote</div>
-  <div class="nav-tab" onclick="showNav('locations',this)">Locations DB</div>
-  <div class="nav-tab" onclick="showNav('aircraft',this)">Aircraft</div>
-  <div class="nav-tab" onclick="showNav('records',this)">Records</div>
-  <div class="nav-tab" onclick="showNav('settings',this)">Settings</div>
+  <div class="nav-tab active" onclick="showNav('quote',this)">✈ Quote</div>
+  <div class="nav-tab" onclick="showNav('locations',this)">📍 Locations</div>
+  <div class="nav-tab" onclick="showNav('aircraft',this)">🚁 Aircraft</div>
+  <div class="nav-tab" onclick="showNav('records',this)">📋 Records</div>
+  <div class="nav-tab" onclick="showNav('settings',this)">⚙️ Settings</div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <div class="mobile-nav-tab active" onclick="showNavMobile('quote',this)"><span class="mobile-nav-icon">✈️</span>Quote</div>
+    <div class="mobile-nav-tab" onclick="showNavMobile('locations',this)"><span class="mobile-nav-icon">📍</span>Locations</div>
+    <div class="mobile-nav-tab" onclick="showNavMobile('aircraft',this)"><span class="mobile-nav-icon">🚁</span>Aircraft</div>
+    <div class="mobile-nav-tab" onclick="showNavMobile('records',this)"><span class="mobile-nav-icon">📋</span>Records</div>
+    <div class="mobile-nav-tab" onclick="showNavMobile('settings',this)"><span class="mobile-nav-icon">⚙️</span>Settings</div>
+  </div>
 </div>
 
 <!-- QUOTE TAB -->
@@ -147,25 +264,21 @@ textarea { resize: vertical; }
     <div class="mission-tabs">
       <div class="mtab active" onclick="showMission('one_way',this)">One Way</div>
       <div class="mtab" onclick="showMission('return',this)">Return</div>
-      <div class="mtab" onclick="showMission('safari',this)">Multi-Stop Safari</div>
+      <div class="mtab" onclick="showMission('safari',this)">Safari</div>
     </div>
     <div id="m-one_way">
-      <div class="form-row">
-        <div class="form-group"><label>From</label><input type="text" id="ow-pickup" placeholder="Location name, GPS or Google Maps link"></div>
-        <div class="form-group"><label>To</label><input type="text" id="ow-dropoff" placeholder="Location name, GPS or Google Maps link"></div>
-      </div>
-      <button class="btn" onclick="submitQuote('one_way')">Get Quote</button>
+      <div class="form-group" style="margin-bottom:14px"><label>From</label><input type="text" id="ow-pickup" placeholder="Location, airstrip or Google Maps link"></div>
+      <div class="form-group" style="margin-bottom:14px"><label>To</label><input type="text" id="ow-dropoff" placeholder="Location, airstrip or Google Maps link"></div>
+      <button class="btn btn-block" onclick="submitQuote('one_way')">Get Quote →</button>
     </div>
     <div id="m-return" style="display:none">
+      <div class="form-group" style="margin-bottom:14px"><label>From</label><input type="text" id="rt-pickup" placeholder="Location or Google Maps link"></div>
+      <div class="form-group" style="margin-bottom:14px"><label>To</label><input type="text" id="rt-dropoff" placeholder="Location or Google Maps link"></div>
       <div class="form-row">
-        <div class="form-group"><label>From</label><input type="text" id="rt-pickup" placeholder="Location name, GPS or Google Maps link"></div>
-        <div class="form-group"><label>To</label><input type="text" id="rt-dropoff" placeholder="Location name, GPS or Google Maps link"></div>
+        <div class="form-group"><label>Departure Date</label><input type="text" id="rt-depart" placeholder="e.g. 25 Jun 2026"></div>
+        <div class="form-group"><label>Return Date</label><input type="text" id="rt-return" placeholder="e.g. 28 Jun 2026"></div>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label>Departure Date</label><input type="text" id="rt-depart" placeholder="e.g. 25/06/25"></div>
-        <div class="form-group"><label>Return Date</label><input type="text" id="rt-return" placeholder="e.g. 27/06/25"></div>
-      </div>
-      <button class="btn" onclick="submitQuote('return')">Get Quote</button>
+      <button class="btn btn-block" onclick="submitQuote('return')">Get Quote →</button>
     </div>
     <div id="m-safari" style="display:none">
       <div id="safari-legs">
@@ -173,18 +286,20 @@ textarea { resize: vertical; }
           <span class="leg-num">1</span>
           <input type="text" placeholder="From" class="leg-origin">
           <input type="text" placeholder="To" class="leg-dest">
-          <input type="text" placeholder="Date e.g. 25/06/25" class="leg-date" style="max-width:150px">
+          <input type="text" placeholder="Date" class="leg-date" style="max-width:120px">
         </div>
       </div>
-      <div style="display:flex;gap:10px;margin-top:10px">
+      <div class="btn-row" style="margin-top:10px">
         <button class="btn btn-outline btn-sm" onclick="addLeg()">+ Add Leg</button>
-        <button class="btn btn-sm" onclick="submitQuote('safari')">Get Quote</button>
+        <button class="btn btn-sm" onclick="submitQuote('safari')">Get Quote →</button>
       </div>
     </div>
   </div>
+
   <div id="quote-result" class="result-box"></div>
+
   <div class="card pdf-section" id="pdf-section" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <h3 style="margin:0">Generate PDF</h3>
       <button class="btn btn-clear btn-sm" onclick="clearQuote()">Clear Quote</button>
     </div>
@@ -210,17 +325,15 @@ textarea { resize: vertical; }
       <div class="form-group"><label>Email</label><input type="text" id="pdf-email" placeholder="client@email.com"></div>
       <div class="form-group"><label>Phone</label><input type="text" id="pdf-phone" placeholder="+254..."></div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>Discount (USD)</label><input type="number" id="pdf-discount" placeholder="0" min="0"></div>
-    </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Discount (USD)</label><input type="number" id="pdf-discount" placeholder="0" min="0"></div>
     <div class="form-group-full"><label>Notes</label><textarea id="pdf-notes" rows="2" placeholder="Special notes..."></textarea></div>
     <div style="margin-bottom:14px">
       <label style="margin-bottom:8px;display:block">Extra Line Items</label>
       <div id="extra-items"></div>
       <button class="btn btn-outline btn-sm" onclick="addExtraItem()" style="margin-top:8px">+ Add Item</button>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn" onclick="generatePDF(false)">Download Selected Aircraft</button>
+    <div class="btn-row">
+      <button class="btn" onclick="generatePDF(false)">Download Selected</button>
       <button class="btn btn-outline" onclick="generatePDF(true)">Download All Aircraft</button>
     </div>
     <div id="pdf-msg"></div>
@@ -239,17 +352,19 @@ textarea { resize: vertical; }
     </div>
     <div class="form-row">
       <div class="form-group"><label>Or paste Google Maps link</label><input type="text" id="loc-maps" placeholder="https://maps.app.goo.gl/..."></div>
-      <div class="form-group" style="display:flex;align-items:flex-end"><button class="btn btn-outline btn-sm" onclick="resolveMapPin()">Resolve Pin</button></div>
+      <div class="form-group" style="display:flex;align-items:flex-end"><button class="btn btn-outline" onclick="resolveMapPin()" style="width:100%">Resolve Pin</button></div>
     </div>
-    <button class="btn" onclick="addLocation()">Add Location</button>
+    <button class="btn btn-block" onclick="addLocation()">Add Location</button>
     <div id="loc-msg"></div>
   </div>
   <div class="card">
     <div class="search-bar"><input type="text" id="loc-search" placeholder="Search locations..." oninput="filterLocations()"></div>
-    <table class="db-table">
-      <thead><tr><th>Name</th><th>Lat</th><th>Lon</th><th>Alias</th><th>Type</th><th>Actions</th></tr></thead>
-      <tbody id="loc-tbody"></tbody>
-    </table>
+    <div class="db-table-wrap">
+      <table class="db-table">
+        <thead><tr><th>Name</th><th>Lat</th><th>Lon</th><th>Alias</th><th>Type</th><th>Actions</th></tr></thead>
+        <tbody id="loc-tbody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -258,7 +373,7 @@ textarea { resize: vertical; }
   <div class="card">
     <h3>Aircraft Fleet</h3>
     <div id="aircraft-list"></div>
-    <div style="margin-top:16px;display:flex;gap:10px">
+    <div class="btn-row" style="margin-top:16px">
       <button class="btn" onclick="addAircraftRow()">+ Add Aircraft</button>
       <button class="btn btn-outline" onclick="saveAircraft()">Save All</button>
     </div>
@@ -279,10 +394,10 @@ textarea { resize: vertical; }
       <label style="margin-bottom:8px;display:block">Line Items</label>
       <div id="mi-items">
         <div class="line-item-row">
-          <textarea placeholder="Description&#10;Press Enter for sub-lines (first line bold)" class="mi-desc" rows="3"></textarea>
-          <input type="number" placeholder="Qty" class="mi-qty qty" value="1" style="max-width:70px;margin-top:0">
-          <input type="number" placeholder="Unit Cost (USD)" class="mi-unit amount" style="max-width:130px;margin-top:0">
-          <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-top:0">x</button>
+          <textarea placeholder="Description" class="mi-desc" rows="3"></textarea>
+          <input type="number" placeholder="Qty" class="mi-qty qty" value="1">
+          <input type="number" placeholder="Unit Cost (USD)" class="mi-unit amount">
+          <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>
         </div>
       </div>
       <button class="btn btn-outline btn-sm" onclick="addMiItem()" style="margin-top:8px">+ Add Line</button>
@@ -298,9 +413,9 @@ textarea { resize: vertical; }
       </div>
     </div>
     <div class="form-group-full"><label>Notes</label><textarea id="mi-notes" rows="2" placeholder="Additional notes..."></textarea></div>
-    <div class="form-group-full"><label>Bank Details (editable)</label><textarea id="mi-bank" rows="6" style="font-family:monospace;font-size:0.88rem"></textarea></div>
+    <div class="form-group-full"><label>Bank Details</label><textarea id="mi-bank" rows="6" style="font-family:monospace;font-size:14px"></textarea></div>
     <div class="form-group-full"><label>Terms & Conditions</label><textarea id="mi-terms" rows="8"></textarea></div>
-    <button class="btn" onclick="createManualInvoice()">Generate & Download</button>
+    <button class="btn btn-block" onclick="createManualInvoice()">Generate & Download</button>
     <div id="mi-msg"></div>
   </div>
 
@@ -308,15 +423,17 @@ textarea { resize: vertical; }
     <h3>All Records</h3>
     <div class="filter-tabs">
       <div class="filter-tab active" onclick="filterRecordsByType('all',this)">All</div>
-      <div class="filter-tab" onclick="filterRecordsByType('Quotation',this)">Quotations</div>
+      <div class="filter-tab" onclick="filterRecordsByType('Quotation',this)">Quotes</div>
       <div class="filter-tab" onclick="filterRecordsByType('Invoice',this)">Invoices</div>
       <div class="filter-tab" onclick="filterRecordsByType('Receipt',this)">Receipts</div>
     </div>
     <div class="search-bar"><input type="text" id="rec-search" placeholder="Search by client, number..." oninput="filterRecords()"></div>
-    <table class="db-table">
-      <thead><tr><th>Number</th><th>Date</th><th>Type</th><th>Client</th><th>Amount</th><th>Payment</th><th>Actions</th></tr></thead>
-      <tbody id="rec-tbody"></tbody>
-    </table>
+    <div class="db-table-wrap">
+      <table class="db-table">
+        <thead><tr><th>Number</th><th>Date</th><th>Type</th><th>Client</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="rec-tbody"></tbody>
+      </table>
+    </div>
     <div id="rec-msg"></div>
   </div>
 </div>
@@ -338,15 +455,15 @@ textarea { resize: vertical; }
       <h4>Colors</h4>
       <div class="form-row">
         <div class="form-group"><label>Primary Color</label>
-          <div style="display:flex;align-items:center;gap:8px">
-            <input type="color" id="s-primary-color" style="width:60px;height:40px;padding:2px">
-            <input type="text" id="s-primary-color-hex" placeholder="#0D47A1" style="flex:1" oninput="syncColor('primary')">
+          <div class="color-row">
+            <input type="color" id="s-primary-color">
+            <input type="text" id="s-primary-color-hex" placeholder="#0D47A1" oninput="syncColor('primary')">
           </div>
         </div>
         <div class="form-group"><label>Accent Color</label>
-          <div style="display:flex;align-items:center;gap:8px">
-            <input type="color" id="s-accent-color" style="width:60px;height:40px;padding:2px">
-            <input type="text" id="s-accent-color-hex" placeholder="#e8a020" style="flex:1" oninput="syncColor('accent')">
+          <div class="color-row">
+            <input type="color" id="s-accent-color">
+            <input type="text" id="s-accent-color-hex" placeholder="#e8a020" oninput="syncColor('accent')">
           </div>
         </div>
       </div>
@@ -379,23 +496,23 @@ textarea { resize: vertical; }
         <div class="form-group-full"><label>Fixed Wing Landing Field Disclaimer</label><textarea id="s-disclaimer" rows="3"></textarea></div>
       </div>
     </div>
-    <button class="btn" onclick="saveBranding()">Save Branding</button>
+    <button class="btn btn-block" onclick="saveBranding()">Save Branding</button>
     <div id="branding-msg"></div>
   </div>
 
   <div class="card">
     <h3>Company Details</h3>
     <div class="form-row">
-      <div class="form-group"><label>Phone</label><input type="text" id="s-phone"></div>
-      <div class="form-group"><label>WhatsApp Number (digits only)</label><input type="text" id="s-whatsapp"></div>
+      <div class="form-group"><label>Phone</label><input type="tel" id="s-phone"></div>
+      <div class="form-group"><label>WhatsApp (digits only)</label><input type="tel" id="s-whatsapp"></div>
     </div>
     <div class="form-group-full"><label>WhatsApp Greeting</label><input type="text" id="s-whatsapp-greeting"></div>
     <div class="form-row">
-      <div class="form-group"><label>Email</label><input type="text" id="s-email"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="s-email"></div>
       <div class="form-group"><label>Base Airport Key</label><input type="text" id="s-base-airport"></div>
     </div>
     <div class="form-group-full"><label>Address</label><input type="text" id="s-address"></div>
-    <button class="btn" onclick="saveCompany()">Save Company Details</button>
+    <button class="btn btn-block" onclick="saveCompany()">Save Company Details</button>
     <div id="company-msg"></div>
   </div>
 
@@ -414,7 +531,7 @@ textarea { resize: vertical; }
         <div class="form-group"><label>Region Display Name</label><input type="text" id="s-geo-region-name" placeholder="Kenya"></div>
       </div>
       <div class="toggle-row">
-        <input type="checkbox" id="s-geo-enabled" style="width:auto;margin:0">
+        <input type="checkbox" id="s-geo-enabled">
         <label for="s-geo-enabled">Enable geographic lock</label>
       </div>
       <div id="geo-custom-fields" style="display:none;margin-top:12px">
@@ -426,27 +543,25 @@ textarea { resize: vertical; }
         </div>
       </div>
     </div>
-    <button class="btn" onclick="saveGeoLock()">Save Geographic Settings</button>
+    <button class="btn btn-block" onclick="saveGeoLock()">Save Geographic Settings</button>
     <div id="geo-msg"></div>
   </div>
 
   <div class="card">
     <h3>Quoting Rules</h3>
     <div class="form-row">
-      <div class="form-group"><label>Minimum Flight Hours</label><input type="number" id="s-min-hours" step="0.5" min="0.5"></div>
+      <div class="form-group"><label>Min Flight Hours</label><input type="number" id="s-min-hours" step="0.5" min="0.5"></div>
       <div class="form-group"><label>Max Nights Before Pick & Drop</label><input type="number" id="s-max-nights" min="1" max="10"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Max Flight Hours Per Day</label><input type="number" id="s-max-hours-day" step="0.5" min="1"></div>
+      <div class="form-group"><label>Max Flight Hours/Day</label><input type="number" id="s-max-hours-day" step="0.5" min="1"></div>
       <div class="form-group"><label>Max Idle Days Between Legs</label><input type="number" id="s-max-idle-days" min="0" max="7"></div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>Quote Validity (hours)</label><input type="number" id="s-quote-validity" min="1"></div>
-    </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Quote Validity (hours)</label><input type="number" id="s-quote-validity" min="1"></div>
     <div class="settings-section" style="margin-top:16px;padding-top:16px">
       <h4>Ground Time Buffer</h4>
       <div class="toggle-row">
-        <input type="checkbox" id="s-buffer-enabled" style="width:auto;margin:0" onchange="toggleBuffer()">
+        <input type="checkbox" id="s-buffer-enabled" onchange="toggleBuffer()">
         <label for="s-buffer-enabled">Add ground time buffer to revenue legs</label>
       </div>
       <div id="buffer-minutes-field" style="display:none;margin-top:10px">
@@ -454,13 +569,13 @@ textarea { resize: vertical; }
       </div>
     </div>
     <div class="settings-section" style="padding-top:16px">
-      <h4>Client Display Options</h4>
+      <h4>Client Display</h4>
       <div class="toggle-row">
-        <input type="checkbox" id="s-show-nm" style="width:auto;margin:0">
+        <input type="checkbox" id="s-show-nm">
         <label for="s-show-nm">Show distance in Nautical Miles on client page</label>
       </div>
     </div>
-    <button class="btn" onclick="saveQuotingRules()">Save Quoting Rules</button>
+    <button class="btn btn-block" onclick="saveQuotingRules()">Save Quoting Rules</button>
     <div id="rules-msg"></div>
   </div>
 
@@ -478,24 +593,20 @@ textarea { resize: vertical; }
       <div class="form-group"><label>SWIFT</label><input type="text" id="s-bank-swift"></div>
       <div class="form-group"><label>Branch</label><input type="text" id="s-bank-branch"></div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>Invoice Prefix (e.g. HF)</label><input type="text" id="s-invoice-prefix"></div>
-    </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Invoice Prefix (e.g. HF)</label><input type="text" id="s-invoice-prefix"></div>
     <div class="form-group-full"><label>Default Terms & Conditions</label><textarea id="s-invoice-terms" rows="8"></textarea></div>
-    <button class="btn" onclick="saveBank()">Save Bank Details</button>
+    <button class="btn btn-block" onclick="saveBank()">Save Bank Details</button>
     <div id="bank-msg"></div>
   </div>
 
   <div class="card">
     <h3>Change Password</h3>
-    <div class="form-row">
-      <div class="form-group"><label>Current Password</label><input type="password" id="s-current-pass"></div>
-    </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Current Password</label><input type="password" id="s-current-pass"></div>
     <div class="form-row">
       <div class="form-group"><label>New Password</label><input type="password" id="s-new-pass"></div>
       <div class="form-group"><label>Confirm New Password</label><input type="password" id="s-confirm-pass"></div>
     </div>
-    <button class="btn" onclick="changePassword()">Change Password</button>
+    <button class="btn btn-block" onclick="changePassword()">Change Password</button>
     <div id="pass-msg"></div>
   </div>
 </div>
@@ -503,6 +614,7 @@ textarea { resize: vertical; }
 <!-- MARK AS PAID MODAL -->
 <div class="modal-overlay" id="paid-modal">
   <div class="modal">
+    <div class="modal-handle"></div>
     <h4 id="paid-modal-title">Mark as Paid</h4>
     <input type="hidden" id="paid-record-number">
     <div class="balance-summary">
@@ -514,28 +626,26 @@ textarea { resize: vertical; }
       <div class="form-group"><label>Amount Paid (USD)</label><input type="number" id="paid-amount" placeholder="Enter amount" min="0" step="0.01"></div>
       <div class="form-group"><label>Payment Date</label><input type="text" id="paid-date" placeholder="DD/MM/YYYY"></div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>Mode of Payment</label>
-        <select id="paid-mode">
-          <option value="">-- Select --</option>
-          <option value="M-Pesa">M-Pesa</option>
-          <option value="Bank Transfer / RTGS">Bank Transfer / RTGS</option>
-          <option value="Cheque">Cheque</option>
-          <option value="Cash">Cash</option>
-          <option value="Stripe">Stripe</option>
-          <option value="Paystack">Paystack</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Mode of Payment</label>
+      <select id="paid-mode">
+        <option value="">-- Select --</option>
+        <option value="M-Pesa">M-Pesa</option>
+        <option value="Bank Transfer / RTGS">Bank Transfer / RTGS</option>
+        <option value="Cheque">Cheque</option>
+        <option value="Cash">Cash</option>
+        <option value="Stripe">Stripe</option>
+        <option value="Paystack">Paystack</option>
+        <option value="Other">Other</option>
+      </select>
     </div>
     <div class="form-group-full" style="margin-bottom:14px">
       <label>Reference / Transaction ID</label>
-      <input type="text" id="paid-ref" placeholder="e.g. M-Pesa code, Cheque no, RTGS ref...">
+      <input type="text" id="paid-ref" placeholder="e.g. M-Pesa code, Cheque no...">
     </div>
     <div class="modal-actions">
-      <button class="btn btn-success btn-sm" id="btn-save-payment" onclick="confirmMarkPaid(false)">Save Payment</button>
-      <button class="btn btn-sm" id="btn-gen-receipt" onclick="confirmMarkPaid(true)" style="display:none">Generate Receipt</button>
-      <button class="btn btn-grey btn-sm" onclick="closePaidModal()">Cancel</button>
+      <button class="btn btn-success" id="btn-save-payment" onclick="confirmMarkPaid(false)">Save Payment</button>
+      <button class="btn" id="btn-gen-receipt" onclick="confirmMarkPaid(true)" style="display:none">Generate Receipt</button>
+      <button class="btn btn-grey" onclick="closePaidModal()">Cancel</button>
     </div>
     <div id="paid-msg"></div>
   </div>
@@ -544,11 +654,12 @@ textarea { resize: vertical; }
 <!-- PAYMENT LOG MODAL -->
 <div class="modal-overlay" id="log-modal">
   <div class="modal">
+    <div class="modal-handle"></div>
     <h4>Payment History</h4>
     <p id="log-record-info" style="font-size:0.85rem;color:#666;margin-bottom:16px"></p>
-    <div id="log-content"></div>
+    <div style="overflow-x:auto"><div id="log-content"></div></div>
     <div class="modal-actions">
-      <button class="btn btn-grey btn-sm" onclick="closeLogModal()">Close</button>
+      <button class="btn btn-grey btn-block" onclick="closeLogModal()">Close</button>
     </div>
   </div>
 </div>
@@ -556,6 +667,7 @@ textarea { resize: vertical; }
 <!-- EDIT RECORD MODAL -->
 <div class="modal-overlay" id="edit-modal">
   <div class="modal">
+    <div class="modal-handle"></div>
     <h4>Edit Record</h4>
     <input type="hidden" id="edit-record-number">
     <div class="form-row">
@@ -573,33 +685,34 @@ textarea { resize: vertical; }
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-success btn-sm" onclick="confirmEdit()">Save Changes</button>
-      <button class="btn btn-grey btn-sm" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-success" onclick="confirmEdit()">Save Changes</button>
+      <button class="btn btn-grey" onclick="closeEditModal()">Cancel</button>
     </div>
     <div id="edit-msg"></div>
   </div>
 </div>
 
-<!-- DELETE WITH PASSWORD MODAL -->
+<!-- DELETE MODAL -->
 <div class="modal-overlay" id="delete-modal">
   <div class="modal">
+    <div class="modal-handle"></div>
     <h4>Delete Paid Record</h4>
     <input type="hidden" id="delete-record-number">
-    <p style="color:#666;font-size:0.9rem;margin-bottom:16px">This record has a payment against it. Enter your admin password to confirm deletion.</p>
+    <p style="color:#666;font-size:0.88rem;margin-bottom:16px;line-height:1.6">This record has a payment. Enter your admin password to confirm deletion.</p>
     <div class="form-group" style="margin-bottom:16px">
       <label>Admin Password</label>
       <input type="password" id="delete-password" placeholder="Enter password">
     </div>
     <div class="modal-actions">
-      <button class="btn btn-danger btn-sm" onclick="confirmDelete()">Delete</button>
-      <button class="btn btn-grey btn-sm" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+      <button class="btn btn-grey" onclick="closeDeleteModal()">Cancel</button>
     </div>
     <div id="delete-msg"></div>
   </div>
 </div>
 
 <script>
-// Quotecloud Admin v2.4.9
+// Quotecloud Admin v2.5.0 - Mobile optimized
 let lastResults = [];
 let allLocations = [];
 let aircraftData = {};
@@ -654,6 +767,18 @@ function showNav(tab, el) {
   if (tab === 'records') loadRecords();
 }
 
+function showNavMobile(tab, el) {
+  document.querySelectorAll('.mobile-nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+  window.scrollTo(0, 0);
+  if (tab === 'locations') loadLocations();
+  if (tab === 'aircraft') loadAircraft();
+  if (tab === 'settings') loadSettings();
+  if (tab === 'records') loadRecords();
+}
+
 function showMission(m, el) {
   document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
@@ -694,8 +819,8 @@ function addLeg() {
   div.innerHTML = `<span class="leg-num">${n}</span>
     <input type="text" placeholder="From" class="leg-origin">
     <input type="text" placeholder="To" class="leg-dest">
-    <input type="text" placeholder="Date e.g. 25/06/25" class="leg-date" style="max-width:150px">
-    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">x</button>`;
+    <input type="text" placeholder="Date" class="leg-date" style="max-width:120px">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>`;
   document.getElementById('safari-legs').appendChild(div);
 }
 
@@ -719,7 +844,7 @@ async function submitQuote(mission) {
       });
     });
   }
-  document.getElementById('quote-result').innerHTML = '<p style="color:#888;padding:12px">Calculating...</p>';
+  document.getElementById('quote-result').innerHTML = '<p style="color:#888;padding:12px;text-align:center">Calculating...</p>';
   try {
     let r = await fetch('/admin/quote', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     let data = await r.json();
@@ -729,6 +854,7 @@ async function submitQuote(mission) {
     renderResults(lastResults);
     document.getElementById('pdf-section').style.display = 'block';
     populatePdfAircraftSelector();
+    document.getElementById('pdf-section').scrollIntoView({behavior:'smooth', block:'start'});
   } catch(e) {
     document.getElementById('quote-result').innerHTML = `<div class="error-box">Network error: ${e.message}</div>`;
   }
@@ -767,7 +893,6 @@ function getSelectedResult() {
   let idx = parseInt(sel.value) || 0;
   let res = lastResults[idx];
   if (!res) return null;
-
   let actual;
   if (res.mission === 'return_both') {
     let wd = res.wait_days || 0;
@@ -787,7 +912,6 @@ function getSelectedResult() {
   } else {
     actual = res;
   }
-
   actual.rate_usd = res.rate_usd;
   actual.overnight_rate_usd = res.overnight_rate_usd;
   actual.idle_day_rate_usd = res.idle_day_rate_usd;
@@ -800,10 +924,10 @@ function getSelectedResult() {
 function addExtraItem() {
   let div = document.createElement('div');
   div.className = 'line-item-row';
-  div.innerHTML = `<textarea placeholder="Description&#10;Press Enter for sub-lines" class="extra-desc" rows="2"></textarea>
-    <input type="number" placeholder="Qty" class="extra-qty qty" value="1" style="max-width:70px;margin-top:0">
-    <input type="number" placeholder="Amount (USD)" class="extra-amount amount" style="max-width:130px;margin-top:0">
-    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-top:0">x</button>`;
+  div.innerHTML = `<textarea placeholder="Description" class="extra-desc" rows="2"></textarea>
+    <input type="number" placeholder="Qty" class="extra-qty qty" value="1">
+    <input type="number" placeholder="Amount (USD)" class="extra-amount amount">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>`;
   document.getElementById('extra-items').appendChild(div);
 }
 
@@ -837,7 +961,7 @@ function renderSegments(segs) {
       let cost = s.cost ? `$${parseFloat(s.cost).toLocaleString(undefined,{minimumFractionDigits:2})}` : '-';
       return `<tr style="background:#fafafa">
         <td><span class="tag ${tagClass(null, s.note)}">${label}</span></td>
-        <td colspan="2" style="color:#666;font-size:0.82rem">${s.note}</td>
+        <td colspan="2" style="color:#666;font-size:0.8rem">${s.note}</td>
         <td>-</td>
         <td style="font-weight:600;color:#333">${cost}</td>
         <td>-</td>
@@ -852,9 +976,9 @@ function renderSegments(segs) {
       <td>${s.date||''}</td>
     </tr>`;
   }).join('');
-  return `<table class="route-table">
-    <thead><tr><th>Type</th><th>From</th><th>To</th><th>Dist (nm)</th><th>Hours / Cost</th><th>Date</th></tr></thead>
-    <tbody>${rows}</tbody></table>`;
+  return `<div class="route-table-wrap"><table class="route-table">
+    <thead><tr><th>Type</th><th>From</th><th>To</th><th>Dist</th><th>Hours</th><th>Date</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
 }
 
 function calcTotalHours(segs) {
@@ -870,7 +994,7 @@ function renderBilling(res, extraSegs) {
   let rows = '';
   if (totalHrs > 0 && rate > 0) {
     let fc = Math.round(totalHrs * rate * 100) / 100;
-    rows += `<div class="billing-row"><span>Aircraft Rental (${totalHrs} hrs @ $${rate.toLocaleString()}/hr)</span><span>USD $${fc.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>`;
+    rows += `<div class="billing-row"><span>Aircraft Rental (${totalHrs} hrs @ $${rate.toLocaleString()}/hr)</span><span>USD $${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
   let fee = res.pax_fee_usd || res.pax_fee_usd_display || 0;
   if (fee > 0) rows += `<div class="billing-row"><span>Fees & Taxes</span><span>USD $${parseFloat(fee).toLocaleString()}</span></div>`;
@@ -886,15 +1010,15 @@ function renderBilling(res, extraSegs) {
     let idleDays = idleRate > 0 ? Math.round(waitingUsd / idleRate) : 1;
     rows += `<div class="billing-row"><span>Idle Day Charge (${idleDays} day${idleDays!==1?'s':''} @ $${idleRate.toLocaleString()}/day)</span><span>USD $${parseFloat(waitingUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div></div>`;
+  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div></div>`;
 }
 
 function renderOneAc(res) {
   if (res.error) return `<div class="error-box">${res.error}</div>`;
   let typeBadge = res.ac_type==='fixed_wing'?`<span class="tag tag-fixed">Fixed Wing</span>`:`<span class="tag tag-heli">Helicopter</span>`;
   let routeBadge = res.routing_mode==='direct'?`<span class="tag tag-direct">Direct</span>`:`<span class="tag tag-standard">Standard</span>`;
-  let homeInfo = res.home_airstrip ? `| Base: ${res.home_airstrip}` : '';
-  let disclaimer = res.ac_type==='fixed_wing' ? `<div class="info-box">This is a fixed wing aircraft and requires a runway for take off / landing. The quote is not a confirmation of service to quoted location. Contact us via WhatsApp for final reservation and confirmation of runway suitability.</div>` : '';
+  let homeInfo = res.home_airstrip ? `<span style="color:#888;font-size:0.78rem">Base: ${res.home_airstrip}</span>` : '';
+  let disclaimer = res.ac_type==='fixed_wing' ? `<div class="info-box">Fixed wing aircraft. Runway required for takeoff/landing. Confirm runway suitability before booking.</div>` : '';
   let content = '';
 
   if (res.mission === 'return_both') {
@@ -902,43 +1026,25 @@ function renderOneAc(res) {
     let maxN = res.max_nights || 3;
     if (wd >= maxN) {
       let b = res.option_b;
-      let bRes = {
-        segments:[...(b.drop.segments||[]),...(b.pick.segments||[])],
-        rate_usd:res.rate_usd,
-        overnight_rate_usd:res.overnight_rate_usd,
-        idle_day_rate_usd:res.idle_day_rate_usd,
-        pax_fee_usd_display:res.pax_fee_usd_display,
-        total_usd:b.total_usd
-      };
+      let bRes = { segments:[...(b.drop.segments||[]),...(b.pick.segments||[])], rate_usd:res.rate_usd, overnight_rate_usd:res.overnight_rate_usd, idle_day_rate_usd:res.idle_day_rate_usd, pax_fee_usd_display:res.pax_fee_usd_display, total_usd:b.total_usd };
       content = `<div class="pickup-drop-msg">${res.pickup_drop_msg||'Pick & Drop only.'}</div>
-        <b style="font-size:0.82rem;color:#555">Drop Off</b>${renderSegments(b.drop.segments)}
-        <b style="font-size:0.82rem;color:#555">Pick Up</b>${renderSegments(b.pick.segments)}
+        <b style="font-size:0.8rem;color:#555">Drop Off</b>${renderSegments(b.drop.segments)}
+        <b style="font-size:0.8rem;color:#555">Pick Up</b>${renderSegments(b.pick.segments)}
         ${renderBilling(bRes)}`;
     } else {
-      let optARes = {...res.option_a,
-        rate_usd:res.rate_usd,
-        overnight_rate_usd:res.overnight_rate_usd,
-        idle_day_rate_usd:res.idle_day_rate_usd,
-        pax_fee_usd_display:res.pax_fee_usd_display
-      };
-      let optBRes = {
-        segments:[...(res.option_b.drop.segments||[]),...(res.option_b.pick.segments||[])],
-        rate_usd:res.rate_usd,
-        idle_day_rate_usd:res.idle_day_rate_usd,
-        pax_fee_usd_display:res.pax_fee_usd_display,
-        total_usd:res.option_b.total_usd
-      };
+      let optARes = {...res.option_a, rate_usd:res.rate_usd, overnight_rate_usd:res.overnight_rate_usd, idle_day_rate_usd:res.idle_day_rate_usd, pax_fee_usd_display:res.pax_fee_usd_display};
+      let optBRes = { segments:[...(res.option_b.drop.segments||[]),...(res.option_b.pick.segments||[])], rate_usd:res.rate_usd, idle_day_rate_usd:res.idle_day_rate_usd, pax_fee_usd_display:res.pax_fee_usd_display, total_usd:res.option_b.total_usd };
       content = `<div class="option-tabs">
-        <div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A - Waits</div>
-        <div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B - Pick & Drop</div>
+        <div class="otab active" onclick="switchOtab(this,'oa-${res.ac_key}')">Option A — Waits</div>
+        <div class="otab" onclick="switchOtab(this,'ob-${res.ac_key}')">Option B — Pick & Drop</div>
       </div>
       <div class="otab-content active" id="oa-${res.ac_key}">
-        <div class="info-box" style="margin-bottom:12px">Note: Aircraft availability for the wait option is subject to operational schedule. We recommend the client also reviews Option B (Pick & Drop) as an alternative.</div>
+        <div class="info-box" style="margin-bottom:12px">Availability for wait option subject to schedule.</div>
         ${renderSegments(res.option_a.segments)}${renderBilling(optARes)}
       </div>
       <div class="otab-content" id="ob-${res.ac_key}">
-        <b style="font-size:0.82rem;color:#555">Drop Off</b>${renderSegments(res.option_b.drop.segments)}
-        <b style="font-size:0.82rem;color:#555">Pick Up</b>${renderSegments(res.option_b.pick.segments)}
+        <b style="font-size:0.8rem;color:#555">Drop Off</b>${renderSegments(res.option_b.drop.segments)}
+        <b style="font-size:0.8rem;color:#555">Pick Up</b>${renderSegments(res.option_b.pick.segments)}
         ${renderBilling(optBRes)}
       </div>`;
     }
@@ -987,7 +1093,7 @@ async function generatePDF(allAircraft) {
         link.download = f.number + '.pdf'; link.click();
         await new Promise(res => setTimeout(res, 800));
       }
-      showMsg('pdf-msg', `Generated ${data.files.length} PDF(s) and saved to Records.`, 'success');
+      showMsg('pdf-msg', `Generated ${data.files.length} PDF(s).`, 'success');
       return;
     } catch(e) { showMsg('pdf-msg','Error: '+e.message,'error'); return; }
   }
@@ -1023,7 +1129,7 @@ function renderLocations(locs) {
     <td>${l.name||l.key}</td><td>${l.lat||''}</td><td>${l.lon||''}</td>
     <td>${(l.aliases||[]).join(', ')||'-'}</td>
     <td><span class="${l.source==='system'?'badge-system':'badge-user'}">${l.source==='system'?'System':'User'}</span></td>
-    <td>${l.source==='user'?`<button class="btn btn-danger btn-sm" onclick="deleteLocation('${l.name||l.key}')">Delete</button>`:''}</td>
+    <td>${l.source==='user'?`<button class="btn btn-danger btn-sm" onclick="deleteLocation('${l.name||l.key}')">Del</button>`:''}</td>
   </tr>`).join('');
 }
 
@@ -1068,10 +1174,12 @@ async function loadAircraft() {
 function renderAircraft() {
   let html = Object.entries(aircraftData).map(([key, ac]) => {
     let isNew = key.startsWith('aircraft_');
-    return `<div class="ac-card" data-key="${key}">
+    return `<div class="ac-card" data-key="${key}" style="margin-bottom:16px">
       <div class="form-row">
         <div class="form-group"><label>Key</label><input class="ac-key" value="${key}" ${isNew?'':'readonly style="background:#f5f5f5"'}></div>
         <div class="form-group"><label>Label</label><input class="ac-label" value="${ac.label}"></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label>Type</label>
           <select class="ac-type">
             <option value="helicopter" ${ac.type==='helicopter'?'selected':''}>Helicopter</option>
@@ -1083,23 +1191,25 @@ function renderAircraft() {
             <option value="direct" ${ac.routing_mode==='direct'?'selected':''}>Direct</option>
           </select></div>
       </div>
+      <div class="form-group" style="margin-bottom:14px"><label>Home Airstrip</label><input class="ac-home" value="${ac.home_airstrip||'Wilson Airport, Nairobi'}"></div>
       <div class="form-row">
-        <div class="form-group"><label>Home Airstrip</label><input class="ac-home" value="${ac.home_airstrip||'Wilson Airport, Nairobi'}"></div>
         <div class="form-group"><label>Seats</label><input class="ac-seater" type="number" value="${ac.seater}"></div>
+        <div class="form-group"><label>Speed (KTAS)</label><input class="ac-speed" type="number" value="${ac.speed}"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Speed (KTAS)</label><input class="ac-speed" type="number" value="${ac.speed}"></div>
         <div class="form-group"><label>Rate (USD/hr)</label><input class="ac-rate" type="number" value="${ac.rate}"></div>
         <div class="form-group"><label>Pax Fee (USD)</label><input class="ac-pax" type="number" value="${ac.pax_fee}"></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label>Overnight Rate (USD/night)</label><input class="ac-overnight" type="number" value="${ac.overnight_rate||300}"></div>
         <div class="form-group"><label>Idle Day Rate (USD/day)</label><input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}"></div>
-        <div class="form-group"><label>Active</label>
-          <select class="ac-active">
-            <option value="true" ${ac.active?'selected':''}>Active</option>
-            <option value="false" ${!ac.active?'selected':''}>Inactive</option>
-          </select></div>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="removeAcRow(this)">Remove</button>
+      <div class="form-group" style="margin-bottom:14px"><label>Status</label>
+        <select class="ac-active">
+          <option value="true" ${ac.active?'selected':''}>Active</option>
+          <option value="false" ${!ac.active?'selected':''}>Inactive</option>
+        </select></div>
+      <button class="btn btn-danger btn-sm" onclick="removeAcRow(this)">Remove Aircraft</button>
     </div>`;
   }).join('');
   document.getElementById('aircraft-list').innerHTML = html;
@@ -1185,7 +1295,7 @@ function getPaymentBadge(rec) {
   let total = parseFloat(rec.amount || 0);
   let paid = parseFloat(rec.paid_amount || 0);
   if (!rec.paid && paid === 0) return '<span class="badge-unpaid">UNPAID</span>';
-  if (paid > 0 && paid < total) return `<span class="badge-partial">PARTIAL $${paid.toLocaleString()}</span>`;
+  if (paid > 0 && paid < total) return `<span class="badge-partial">PART $${paid.toLocaleString()}</span>`;
   return '<span class="badge-paid">PAID</span>';
 }
 
@@ -1197,12 +1307,12 @@ function getPaymentActions(rec) {
   let hasLog = (rec.payment_log || []).length > 0;
   let viewBtn = hasLog ? `<button class="btn btn-info btn-sm" onclick="openLogModal('${rec.number}')">Log</button>` : '';
   if (fullyPaid && rec.receipt_number) {
-    return `${viewBtn} <span style="font-size:0.78rem;color:#1b5e20;font-weight:600">${rec.receipt_number}</span>`;
+    return `${viewBtn} <span style="font-size:0.75rem;color:#1b5e20;font-weight:700">${rec.receipt_number}</span>`;
   }
   if (fullyPaid && !rec.receipt_number) {
-    return `${viewBtn} <button class="btn btn-success btn-sm" onclick="openPaidModal('${rec.number}')">Generate Receipt</button>`;
+    return `${viewBtn} <button class="btn btn-success btn-sm" onclick="openPaidModal('${rec.number}')">Receipt</button>`;
   }
-  let label = paid > 0 ? 'Update' : 'Mark Paid';
+  let label = paid > 0 ? 'Update' : 'Pay';
   return `${viewBtn} <button class="btn btn-amber btn-sm" onclick="openPaidModal('${rec.number}')">${label}</button>`;
 }
 
@@ -1214,13 +1324,13 @@ function renderRecords(records) {
   document.getElementById('rec-tbody').innerHTML = records.slice().reverse().map(r => {
     let typeKey = (r.type||'').toLowerCase();
     return `<tr>
-      <td><strong>${r.number||'-'}</strong></td>
-      <td>${r.date||'-'}</td>
+      <td><strong style="white-space:nowrap">${r.number||'-'}</strong></td>
+      <td style="white-space:nowrap">${r.date||'-'}</td>
       <td><span class="badge-${typeKey}">${r.type||'-'}</span></td>
-      <td>${r.client_name||'-'}</td>
-      <td>USD $${parseFloat(r.amount||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.client_name||'-'}</td>
+      <td style="white-space:nowrap">$${parseFloat(r.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
       <td>${getPaymentBadge(r)}</td>
-      <td style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+      <td style="white-space:nowrap">
         ${getPaymentActions(r)}
         <button class="btn btn-outline btn-sm" onclick="openEditModal('${r.number}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.number}')">Del</button>
@@ -1255,10 +1365,10 @@ async function openPaidModal(number) {
   if (isFullyPaid) {
     document.getElementById('paid-modal-title').textContent = 'Generate Receipt';
     document.getElementById('btn-save-payment').style.display = 'none';
-    document.getElementById('btn-gen-receipt').style.display = 'inline-block';
+    document.getElementById('btn-gen-receipt').style.display = 'inline-flex';
   } else {
     document.getElementById('paid-modal-title').textContent = prevPaid > 0 ? 'Update Payment' : 'Mark as Paid';
-    document.getElementById('btn-save-payment').style.display = 'inline-block';
+    document.getElementById('btn-save-payment').style.display = 'inline-flex';
     document.getElementById('btn-gen-receipt').style.display = 'none';
   }
   document.getElementById('paid-msg').innerHTML = '';
@@ -1306,15 +1416,14 @@ async function openLogModal(number) {
   } else {
     let rows = log.map(entry => `<tr>
       <td>${entry.date||'-'}</td>
-      <td>USD $${parseFloat(entry.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td>$${parseFloat(entry.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
       <td>${entry.mode||'-'}</td>
       <td>${entry.ref||'-'}</td>
       <td>${entry.receipt||'-'}</td>
-      <td style="font-size:0.78rem;color:#999">${entry.recorded_at||''}</td>
     </tr>`).join('');
     document.getElementById('log-content').innerHTML = `
       <table class="payment-log-table">
-        <thead><tr><th>Date</th><th>Amount</th><th>Mode</th><th>Ref</th><th>Receipt</th><th>Recorded</th></tr></thead>
+        <thead><tr><th>Date</th><th>Amount</th><th>Mode</th><th>Ref</th><th>Receipt</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>`;
   }
@@ -1344,13 +1453,7 @@ function closeEditModal() { document.getElementById('edit-modal').classList.remo
 async function confirmEdit() {
   let number = document.getElementById('edit-record-number').value;
   let password = document.getElementById('edit-password').value;
-  let body = {
-    number, password,
-    client_name: document.getElementById('edit-client-name').value,
-    client_email: document.getElementById('edit-client-email').value,
-    amount: parseFloat(document.getElementById('edit-amount').value) || 0,
-    date: document.getElementById('edit-date').value
-  };
+  let body = { number, password, client_name: document.getElementById('edit-client-name').value, client_email: document.getElementById('edit-client-email').value, amount: parseFloat(document.getElementById('edit-amount').value) || 0, date: document.getElementById('edit-date').value };
   try {
     let r = await fetch('/records/edit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     let data = await r.json();
@@ -1381,10 +1484,7 @@ async function confirmDelete() {
 }
 
 async function deleteRecord(number, password) {
-  let r = await fetch('/records/delete', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ number, password })
-  });
+  let r = await fetch('/records/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ number, password }) });
   let data = await r.json();
   if (data.success) { closeDeleteModal(); loadRecords(); }
   else showMsg('delete-msg', data.error||'Error', 'error');
@@ -1393,10 +1493,10 @@ async function deleteRecord(number, password) {
 function addMiItem() {
   let div = document.createElement('div');
   div.className = 'line-item-row';
-  div.innerHTML = `<textarea placeholder="Description&#10;Press Enter for sub-lines (first line bold)" class="mi-desc" rows="3"></textarea>
-    <input type="number" placeholder="Qty" class="mi-qty qty" value="1" style="max-width:70px;margin-top:0">
-    <input type="number" placeholder="Unit Cost (USD)" class="mi-unit amount" style="max-width:130px;margin-top:0">
-    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-top:0">x</button>`;
+  div.innerHTML = `<textarea placeholder="Description" class="mi-desc" rows="3"></textarea>
+    <input type="number" placeholder="Qty" class="mi-qty qty" value="1">
+    <input type="number" placeholder="Unit Cost (USD)" class="mi-unit amount">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>`;
   document.getElementById('mi-items').appendChild(div);
 }
 
@@ -1409,17 +1509,7 @@ async function createManualInvoice() {
     if (desc) lineItems.push({ description: desc, quantity: qty, unit_cost: unit });
   });
   if (!lineItems.length) return showMsg('mi-msg','Add at least one line item.','error');
-  let body = {
-    client_name: document.getElementById('mi-name').value,
-    client_email: document.getElementById('mi-email').value,
-    client_phone: document.getElementById('mi-phone').value,
-    discount: document.getElementById('mi-discount').value || 0,
-    note: document.getElementById('mi-notes').value,
-    bank_block: document.getElementById('mi-bank').value,
-    terms: document.getElementById('mi-terms').value,
-    doc_type: document.getElementById('mi-type').value,
-    line_items: lineItems
-  };
+  let body = { client_name: document.getElementById('mi-name').value, client_email: document.getElementById('mi-email').value, client_phone: document.getElementById('mi-phone').value, discount: document.getElementById('mi-discount').value || 0, note: document.getElementById('mi-notes').value, bank_block: document.getElementById('mi-bank').value, terms: document.getElementById('mi-terms').value, doc_type: document.getElementById('mi-type').value, line_items: lineItems };
   showMsg('mi-msg','Generating...','success');
   try {
     let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
@@ -1509,19 +1599,16 @@ function syncColor(type) {
 }
 
 function toggleBuffer() {
-  document.getElementById('buffer-minutes-field').style.display =
-    document.getElementById('s-buffer-enabled').checked ? 'block' : 'none';
+  document.getElementById('buffer-minutes-field').style.display = document.getElementById('s-buffer-enabled').checked ? 'block' : 'none';
 }
 
 function toggleDisclaimer() {
   let mode = document.getElementById('s-aircraft-mode').value;
-  document.getElementById('disclaimer-field').style.display =
-    (mode === 'fixed_wing' || mode === 'both') ? 'block' : 'none';
+  document.getElementById('disclaimer-field').style.display = (mode === 'fixed_wing' || mode === 'both') ? 'block' : 'none';
 }
 
 function toggleGeoCustom() {
-  document.getElementById('geo-custom-fields').style.display =
-    document.getElementById('s-geo-preset').value === 'custom' ? 'block' : 'none';
+  document.getElementById('geo-custom-fields').style.display = document.getElementById('s-geo-preset').value === 'custom' ? 'block' : 'none';
 }
 
 function applyGeoPreset() {
@@ -1538,16 +1625,10 @@ function applyGeoPreset() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('s-primary-color').addEventListener('input', function() {
-    document.getElementById('s-primary-color-hex').value = this.value;
-  });
-  document.getElementById('s-accent-color').addEventListener('input', function() {
-    document.getElementById('s-accent-color-hex').value = this.value;
-  });
+  document.getElementById('s-primary-color').addEventListener('input', function() { document.getElementById('s-primary-color-hex').value = this.value; });
+  document.getElementById('s-accent-color').addEventListener('input', function() { document.getElementById('s-accent-color-hex').value = this.value; });
   ['paid-modal','log-modal','edit-modal','delete-modal'].forEach(id => {
-    document.getElementById(id).addEventListener('click', function(e) {
-      if (e.target === this) this.classList.remove('active');
-    });
+    document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
   loadStateFromStorage();
 });
@@ -1580,12 +1661,7 @@ async function saveCompany() {
 
 async function saveGeoLock() {
   let preset = document.getElementById('s-geo-preset').value;
-  let coords = GEO_PRESETS[preset] || {
-    lat_min: parseFloat(document.getElementById('s-geo-lat-min').value),
-    lat_max: parseFloat(document.getElementById('s-geo-lat-max').value),
-    lon_min: parseFloat(document.getElementById('s-geo-lon-min').value),
-    lon_max: parseFloat(document.getElementById('s-geo-lon-max').value)
-  };
+  let coords = GEO_PRESETS[preset] || { lat_min: parseFloat(document.getElementById('s-geo-lat-min').value), lat_max: parseFloat(document.getElementById('s-geo-lat-max').value), lon_min: parseFloat(document.getElementById('s-geo-lon-min').value), lon_max: parseFloat(document.getElementById('s-geo-lon-max').value) };
   operatorConfig.geo_lock = { enabled: document.getElementById('s-geo-enabled').checked, region_name: document.getElementById('s-geo-region-name').value, preset, lat_min: coords.lat_min, lat_max: coords.lat_max, lon_min: coords.lon_min, lon_max: coords.lon_max };
   await saveConfig('geo-msg');
 }
@@ -1621,7 +1697,7 @@ async function saveConfig(msgId) {
   try {
     let r = await fetch('/settings/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(operatorConfig) });
     let data = await r.json();
-    showMsg(msgId, data.success?'Saved successfully.':(data.error||'Error'), data.success?'success':'error');
+    showMsg(msgId, data.success?'Saved.':(data.error||'Error'), data.success?'success':'error');
   } catch(e) { showMsg(msgId,'Network error.','error'); }
 }
 
