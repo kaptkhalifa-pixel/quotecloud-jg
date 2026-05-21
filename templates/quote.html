@@ -869,10 +869,20 @@ function renderSegments(segs, showDist) {
       return `<tr><td><span class="tag ${tagClass(null,s.note)}">${label}</span></td><td colspan="2" style="color:#888;font-size:0.75rem">${s.note}</td>${showDist?'<td>—</td>':''}<td style="font-weight:700">${cost}</td><td>—</td></tr>`;
     }
     let nm = s.nm||s.dist_nm||0;
-    return `<tr><td><span class="tag ${tagClass(s.type,null)}">${s.type}</span></td><td>${s.origin||''}</td><td>${s.destination||''}</td>${showDist?`<td>${nm?nm+' nm':'—'}</td>`:''}<td>${s.hours?s.hours+' hr':'—'}</td><td>${s.date||'—'}</td></tr>`;
+    return `<tr><td><span class="tag ${tagClass(s.type,null)}">${s.type}</span></td><td>${s.origin||''}</td><td>${s.destination||''}</td>${showDist?`<td>${nm?nm+' nm':'—'}</td>`:''}<td>${s.hours?fmtHours(s.hours):'—'}</td><td>${s.date||'—'}</td></tr>`;
   }).join('');
   let dh = showDist?'<th>Dist</th>':'';
   return `<div class="route-wrap"><table class="route-table"><thead><tr><th>Type</th><th>From</th><th>To</th>${dh}<th>Hours</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function fmtHours(h) {
+  h = parseFloat(h) || 0;
+  let totalMins = Math.ceil(h * 60);
+  if (totalMins < 60) return totalMins + " mins";
+  let hrs = Math.floor(totalMins / 60);
+  let mins = totalMins % 60;
+  if (mins === 0) return hrs + " hr" + (hrs !== 1 ? "s" : "");
+  return hrs + " hr " + mins + " mins";
 }
 
 function calcHours(segs) {
