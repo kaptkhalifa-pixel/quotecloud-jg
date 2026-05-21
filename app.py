@@ -520,6 +520,10 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         result["idle_day_rate_usd"] = idle_day_rate
         result["pax_fee_usd_display"] = float(ac_cfg["pax_fee"])
         result["routing_mode"] = routing_mode
+        min_hrs = float(rules.get("min_flight_hours", 1.0))
+        result["min_chargeable_hrs"] = min_hrs
+        result["min_applied"] = result.get("billed_hours", 0) > sum(
+            float(s.get("hours", 0)) for s in (result.get("segments") or []) if s.get("type"))
 
     except Exception as e:
         result = {

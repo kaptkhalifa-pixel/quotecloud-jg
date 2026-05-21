@@ -974,13 +974,22 @@ function renderSegments(segs) {
       <td>${s.origin||''}</td>
       <td>${s.destination||''}</td>
       <td>${nm ? nm + ' nm' : '-'}</td>
-      <td>${s.hours ? s.hours + ' hr' : '-'}</td>
+      <td>${s.hours ? fmtHours(s.hours) : '-'}</td>
       <td>${s.date||''}</td>
     </tr>`;
   }).join('');
   return `<div class="route-table-wrap"><table class="route-table">
     <thead><tr><th>Type</th><th>From</th><th>To</th><th>Dist</th><th>Hours</th><th>Date</th></tr></thead>
     <tbody>${rows}</tbody></table></div>`;
+}
+function fmtHours(h) {
+  h = parseFloat(h) || 0;
+  let totalMins = Math.ceil(h * 60);
+  if (totalMins < 60) return totalMins + ' mins';
+  let hrs = Math.floor(totalMins / 60);
+  let mins = totalMins % 60;
+  if (mins === 0) return hrs + ' hr' + (hrs !== 1 ? 's' : '');
+  return hrs + ' hr ' + mins + ' mins';
 }
 
 function calcTotalHours(segs) {
@@ -996,8 +1005,9 @@ function renderBilling(res, extraSegs) {
   let rows = '';
   if (totalHrs > 0 && rate > 0) {
     let fc = Math.round(totalHrs * rate * 100) / 100;
-    rows += `<div class="billing-row"><span>Aircraft Rental (${totalHrs} hrs @ $${rate.toLocaleString()}/hr)</span><span>USD $${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
-  }
+        let minHrs = res.min_chargeable_hrs || 0;
+    let minMsg = (minHrs > 0 && res.min_applied) ? `<div style="font-size:0.75rem;color:#e65100;background:#fff3e0;border-radius:6px;padding:5px 10px;margin-bottom:6px">Minimum charge of ${minHrs.toFixed(1)} flight hours applies. Quote reflects minimum billable hours.</div>` : '';
+    rows += `${minMsg}<div class="billing-row"><span>Aircraft Rental (${totalHrs} hrs @ $${rate.toLocaleString()}/hr)</span><span>USD $${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   let fee = res.pax_fee_usd || res.pax_fee_usd_display || 0;
   if (fee > 0) rows += `<div class="billing-row"><span>Fees & Taxes</span><span>USD $${parseFloat(fee).toLocaleString()}</span></div>`;
   let overnightUsd = res.overnight_usd || res.overnight_cost_usd || 0;
