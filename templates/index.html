@@ -344,6 +344,8 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 <div class="tab-content" id="nav-locations">
   <div class="card">
     <h3>Add Location</h3>
+<p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px;border-left:3px solid {{ operator.branding.primary_color }}">The locations database lets you save regularly used airstrips, helipads and landing zones with nicknames or operational codes for faster quoting and easier coordination with dispatch. Your base airport must always be present in this list.</p>
+
     <div class="form-row">
       <div class="form-group"><label>Name</label><input type="text" id="loc-name" placeholder="e.g. Angama Mara"></div>
       <div class="form-group"><label>Latitude</label><input type="text" id="loc-lat" placeholder="-1.234567"></div>
@@ -1128,8 +1130,8 @@ function renderLocations(locs) {
   document.getElementById('loc-tbody').innerHTML = locs.map(l => `<tr>
     <td>${l.name||l.key}</td><td>${l.lat||''}</td><td>${l.lon||''}</td>
     <td>${(l.aliases||[]).join(', ')||'-'}</td>
-    <td><span class="${l.source==='system'?'badge-system':'badge-user'}">${l.source==='system'?'System':'User'}</span></td>
-    <td>${l.source==='user'?`<button class="btn btn-danger btn-sm" onclick="deleteLocation('${l.name||l.key}')">Del</button>`:''}</td>
+    <td><span class="badge-user">Custom</span></td>
+    <td><button class="btn btn-danger btn-sm" onclick="deleteLocation('${l.name||l.key}')">Del</button></td>
   </tr>`).join('');
 }
 

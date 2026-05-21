@@ -80,20 +80,7 @@ def _fmt_usd(x):   return f"USD {float(x):,.2f}"
 # SECTION 2 — AIRPORTS DATABASE
 # =========================================================
 
-AIRPORTS: Dict[str, Dict] = {
-    "wilson":   {"lat": -1.319167, "lon": 36.9275,   "aliases": ["nairobi wilson", "hknw", "wil"]},
-    "nairobi":  {"lat": -1.292066, "lon": 36.821946, "aliases": ["jkia", "hkjk", "jomo kenyatta"]},
-    "nanyuki":  {"lat": 0.011389,  "lon": 37.073056, "aliases": ["hkny", "nanyuki airstrip"]},
-    "kisumu":   {"lat": -0.0917,   "lon": 34.7679,   "aliases": ["kis"]},
-    "mombasa":  {"lat": -4.0425,   "lon": 39.6682,   "aliases": ["mba"]},
-    "diani":    {"lat": -4.293540, "lon": 39.571167, "aliases": ["ukunda", "hkuk", "diani beach"]},
-    "naivasha": {"lat": -0.722,    "lon": 36.432,    "aliases": ["lake naivasha", "naivasha airstrip"]},
-    "magadi":   {"lat": -1.888,    "lon": 36.299,    "aliases": ["kwenia", "magadi airstrip"]},
-    "wajir":    {"lat": 1.747,     "lon": 40.057,    "aliases": ["hkjw"]},
-    "amboseli": {"lat": -2.645,    "lon": 37.253,    "aliases": ["hkan"]},
-    "laikipia": {"lat": 0.198,     "lon": 36.699,    "aliases": ["lewa", "lewa downs"]},
-    "malindi":  {"lat": -3.229,    "lon": 40.102,    "aliases": ["mldi", "hkml"]},
-}
+AIRPORTS: Dict[str, Dict] = {}
 
 USER_AIRPORTS: Dict[str, Dict] = {}
 USER_AIRPORTS_FILE = "hf_airports_user.csv"
@@ -278,7 +265,7 @@ def _to_coord(s):
 
 def _compute_leg(o_lat, o_lon, d_lat, d_lon, speed):
     nm = haversine_nm(o_lat, o_lon, d_lat, d_lon)
-    hrs = ceil_0_1(max(nm / speed, 0.0))
+    hrs = round(max(nm / speed, 0.0), 4)
     return round(nm, 1), hrs
 
 def _flight_cost(hrs, rate):

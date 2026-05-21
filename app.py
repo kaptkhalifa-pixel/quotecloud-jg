@@ -1122,8 +1122,6 @@ def edit_record():
 @login_required
 def airports():
     all_airports = {}
-    for k, v in hq.AIRPORTS.items():
-        all_airports[k] = {**v, "source": "system"}
     for k, v in hq.USER_AIRPORTS.items():
         all_airports[k] = {**v, "source": "user"}
     return jsonify(all_airports)
