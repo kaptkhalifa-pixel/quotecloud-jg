@@ -461,6 +461,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         "idle_day": idle_day_rate,
     }
     hq.PAX_ADMIN_FEE_USD = float(ac_cfg["pax_fee"])
+    hq.MIN_CHARGEABLE_HR = float(rules.get("min_flight_hours", 1.0))
 
     try:
         if mission == "one_way":
