@@ -131,6 +131,10 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
 .fx-currency { font-family: 'DM Sans', sans-serif; font-size: 0.58rem; font-weight: 700; color: var(--grey-500); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
 .fx-amount { font-size: 0.95rem; font-weight: 600; color: var(--black); }
 .fx-updated { font-family: 'DM Sans', sans-serif; font-size: 0.6rem; color: var(--grey-300); text-align: right; margin-top: 8px; }
+.fx-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--grey-200); }
+.fx-row:last-child { border-bottom: none; }
+.fx-row-label { font-family: 'DM Sans', sans-serif; color: var(--grey-500); font-size: 0.78rem; }
+.fx-row-amount { font-family: 'DM Sans', sans-serif; font-weight: 700; color: var(--black); font-size: 0.92rem; }
 .footer { background: var(--black); color: rgba(255,255,255,0.3); padding: 40px 22px; text-align: center; font-family: 'DM Sans', sans-serif; font-size: 0.72rem; line-height: 2; }
 .footer img { height: 18px; filter: invert(1); opacity: 0.4; display: block; margin: 0 auto 16px; }
 .footer-powered { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.58rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.15); }
@@ -246,11 +250,7 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
       <div id="results-inner"></div>
       <div class="validity-notice" id="validity-notice"></div>
       <div class="fx-widget" id="fx-widget" style="display:none">
-        <div class="fx-title">Live Currency Conversion</div>
-        <div class="fx-input-wrap">
-          <span>USD</span>
-          <input type="number" id="fx-input" value="0" oninput="updateFX()">
-        </div>
+        <div class="fx-title">KES Equivalent</div>
         <div class="fx-grid" id="fx-grid"></div>
         <div class="fx-updated" id="fx-updated"></div>
       </div>
@@ -681,13 +681,16 @@ function renderResults(results, mission) {
     </div>`).join('');
   let hours=(config.quoting_rules||{}).quote_validity_hours||48;
   document.getElementById('validity-notice').textContent=`Quote valid for ${hours} hours · Subject to availability`;
-  let firstTotal=0;
-  if (results.length) { let f=results[0]; firstTotal=f.mission==='return_both'?(f.option_a?.total_usd||0):(f.total_usd||0); }
-  if (firstTotal>0&&Object.keys(fxRates).length) {
-    document.getElementById('fx-input').value=firstTotal;
+  if (results.length && fxRates['KES']) {
+    let kesRate = fxRates['KES'];
+    document.getElementById('fx-grid').innerHTML = results.filter(r=>!r.error).map(res=>{
+      let total = res.mission==='return_both'?(res.option_a?.total_usd||0):(res.total_usd||0);
+      let kes = Math.round(total * kesRate).toLocaleString();
+      return `<div class="fx-row"><span class="fx-row-label">${res.ac_label||''}</span><span class="fx-row-amount">KES ${kes}</span></div>`;
+    }).join('');
     document.getElementById('fx-widget').style.display='block';
-    updateFX();
   }
+
   buildWhatsApp(results, mission);
   document.getElementById('results').style.display='block';
   document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
