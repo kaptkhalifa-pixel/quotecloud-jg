@@ -1707,11 +1707,17 @@ async function saveBank() {
 }
 
 async function saveConfig(msgId) {
+  let btn = document.querySelector(`#${msgId}`).previousElementSibling;
+  if (btn && btn.tagName === 'BUTTON') btnFeedback(btn, 'loading');
   try {
     let r = await fetch('/settings/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(operatorConfig) });
     let data = await r.json();
+    if (btn && btn.tagName === 'BUTTON') btnFeedback(btn, data.success?'success':'error', data.success?'Saved':'Failed');
     showMsg(msgId, data.success?'Saved.':(data.error||'Error'), data.success?'success':'error');
-  } catch(e) { showMsg(msgId,'Network error.','error'); }
+  } catch(e) {
+    if (btn && btn.tagName === 'BUTTON') btnFeedback(btn, 'error', 'Network Error');
+    showMsg(msgId,'Network error.','error');
+  }
 }
 
 async function changePassword() {
@@ -1728,8 +1734,34 @@ function showMsg(id, msg, type) {
   let el = document.getElementById(id);
   if (!el) return;
   el.innerHTML = `<div class="${type==='error'?'error-box':'success-box'}" style="margin-top:10px">${msg}</div>`;
-  setTimeout(() => el.innerHTML = '', 4000);
+  setTimeout(() => el.innerHTML = '', 6000);
 }
+
+function btnFeedback(btn, state, text) {
+  if (!btn) return;
+  if (state === 'loading') {
+    btn.disabled = true;
+    btn.dataset.original = btn.innerHTML;
+    btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin 0.7s linear infinite"></span>${text||'Saving...'}</span>`;
+  } else if (state === 'success') {
+    btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px">✓ ${text||'Saved'}</span>`;
+    btn.style.background = '#28a745';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = btn.dataset.original || btn.innerHTML;
+      btn.style.background = '';
+    }, 3000);
+  } else if (state === 'error') {
+    btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px">✕ ${text||'Failed'}</span>`;
+    btn.style.background = '#dc3545';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = btn.dataset.original || btn.innerHTML;
+      btn.style.background = '';
+    }, 3000);
+  }
+}
+
 </script>
 </body>
 </html>
