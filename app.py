@@ -309,7 +309,8 @@ def resolve_location(s, user_label=None):
             s = expanded
         except Exception:
             pass
-        q_coord = re.search(r'[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)', s)
+
+    q_coord = re.search(r'[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)', s)
     if q_coord:
         try:
             lat, lon = float(q_coord.group(1)), float(q_coord.group(2))
