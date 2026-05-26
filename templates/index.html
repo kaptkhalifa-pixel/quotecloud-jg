@@ -572,9 +572,13 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <div class="settings-section" style="padding-top:16px">
       <h4>Client Display</h4>
-      <div class="toggle-row">
+            <div class="toggle-row">
         <input type="checkbox" id="s-show-nm">
         <label for="s-show-nm">Show distance in Nautical Miles on client page</label>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="s-show-rate-breakdown">
+        <label for="s-show-rate-breakdown">Show rate breakdown in billing (hrs @ USD/hr)</label>
       </div>
     </div>
     <button class="btn btn-block" onclick="saveQuotingRules()">Save Quoting Rules</button>
@@ -1588,6 +1592,7 @@ async function loadSettings() {
   document.getElementById('s-buffer-enabled').checked = qr.ground_time_buffer_enabled || false;
   document.getElementById('s-buffer-minutes').value = qr.ground_time_buffer_minutes || 0;
   document.getElementById('s-show-nm').checked = qr.show_distance_to_client || false;
+  document.getElementById('s-show-rate-breakdown').checked = qr.show_rate_breakdown || false;
   toggleBuffer();
   document.getElementById('s-bank-name').value = bk.account_name || '';
   document.getElementById('s-bank-bank').value = bk.bank_name || '';
@@ -1689,6 +1694,7 @@ async function saveQuotingRules() {
   operatorConfig.quoting_rules.ground_time_buffer_enabled = document.getElementById('s-buffer-enabled').checked;
   operatorConfig.quoting_rules.ground_time_buffer_minutes = parseFloat(document.getElementById('s-buffer-minutes').value) || 0;
   operatorConfig.quoting_rules.show_distance_to_client = document.getElementById('s-show-nm').checked;
+  operatorConfig.quoting_rules.show_rate_breakdown = document.getElementById('s-show-rate-breakdown').checked;
   await saveConfig('rules-msg');
 }
 
