@@ -614,7 +614,7 @@ function renderBilling(res) {
     let fc=Math.round(hrs*rate*100)/100;
     let minHrs=res.min_chargeable_hrs||0;
     let minMsg=(minHrs>0&&res.min_applied)?`<div style="font-family:'DM Sans',sans-serif;font-size:0.72rem;color:#e65100;background:#fff3e0;border-radius:2px;padding:5px 10px;margin-bottom:6px">Minimum charge of ${minHrs.toFixed(1)} flight hours applies.</div>`:"";
-    rows+=`${minMsg}<div class="billing-row"><span>Aircraft Charter</span><span>$${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+        let showBreakdown=(config.quoting_rules||{}).show_rate_breakdown!==false; let rateLabel=showBreakdown?`<span style="color:#aaa;font-size:0.72rem"> ${hrs}hrs @ $${rate.toLocaleString()}/hr</span>`:''; rows+=`${minMsg}<div class="billing-row"><span>Aircraft Charter${rateLabel}</span><span>$${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
   let fee=res.pax_fee_usd||res.pax_fee_usd_display||0;
   if (fee>0) rows+=`<div class="billing-row"><span>Taxes & Admin</span><span>$${parseFloat(fee).toLocaleString()}</span></div>`;
