@@ -18,7 +18,8 @@
   --grey-700: #444;
   --accent: #0a0a0a;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; pa
+dding: 0; }
 body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--white); color: var(--black); min-height: 100vh; }
 .hero { background: var(--black); color: var(--white); position: relative; overflow: hidden; padding-bottom: 72px; }
 .hero::before { content: ''; position: absolute; top: -120px; right: -80px; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%); pointer-events: none; }
@@ -368,6 +369,8 @@ function extractCoordsFromUrl(url) {
   if (m2) return { lat: parseFloat(m2[1]), lng: parseFloat(m2[2]) };
   let m3 = url.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (m3) return { lat: parseFloat(m3[1]), lng: parseFloat(m3[2]) };
+  let m4 = url.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (m4) return { lat: parseFloat(m4[1]), lng: parseFloat(m4[2]) };
   return null;
 }
 
