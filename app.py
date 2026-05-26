@@ -27,6 +27,12 @@ def load_operator_config():
     return {}
 
 OPERATOR = load_operator_config()
+if not OPERATOR.get("branding"):
+    OPERATOR["branding"] = {"primary_color": "#1a56db", "accent_color": "#f59e0b", "button_color": "#f59e0b", "button_text": "#ffffff"}
+if not OPERATOR.get("company_name"):
+    OPERATOR["company_name"] = "Quotecloud"
+if not OPERATOR.get("logo_url"):
+    OPERATOR["logo_url"] = ""
 
 app.secret_key = os.environ.get("SECRET_KEY", OPERATOR.get("env", {}).get("secret_key", "qc-secret-2026"))
 app.config["PERMANENT_SESSION_LIFETIME"] = datetime.timedelta(days=7)
