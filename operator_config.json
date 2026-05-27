@@ -1,0 +1,59 @@
+{
+  "aircraft_mode": "helicopter",
+  "bank": {
+    "account_name": "HELIFLIGHT AFRICA LTD",
+    "bank_name": "FAMILY BANK",
+    "branch": "KENYATTA AVENUE",
+    "kes_account": "012000070043",
+    "swift": "FABLKENA",
+    "usd_account": "012000070044"
+  },
+  "base_airport": "Nairobi wilson",
+  "branding": {
+    "accent_color": "#000000",
+    "button_color": "#f59e0b",
+    "button_text": "#ffffff",
+    "primary_color": "#000000"
+  },
+  "company_name": "Quotecloud",
+  "contact": {
+    "address": "The aerospace logistics center, Wilson airport, Langata road , Kenya",
+    "email": "info@heliflight.com",
+    "phone": "+254721 888 885",
+    "whatsapp": "254721888885",
+    "whatsapp_greeting": "Hello, i\u2019m  in interested in renting a helicopter "
+  },
+  "footer": {
+    "powered_by": "Quotecloud \u2014 Jetman Global",
+    "powered_url": "https://jetmanglobal.com"
+  },
+  "footer_tagline": "",
+  "geo_lock": {
+    "enabled": false,
+    "lat_max": 5,
+    "lat_min": -12,
+    "lon_max": 42,
+    "lon_min": 28,
+    "preset": "custom",
+    "region_name": "Africa"
+  },
+  "invoice": {
+    "prefix": "",
+    "terms": "1. Availability - Subject to aircraft and crew availability at time of booking.\n2. Rates & Charges - Apply to general passenger flights only.\n3. Repositioning - All charter quotes include return to base unless otherwise specified.\n4. Payment Terms - 40% deposit required to confirm; balance payable prior to departure.\n5. Cancellations - Cancelled bookings attract 20% surcharge; further charges may apply.\n6. Operational Flexibility - Flights subject to weather, ATC, and operational restrictions.\n7. Fuel - Fuel costs included in quoted hourly rate."
+  },
+  "landing_field_disclaimer": "",
+  "logo_url": "",
+  "social": {
+    "facebook": "",
+    "instagram": "",
+    "twitter": "",
+    "website": ""
+  },
+  "tagline": "",
+  "trust_bar": [
+    "",
+    "",
+    "",
+    ""
+  ]
+}
