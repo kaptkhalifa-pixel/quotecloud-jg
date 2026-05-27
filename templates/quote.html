@@ -328,8 +328,9 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
         <div style="font-size:2rem;margin-bottom:12px">📄</div>
         <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">Quote Downloaded</h3>
         <div id="bm-token-display" style="font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;letter-spacing:3px;background:#f5f5f5;padding:14px;border-radius:4px;margin-bottom:16px"></div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:0.75rem;color:#888;background:#f5f5f5;border-radius:4px;padding:10px 14px;margin-bottom:16px;line-height:1.6">📥 Your PDF is downloading — check your Downloads folder.</div>
         <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#444;margin-bottom:20px;line-height:1.6">Ready to book? Tap below to request invoice details from our team.</div>
-        <button onclick="requestInvoice()" style="width:100%;padding:14px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:8px">Request Invoice Details</button>
+        <a id="bm-invoice-link" href="#" target="_blank" onclick="requestInvoice()" style="display:block;width:100%;padding:14px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;text-decoration:none;text-align:center;margin-bottom:8px;box-sizing:border-box">Request Invoice Details</a>
         <button onclick="closeBookingModal()" style="width:100%;padding:11px;background:transparent;color:#888;border:1px solid #e8e8e8;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.7rem;cursor:pointer">Maybe Later</button>
       </div>
       <!-- Step 3: Confirmed -->
@@ -947,6 +948,7 @@ function requestInvoice() {
   let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
   let routeSummary = buildRouteSummary(res);
   let waNum = ((config.contact||{}).whatsapp || '').replace(/^\+/, '').replace(/\s/g, '');
+  let waUrl = '#';
   if (waNum) {
     let waLines = [
       "Hi, I'd like to request an invoice for a charter.",
@@ -957,7 +959,9 @@ function requestInvoice() {
       `Route: ${routeSummary}`,
       `Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`
     ];
-    document.getElementById('bm-wa-link').href = `https://wa.me/${waNum}?text=${encodeURIComponent(waLines.join('\n'))}`;
+    waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waLines.join('\n'))}`;
+    document.getElementById('bm-wa-link').href = waUrl;
+    document.getElementById('bm-invoice-link').href = waUrl;
   }
   document.getElementById('bm-token-final').textContent = `Reference: ${currentBookingToken}`;
   document.getElementById('bm-step2').style.display = 'none';
