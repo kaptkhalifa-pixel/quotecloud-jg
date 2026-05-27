@@ -1,4 +1,27 @@
 {
+  "JET-2026-4NJI9A": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "",
+    "client_name": "khalif",
+    "created_at": "2026-05-27T19:43:18.389042",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Lamu (243.5 nm)",
+      "total_usd": 2845
+    },
+    "route_summary": "Wilson \u2192 Lamu (243.5 nm)",
+    "status": "PENDING",
+    "token": "JET-2026-4NJI9A",
+    "total_usd": 2845,
+    "updated_at": "2026-05-27T19:43:18.389048"
+  },
   "JET-2026-5M1FG5": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (4 seater)",
@@ -90,6 +113,29 @@
     "token": "JET-2026-7MSE8K",
     "total_usd": 3400,
     "updated_at": "2026-05-27T19:36:14.735931"
+  },
+  "JET-2026-8U0ZCA": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "",
+    "client_name": "khalif",
+    "created_at": "2026-05-27T19:44:55.589844",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "one_way",
+      "route_summary": "Lamu \u2192 Mombasa (127.4 nm)",
+      "total_usd": 3495
+    },
+    "route_summary": "Lamu \u2192 Mombasa (127.4 nm)",
+    "status": "PENDING",
+    "token": "JET-2026-8U0ZCA",
+    "total_usd": 3495,
+    "updated_at": "2026-05-27T19:44:55.589850"
   },
   "JET-2026-C6PBAU": {
     "ac_key": "Cessna 206",
@@ -252,6 +298,29 @@
     "total_usd": 2585,
     "updated_at": "2026-05-27T19:03:38.605364"
   },
+  "JET-2026-WYQTMT": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "",
+    "client_name": "khalif",
+    "created_at": "2026-05-27T19:47:03.201663",
+    "mission": "return_both",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "return_both",
+      "route_summary": "Wilson \u2192 Lewa Downs (92.1 nm) on 25/06/26, Lewa Downs \u2192 Wilson (92.1 nm) on 26/06/26",
+      "total_usd": 1305
+    },
+    "route_summary": "Wilson \u2192 Lewa Downs (92.1 nm) on 25/06/26, Lewa Downs \u2192 Wilson (92.1 nm) on 26/06/26",
+    "status": "PENDING",
+    "token": "JET-2026-WYQTMT",
+    "total_usd": 1305,
+    "updated_at": "2026-05-27T19:47:03.201667"
+  },
   "JET-2026-XP1N6D": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (4 seater)",
@@ -297,6 +366,29 @@
     "token": "JET-2026-YWD09G",
     "total_usd": 3140,
     "updated_at": "2026-05-27T19:13:40.168742"
+  },
+  "JET-2026-ZOUU69": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "khalif",
+    "client_name": "khalif",
+    "created_at": "2026-05-27T19:45:50.428583",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Airsprey Naivasha (43.8 nm)",
+      "total_usd": 700
+    },
+    "route_summary": "Wilson \u2192 Airsprey Naivasha (43.8 nm)",
+    "status": "PENDING",
+    "token": "JET-2026-ZOUU69",
+    "total_usd": 700,
+    "updated_at": "2026-05-27T19:45:50.428588"
   },
   "JET-2026-ZYWRZD": {
     "ac_key": "Cessna 206",
