@@ -45,6 +45,29 @@
     "total_usd": 2845,
     "updated_at": "2026-05-27T19:43:18.389048"
   },
+  "JET-2026-4SCXKM": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "khalif",
+    "client_name": "khalif",
+    "created_at": "2026-05-27T20:13:40.360693",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Lamu (243.5 nm)",
+      "total_usd": 2845
+    },
+    "route_summary": "Wilson \u2192 Lamu (243.5 nm)",
+    "status": "PENDING",
+    "token": "JET-2026-4SCXKM",
+    "total_usd": 2845,
+    "updated_at": "2026-05-27T20:13:40.360700"
+  },
   "JET-2026-5M1FG5": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (4 seater)",
@@ -183,6 +206,29 @@
     "total_usd": 3495,
     "updated_at": "2026-05-27T19:44:55.589850"
   },
+  "JET-2026-C18L4Q": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "",
+    "client_name": "khalif",
+    "created_at": "2026-05-27T20:15:09.960794",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Lamu (243.5 nm)",
+      "total_usd": 2845
+    },
+    "route_summary": "Wilson \u2192 Lamu (243.5 nm)",
+    "status": "PENDING",
+    "token": "JET-2026-C18L4Q",
+    "total_usd": 2845,
+    "updated_at": "2026-05-27T20:15:09.960800"
+  },
   "JET-2026-C6PBAU": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (4 seater)",
@@ -205,6 +251,29 @@
     "token": "JET-2026-C6PBAU",
     "total_usd": 2065,
     "updated_at": "2026-05-27T18:11:00.443598"
+  },
+  "JET-2026-FCWN9S": {
+    "ac_key": "Cessna Grand Caravan",
+    "ac_label": "Cessna Grand Caravan EX (12 seater)",
+    "client_email": "",
+    "client_name": "khalif",
+    "created_at": "2026-05-27T20:12:53.521189",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna Grand Caravan",
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Rusinga Island (174.6 nm)",
+      "total_usd": 3400
+    },
+    "route_summary": "Wilson \u2192 Rusinga Island (174.6 nm)",
+    "status": "PENDING",
+    "token": "JET-2026-FCWN9S",
+    "total_usd": 3400,
+    "updated_at": "2026-05-27T20:12:53.521196"
   },
   "JET-2026-HBHPHF": {
     "ac_key": "Cessna 206",
@@ -274,6 +343,29 @@
     "token": "JET-2026-MWV9XQ",
     "total_usd": 2845,
     "updated_at": "2026-05-27T17:49:55.592971"
+  },
+  "JET-2026-N3ZPGX": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "",
+    "client_name": "khalif",
+    "created_at": "2026-05-27T20:12:30.995893",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Rusinga Island (174.6 nm)",
+      "total_usd": 2065
+    },
+    "route_summary": "Wilson \u2192 Rusinga Island (174.6 nm)",
+    "status": "PENDING",
+    "token": "JET-2026-N3ZPGX",
+    "total_usd": 2065,
+    "updated_at": "2026-05-27T20:12:30.995899"
   },
   "JET-2026-PPM50H": {
     "ac_key": "Cessna 206",

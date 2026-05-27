@@ -318,7 +318,7 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
         <div style="font-size:2rem;margin-bottom:12px">📄</div>
         <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">Quote Downloaded</h3>
         <div id="bm-token-display" style="font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;letter-spacing:3px;background:#f5f5f5;padding:14px;border-radius:4px;margin-bottom:16px"></div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:0.75rem;color:#888;background:#f5f5f5;border-radius:4px;padding:10px 14px;margin-bottom:16px;line-height:1.6">📥 Your PDF is downloading — check your Downloads folder.</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:0.75rem;color:#888;background:#f5f5f5;border-radius:4px;padding:10px 14px;margin-bottom:16px;line-height:1.6">📄 Quote PDF ready — <a id="bm-pdf-link" href="#" target="_blank" style="color:#0a0a0a;font-weight:600;text-decoration:underline">tap here to open</a></div>
         <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#444;margin-bottom:20px;line-height:1.6">Ready to book? Tap below to request invoice details from our team.</div>
         <button onclick="requestInvoice()" style="width:100%;padding:14px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:8px">Request Invoice Details</button>
         <button onclick="closeBookingModal()" style="width:100%;padding:11px;background:transparent;color:#888;border:1px solid #e8e8e8;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.7rem;cursor:pointer">Maybe Later</button>
@@ -896,21 +896,16 @@ async function submitBookingForm() {
   currentBookingToken = token;
   let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
   let routeSummary = buildRouteSummary(res);
-  try {
-    let r = await fetch('/booking/pdf', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        client_name: name,
-        client_email: email,
-        token: token,
-        result: actual
-      })
-    });
-    if (r.ok) {
-      window.open(`/booking/pdf/${token}`, '_blank');
-    }
-  } catch(e) { console.log('PDF error:', e); }
+  fetch('/booking/pdf', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      client_name: name,
+      client_email: email,
+      token: token,
+      result: actual
+    })
+  }).catch(e => console.log('PDF error:', e));
 fetch('/booking/request', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -943,6 +938,7 @@ fetch('/booking/request', {
     let waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waLines.join('\n'))}`;
     document.getElementById('bm-wa-link').href = waUrl;
   }
+  document.getElementById('bm-pdf-link').href = `/booking/pdf/${token}`;
   document.getElementById('bm-token-display').textContent = `Ref: ${token}`;
   document.getElementById('bm-step1').style.display = 'none';
   document.getElementById('bm-step2').style.display = 'block';
