@@ -16,6 +16,7 @@ app = Flask(__name__)
 OPERATOR_CONFIG_FILE = "operator_config.json"
 AIRCRAFT_CONFIG_FILE = "hf_aircraft.json"
 RECORDS_FILE = "qc_records.json"
+BOOKINGS_FILE = "qc_bookings.json"
 
 def load_operator_config():
     p = pathlib.Path(OPERATOR_CONFIG_FILE)
@@ -166,6 +167,25 @@ def load_aircraft():
 
 def save_aircraft(data):
     pathlib.Path(AIRCRAFT_CONFIG_FILE).write_text(json.dumps(data, indent=2))
+def load_bookings():
+    p = pathlib.Path(BOOKINGS_FILE)
+    if p.exists():
+        try:
+            return json.loads(p.read_text())
+        except Exception:
+            pass
+    return {}
+
+def save_bookings(bookings):
+    pathlib.Path(BOOKINGS_FILE).write_text(json.dumps(bookings, indent=2))
+
+def generate_booking_token():
+    import random, string
+    prefix = OPERATOR.get("invoice", {}).get("prefix", "JG")
+    year = datetime.date.today().year
+    chars = string.ascii_uppercase + string.digits
+    rand = ''.join(random.choices(chars, k=6))
+    return f"{prefix}-{year}-{rand}"
 
 def load_records():
     p = pathlib.Path(RECORDS_FILE)
@@ -1347,7 +1367,7 @@ def backup_configs():
     if key != app.secret_key:
         return jsonify({"error": "Unauthorized"}), 401
     configs = {}
-    for fname in [OPERATOR_CONFIG_FILE, AIRCRAFT_CONFIG_FILE, RECORDS_FILE]:
+    for fname in [OPERATOR_CONFIG_FILE, AIRCRAFT_CONFIG_FILE, RECORDS_FILE, BOOKINGS_FILE]:
         p = pathlib.Path(fname)
         if p.exists():
             try:
@@ -1380,6 +1400,119 @@ def upload_image():
         return jsonify({"error": "Upload failed"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+@app.route("/booking/request", methods=["POST"])
+def booking_request():
+    data = request.get_json()
+    try:
+        client_name = data.get("client_name", "").strip()
+        client_email = data.get("client_email", "").strip()
+        quote_snapshot = data.get("quote_snapshot", {})
+        if not client_name:
+            return jsonify({"error": "Name required"}), 400
+        token = generate_booking_token()
+        bookings = load_bookings()
+        route_summary = data.get("route_summary", "")
+        bookings[token] = {
+            "token": token,
+            "status": "PENDING",
+            "client_name": client_name,
+            "client_email": client_email,
+            "ac_label": quote_snapshot.get("ac_label", ""),
+            "ac_key": quote_snapshot.get("ac_key", ""),
+            "total_usd": quote_snapshot.get("total_usd", 0),
+            "mission": quote_snapshot.get("mission", ""),
+            "route_summary": route_summary,
+            "quote_snapshot": quote_snapshot,
+            "created_at": datetime.datetime.now().isoformat(),
+            "updated_at": datetime.datetime.now().isoformat(),
+            "payment_method": "",
+            "payment_ref": "",
+            "notes": ""
+        }
+        save_bookings(bookings)
+        wa = get_whatsapp()
+        notify_lines = [
+            "NEW CHARTER REQUEST",
+            f"Ref: {token}",
+            f"Client: {client_name}",
+            f"Email: {client_email}",
+            f"Aircraft: {quote_snapshot.get('ac_label','')}",
+            f"Route: {route_summary}",
+            f"Total: USD ${float(quote_snapshot.get('total_usd',0)):,.2f}",
+            "Review in your admin panel."
+        ]
+        notify_msg = "\n".join(notify_lines)
+        encoded_msg = notify_msg.replace(' ', '%20').replace('\n', '%0A')
+        notify_wa = f"https://wa.me/{wa}?text={encoded_msg}" if wa else ""
+        return jsonify({
+            "success": True,
+            "token": token,
+            "notify_wa": notify_wa
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/booking/pdf", methods=["POST"])
+def booking_pdf():
+    data = request.get_json()
+    try:
+        client_name = data.get("client_name", "Client")
+        client_email = data.get("client_email", "")
+        token = data.get("token", "")
+        result = data.get("result", {})
+        payload, _ = build_pdf_payload_from_result(
+            "Quotation", result, client_name, client_email, "", "", "0", [])
+        payload["number"] = token
+        payload["notes"] = ""
+        payload["notes_title"] = ""
+        out_path = f"/tmp/{token}.pdf"
+        hq.generate_pdf(payload, out_path)
+        return send_file(out_path, as_attachment=True,
+                         download_name=f"{token}.pdf",
+                         mimetype="application/pdf")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/booking/status/<token>", methods=["GET"])
+def booking_status(token):
+    bookings = load_bookings()
+    b = bookings.get(token)
+    if not b:
+        return jsonify({"error": "Booking not found"}), 404
+    return jsonify({
+        "token": b["token"],
+        "status": b["status"],
+        "ac_label": b["ac_label"],
+        "total_usd": b["total_usd"],
+        "client_name": b["client_name"],
+        "created_at": b["created_at"]
+    })
+
+@app.route("/booking/update", methods=["POST"])
+@login_required
+def booking_update():
+    data = request.get_json()
+    token = data.get("token", "")
+    status = data.get("status", "")
+    bookings = load_bookings()
+    if token not in bookings:
+        return jsonify({"error": "Booking not found"}), 404
+    bookings[token]["status"] = status
+    bookings[token]["updated_at"] = datetime.datetime.now().isoformat()
+    if data.get("notes"):
+        bookings[token]["notes"] = data["notes"]
+    if data.get("payment_ref"):
+        bookings[token]["payment_ref"] = data["payment_ref"]
+    if data.get("payment_method"):
+        bookings[token]["payment_method"] = data["payment_method"]
+    save_bookings(bookings)
+    return jsonify({"success": True})
+
+@app.route("/bookings", methods=["GET"])
+@login_required
+def get_bookings():
+    bookings = load_bookings()
+    return jsonify(list(bookings.values()))
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
