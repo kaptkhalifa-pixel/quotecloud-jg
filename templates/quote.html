@@ -908,9 +908,7 @@ async function submitBookingForm() {
       })
     });
     if (r.ok) {
-      let blob = await r.blob();
-      let blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
+      window.open(`/booking/pdf/${token}`, '_blank');
     }
   } catch(e) { console.log('PDF error:', e); }
 fetch('/booking/request', {

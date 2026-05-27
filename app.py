@@ -1451,7 +1451,17 @@ def booking_request():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
+@app.route("/booking/pdf/<token>", methods=["GET"])
+def booking_pdf_get(token):
+    try:
+        out_path = f"/tmp/{token}.pdf"
+        if not pathlib.Path(out_path).exists():
+            return jsonify({"error": "PDF not found"}), 404
+        return send_file(out_path, as_attachment=False,
+                         download_name=f"{token}.pdf",
+                         mimetype="application/pdf")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 @app.route("/booking/pdf", methods=["POST"])
 def booking_pdf():
     data = request.get_json()
@@ -1467,7 +1477,7 @@ def booking_pdf():
         payload["notes_title"] = ""
         out_path = f"/tmp/{token}.pdf"
         hq.generate_pdf(payload, out_path)
-        return send_file(out_path, as_attachment=True,
+        return send_file(out_path, as_attachment=False,
                          download_name=f"{token}.pdf",
                          mimetype="application/pdf")
     except Exception as e:
