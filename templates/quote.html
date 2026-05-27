@@ -945,7 +945,22 @@ async function proceedToBooking() {
       document.getElementById('bm-token-final').textContent = `Reference: ${currentBookingToken}`;
       document.getElementById('bm-step2').style.display = 'none';
       document.getElementById('bm-step3').style.display = 'block';
-      if (data.notify_wa) window.open(data.notify_wa, '_blank');
+      let res = currentBookingResult;
+      let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
+      let waNum = (config.contact||{}).whatsapp || '';
+      if (waNum) {
+        let waLines = [
+          "Hi, I'd like to request an invoice for a charter.",
+          "",
+          `Ref: ${currentBookingToken}`,
+          `Name: ${window._bmName || ''}`,
+          `Aircraft: ${res.ac_label || ''}`,
+          `Route: ${routeSummary}`,
+          `Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`
+        ];
+        let waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waLines.join('\n'))}`;
+        window.open(waUrl, '_blank');
+      }
     }
   } catch(e) {}
 }
