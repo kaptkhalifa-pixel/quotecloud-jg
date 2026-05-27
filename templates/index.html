@@ -244,6 +244,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <div class="nav-tab" onclick="showNav('locations',this)">📍 Locations</div>
   <div class="nav-tab" onclick="showNav('aircraft',this)">🚁 Aircraft</div>
   <div class="nav-tab" onclick="showNav('records',this)">📋 Records</div>
+  <div class="nav-tab" onclick="showNav('enquiries',this)">📩 Enquiries</div>
   <div class="nav-tab" onclick="showNav('settings',this)">⚙️ Settings</div>
 </div>
 
@@ -254,6 +255,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="mobile-nav-tab" onclick="showNavMobile('locations',this)"><span class="mobile-nav-icon">📍</span>Locations</div>
     <div class="mobile-nav-tab" onclick="showNavMobile('aircraft',this)"><span class="mobile-nav-icon">🚁</span>Aircraft</div>
     <div class="mobile-nav-tab" onclick="showNavMobile('records',this)"><span class="mobile-nav-icon">📋</span>Records</div>
+    <div class="mobile-nav-tab" onclick="showNavMobile('enquiries',this)"><span class="mobile-nav-icon">📩</span>Enquiries</div>
     <div class="mobile-nav-tab" onclick="showNavMobile('settings',this)"><span class="mobile-nav-icon">⚙️</span>Settings</div>
   </div>
 </div>
@@ -382,7 +384,52 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div id="ac-msg"></div>
   </div>
 </div>
-
+<!-- ENQUIRIES TAB -->
+<div class="tab-content" id="nav-enquiries">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <h3 style="margin:0">Enquiries</h3>
+      <button class="btn btn-outline btn-sm" onclick="loadEnquiries()">↻ Refresh</button>
+    </div>
+    <div id="enq-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+      <select id="enq-filter-status" onchange="filterEnquiries()" style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;background:#fff;min-height:44px">
+        <option value="all">All Status</option>
+        <option value="PENDING">Pending</option>
+        <option value="CONTACTED">Contacted</option>
+        <option value="ACCEPTED">Accepted</option>
+        <option value="INVOICED">Invoiced</option>
+        <option value="PAID">Paid</option>
+      </select>
+      <select id="enq-filter-time" onchange="filterEnquiries()" style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;background:#fff;min-height:44px">
+        <option value="all">All Time</option>
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+      </select>
+      <input type="text" id="enq-search" oninput="filterEnquiries()" placeholder="Search name or ref..." style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;flex:1;min-width:150px;min-height:44px">
+    </div>
+    <div class="db-table-wrap">
+      <table class="db-table" id="enq-table">
+        <thead>
+          <tr>
+            <th>Ref</th>
+            <th>Date</th>
+            <th>Client</th>
+            <th>WhatsApp</th>
+            <th>Aircraft</th>
+            <th>Route</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="enq-tbody"></tbody>
+      </table>
+    </div>
+    <div id="enq-empty" style="display:none;text-align:center;padding:40px;color:#999;font-size:0.85rem">No enquiries found.</div>
+  </div>
+</div>
 <!-- RECORDS TAB -->
 <div class="tab-content" id="nav-records">
   <div class="card">
@@ -771,6 +818,7 @@ function showNav(tab, el) {
   if (tab === 'aircraft') loadAircraft();
   if (tab === 'settings') loadSettings();
   if (tab === 'records') loadRecords();
+  if (tab === 'enquiries') loadEnquiries();
 }
 
 function showNavMobile(tab, el) {
@@ -783,6 +831,7 @@ function showNavMobile(tab, el) {
   if (tab === 'aircraft') loadAircraft();
   if (tab === 'settings') loadSettings();
   if (tab === 'records') loadRecords();
+  if (tab === 'enquiries') loadEnquiries();
 }
 
 function showMission(m, el) {
@@ -1790,6 +1839,105 @@ async function changePassword() {
     showMsg('pass-msg', data.success?'Password changed.':(data.error||'Error'), data.success?'success':'error');
     if (data.success) { document.getElementById('s-current-pass').value=''; document.getElementById('s-new-pass').value=''; document.getElementById('s-confirm-pass').value=''; }
   } catch(e) { showMsg('pass-msg','Network error.','error'); }
+}
+let allEnquiries = [];
+
+async function loadEnquiries() {
+  try {
+    let r = await fetch('/bookings');
+    allEnquiries = await r.json();
+    renderEnquirySummary(allEnquiries);
+    filterEnquiries();
+  } catch(e) { console.log('Enquiries error:', e); }
+}
+
+function renderEnquirySummary(enqs) {
+  let total = enqs.length;
+  let pending = enqs.filter(e => e.status === 'PENDING').length;
+  let pipeline = enqs.reduce((s,e) => s + parseFloat(e.total_usd||0), 0);
+  document.getElementById('enq-summary').innerHTML = `
+    <div style="background:#f8f9fa;border-radius:10px;padding:14px;text-align:center;border:1px solid #eee">
+      <div style="font-size:1.4rem;font-weight:700;color:#333">${total}</div>
+      <div style="font-size:0.75rem;color:#888;margin-top:4px">Total Enquiries</div>
+    </div>
+    <div style="background:#fff3e0;border-radius:10px;padding:14px;text-align:center;border:1px solid #ffe082">
+      <div style="font-size:1.4rem;font-weight:700;color:#e65100">${pending}</div>
+      <div style="font-size:0.75rem;color:#888;margin-top:4px">Pending</div>
+    </div>
+    <div style="background:#e8f5e9;border-radius:10px;padding:14px;text-align:center;border:1px solid #a5d6a7">
+      <div style="font-size:1.4rem;font-weight:700;color:#1b5e20">$${pipeline.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+      <div style="font-size:0.75rem;color:#888;margin-top:4px">Pipeline (USD)</div>
+    </div>`;
+}
+
+function filterEnquiries() {
+  let status = document.getElementById('enq-filter-status').value;
+  let time = document.getElementById('enq-filter-time').value;
+  let q = document.getElementById('enq-search').value.toLowerCase();
+  let now = new Date();
+  let filtered = allEnquiries.filter(e => {
+    if (status !== 'all' && e.status !== status) return false;
+    if (q && !(e.token||'').toLowerCase().includes(q) && !(e.client_name||'').toLowerCase().includes(q)) return false;
+    if (time !== 'all') {
+      let d = new Date(e.created_at);
+      if (time === 'today') { if (d.toDateString() !== now.toDateString()) return false; }
+      else if (time === 'week') { let w = new Date(now); w.setDate(now.getDate()-7); if (d < w) return false; }
+      else if (time === 'month') { let m = new Date(now); m.setMonth(now.getMonth()-1); if (d < m) return false; }
+    }
+    return true;
+  });
+  renderEnquiries(filtered);
+}
+
+function getEnqStatusBadge(status) {
+  const colors = { PENDING:'#fff3e0,#e65100', CONTACTED:'#e3f2fd,#0d47a1', ACCEPTED:'#e8f5e9,#1b5e20', INVOICED:'#f3e5f5,#4a148c', PAID:'#e8f5e9,#155724' };
+  let [bg, color] = (colors[status]||'#f5f5f5,#666').split(',');
+  return `<span style="background:${bg};color:${color};padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:700">${status}</span>`;
+}
+
+function renderEnquiries(enqs) {
+  let tbody = document.getElementById('enq-tbody');
+  let empty = document.getElementById('enq-empty');
+  if (!enqs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = enqs.slice().reverse().map(e => {
+    let date = e.created_at ? new Date(e.created_at).toLocaleDateString('en-GB') : '-';
+    let waLink = e.client_whatsapp ? `<a href="https://wa.me/${e.client_whatsapp.replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-weight:600;text-decoration:none">📱 ${e.client_whatsapp}</a>` : '-';
+    let route = (e.route_summary||'').substring(0,40) + ((e.route_summary||'').length>40?'...':'');
+    return `<tr>
+      <td><strong style="white-space:nowrap">${e.token||'-'}</strong></td>
+      <td style="white-space:nowrap">${date}</td>
+      <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.client_name||'-'}</td>
+      <td>${waLink}</td>
+      <td style="white-space:nowrap">${e.ac_label||'-'}</td>
+      <td style="max-width:150px;font-size:0.78rem;color:#555">${route||'-'}</td>
+      <td style="white-space:nowrap">$${parseFloat(e.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td>${getEnqStatusBadge(e.status)}</td>
+      <td style="white-space:nowrap">
+        <select onchange="updateEnqStatus('${e.token}',this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.75rem;min-height:32px">
+          <option value="">-- Update --</option>
+          <option value="PENDING">Pending</option>
+          <option value="CONTACTED">Contacted</option>
+          <option value="ACCEPTED">Accepted</option>
+          <option value="INVOICED">Invoiced</option>
+          <option value="PAID">Paid</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function updateEnqStatus(token, status) {
+  if (!status) return;
+  try {
+    let r = await fetch('/booking/update', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ token, status })
+    });
+    let data = await r.json();
+    if (data.success) loadEnquiries();
+    else alert(data.error || 'Error updating status');
+  } catch(e) { alert('Network error'); }
 }
 
 function showMsg(id, msg, type) {
