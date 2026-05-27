@@ -301,6 +301,10 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
           <label style="font-family:'DM Sans',sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px">Your Name</label>
           <input type="text" id="bm-name" placeholder="Full name" style="width:100%;padding:12px 14px;border:1px solid #e8e8e8;border-radius:2px;font-size:1rem;font-family:'Cormorant Garamond',serif;outline:none">
         </div>
+        <div style="margin-bottom:14px">
+          <label style="font-family:'DM Sans',sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px">WhatsApp <span style="color:#e11d48">*</span></label>
+          <input type="tel" id="bm-whatsapp" placeholder="+254 7XX XXX XXX" style="width:100%;padding:12px 14px;border:1px solid #e8e8e8;border-radius:2px;font-size:1rem;font-family:'Cormorant Garamond',serif;outline:none">
+        </div>
         <div style="margin-bottom:20px">
           <label style="font-family:'DM Sans',sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px">Email (optional)</label>
           <input type="email" id="bm-email" placeholder="your@email.com" style="width:100%;padding:12px 14px;border:1px solid #e8e8e8;border-radius:2px;font-size:1rem;font-family:'Cormorant Garamond',serif;outline:none">
@@ -858,7 +862,7 @@ function buildRouteSummary(res) {
   if (res.mission === 'return_both') segs = res.option_a?.segments || [];
   if (res.mission === 'pick_and_drop') segs = [...(res.drop?.segments||[]), ...(res.pick?.segments||[])];
   return segs.filter(s => s.type === 'revenue')
-    .map(s => `${s.origin} → ${s.destination}${s.date ? ' on ' + s.date : ''}`)
+    .map(s => { let nm = s.nm || s.dist_nm || 0; let dist = nm ? ` (${nm} nm)` : ''; return `${s.origin} → ${s.destination}${dist}${s.date ? ' on ' + s.date : ''}`; })
     .join(', ');
 }
 
@@ -866,7 +870,9 @@ async function submitBookingForm() {
   let name = document.getElementById('bm-name').value.trim();
   let email = document.getElementById('bm-email').value.trim();
   let errEl = document.getElementById('bm-error');
+  let whatsapp = document.getElementById('bm-whatsapp').value.trim();
   if (!name) { errEl.textContent = 'Please enter your name.'; errEl.style.display = 'block'; return; }
+  if (!whatsapp) { errEl.textContent = 'Please enter your WhatsApp number.'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
   let res = currentBookingResult;
   let actual = res;
@@ -908,6 +914,7 @@ async function submitBookingForm() {
   document.getElementById('bm-step2').style.display = 'block';
   window._bmName = name;
   window._bmEmail = email;
+  window._bmWhatsapp = whatsapp;
 }
 
 async function proceedToBooking() {
@@ -921,6 +928,7 @@ async function proceedToBooking() {
       body: JSON.stringify({
         client_name: window._bmName || '',
         client_email: window._bmEmail || '',
+        client_whatsapp: window._bmWhatsapp || '',
         token_override: currentBookingToken,
         route_summary: routeSummary,
         quote_snapshot: {
