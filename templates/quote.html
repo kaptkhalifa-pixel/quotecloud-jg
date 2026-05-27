@@ -653,7 +653,9 @@ function renderBilling(res) {
     let days=ir>0?Math.round(wu/ir):1;
     rows+=`<div class="billing-row"><span>Idle Day <span style="color:#aaa;font-size:0.72rem">${days} day${days!==1?'s':''} @ $${ir.toLocaleString()}</span></span><span>$${parseFloat(wu).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-  return `<div class="billing">${rows}<div class="billing-total"><span>Total Estimate</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div></div>`;
+  let kesRate = fxRates['KES'] || 0;
+  let kesFx = kesRate > 0 ? `<div style="font-family:'DM Sans',sans-serif;font-size:0.62rem;color:var(--grey-500);text-align:right;margin-top:4px;letter-spacing:0.3px">Live FX &nbsp;·&nbsp; KES ${Math.round((res.total_usd||0) * kesRate).toLocaleString()}</div>` : '';
+  return `<div class="billing">${rows}<div class="billing-total"><span>Total Estimate</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>${kesFx}</div>`;
 }
 
 function renderOneAc(res, showDist, isDark) {
@@ -717,15 +719,7 @@ function renderResults(results, mission) {
     </div>`).join('');
   let hours=(config.quoting_rules||{}).quote_validity_hours||48;
   document.getElementById('validity-notice').textContent=`Quote valid for ${hours} hours · Subject to availability`;
-  if (results.length && fxRates['KES']) {
-    let kesRate = fxRates['KES'];
-    document.getElementById('fx-grid').innerHTML = results.filter(r=>!r.error).map(res=>{
-      let total = res.mission==='return_both'?(res.option_a?.total_usd||0):(res.total_usd||0);
-      let kes = Math.round(total * kesRate).toLocaleString();
-      return `<div class="fx-row"><span class="fx-row-label">${res.ac_label||''}</span><span class="fx-row-amount">KES ${kes}</span></div>`;
-    }).join('');
-    document.getElementById('fx-widget').style.display='block';
-  }
+  document.getElementById('fx-widget').style.display='none';
 
   buildWhatsApp(results, mission);
   document.getElementById('results').style.display='block';
