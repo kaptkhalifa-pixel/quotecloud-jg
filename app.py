@@ -33,6 +33,8 @@ if not OPERATOR.get("company_name"):
     OPERATOR["company_name"] = "Quotecloud"
 if not OPERATOR.get("logo_url"):
     OPERATOR["logo_url"] = ""
+if not OPERATOR.get("footer"):
+    OPERATOR["footer"] = {"powered_by": "Quotecloud — Jetman Global", "powered_url": "https://jetmanglobal.com"}
 
 app.secret_key = os.environ.get("SECRET_KEY", OPERATOR.get("env", {}).get("secret_key", "qc-secret-2026"))
 app.config["PERMANENT_SESSION_LIFETIME"] = datetime.timedelta(days=7)
@@ -1338,5 +1340,23 @@ def resolve_pin():
     parts = coord.split(",")
     return jsonify({"found": True, "lat": float(parts[0]), "lon": float(parts[1]), "display": disp})
 
+@app.route("/backup/configs", methods=["GET"])
+def backup_configs():
+    key = request.args.get("key", "")
+    if key != app.secret_key:
+        return jsonify({"error": "Unauthorized"}), 401
+    configs = {}
+    for fname in [OPERATOR_CONFIG_FILE, AIRCRAFT_CONFIG_FILE, RECORDS_FILE]:
+        p = pathlib.Path(fname)
+        if p.exists():
+            try:
+                configs[fname] = json.loads(p.read_text())
+            except Exception:
+                configs[fname] = {}
+        else:
+            configs[fname] = {}
+    return jsonify(configs)
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
