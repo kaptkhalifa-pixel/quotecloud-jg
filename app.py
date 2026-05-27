@@ -544,6 +544,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         result["min_chargeable_hrs"] = min_hrs
         result["min_applied"] = result.get("billed_hours", 0) > sum(
             float(s.get("hours", 0)) for s in (result.get("segments") or []) if s.get("type"))
+        result["images"] = ac_cfg.get("images", [])
 
     except Exception as e:
         result = {
@@ -1356,6 +1357,29 @@ def backup_configs():
         else:
             configs[fname] = {}
     return jsonify(configs)
+@app.route("/upload_image", methods=["POST"])
+@login_required
+def upload_image():
+    try:
+        import requests as req
+        import base64
+        file = request.files.get("image")
+        if not file:
+            return jsonify({"error": "No image provided"}), 400
+        image_data = base64.b64encode(file.read()).decode("utf-8")
+        imgbb_key = "c6febd5ceb1476c58ddcf727d5b68969"
+        r = req.post(
+            "https://api.imgbb.com/1/upload",
+            data={"key": imgbb_key, "image": image_data},
+            timeout=30
+        )
+        result = r.json()
+        if result.get("success"):
+            url = result["data"]["url"]
+            return jsonify({"success": True, "url": url})
+        return jsonify({"error": "Upload failed"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

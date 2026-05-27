@@ -1226,8 +1226,23 @@ function renderAircraft() {
           <option value="true" ${ac.active?'selected':''}>Active</option>
           <option value="false" ${!ac.active?'selected':''}>Inactive</option>
         </select></div>
-      <button class="btn btn-danger btn-sm" onclick="removeAcRow(this)">Remove Aircraft</button>
+      <div style="margin-top:12px">
+        <label style="margin-bottom:8px;display:block;font-size:0.78rem;font-weight:600;color:#555">Aircraft Images (up to 10)</label>
+        <div class="ac-images-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          ${(ac.images||[]).map((url,i)=>`<div style="position:relative">
+            <img src="${url}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #ddd">
+            <button onclick="removeAcImage(this,'${url}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#dc3545;color:#fff;border:none;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+          </div>`).join('')}
+        </div>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+          📷 Upload Image
+          <input type="file" accept="image/*" style="display:none" onchange="uploadAcImage(this)">
+        </label>
+        <span class="ac-upload-status" style="font-size:0.75rem;color:#888;margin-left:8px"></span>
+      </div>
+      <button class="btn btn-danger btn-sm" style="margin-top:12px" onclick="removeAcRow(this)">Remove Aircraft</button>
     </div>`;
+
   }).join('');
   document.getElementById('aircraft-list').innerHTML = html;
 }
@@ -1242,6 +1257,43 @@ function removeAcRow(btn) {
   let card = btn.closest('.ac-card');
   delete aircraftData[card.dataset.key];
   card.remove();
+}
+async function uploadAcImage(input) {
+  let card = input.closest('.ac-card');
+  let status = card.querySelector('.ac-upload-status');
+  let preview = card.querySelector('.ac-images-preview');
+  let key = card.dataset.key;
+  let current = aircraftData[key]?.images || [];
+  if (current.length >= 10) { status.textContent = 'Max 10 images reached.'; return; }
+  status.textContent = 'Uploading...';
+  let formData = new FormData();
+  formData.append('image', input.files[0]);
+  try {
+    let r = await fetch('/upload_image', { method:'POST', body: formData });
+    let data = await r.json();
+    if (data.success) {
+      if (!aircraftData[key].images) aircraftData[key].images = [];
+      aircraftData[key].images.push(data.url);
+      let div = document.createElement('div');
+      div.style.cssText = 'position:relative';
+      div.innerHTML = `<img src="${data.url}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #ddd">
+        <button onclick="removeAcImage(this,'${data.url}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#dc3545;color:#fff;border:none;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;padding:0">✕</button>`;
+      preview.appendChild(div);
+      status.textContent = `${aircraftData[key].images.length}/10 images`;
+    } else {
+      status.textContent = 'Upload failed.';
+    }
+  } catch(e) { status.textContent = 'Error: ' + e.message; }
+  input.value = '';
+}
+
+function removeAcImage(btn, url) {
+  let card = btn.closest('.ac-card');
+  let key = card.dataset.key;
+  if (aircraftData[key]?.images) {
+    aircraftData[key].images = aircraftData[key].images.filter(u => u !== url);
+  }
+  btn.parentElement.remove();
 }
 
 async function saveAircraft() {
@@ -1259,8 +1311,10 @@ async function saveAircraft() {
       active: card.querySelector('.ac-active').value === 'true',
       type: card.querySelector('.ac-type').value,
       home_airstrip: card.querySelector('.ac-home').value,
-      routing_mode: card.querySelector('.ac-routing').value
+      routing_mode: card.querySelector('.ac-routing').value,
+      images: aircraftData[card.dataset.key]?.images || []
     };
+
   });
   let activeCount = Object.values(data).filter(v => v.active).length;
   if (activeCount < 1) { showMsg('ac-msg', 'At least one aircraft must be active.', 'error'); return; }

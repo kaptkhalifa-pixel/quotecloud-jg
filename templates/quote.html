@@ -139,6 +139,20 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
 .footer { background: var(--black); color: rgba(255,255,255,0.3); padding: 40px 22px; text-align: center; font-family: 'DM Sans', sans-serif; font-size: 0.72rem; line-height: 2; }
 .footer img { height: 18px; filter: invert(1); opacity: 0.4; display: block; margin: 0 auto 16px; }
 .footer-powered { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.58rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.15); }
+.ac-images { padding: 0 20px 16px; }
+.ac-thumb { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; cursor: pointer; display: block; }
+.slider-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+.slider-overlay.active { display: flex; }
+.slider-img { max-width: 94vw; max-height: 80vh; object-fit: contain; border-radius: 4px; }
+.slider-close { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 1.8rem; cursor: pointer; background: none; border: none; line-height: 1; }
+.slider-prev, .slider-next { position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 2rem; cursor: pointer; background: rgba(255,255,255,0.1); border: none; padding: 10px 16px; border-radius: 4px; }
+.slider-prev { left: 10px; }
+.slider-next { right: 10px; }
+.slider-dots { display: flex; gap: 6px; margin-top: 16px; }
+.slider-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: background 0.2s; }
+.slider-dot.active { background: #fff; }
+.slider-counter { color: rgba(255,255,255,0.6); font-family: 'DM Sans', sans-serif; font-size: 0.75rem; margin-top: 8px; }
+
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @media(max-width:480px) {
@@ -274,6 +288,14 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
   <img id="footer-logo" src="" alt="">
   <div id="footer-contact"></div>
   <div class="footer-powered">Powered by Quotecloud &nbsp;·&nbsp; Jetman Global</div>
+</div>
+<div class="slider-overlay" id="img-slider">
+  <button class="slider-close" onclick="closeSlider()">✕</button>
+  <button class="slider-prev" onclick="sliderNav(-1)">‹</button>
+  <img class="slider-img" id="slider-img" src="">
+  <button class="slider-next" onclick="sliderNav(1)">›</button>
+  <div class="slider-dots" id="slider-dots"></div>
+  <div class="slider-counter" id="slider-counter"></div>
 </div>
 
 <script>
@@ -659,13 +681,21 @@ function renderOneAc(res, showDist, isDark) {
   } else {
     content = renderSegments(res.segments,showDist)+renderBilling(res);
   }
+  let images = res.images || [];
+  let imageHtml = '';
+  if (images.length > 0) {
+    let thumbs = images.map((url, i) =>
+      `<img src="${url}" class="ac-thumb" style="width:${images.length>1?'48%':'100%'};height:140px;display:inline-block;margin:1%" onclick="openSlider(${JSON.stringify(images)},${i})">`
+    ).join('');
+    imageHtml = `<div class="ac-images">${thumbs}<div style="font-family:'DM Sans',sans-serif;font-size:0.65rem;color:#aaa;text-align:center;margin-top:6px;letter-spacing:1px">TAP IMAGE TO EXPAND</div></div>`;
+  }
   return `<div class="${headerClass}">
     <div>
       <div class="ac-title">${res.ac_label||''}</div>
       <div class="ac-sub">${isFixed?'Fixed Wing':'Helicopter'} · ${res.home_airstrip||''}</div>
     </div>
     <span class="ac-badge ${badgeClass}">${badgeText}</span>
-  </div>${content}${disclaimer}`;
+  </div>${imageHtml}${content}${disclaimer}`;
 }
 
 function switchOtab(el, id) {
@@ -727,6 +757,33 @@ function buildWhatsApp(results, mission) {
   });
   lines.push('Please confirm availability. Thank you.');
   document.getElementById('btn-whatsapp').href=`https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;
+}
+let sliderImages = [];
+let sliderIndex = 0;
+
+function openSlider(images, startIndex) {
+  sliderImages = images;
+  sliderIndex = startIndex || 0;
+  document.getElementById('img-slider').classList.add('active');
+  updateSlider();
+}
+
+function closeSlider() {
+  document.getElementById('img-slider').classList.remove('active');
+}
+
+function sliderNav(dir) {
+  sliderIndex = (sliderIndex + dir + sliderImages.length) % sliderImages.length;
+  updateSlider();
+}
+
+function updateSlider() {
+  document.getElementById('slider-img').src = sliderImages[sliderIndex];
+  document.getElementById('slider-counter').textContent = `${sliderIndex + 1} / ${sliderImages.length}`;
+  let dots = document.getElementById('slider-dots');
+  dots.innerHTML = sliderImages.map((_, i) =>
+    `<div class="slider-dot ${i === sliderIndex ? 'active' : ''}" onclick="sliderIndex=${i};updateSlider()"></div>`
+  ).join('');
 }
 
 function resetQuote() {
