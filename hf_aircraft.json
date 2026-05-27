@@ -1,28 +1,28 @@
 {
-  "PA32": {
+  "Cessna 206": {
     "active": true,
     "home_airstrip": "Wilson Airport, Nairobi",
-    "idle_day_rate": 600,
-    "label": "Piper PA32",
+    "idle_day_rate": 650,
+    "label": "Cessna 206 Station air",
     "overnight_rate": 150,
     "pax_fee": 50,
-    "rate": 600,
+    "rate": 650,
     "routing_mode": "standard",
     "seater": 4,
-    "speed": 120,
+    "speed": 115,
     "type": "fixed_wing"
   },
-  "PC12": {
+  "Cessna Grand Caravan": {
     "active": true,
     "home_airstrip": "Wilson Airport, Nairobi",
-    "idle_day_rate": 3300,
-    "label": "Pilatus PC12",
-    "overnight_rate": 600,
-    "pax_fee": 100,
-    "rate": 3300,
+    "idle_day_rate": 1300,
+    "label": "Cessna Grand Caravan EX",
+    "overnight_rate": 250,
+    "pax_fee": 150,
+    "rate": 1300,
     "routing_mode": "standard",
-    "seater": 8,
-    "speed": 260,
+    "seater": 12,
+    "speed": 140,
     "type": "fixed_wing"
   }
 }
