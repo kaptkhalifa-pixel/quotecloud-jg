@@ -1,28 +1,28 @@
 {
   "PA32": {
+    "active": true,
+    "home_airstrip": "Wilson Airport, Nairobi",
+    "idle_day_rate": 600,
     "label": "Piper PA32",
+    "overnight_rate": 150,
+    "pax_fee": 50,
+    "rate": 600,
+    "routing_mode": "standard",
     "seater": 4,
     "speed": 120,
-    "rate": 600,
-    "pax_fee": 50,
-    "overnight_rate": 150,
-    "idle_day_rate": 600,
-    "active": true,
-    "type": "fixed_wing",
-    "home_airstrip": "Wilson Airport, Nairobi",
-    "routing_mode": "standard"
+    "type": "fixed_wing"
   },
   "PC12": {
+    "active": true,
+    "home_airstrip": "Wilson Airport, Nairobi",
+    "idle_day_rate": 3300,
     "label": "Pilatus PC12",
+    "overnight_rate": 600,
+    "pax_fee": 100,
+    "rate": 3300,
+    "routing_mode": "standard",
     "seater": 8,
     "speed": 260,
-    "rate": 3300,
-    "pax_fee": 100,
-    "overnight_rate": 600,
-    "idle_day_rate": 3300,
-    "active": true,
-    "type": "fixed_wing",
-    "home_airstrip": "Wilson Airport, Nairobi",
-    "routing_mode": "standard"
+    "type": "fixed_wing"
   }
 }
