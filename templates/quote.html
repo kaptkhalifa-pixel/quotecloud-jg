@@ -947,7 +947,7 @@ async function proceedToBooking() {
       document.getElementById('bm-step3').style.display = 'block';
       let res = currentBookingResult;
       let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
-      let waNum = (config.contact||{}).whatsapp || '';
+      let waNum = ((config.contact||{}).whatsapp || '').replace(/^\+/, '').replace(/\s/g, '');
       if (waNum) {
         let waLines = [
           "Hi, I'd like to request an invoice for a charter.",
