@@ -309,10 +309,7 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
           <label style="font-family:'DM Sans',sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px">Email (optional)</label>
           <input type="email" id="bm-email" placeholder="your@email.com" style="width:100%;padding:12px 14px;border:1px solid #e8e8e8;border-radius:2px;font-size:1rem;font-family:'Cormorant Garamond',serif;outline:none">
         </div>
-        <button onclick="submitBookingForm()" style="width:100%;padding:14px;background:#25D366;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          Request Invoice via WhatsApp
-        </button>
+        <button onclick="submitBookingForm()" style="width:100%;padding:14px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer">Download Quote PDF</button>
         <button onclick="closeBookingModal()" style="width:100%;padding:11px;background:transparent;color:#888;border:1px solid #e8e8e8;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.7rem;cursor:pointer;margin-top:8px">Cancel</button>
         <div id="bm-error" style="color:#e11d48;font-family:'DM Sans',sans-serif;font-size:0.78rem;margin-top:10px;display:none"></div>
       </div>
@@ -326,15 +323,24 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
         <button onclick="proceedToBooking()" style="width:100%;padding:14px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:8px">Yes — Request Invoice</button>
         <button onclick="closeBookingModal()" style="width:100%;padding:11px;background:transparent;color:#888;border:1px solid #e8e8e8;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.7rem;cursor:pointer">No Thanks</button>
       </div>
+      <!-- Step 2: PDF Downloaded - Request Invoice -->
+      <div id="bm-step2" style="display:none;text-align:center">
+        <div style="font-size:2rem;margin-bottom:12px">📄</div>
+        <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">Quote Downloaded</h3>
+        <div id="bm-token-display" style="font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;letter-spacing:3px;background:#f5f5f5;padding:14px;border-radius:4px;margin-bottom:16px"></div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#444;margin-bottom:20px;line-height:1.6">Ready to book? Tap below to request invoice details from our team.</div>
+        <button onclick="requestInvoice()" style="width:100%;padding:14px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:8px">Request Invoice Details</button>
+        <button onclick="closeBookingModal()" style="width:100%;padding:11px;background:transparent;color:#888;border:1px solid #e8e8e8;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.7rem;cursor:pointer">Maybe Later</button>
+      </div>
       <!-- Step 3: Confirmed -->
       <div id="bm-step3" style="display:none;text-align:center">
         <div style="font-size:2.5rem;margin-bottom:12px">🎉</div>
-        <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">Request Sent</h3>
-        <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#444;margin-bottom:16px;line-height:1.6">Your booking request has been sent. Tap below to send us the details on WhatsApp.</div>
+        <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">Request Sent!</h3>
+        <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#444;margin-bottom:16px;line-height:1.6">We're reviewing your request and will be in touch shortly.</div>
         <div id="bm-token-final" style="font-family:'DM Sans',sans-serif;font-size:0.78rem;color:#888;margin-bottom:20px"></div>
         <a id="bm-wa-link" href="#" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:#25D366;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;text-decoration:none;margin-bottom:8px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          Send via WhatsApp
+          Open WhatsApp
         </a>
         <button onclick="closeBookingModal()" style="width:100%;padding:11px;background:transparent;color:#888;border:1px solid #e8e8e8;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.7rem;cursor:pointer">Close</button>
       </div>
@@ -931,8 +937,30 @@ async function submitBookingForm() {
     let waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waLines.join('\n'))}`;
     document.getElementById('bm-wa-link').href = waUrl;
   }
-  document.getElementById('bm-token-final').textContent = `Reference: ${token}`;
+  document.getElementById('bm-token-display').textContent = `Ref: ${token}`;
   document.getElementById('bm-step1').style.display = 'none';
+  document.getElementById('bm-step2').style.display = 'block';
+}
+
+function requestInvoice() {
+  let res = currentBookingResult;
+  let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
+  let routeSummary = buildRouteSummary(res);
+  let waNum = ((config.contact||{}).whatsapp || '').replace(/^\+/, '').replace(/\s/g, '');
+  if (waNum) {
+    let waLines = [
+      "Hi, I'd like to request an invoice for a charter.",
+      "",
+      `Ref: ${currentBookingToken}`,
+      `Name: ${document.getElementById('bm-name').value.trim()}`,
+      `Aircraft: ${res.ac_label || ''}`,
+      `Route: ${routeSummary}`,
+      `Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`
+    ];
+    document.getElementById('bm-wa-link').href = `https://wa.me/${waNum}?text=${encodeURIComponent(waLines.join('\n'))}`;
+  }
+  document.getElementById('bm-token-final').textContent = `Reference: ${currentBookingToken}`;
+  document.getElementById('bm-step2').style.display = 'none';
   document.getElementById('bm-step3').style.display = 'block';
 }
 
