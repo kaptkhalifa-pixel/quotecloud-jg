@@ -3,6 +3,12 @@
     "active": true,
     "home_airstrip": "Wilson Airport, Nairobi",
     "idle_day_rate": 650,
+    "images": [
+      "https://i.ibb.co/HD91HzJ4/c3652c5f7285.jpg",
+      "https://i.ibb.co/HTB68k76/181c223b43bb.jpg",
+      "https://i.ibb.co/Y4S7b4DF/e8f8c37f2c9f.jpg",
+      "https://i.ibb.co/qMCS50hb/17edc0112ac6.jpg"
+    ],
     "label": "Cessna 206 Station air",
     "overnight_rate": 150,
     "pax_fee": 50,
@@ -16,6 +22,15 @@
     "active": true,
     "home_airstrip": "Wilson Airport, Nairobi",
     "idle_day_rate": 1300,
+    "images": [
+      "https://i.ibb.co/NgyHGZNy/232656dc494d.jpg",
+      "https://i.ibb.co/xKrRd8tH/126d72dc5b2d.jpg",
+      "https://i.ibb.co/ccTY4xX3/c5427a6a77ba.jpg",
+      "https://i.ibb.co/JwBfn8ND/2592a2d3f3a7.jpg",
+      "https://i.ibb.co/V0yVtqG9/cefdc2578ce2.jpg",
+      "https://i.ibb.co/RTbx02Dv/e36c0cc658ee.jpg",
+      "https://i.ibb.co/9mHVCy6H/24edf735681c.jpg"
+    ],
     "label": "Cessna Grand Caravan EX",
     "overnight_rate": 250,
     "pax_fee": 150,
