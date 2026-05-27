@@ -289,6 +289,47 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
   <div id="footer-contact"></div>
   <div class="footer-powered">Powered by Quotecloud &nbsp;·&nbsp; Jetman Global</div>
 </div>
+<div class="modal-overlay" id="booking-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9998;align-items:flex-end;justify-content:center">
+  <div style="background:#fff;width:100%;max-width:500px;border-radius:12px 12px 0 0;padding:28px 22px 36px;max-height:90vh;overflow-y:auto">
+    <div style="width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 20px"></div>
+    <div id="booking-modal-content">
+      <!-- Step 1: Form -->
+      <div id="bm-step1">
+        <h3 style="font-size:1.2rem;font-weight:600;margin-bottom:4px" id="bm-ac-label"></h3>
+        <div style="font-family:'DM Sans',sans-serif;font-size:0.78rem;color:#888;margin-bottom:20px" id="bm-total"></div>
+        <div style="margin-bottom:14px">
+          <label style="font-family:'DM Sans',sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px">Your Name</label>
+          <input type="text" id="bm-name" placeholder="Full name" style="width:100%;padding:12px 14px;border:1px solid #e8e8e8;border-radius:2px;font-size:1rem;font-family:'Cormorant Garamond',serif;outline:none">
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="font-family:'DM Sans',sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px">Email (optional)</label>
+          <input type="email" id="bm-email" placeholder="your@email.com" style="width:100%;padding:12px 14px;border:1px solid #e8e8e8;border-radius:2px;font-size:1rem;font-family:'Cormorant Garamond',serif;outline:none">
+        </div>
+        <button onclick="submitBookingForm()" style="width:100%;padding:14px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer">Download Quote PDF</button>
+        <button onclick="closeBookingModal()" style="width:100%;padding:11px;background:transparent;color:#888;border:1px solid #e8e8e8;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.7rem;cursor:pointer;margin-top:8px">Cancel</button>
+        <div id="bm-error" style="color:#e11d48;font-family:'DM Sans',sans-serif;font-size:0.78rem;margin-top:10px;display:none"></div>
+      </div>
+      <!-- Step 2: Token + Proceed -->
+      <div id="bm-step2" style="display:none;text-align:center">
+        <div style="font-size:2rem;margin-bottom:12px">✓</div>
+        <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">Quote Downloaded</h3>
+        <div style="font-family:'DM Sans',sans-serif;font-size:0.78rem;color:#888;margin-bottom:16px">Your reference number</div>
+        <div id="bm-token-display" style="font-family:'DM Sans',sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:3px;background:#f5f5f5;padding:14px;border-radius:4px;margin-bottom:20px"></div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#444;margin-bottom:20px;line-height:1.6">Would you like to proceed with a booking request? The operator will review and send you an invoice.</div>
+        <button onclick="proceedToBooking()" style="width:100%;padding:14px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:8px">Yes — Request Invoice</button>
+        <button onclick="closeBookingModal()" style="width:100%;padding:11px;background:transparent;color:#888;border:1px solid #e8e8e8;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.7rem;cursor:pointer">No Thanks</button>
+      </div>
+      <!-- Step 3: Confirmed -->
+      <div id="bm-step3" style="display:none;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:12px">🎉</div>
+        <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">Request Sent</h3>
+        <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#444;margin-bottom:16px;line-height:1.6">Your booking request has been sent. The operator will be in touch shortly.</div>
+        <div id="bm-token-final" style="font-family:'DM Sans',sans-serif;font-size:0.78rem;color:#888;margin-bottom:20px"></div>
+        <button onclick="closeBookingModal()" style="width:100%;padding:14px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="slider-overlay" id="img-slider">
   <button class="slider-close" onclick="closeSlider()">✕</button>
   <button class="slider-prev" onclick="sliderNav(-1)">‹</button>
@@ -694,13 +735,20 @@ function renderOneAc(res, showDist, isDark) {
       <div style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px">${thumbs}</div>
     </div>`;
   }
+  let acIndex = lastResults.indexOf(res);
+  let bookBtn = `<div style="padding:14px 18px;border-top:1px solid var(--grey-100)">
+    <button onclick="openBookingModal(lastResults[${acIndex}])" style="width:100%;padding:12px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      Get Quote PDF
+    </button>
+  </div>`;
   return `<div class="${headerClass}">
     <div>
       <div class="ac-title">${res.ac_label||''}</div>
       <div class="ac-sub">${isFixed?'Fixed Wing':'Helicopter'} · ${res.home_airstrip||''}</div>
     </div>
     <span class="ac-badge ${badgeClass}">${badgeText}</span>
-  </div>${content}${disclaimer}${imageHtml}`;
+  </div>${content}${disclaimer}${imageHtml}${bookBtn}`;
 }
 
 function switchOtab(el, id) {
@@ -782,7 +830,117 @@ function updateSlider() {
     `<div class="slider-dot ${i === sliderIndex ? 'active' : ''}" onclick="sliderIndex=${i};updateSlider()"></div>`
   ).join('');
 }
+let currentBookingResult = null;
+let currentBookingToken = null;
 
+function openBookingModal(res) {
+  currentBookingResult = res;
+  currentBookingToken = null;
+  document.getElementById('bm-ac-label').textContent = res.ac_label || '';
+  let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
+  document.getElementById('bm-total').textContent = `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('bm-name').value = '';
+  document.getElementById('bm-email').value = '';
+  document.getElementById('bm-error').style.display = 'none';
+  document.getElementById('bm-step1').style.display = 'block';
+  document.getElementById('bm-step2').style.display = 'none';
+  document.getElementById('bm-step3').style.display = 'none';
+  let modal = document.getElementById('booking-modal');
+  modal.style.display = 'flex';
+}
+
+function closeBookingModal() {
+  document.getElementById('booking-modal').style.display = 'none';
+}
+
+function buildRouteSummary(res) {
+  let segs = res.segments || [];
+  if (res.mission === 'return_both') segs = res.option_a?.segments || [];
+  if (res.mission === 'pick_and_drop') segs = [...(res.drop?.segments||[]), ...(res.pick?.segments||[])];
+  return segs.filter(s => s.type === 'revenue')
+    .map(s => `${s.origin} → ${s.destination}${s.date ? ' on ' + s.date : ''}`)
+    .join(', ');
+}
+
+async function submitBookingForm() {
+  let name = document.getElementById('bm-name').value.trim();
+  let email = document.getElementById('bm-email').value.trim();
+  let errEl = document.getElementById('bm-error');
+  if (!name) { errEl.textContent = 'Please enter your name.'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  let res = currentBookingResult;
+  let actual = res;
+  if (res.mission === 'return_both') {
+    let wd = res.wait_days || 0;
+    let maxN = res.max_nights || 3;
+    actual = wd >= maxN ? {...res.option_b, mission:'pick_and_drop'} : {...res.option_a};
+    actual.rate_usd = res.rate_usd;
+    actual.overnight_rate_usd = res.overnight_rate_usd;
+    actual.idle_day_rate_usd = res.idle_day_rate_usd;
+    actual.pax_fee_usd_display = res.pax_fee_usd_display;
+    actual.ac_label = res.ac_label;
+    actual.ac_key = res.ac_key;
+  }
+  let token = `${(config.invoice_prefix||'JG')}-${new Date().getFullYear()}-${Math.random().toString(36).substr(2,6).toUpperCase()}`;
+  currentBookingToken = token;
+  try {
+    let r = await fetch('/booking/pdf', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        client_name: name,
+        client_email: email,
+        token: token,
+        result: actual
+      })
+    });
+    if (r.ok) {
+      let blob = await r.blob();
+      let url = URL.createObjectURL(blob);
+      let a = document.createElement('a');
+      a.href = url;
+      a.download = `${token}.pdf`;
+      a.click();
+    }
+  } catch(e) {}
+  document.getElementById('bm-token-display').textContent = token;
+  document.getElementById('bm-step1').style.display = 'none';
+  document.getElementById('bm-step2').style.display = 'block';
+  window._bmName = name;
+  window._bmEmail = email;
+}
+
+async function proceedToBooking() {
+  let res = currentBookingResult;
+  let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
+  let routeSummary = buildRouteSummary(res);
+  try {
+    let r = await fetch('/booking/request', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        client_name: window._bmName || '',
+        client_email: window._bmEmail || '',
+        token_override: currentBookingToken,
+        route_summary: routeSummary,
+        quote_snapshot: {
+          ac_label: res.ac_label,
+          ac_key: res.ac_key,
+          total_usd: total,
+          mission: res.mission,
+          route_summary: routeSummary
+        }
+      })
+    });
+    let data = await r.json();
+    if (data.success) {
+      document.getElementById('bm-token-final').textContent = `Reference: ${currentBookingToken}`;
+      document.getElementById('bm-step2').style.display = 'none';
+      document.getElementById('bm-step3').style.display = 'block';
+      if (data.notify_wa) window.open(data.notify_wa, '_blank');
+    }
+  } catch(e) {}
+}
 function resetQuote() {
   document.getElementById('results').style.display='none';
   hideError(); lastResults=[];
