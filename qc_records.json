@@ -401,5 +401,22 @@
     },
     "timestamp": "2026-05-18T23:49:35.348770",
     "type": "Invoice"
+  },
+  {
+    "amount": 2945.0,
+    "client_email": "",
+    "client_name": "khalif",
+    "date": "28/05/2026",
+    "number": "JET-I-2026-008",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": "",
+    "result_summary": {},
+    "timestamp": "2026-05-28T05:58:18.679577",
+    "type": "Invoice"
   }
 ]
