@@ -663,7 +663,44 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div id="pass-msg"></div>
   </div>
 </div>
-
+<!-- INVOICE BUILDER MODAL -->
+<div class="modal-overlay" id="invoice-builder-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h4>Generate Invoice</h4>
+    <input type="hidden" id="ib-token">
+    <input type="hidden" id="ib-client-whatsapp">
+    <div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:0.82rem;color:#555">
+      <div id="ib-summary"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Client Name</label><input type="text" id="ib-name"></div>
+      <div class="form-group"><label>Client Email</label><input type="text" id="ib-email"></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="margin-bottom:8px;display:block;font-weight:600;font-size:0.78rem;color:#555">Base Charter</label>
+      <div id="ib-base-line" style="background:#f0f4ff;border-radius:8px;padding:10px 14px;font-size:0.85rem;color:#333;border:1px solid #d0d8ff"></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="margin-bottom:8px;display:block;font-weight:600;font-size:0.78rem;color:#555">Uplift Charges</label>
+      <div id="ib-uplift-items"></div>
+      <button class="btn btn-outline btn-sm" onclick="addUpliftItem()" style="margin-top:8px">+ Add Charge</button>
+    </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Discount (USD)</label><input type="number" id="ib-discount" placeholder="0" min="0" value="0" oninput="recalcInvoiceTotal()"></div>
+    <div style="background:#1a1a1a;border-radius:8px;padding:14px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;color:#aaa;font-size:0.82rem;margin-bottom:6px"><span>Base Charter</span><span id="ib-total-base">$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;color:#aaa;font-size:0.82rem;margin-bottom:6px"><span>Uplift Charges</span><span id="ib-total-uplift">$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;color:#aaa;font-size:0.82rem;margin-bottom:8px"><span>Discount</span><span id="ib-total-discount">-$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;color:#fff;font-size:1rem;font-weight:700;border-top:1px solid #444;padding-top:10px"><span>INVOICE TOTAL</span><span id="ib-total-final">$0.00</span></div>
+    </div>
+    <div class="form-group-full" style="margin-bottom:16px"><label>Notes</label><textarea id="ib-notes" rows="2" placeholder="Any special notes..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-success" onclick="generateAndSendInvoice()">Generate & Send via WhatsApp</button>
+      <button class="btn btn-grey" onclick="closeInvoiceBuilder()">Cancel</button>
+    </div>
+    <div id="ib-msg"></div>
+  </div>
+</div>
 <!-- MARK AS PAID MODAL -->
 <div class="modal-overlay" id="paid-modal">
   <div class="modal">
@@ -1750,7 +1787,7 @@ function applyGeoPreset() {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('s-primary-color').addEventListener('input', function() { document.getElementById('s-primary-color-hex').value = this.value; });
   document.getElementById('s-accent-color').addEventListener('input', function() { document.getElementById('s-accent-color-hex').value = this.value; });
-  ['paid-modal','log-modal','edit-modal','delete-modal'].forEach(id => {
+  ['paid-modal','log-modal','edit-modal','delete-modal','invoice-builder-modal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
   loadStateFromStorage();
@@ -1913,20 +1950,132 @@ function renderEnquiries(enqs) {
       <td style="max-width:150px;font-size:0.78rem;color:#555">${route||'-'}</td>
       <td style="white-space:nowrap">$${parseFloat(e.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
       <td>${getEnqStatusBadge(e.status)}</td>
-      <td style="white-space:nowrap">
+      <td style="white-space:nowrap;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <select onchange="updateEnqStatus('${e.token}',this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.75rem;min-height:32px">
-          <option value="">-- Update --</option>
+          <option value="">-- Status --</option>
           <option value="PENDING">Pending</option>
           <option value="CONTACTED">Contacted</option>
           <option value="ACCEPTED">Accepted</option>
           <option value="INVOICED">Invoiced</option>
           <option value="PAID">Paid</option>
         </select>
+        <button class="btn btn-success btn-sm" onclick="openInvoiceBuilder(${JSON.stringify(e).replace(/"/g,'&quot;')})">📄 Invoice</button>
       </td>
     </tr>`;
   }).join('');
 }
+let currentInvoiceEnquiry = null;
 
+function openInvoiceBuilder(enq) {
+  currentInvoiceEnquiry = enq;
+  document.getElementById('ib-token').value = enq.token || '';
+  document.getElementById('ib-client-whatsapp').value = enq.client_whatsapp || '';
+  document.getElementById('ib-name').value = enq.client_name || '';
+  document.getElementById('ib-email').value = enq.client_email || '';
+  document.getElementById('ib-discount').value = '0';
+  document.getElementById('ib-notes').value = '';
+  document.getElementById('ib-uplift-items').innerHTML = '';
+  document.getElementById('ib-msg').innerHTML = '';
+  let base = parseFloat(enq.total_usd || 0);
+  document.getElementById('ib-summary').innerHTML =
+    `<strong>${enq.token}</strong> &nbsp;·&nbsp; ${enq.client_name} &nbsp;·&nbsp; ${enq.ac_label||''}<br>
+     <span style="color:#888">${enq.route_summary||''}</span>`;
+  document.getElementById('ib-base-line').textContent =
+    `${enq.ac_label||'Aircraft Charter'} — ${enq.route_summary||''} — USD $${base.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('ib-total-base').textContent = `$${base.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  recalcInvoiceTotal();
+  document.getElementById('invoice-builder-modal').classList.add('active');
+}
+
+function closeInvoiceBuilder() {
+  document.getElementById('invoice-builder-modal').classList.remove('active');
+}
+
+function addUpliftItem() {
+  let div = document.createElement('div');
+  div.className = 'line-item-row';
+  div.innerHTML = `
+    <textarea placeholder="e.g. International Permit, Landing Fee, Catering..." class="ib-desc" rows="2" oninput="recalcInvoiceTotal()" style="flex:1;min-width:140px;min-height:60px"></textarea>
+    <input type="number" placeholder="Qty" class="ib-qty qty" value="1" oninput="recalcInvoiceTotal()" style="max-width:70px">
+    <input type="number" placeholder="USD" class="ib-unit amount" oninput="recalcInvoiceTotal()" style="max-width:110px">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove();recalcInvoiceTotal()">✕</button>`;
+  document.getElementById('ib-uplift-items').appendChild(div);
+}
+
+function recalcInvoiceTotal() {
+  let base = parseFloat(currentInvoiceEnquiry?.total_usd || 0);
+  let uplift = 0;
+  document.querySelectorAll('#ib-uplift-items .line-item-row').forEach(row => {
+    let qty = parseFloat(row.querySelector('.ib-qty')?.value) || 1;
+    let unit = parseFloat(row.querySelector('.ib-unit')?.value) || 0;
+    uplift += qty * unit;
+  });
+  let discount = parseFloat(document.getElementById('ib-discount').value) || 0;
+  let total = Math.max(base + uplift - discount, 0);
+  document.getElementById('ib-total-uplift').textContent = `$${uplift.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('ib-total-discount').textContent = `-$${discount.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('ib-total-final').textContent = `$${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+}
+
+async function generateAndSendInvoice() {
+  let enq = currentInvoiceEnquiry;
+  let clientName = document.getElementById('ib-name').value.trim();
+  let clientEmail = document.getElementById('ib-email').value.trim();
+  let clientWa = document.getElementById('ib-client-whatsapp').value.trim().replace(/\D/g,'');
+  let discount = parseFloat(document.getElementById('ib-discount').value) || 0;
+  let notes = document.getElementById('ib-notes').value.trim();
+  if (!clientName) { showMsg('ib-msg','Client name required.','error'); return; }
+  let base = parseFloat(enq.total_usd || 0);
+  let lineItems = [{
+    description: `${enq.ac_label||'Aircraft Charter'}\n${enq.route_summary||''}`,
+    quantity: 1,
+    unit_cost: base
+  }];
+  document.querySelectorAll('#ib-uplift-items .line-item-row').forEach(row => {
+    let desc = row.querySelector('.ib-desc')?.value.trim();
+    let qty = parseFloat(row.querySelector('.ib-qty')?.value) || 1;
+    let unit = parseFloat(row.querySelector('.ib-unit')?.value) || 0;
+    if (desc && unit > 0) lineItems.push({ description: desc, quantity: qty, unit_cost: unit });
+  });
+  let uplift = lineItems.slice(1).reduce((s,i) => s + i.quantity * i.unit_cost, 0);
+  let finalTotal = Math.max(base + uplift - discount, 0);
+  showMsg('ib-msg','Generating invoice...','success');
+  try {
+    let body = {
+      client_name: clientName, client_email: clientEmail, client_phone: '',
+      discount, note: notes, doc_type: 'Invoice', line_items: lineItems
+    };
+    let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    if (!r.ok) { let e = await r.json(); showMsg('ib-msg', e.error||'Failed','error'); return; }
+    let blob = await r.blob();
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a'); a.href = url; a.download = `${enq.token}-invoice.pdf`; a.click();
+    await fetch('/booking/update', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token: enq.token, status: 'INVOICED' })
+    });
+    if (clientWa) {
+      let waLines = [
+        `Hi ${clientName},`,
+        '',
+        `Your invoice for your charter is ready.`,
+        '',
+        `Ref: ${enq.token}`,
+        `Aircraft: ${enq.ac_label||''}`,
+        `Route: ${enq.route_summary||''}`,
+        `Invoice Total: USD $${finalTotal.toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        '',
+        'Please find your invoice attached. To confirm your booking, please proceed with payment as per the bank details on the invoice.',
+        '',
+        'Thank you.'
+      ];
+      let waUrl = `https://wa.me/${clientWa}?text=${encodeURIComponent(waLines.join('\n'))}`;
+      setTimeout(() => window.open(waUrl, '_blank'), 800);
+    }
+    closeInvoiceBuilder();
+    loadEnquiries();
+  } catch(e) { showMsg('ib-msg','Error: '+e.message,'error'); }
+}
 async function updateEnqStatus(token, status) {
   if (!status) return;
   try {
