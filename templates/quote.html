@@ -896,17 +896,19 @@ async function submitBookingForm() {
   currentBookingToken = token;
   let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
   let routeSummary = buildRouteSummary(res);
-  fetch('/booking/pdf', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      client_name: name,
-      client_email: email,
-      token: token,
-      result: actual
-    })
-  }).catch(e => console.log('PDF error:', e));
-fetch('/booking/request', {
+  try {
+    await fetch('/booking/pdf', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        client_name: name,
+        client_email: email,
+        token: token,
+        result: actual
+      })
+    });
+  } catch(e) { console.log('PDF error:', e); }
+  fetch('/booking/request', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -942,6 +944,7 @@ fetch('/booking/request', {
   document.getElementById('bm-token-display').textContent = `Ref: ${token}`;
   document.getElementById('bm-step1').style.display = 'none';
   document.getElementById('bm-step2').style.display = 'block';
+  document.getElementById('bm-pdf-link').textContent = '📄 View / Download Quote PDF';
 }
 
 function requestInvoice() {
