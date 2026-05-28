@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "amount": 2945.0,
+    "client_email": "khalif@gmail.com",
+    "client_name": "Joseph kairu",
+    "date": "28/05/2026",
+    "number": "JET-I-280526-OH4APZ",
+    "paid": true,
+    "paid_amount": 2945.0,
+    "paid_date": "28/05/2026",
+    "payment_log": [
+      {
+        "amount": 2945.0,
+        "date": "28/05/2026",
+        "mode": "Cash",
+        "recorded_at": "28/05/2026 08:07",
+        "ref": "Cash payment"
+      }
+    ],
+    "payment_mode": "Cash",
+    "payment_ref": "Cash payment",
+    "receipt_number": "",
+    "result_summary": {},
+    "timestamp": "2026-05-28T08:04:15.990053",
+    "type": "Invoice"
+  }
+]

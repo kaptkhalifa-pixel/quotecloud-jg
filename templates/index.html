@@ -430,6 +430,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
             <th>Route</th>
             <th>Total</th>
             <th>Status</th>
+            <th>Invoice</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -1960,6 +1961,7 @@ function renderEnquiries(enqs) {
       <td style="max-width:150px;font-size:0.78rem;color:#555">${route||'-'}</td>
       <td style="white-space:nowrap">$${parseFloat(e.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
       <td>${getEnqStatusBadge(e.status)}</td>
+      <td style="white-space:nowrap;font-size:0.75rem;color:#4a148c;font-weight:600">${e.invoice_number||'-'}</td>
       <td style="white-space:nowrap;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <select onchange="updateEnqStatus('${e.token}',this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.75rem;min-height:32px">
           <option value="">-- Status --</option>
@@ -2049,11 +2051,14 @@ async function generateAndSendInvoice() {
   });
   let uplift = lineItems.slice(1).reduce((s,i) => s + i.quantity * i.unit_cost, 0);
   let finalTotal = Math.max(base + uplift - discount, 0);
+  let genBtn = document.querySelector('#invoice-builder-modal .btn-success');
+  if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Generating...'; }
   showMsg('ib-msg','Generating invoice...','success');
   try {
     let body = {
       client_name: clientName, client_email: clientEmail, client_phone: '',
-      discount, note: notes, doc_type: 'Invoice', line_items: lineItems
+      discount, note: notes, doc_type: 'Invoice', line_items: lineItems,
+      source_token: enq.token
     };
     let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('ib-msg', e.error||'Failed','error'); return; }
@@ -2084,7 +2089,11 @@ async function generateAndSendInvoice() {
     }
     closeInvoiceBuilder();
     loadEnquiries();
-  } catch(e) { showMsg('ib-msg','Error: '+e.message,'error'); }
+  } catch(e) {
+    showMsg('ib-msg','Error: '+e.message,'error');
+  } finally {
+    if (genBtn) { genBtn.disabled = false; genBtn.textContent = 'Generate & Send via WhatsApp'; }
+  }
 }
 function toggleSelectAll(cb) {
   document.querySelectorAll('.enq-checkbox').forEach(c => c.checked = cb.checked);
