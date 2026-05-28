@@ -1561,6 +1561,15 @@ def delete_bookings():
             deleted += 1
     save_bookings(bookings)
     return jsonify({"success": True, "deleted": deleted})
+@app.route("/admin/wipe_data", methods=["POST"])
+@login_required
+def wipe_data():
+    data = request.get_json()
+    if data.get("password") != get_admin_pass():
+        return jsonify({"error": "Invalid password"}), 403
+    pathlib.Path(RECORDS_FILE).write_text("[]")
+    pathlib.Path(BOOKINGS_FILE).write_text("{}")
+    return jsonify({"success": True, "message": "Wiped."})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
