@@ -409,10 +409,19 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       </select>
       <input type="text" id="enq-search" oninput="filterEnquiries()" placeholder="Search name or ref..." style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;flex:1;min-width:150px;min-height:44px">
     </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#555;cursor:pointer">
+        <input type="checkbox" id="enq-select-all" onchange="toggleSelectAll(this)" style="width:18px;height:18px;min-height:unset;padding:0;border:1.5px solid #ddd;border-radius:4px;-webkit-appearance:checkbox;appearance:checkbox">
+        Select All
+      </label>
+      <button class="btn btn-danger btn-sm" onclick="deleteSelectedEnquiries()">🗑 Delete Selected</button>
+      <span id="enq-selected-count" style="font-size:0.78rem;color:#888"></span>
+    </div>
     <div class="db-table-wrap">
       <table class="db-table" id="enq-table">
         <thead>
           <tr>
+            <th style="width:36px"></th>
             <th>Ref</th>
             <th>Date</th>
             <th>Client</th>
@@ -1942,6 +1951,7 @@ function renderEnquiries(enqs) {
     let waLink = e.client_whatsapp ? `<a href="https://wa.me/${e.client_whatsapp.replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-weight:600;text-decoration:none">📱 ${e.client_whatsapp}</a>` : '-';
     let route = (e.route_summary||'').substring(0,40) + ((e.route_summary||'').length>40?'...':'');
     return `<tr>
+      <td><input type="checkbox" class="enq-checkbox" value="${e.token}" onchange="updateSelectedCount()" style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox"></td>
       <td><strong style="white-space:nowrap">${e.token||'-'}</strong></td>
       <td style="white-space:nowrap">${date}</td>
       <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.client_name||'-'}</td>
@@ -2076,6 +2086,35 @@ async function generateAndSendInvoice() {
     loadEnquiries();
   } catch(e) { showMsg('ib-msg','Error: '+e.message,'error'); }
 }
+function toggleSelectAll(cb) {
+  document.querySelectorAll('.enq-checkbox').forEach(c => c.checked = cb.checked);
+  updateSelectedCount();
+}
+
+function updateSelectedCount() {
+  let checked = document.querySelectorAll('.enq-checkbox:checked').length;
+  let total = document.querySelectorAll('.enq-checkbox').length;
+  document.getElementById('enq-selected-count').textContent = checked > 0 ? `${checked} of ${total} selected` : '';
+  let selAll = document.getElementById('enq-select-all');
+  if (selAll) selAll.checked = checked === total && total > 0;
+}
+
+async function deleteSelectedEnquiries() {
+  let checked = Array.from(document.querySelectorAll('.enq-checkbox:checked')).map(c => c.value);
+  if (!checked.length) { alert('Select at least one enquiry to delete.'); return; }
+  let password = prompt(`Enter admin password to delete ${checked.length} enquiry(ies):`);
+  if (!password) return;
+  try {
+    let r = await fetch('/bookings/delete', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ tokens: checked, password })
+    });
+    let data = await r.json();
+    if (data.success) { loadEnquiries(); }
+    else alert(data.error || 'Delete failed.');
+  } catch(e) { alert('Network error.'); }
+}
+
 async function updateEnqStatus(token, status) {
   if (!status) return;
   try {
