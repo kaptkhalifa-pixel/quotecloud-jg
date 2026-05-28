@@ -246,7 +246,24 @@ def save_record(record_type, client_name, client_email, amount, doc_number, resu
         rec.update(extra)
     records.append(rec)
     save_records(records)
-
+def upload_pdf_to_imgbb(pdf_path):
+    try:
+        import requests as req
+        import base64
+        with open(pdf_path, "rb") as f:
+            pdf_data = base64.b64encode(f.read()).decode("utf-8")
+        imgbb_key = "c6febd5ceb1476c58ddcf727d5b68969"
+        r = req.post(
+            "https://api.imgbb.com/1/upload",
+            data={"key": imgbb_key, "image": pdf_data},
+            timeout=30
+        )
+        result = r.json()
+        if result.get("success"):
+            return result["data"]["url"]
+    except Exception:
+        pass
+    return None
 def check_geo_lock(lat, lon):
     geo = get_geo_lock()
     if not geo.get("enabled", True):
@@ -843,19 +860,22 @@ def pdf():
         out_path = f"/tmp/{doc_number}.pdf"
         hq.generate_pdf(payload, out_path)
 
+        pdf_url = upload_pdf_to_imgbb(out_path)
         total = calc_pdf_total(result, extra_items, discount)
         save_record(doc_type, client_name, client_email, total, doc_number, {
             "ac_label": result.get("ac_label", ""),
-            "mission": result.get("mission", "")
+            "mission": result.get("mission", ""),
+            "pdf_url": pdf_url or ""
         })
 
-        return send_file(out_path, as_attachment=True,
+        return send_file(out_path, as_attachment=False,
                          download_name=f"{doc_number}.pdf",
                          mimetype="application/pdf")
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 @app.route("/pdf_all", methods=["POST"])
+
 @login_required
 def pdf_all():
     data = request.get_json()
@@ -987,15 +1007,26 @@ def manual_invoice():
 
         out_path = f"/tmp/{doc_number}.pdf"
         hq.generate_pdf(payload, out_path)
-        save_record(doc_type, client_name, client_email, total, doc_number)
+        pdf_url = upload_pdf_to_imgbb(out_path)
+        save_record(doc_type, client_name, client_email, total, doc_number,
+                    extra={"pdf_url": pdf_url or ""})
 
-        return send_file(out_path, as_attachment=True,
+        if source_token:
+            bookings = load_bookings()
+            if source_token in bookings:
+                bookings[source_token]["invoice_number"] = doc_number
+                bookings[source_token]["invoice_url"] = pdf_url or ""
+                bookings[source_token]["updated_at"] = datetime.datetime.now().isoformat()
+                save_bookings(bookings)
+
+        return send_file(out_path, as_attachment=False,
                          download_name=f"{doc_number}.pdf",
                          mimetype="application/pdf")
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 @app.route("/records", methods=["GET"])
+
 @login_required
 def get_records():
     return jsonify(load_records())

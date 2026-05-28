@@ -1493,7 +1493,10 @@ function renderRecords(records) {
   document.getElementById('rec-tbody').innerHTML = records.slice().reverse().map(r => {
     let typeKey = (r.type||'').toLowerCase();
     return `<tr>
-      <td><strong style="white-space:nowrap">${r.number||'-'}</strong></td>
+      <td>
+        <strong style="white-space:nowrap">${r.number||'-'}</strong>
+        ${r.pdf_url ? `<a href="${r.pdf_url}" target="_blank" style="display:block;color:#0d47a1;font-size:0.72rem;text-decoration:none;margin-top:2px">📄 View</a>` : ''}
+      </td>
       <td style="white-space:nowrap">${r.date||'-'}</td>
       <td><span class="badge-${typeKey}">${r.type||'-'}</span></td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.client_name||'-'}</td>
@@ -1961,7 +1964,10 @@ function renderEnquiries(enqs) {
       <td style="max-width:150px;font-size:0.78rem;color:#555">${route||'-'}</td>
       <td style="white-space:nowrap">$${parseFloat(e.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
       <td>${getEnqStatusBadge(e.status)}</td>
-      <td style="white-space:nowrap;font-size:0.75rem;color:#4a148c;font-weight:600">${e.invoice_number||'-'}</td>
+      <td style="white-space:nowrap;font-size:0.75rem;color:#4a148c;font-weight:600">
+        ${e.invoice_number ? `<span>${e.invoice_number}</span>` : '-'}
+        ${e.invoice_url ? `<a href="${e.invoice_url}" target="_blank" style="display:block;color:#0d47a1;font-size:0.72rem;text-decoration:none;margin-top:2px">📄 View</a>` : ''}
+      </td>
       <td style="white-space:nowrap;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <select onchange="updateEnqStatus('${e.token}',this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.75rem;min-height:32px">
           <option value="">-- Status --</option>
@@ -2062,27 +2068,32 @@ async function generateAndSendInvoice() {
     };
     let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('ib-msg', e.error||'Failed','error'); return; }
+    let invoicePdfUrl = r.headers.get('X-PDF-URL') || '';
     let blob = await r.blob();
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a'); a.href = url; a.download = `${enq.token}-invoice.pdf`; a.click();
+    let blobUrl = URL.createObjectURL(blob);
+    let a = document.createElement('a'); a.href = blobUrl; a.download = `${enq.token}-invoice.pdf`; a.click();
     await fetch('/booking/update', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ token: enq.token, status: 'INVOICED' })
     });
     if (clientWa) {
+      let pdfLine = invoicePdfUrl ? `\n📄 View Invoice: ${invoicePdfUrl}` : '';
       let waLines = [
-        `Hi ${clientName},`,
+        `Hello ${clientName},`,
         '',
-        `Your invoice for your charter is ready.`,
+        `Please find herein your invoice for your charter booking.${pdfLine}`,
         '',
         `Ref: ${enq.token}`,
         `Aircraft: ${enq.ac_label||''}`,
         `Route: ${enq.route_summary||''}`,
         `Invoice Total: USD $${finalTotal.toLocaleString(undefined,{minimumFractionDigits:2})}`,
         '',
-        'Please find your invoice attached. To confirm your booking, please proceed with payment as per the bank details on the invoice.',
+        'To confirm your booking, please proceed with payment as per the bank details on the invoice.',
         '',
-        'Thank you.'
+        'Thank you for choosing Jetman Global.',
+        '',
+        'Regards,',
+        'Jetman Reservations Team'
       ];
       let waUrl = `https://wa.me/${clientWa}?text=${encodeURIComponent(waLines.join('\n'))}`;
       setTimeout(() => window.open(waUrl, '_blank'), 800);

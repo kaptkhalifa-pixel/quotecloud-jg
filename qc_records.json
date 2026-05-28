@@ -23,5 +23,22 @@
     "result_summary": {},
     "timestamp": "2026-05-28T08:04:15.990053",
     "type": "Invoice"
+  },
+  {
+    "amount": 3045.0,
+    "client_email": "khalif@khalifkairo.com",
+    "client_name": "joseph",
+    "date": "28/05/2026",
+    "number": "JET-I-280526-NB44S1",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": "",
+    "result_summary": {},
+    "timestamp": "2026-05-28T08:22:21.144819",
+    "type": "Invoice"
   }
 ]
