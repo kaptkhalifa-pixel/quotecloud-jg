@@ -858,7 +858,7 @@ def pdf():
             client_phone, note, discount, extra_items)
 
         out_path = f"/tmp/{doc_number}.pdf"
-        hq.generate_pdf(payload, out_path)
+        hq.generate_pdf_weasy(payload, out_path)
 
         pdf_url = upload_pdf_to_imgbb(out_path)
         total = calc_pdf_total(result, extra_items, discount)
@@ -915,7 +915,7 @@ def pdf_all():
                 client_phone, note, discount, extra_items)
 
             out_path = f"/tmp/{doc_number}.pdf"
-            hq.generate_pdf(payload, out_path)
+            hq.generate_pdf_weasy(payload, out_path)
 
             total = calc_pdf_total(actual, extra_items, discount)
             save_record(doc_type, client_name, client_email, total, doc_number, {
@@ -1005,7 +1005,7 @@ def manual_invoice():
         }
 
         out_path = f"/tmp/{doc_number}.pdf"
-        hq.generate_pdf(payload, out_path)
+        hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_imgbb(out_path)
         save_record(doc_type, client_name, client_email, total, doc_number,
                     extra={"pdf_url": pdf_url or ""})
@@ -1160,7 +1160,7 @@ def generate_receipt():
     }
 
     out_path = f"/tmp/{receipt_number}.pdf"
-    hq.generate_pdf(payload, out_path)
+    hq.generate_pdf_weasy(payload, out_path)
     receipt_pdf_url = upload_pdf_to_imgbb(out_path)
 
     rec["paid"] = paid_amount >= total
@@ -1551,7 +1551,7 @@ def booking_pdf():
         payload["notes"] = ""
         payload["notes_title"] = ""
         out_path = f"/tmp/{token}.pdf"
-        hq.generate_pdf(payload, out_path)
+        hq.generate_pdf_weasy(payload, out_path)
         return send_file(out_path, as_attachment=False,
                          download_name=f"{token}.pdf",
                          mimetype="application/pdf")

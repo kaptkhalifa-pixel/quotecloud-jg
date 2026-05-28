@@ -686,8 +686,6 @@ def generate_pdf(payload, out_path):
     if resp.status_code != 200:
         raise RuntimeError(f"API error ({resp.status_code}): {resp.text}")
     pathlib.Path(out_path).write_bytes(resp.content)
-
-# =========================================================
 # SECTION 7 — PDF PROMPT
 # =========================================================
 
