@@ -40,5 +40,49 @@
     "result_summary": {},
     "timestamp": "2026-05-28T08:22:21.144819",
     "type": "Invoice"
+  },
+  {
+    "amount": 3060.0,
+    "client_email": "josep@gmail.com",
+    "client_name": "Joseph Onyango",
+    "date": "28/05/2026",
+    "number": "JET-I-280526-KSW9WW",
+    "paid": true,
+    "paid_amount": 3060.0,
+    "paid_date": "28/05/2026",
+    "payment_log": [
+      {
+        "amount": 3060.0,
+        "date": "28/05/2026",
+        "mode": "M-Pesa",
+        "recorded_at": "28/05/2026 08:44",
+        "ref": "kes 397000 ref; Hvajugrvv"
+      }
+    ],
+    "payment_mode": "M-Pesa",
+    "payment_ref": "kes 397000 ref; Hvajugrvv",
+    "pdf_url": "https://i.ibb.co/WNc0QBzN/449467d4f990.jpg",
+    "receipt_number": "",
+    "result_summary": {},
+    "timestamp": "2026-05-28T08:42:36.079410",
+    "type": "Invoice"
+  },
+  {
+    "amount": 3060.0,
+    "client_email": "josep@gmail.com",
+    "client_name": "Joseph Onyango",
+    "date": "28/05/2026",
+    "number": "JET-I-280526-KSW9WW",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "pdf_url": "https://i.ibb.co/WNc0QBzN/449467d4f990.jpg",
+    "receipt_number": "",
+    "result_summary": {},
+    "timestamp": "2026-05-28T08:42:49.656452",
+    "type": "Invoice"
   }
 ]

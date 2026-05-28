@@ -23,6 +23,32 @@
     "total_usd": 2845,
     "updated_at": "2026-05-28T08:07:57.710502"
   },
+  "JET-Q-280526-KSW9WW": {
+    "ac_key": "Cessna Grand Caravan",
+    "ac_label": "Cessna Grand Caravan EX (12 seater)",
+    "client_email": "josep@gmail.com",
+    "client_name": "Joseph Onyango",
+    "client_whatsapp": "254722750570",
+    "created_at": "2026-05-28T08:41:22.573983",
+    "invoice_number": "JET-I-280526-KSW9WW",
+    "invoice_url": "https://i.ibb.co/WNc0QBzN/449467d4f990.jpg",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna Grand Caravan",
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Kisumu (149.1 nm)",
+      "total_usd": 3010
+    },
+    "route_summary": "Wilson \u2192 Kisumu (149.1 nm)",
+    "status": "PAID",
+    "token": "JET-Q-280526-KSW9WW",
+    "total_usd": 3010,
+    "updated_at": "2026-05-28T08:43:38.563220"
+  },
   "JET-Q-280526-OVF0XU": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (4 seater)",

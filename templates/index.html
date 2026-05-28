@@ -673,6 +673,33 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div id="pass-msg"></div>
   </div>
 </div>
+<!-- SHARE VIA WHATSAPP MODAL -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h4>📤 Share via WhatsApp</h4>
+    <input type="hidden" id="share-doc-number">
+    <input type="hidden" id="share-pdf-url">
+    <input type="hidden" id="share-record-number">
+    <input type="hidden" id="share-doc-type">
+    <div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:0.82rem;color:#555" id="share-summary"></div>
+    <div id="share-pdf-preview" style="display:none;margin-bottom:16px">
+      <a id="share-pdf-link" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:8px 12px;border-radius:8px">📄 View PDF</a>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Client WhatsApp</label>
+      <div style="display:flex;gap:8px">
+        <input type="tel" id="share-wa-input" placeholder="+254 7XX XXX XXX" style="flex:1">
+        <button class="btn btn-success btn-sm" onclick="saveAndShareWa()">📤 Send</button>
+      </div>
+      <div style="font-size:0.72rem;color:#888;margin-top:6px" id="share-wa-hint"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-grey btn-block" onclick="closeShareModal()">Close</button>
+    </div>
+    <div id="share-msg"></div>
+  </div>
+</div>
 <!-- INVOICE BUILDER MODAL -->
 <div class="modal-overlay" id="invoice-builder-modal">
   <div class="modal">
@@ -1504,6 +1531,7 @@ function renderRecords(records) {
       <td>${getPaymentBadge(r)}</td>
       <td style="white-space:nowrap">
         ${getPaymentActions(r)}
+        <button class="btn btn-outline btn-sm" style="background:#25D366;color:#fff;border:none" onclick="openShareModal('${r.number}','${r.pdf_url||''}','${r.number}','${r.type||'Document'}')">📤</button>
         <button class="btn btn-outline btn-sm" onclick="openEditModal('${r.number}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.number}')">Del</button>
       </td>
@@ -1564,10 +1592,16 @@ async function confirmMarkPaid(generateReceipt) {
       body: JSON.stringify({ number, paid_amount: paidAmount, paid_date: paidDate, payment_mode: paymentMode, payment_ref: paymentRef })
     });
     if (generateReceipt && r.ok) {
+      let pdfUrl = r.headers.get('X-PDF-URL') || '';
+      let docNumber = r.headers.get('X-DOC-NUMBER') || '';
       let blob = await r.blob();
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a'); a.href = url; a.download = 'receipt.pdf'; a.click();
-      closePaidModal(); loadRecords();
+      closePaidModal();
+      loadRecords();
+      if (pdfUrl) {
+        setTimeout(() => openShareModal(docNumber, pdfUrl, number, 'Receipt'), 800);
+      }
     } else {
       let data = await r.json();
       if (data.success) { closePaidModal(); loadRecords(); }
@@ -1800,7 +1834,7 @@ function applyGeoPreset() {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('s-primary-color').addEventListener('input', function() { document.getElementById('s-primary-color-hex').value = this.value; });
   document.getElementById('s-accent-color').addEventListener('input', function() { document.getElementById('s-accent-color-hex').value = this.value; });
-  ['paid-modal','log-modal','edit-modal','delete-modal','invoice-builder-modal'].forEach(id => {
+  ['paid-modal','log-modal','edit-modal','delete-modal','invoice-builder-modal','share-modal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
   loadStateFromStorage();
@@ -2069,6 +2103,7 @@ async function generateAndSendInvoice() {
     let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('ib-msg', e.error||'Failed','error'); return; }
     let invoicePdfUrl = r.headers.get('X-PDF-URL') || '';
+    let invoiceDocNumber = r.headers.get('X-DOC-NUMBER') || enq.token;
     let blob = await r.blob();
     let blobUrl = URL.createObjectURL(blob);
     let a = document.createElement('a'); a.href = blobUrl; a.download = `${enq.token}-invoice.pdf`; a.click();
@@ -2076,36 +2111,126 @@ async function generateAndSendInvoice() {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ token: enq.token, status: 'INVOICED' })
     });
-    if (clientWa) {
-      let pdfLine = invoicePdfUrl ? `\n📄 View Invoice: ${invoicePdfUrl}` : '';
-      let waLines = [
-        `Hello ${clientName},`,
-        '',
-        `Please find herein your invoice for your charter booking.${pdfLine}`,
-        '',
-        `Ref: ${enq.token}`,
-        `Aircraft: ${enq.ac_label||''}`,
-        `Route: ${enq.route_summary||''}`,
-        `Invoice Total: USD $${finalTotal.toLocaleString(undefined,{minimumFractionDigits:2})}`,
-        '',
-        'To confirm your booking, please proceed with payment as per the bank details on the invoice.',
-        '',
-        'Thank you for choosing Jetman Global.',
-        '',
-        'Regards,',
-        'Jetman Reservations Team'
-      ];
-      let waUrl = `https://wa.me/${clientWa}?text=${encodeURIComponent(waLines.join('\n'))}`;
-      setTimeout(() => window.open(waUrl, '_blank'), 800);
-    }
     closeInvoiceBuilder();
     loadEnquiries();
+    setTimeout(() => openShareModal(invoiceDocNumber, invoicePdfUrl, null, 'Invoice', {
+      clientName, clientWa, finalTotal,
+      acLabel: enq.ac_label||'', route: enq.route_summary||'', token: enq.token
+    }), 500);
   } catch(e) {
     showMsg('ib-msg','Error: '+e.message,'error');
   } finally {
     if (genBtn) { genBtn.disabled = false; genBtn.textContent = 'Generate & Send via WhatsApp'; }
   }
 }
+let currentShareData = null;
+
+function openShareModal(docNumber, pdfUrl, recordNumber, docType, extra) {
+  currentShareData = { docNumber, pdfUrl, recordNumber: recordNumber || docNumber, docType, extra: extra || {} };
+  document.getElementById('share-doc-number').value = docNumber;
+  document.getElementById('share-pdf-url').value = pdfUrl || '';
+  document.getElementById('share-record-number').value = recordNumber || docNumber;
+  document.getElementById('share-doc-type').value = docType || 'Document';
+  document.getElementById('share-msg').innerHTML = '';
+  let extra2 = extra || {};
+  let summary = `<strong>${docNumber}</strong> — ${docType}`;
+  if (extra2.clientName) summary += ` — ${extra2.clientName}`;
+  document.getElementById('share-summary').innerHTML = summary;
+  let pdfPreview = document.getElementById('share-pdf-preview');
+  if (pdfUrl) {
+    pdfPreview.style.display = 'block';
+    document.getElementById('share-pdf-link').href = pdfUrl;
+  } else {
+    pdfPreview.style.display = 'none';
+  }
+  let waInput = document.getElementById('share-wa-input');
+  let waHint = document.getElementById('share-wa-hint');
+  if (extra2.clientWa) {
+    waInput.value = extra2.clientWa;
+    waHint.textContent = 'WhatsApp number from enquiry.';
+  } else {
+    let rec = allRecords.find(r => r.number === (recordNumber || docNumber));
+    if (rec && rec.client_whatsapp) {
+      waInput.value = rec.client_whatsapp;
+      waHint.textContent = 'WhatsApp number from saved record.';
+    } else {
+      waInput.value = '';
+      waHint.textContent = 'No WhatsApp on file — enter to send and save.';
+    }
+  }
+  document.getElementById('share-modal').classList.add('active');
+  if (extra2.clientWa && pdfUrl) {
+    setTimeout(() => buildAndOpenWa(), 300);
+  }
+}
+
+function closeShareModal() {
+  document.getElementById('share-modal').classList.remove('active');
+}
+
+async function saveAndShareWa() {
+  let wa = document.getElementById('share-wa-input').value.trim().replace(/\D/g,'');
+  if (!wa) { showMsg('share-msg','Enter a WhatsApp number.','error'); return; }
+  let recordNumber = document.getElementById('share-record-number').value;
+  try {
+    await fetch('/records/update_whatsapp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ number: recordNumber, client_whatsapp: wa })
+    });
+  } catch(e) {}
+  buildAndOpenWa();
+}
+
+function buildAndOpenWa() {
+  let wa = document.getElementById('share-wa-input').value.trim().replace(/\D/g,'');
+  if (!wa) { showMsg('share-msg','Enter a WhatsApp number.','error'); return; }
+  let d = currentShareData || {};
+  let pdfUrl = d.pdfUrl || '';
+  let docNumber = d.docNumber || '';
+  let docType = d.docType || 'Document';
+  let extra = d.extra || {};
+  let pdfLine = pdfUrl ? `\n📄 View ${docType}: ${pdfUrl}` : '';
+  let lines;
+  if (docType === 'Invoice' && extra.clientName) {
+    lines = [
+      `Hello ${extra.clientName},`,
+      '',
+      `Please find herein your invoice for your charter booking.${pdfLine}`,
+      '',
+      `Ref: ${extra.token || docNumber}`,
+      `Aircraft: ${extra.acLabel || ''}`,
+      `Route: ${extra.route || ''}`,
+      `Invoice Total: USD $${(extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+      '',
+      'To confirm your booking, please proceed with payment as per the bank details on the invoice.',
+      '',
+      'Thank you for choosing Jetman Global.',
+      '',
+      'Regards,',
+      'Jetman Reservations Team'
+    ];
+  } else {
+    let rec = allRecords.find(r => r.number === docNumber) || {};
+    lines = [
+      `Hello ${rec.client_name || extra.clientName || 'Valued Client'},`,
+      '',
+      `Please find herein your ${docType.toLowerCase()} from Jetman Global.${pdfLine}`,
+      '',
+      `Ref: ${docNumber}`,
+      `Amount: USD $${parseFloat(rec.amount||extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+      '',
+      'Thank you for choosing Jetman Global.',
+      '',
+      'Regards,',
+      'Jetman Reservations Team'
+    ];
+  }
+  let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;
+  window.open(waUrl, '_blank');
+  closeShareModal();
+}
+
+
 function toggleSelectAll(cb) {
   document.querySelectorAll('.enq-checkbox').forEach(c => c.checked = cb.checked);
   updateSelectedCount();

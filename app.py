@@ -875,7 +875,6 @@ def pdf():
         return jsonify({"error": str(e)}), 400
 
 @app.route("/pdf_all", methods=["POST"])
-
 @login_required
 def pdf_all():
     data = request.get_json()
@@ -1019,16 +1018,19 @@ def manual_invoice():
                 bookings[source_token]["updated_at"] = datetime.datetime.now().isoformat()
                 save_bookings(bookings)
 
-        return send_file(out_path, as_attachment=False,
-                         download_name=f"{doc_number}.pdf",
-                         mimetype="application/pdf")
+        response = send_file(out_path, as_attachment=False,
+                             download_name=f"{doc_number}.pdf",
+                             mimetype="application/pdf")
+        response.headers["X-PDF-URL"] = pdf_url or ""
+        response.headers["X-DOC-NUMBER"] = doc_number
+        return response
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 @app.route("/records", methods=["GET"])
-
 @login_required
 def get_records():
+
     return jsonify(load_records())
 
 @app.route("/records/get_one", methods=["POST"])
@@ -1145,8 +1147,10 @@ def generate_receipt():
         "to": to_block,
         "number": receipt_number,
         "date": datetime.date.today().strftime("%d %b %Y"),
+        "due_date": datetime.date.today().strftime("%d %b %Y"),
         "items": items,
-        "amount_paid": paid_amount,
+        "discounts": 0,
+        "fields": {"tax": False, "discounts": False, "shipping": False},
         "notes": bank_block,
         "notes_title": "BANK DETAILS",
         "terms": terms,
@@ -1157,6 +1161,7 @@ def generate_receipt():
 
     out_path = f"/tmp/{receipt_number}.pdf"
     hq.generate_pdf(payload, out_path)
+    receipt_pdf_url = upload_pdf_to_imgbb(out_path)
 
     rec["paid"] = paid_amount >= total
     rec["paid_amount"] = round(paid_amount, 2)
@@ -1164,6 +1169,7 @@ def generate_receipt():
     rec["payment_mode"] = payment_mode
     rec["payment_ref"] = payment_ref
     rec["receipt_number"] = receipt_number
+    rec["receipt_url"] = receipt_pdf_url or ""
 
     if "payment_log" not in rec:
         rec["payment_log"] = []
@@ -1178,11 +1184,29 @@ def generate_receipt():
 
     save_records(records)
     save_record("Receipt", rec.get("client_name", ""), rec.get("client_email", ""),
-                paid_amount, receipt_number)
+                paid_amount, receipt_number,
+                extra={"pdf_url": receipt_pdf_url or "",
+                       "client_whatsapp": rec.get("client_whatsapp", "")})
 
-    return send_file(out_path, as_attachment=True,
-                     download_name=f"{receipt_number}.pdf",
-                     mimetype="application/pdf")
+    response = send_file(out_path, as_attachment=False,
+                         download_name=f"{receipt_number}.pdf",
+                         mimetype="application/pdf")
+    response.headers["X-PDF-URL"] = receipt_pdf_url or ""
+    response.headers["X-DOC-NUMBER"] = receipt_number
+    return response
+@app.route("/records/update_whatsapp", methods=["POST"])
+@login_required
+def update_record_whatsapp():
+    data = request.get_json()
+    number = data.get("number", "")
+    whatsapp = data.get("client_whatsapp", "").strip()
+    records = load_records()
+    rec = next((r for r in records if r.get("number") == number), None)
+    if not rec:
+        return jsonify({"error": "Record not found"}), 404
+    rec["client_whatsapp"] = whatsapp
+    save_records(records)
+    return jsonify({"success": True})
 
 @app.route("/records/edit", methods=["POST"])
 @login_required
