@@ -897,7 +897,7 @@ async function submitBookingForm() {
   let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
   let routeSummary = buildRouteSummary(res);
   try {
-    await fetch('/booking/pdf', {
+    let pdfResp = await fetch('/booking/pdf', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -907,6 +907,11 @@ async function submitBookingForm() {
         result: actual
       })
     });
+    if (pdfResp.ok) {
+      let pdfBlob = await pdfResp.blob();
+      let pdfBlobUrl = URL.createObjectURL(pdfBlob);
+      document.getElementById('bm-pdf-link').href = pdfBlobUrl;
+    }
   } catch(e) { console.log('PDF error:', e); }
   fetch('/booking/request', {
     method: 'POST',

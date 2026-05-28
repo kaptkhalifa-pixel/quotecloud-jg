@@ -23,6 +23,78 @@
     "total_usd": 1415,
     "updated_at": "2026-05-28T11:31:21.645964"
   },
+  "JET-Q-280526-6ZMOHN": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "",
+    "client_name": "Leo Kairu",
+    "client_whatsapp": "254722750570",
+    "created_at": "2026-05-28T11:40:24.394506",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Antananarivo (1226.9 nm)",
+      "total_usd": 13960
+    },
+    "route_summary": "Wilson \u2192 Antananarivo (1226.9 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-280526-6ZMOHN",
+    "total_usd": 13960,
+    "updated_at": "2026-05-28T11:40:24.394511"
+  },
+  "JET-Q-280526-EL713J": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "",
+    "client_name": "leo",
+    "client_whatsapp": "254722750570",
+    "created_at": "2026-05-28T11:38:39.425145",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Modogashe Airstrip (176.6 nm)",
+      "total_usd": 2065
+    },
+    "route_summary": "Wilson \u2192 Modogashe Airstrip (176.6 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-280526-EL713J",
+    "total_usd": 2065,
+    "updated_at": "2026-05-28T11:38:39.425162"
+  },
+  "JET-Q-280526-UU2W01": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (4 seater)",
+    "client_email": "",
+    "client_name": "wilson",
+    "client_whatsapp": "254722750570",
+    "created_at": "2026-05-28T11:39:13.064875",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (4 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Lamu (243.5 nm)",
+      "total_usd": 2845
+    },
+    "route_summary": "Wilson \u2192 Lamu (243.5 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-280526-UU2W01",
+    "total_usd": 2845,
+    "updated_at": "2026-05-28T11:39:13.064882"
+  },
   "JET-Q-280526-ZE9GNH": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (4 seater)",
