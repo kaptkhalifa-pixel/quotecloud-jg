@@ -1616,6 +1616,16 @@ def delete_bookings():
             deleted += 1
     save_bookings(bookings)
     return jsonify({"success": True, "deleted": deleted})
+@app.route("/debug/pdf_test", methods=["GET"])
+@login_required
+def debug_pdf_test():
+    try:
+        hq.generate_pdf_weasy({"header":"Invoice","logo":"","from":"Test Co","to":"Client","number":"TEST-001","date":"28 May 2026","due_date":"04 Jun 2026","items":[{"name":"Test Item","quantity":1,"unit_cost":100}],"discounts":0,"notes":"","terms":"","currency":"USD"}, "/tmp/test_weasy.pdf")
+        return jsonify({"success": True, "message": "WeasyPrint OK"})
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "trace": traceback.format_exc()})
+
 @app.route("/admin/wipe_data", methods=["POST"])
 @login_required
 def wipe_data():
