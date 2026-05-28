@@ -179,13 +179,24 @@ def load_bookings():
 def save_bookings(bookings):
     pathlib.Path(BOOKINGS_FILE).write_text(json.dumps(bookings, indent=2))
 
-def generate_booking_token():
+def generate_token(doc_type="Q"):
     import random, string
     prefix = OPERATOR.get("invoice", {}).get("prefix", "JG")
-    year = datetime.date.today().year
+    today = datetime.date.today()
+    date_str = today.strftime("%d%m%y")
     chars = string.ascii_uppercase + string.digits
     rand = ''.join(random.choices(chars, k=6))
-    return f"{prefix}-{year}-{rand}"
+    return f"{prefix}-{doc_type}-{date_str}-{rand}"
+
+def generate_booking_token():
+    return generate_token("Q")
+
+def inherit_token(token, new_type):
+    parts = token.split("-")
+    if len(parts) == 4:
+        parts[1] = new_type
+        return "-".join(parts)
+    return generate_token(new_type)
 
 def load_records():
     p = pathlib.Path(RECORDS_FILE)
@@ -199,10 +210,9 @@ def load_records():
 def save_records(records):
     pathlib.Path(RECORDS_FILE).write_text(json.dumps(records, indent=2))
 
-def next_record_number(doc_type="Quotation"):
-    records = load_records()
-    prefix = OPERATOR.get("invoice", {}).get("prefix", "QC")
-    year = datetime.date.today().year
+def next_record_number(doc_type="Quotation", token_override=None):
+    if token_override:
+        return token_override
     if doc_type in ("Quotation", "Quote"):
         type_code = "Q"
     elif doc_type == "Invoice":
@@ -211,10 +221,7 @@ def next_record_number(doc_type="Quotation"):
         type_code = "R"
     else:
         type_code = "Q"
-    seq = len([r for r in records
-               if str(year) in r.get("number", "") and
-               f"-{type_code}-" in r.get("number", "")]) + 1
-    return f"{prefix}-{type_code}-{year}-{seq:03d}"
+    return generate_token(type_code)
 
 def save_record(record_type, client_name, client_email, amount, doc_number, result=None, extra=None):
     records = load_records()
@@ -768,7 +775,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     to_block = "\n".join(filter(None, [client_name, client_email, client_phone]))
     bank_block = get_bank_details_block()
     terms = OPERATOR.get("invoice", {}).get("terms", "")
-    doc_number = next_record_number(doc_type)
+    token_override = extra_items.pop("_token_override", None) if isinstance(extra_items, dict) else None
+    doc_number = next_record_number(doc_type, token_override)
     disc = float(discount) if discount else 0
 
     payload = {
@@ -929,7 +937,16 @@ def manual_invoice():
         bank_override = data.get("bank_block", "")
         line_items = data.get("line_items", [])
         doc_type = data.get("doc_type", "Invoice")
-        doc_number = next_record_number(doc_type)
+        source_token = data.get("source_token", "")
+        if doc_type in ("Quotation", "Quote"):
+            type_code = "Q"
+        elif doc_type == "Invoice":
+            type_code = "I"
+        elif doc_type == "Receipt":
+            type_code = "R"
+        else:
+            type_code = "Q"
+        doc_number = inherit_token(source_token, type_code) if source_token else generate_token(type_code)
 
         items = []
         total = 0.0
@@ -1067,7 +1084,7 @@ def generate_receipt():
         return jsonify({"error": "Record not found"}), 404
 
     total = float(rec.get("amount", 0))
-    receipt_number = next_record_number("Receipt")
+    receipt_number = inherit_token(number, "R")
 
     to_block = "\n".join(filter(None, [
         rec.get("client_name", ""),
@@ -1413,11 +1430,13 @@ def booking_request():
         token = generate_booking_token()
         bookings = load_bookings()
         route_summary = data.get("route_summary", "")
+        client_whatsapp = data.get("client_whatsapp", "").strip()
         bookings[token] = {
             "token": token,
             "status": "PENDING",
             "client_name": client_name,
             "client_email": client_email,
+            "client_whatsapp": client_whatsapp,
             "ac_label": quote_snapshot.get("ac_label", ""),
             "ac_key": quote_snapshot.get("ac_key", ""),
             "total_usd": quote_snapshot.get("total_usd", 0),
@@ -1524,6 +1543,24 @@ def booking_update():
 def get_bookings():
     bookings = load_bookings()
     return jsonify(list(bookings.values()))
+@app.route("/bookings/delete", methods=["POST"])
+@login_required
+def delete_bookings():
+    data = request.get_json()
+    password = data.get("password", "")
+    tokens = data.get("tokens", [])
+    if password != get_admin_pass():
+        return jsonify({"error": "Invalid password."}), 403
+    if not tokens:
+        return jsonify({"error": "No tokens provided."}), 400
+    bookings = load_bookings()
+    deleted = 0
+    for token in tokens:
+        if token in bookings:
+            del bookings[token]
+            deleted += 1
+    save_bookings(bookings)
+    return jsonify({"success": True, "deleted": deleted})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
