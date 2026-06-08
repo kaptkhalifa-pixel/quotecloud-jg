@@ -284,6 +284,17 @@ def _nm_distance(lat1, lon1, lat2, lon2):
 def get_base_key_for_aircraft(ac_cfg):
     home = ac_cfg.get("home_airstrip", "wilson")
     base_name = home.split(",")[0].strip().lower()
+    try:
+        hq.lookup_coords(base_name)
+        return base_name
+    except Exception:
+        words = base_name.split()
+        for w in words:
+            try:
+                hq.lookup_coords(w)
+                return w
+            except Exception:
+                pass
     return base_name
 
 def snap_to_base(lat, lon, base_key):
@@ -538,8 +549,10 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
     buffer_hours = (buffer_mins / 60.0) if buffer_enabled and buffer_mins > 0 else 0
 
     base_key = get_base_key_for_aircraft(ac_cfg)
+    allow_urban_hops = (ac_cfg.get("type", "helicopter") == "helicopter" and
+                        ac_cfg.get("allow_urban_hops", False))
     def maybe_snap(coord):
-        if not coord:
+        if not coord or allow_urban_hops:
             return coord
         try:
             parts = coord.split(",")
