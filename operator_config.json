@@ -15,7 +15,7 @@
     "button_text": "#ffffff",
     "primary_color": "#000000"
   },
-  "company_name": "Jetman Global",
+  "company_name": "Jetman holdings",
   "contact": {
     "address": "Nairobi, Wilson",
     "email": "sales@jetman.co.ke",
@@ -48,11 +48,11 @@
     "ground_time_buffer_minutes": 0,
     "max_flight_hours_per_day": 10,
     "max_idle_days_between_legs": 1,
-    "max_nights_before_pickup_drop": 1,
+    "max_nights_before_pickup_drop": 2,
     "min_flight_hours": 1,
     "quote_validity_hours": 48,
-    "show_distance_to_client": false,
-    "show_rate_breakdown": false
+    "show_distance_to_client": true,
+    "show_rate_breakdown": true
   },
   "social": {
     "facebook": "https://www.facebook.com/share/1H4o3e3o3s/?mibextid=wwXIfr",

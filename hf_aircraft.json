@@ -1,4 +1,23 @@
 {
+  "Bell 407": {
+    "active": true,
+    "home_airstrip": "Wilson Airport, Nairobi",
+    "idle_day_rate": 2350,
+    "images": [
+      "https://i.ibb.co/Qj91gzhK/1d6435dad708.jpg",
+      "https://i.ibb.co/TMSpkY9K/8eb8a50a3ae7.jpg",
+      "https://i.ibb.co/bRWLBvNQ/ea54691456da.jpg",
+      "https://i.ibb.co/67jQ3Cgk/93a8aaaf36ae.jpg"
+    ],
+    "label": "Bell 407",
+    "overnight_rate": 300,
+    "pax_fee": 150,
+    "rate": 2350,
+    "routing_mode": "standard",
+    "seater": 5,
+    "speed": 100,
+    "type": "helicopter"
+  },
   "Cessna 206": {
     "active": true,
     "home_airstrip": "Wilson Airport, Nairobi",
@@ -38,5 +57,19 @@
     "seater": 12,
     "speed": 140,
     "type": "fixed_wing"
+  },
+  "aircraft_1780946234258": {
+    "active": false,
+    "home_airstrip": "Wilson Airport, Nairobi",
+    "idle_day_rate": 1500,
+    "images": [],
+    "label": "New Aircraft",
+    "overnight_rate": 300,
+    "pax_fee": 100,
+    "rate": 1500,
+    "routing_mode": "standard",
+    "seater": 4,
+    "speed": 120,
+    "type": "helicopter"
   }
 }
