@@ -297,12 +297,24 @@ def get_base_key_for_aircraft(ac_cfg):
                 pass
     return base_name
 
+KNOWN_BASES = {
+    "wilson": (-1.319167, 36.9275),
+    "wilson airport": (-1.319167, 36.9275),
+    "nairobi": (-1.292066, 36.821946),
+    "kisumu": (-0.0917, 34.7679),
+    "mombasa": (-4.0425, 39.6682),
+    "nanyuki": (0.011389, 37.073056),
+}
+
 def snap_to_base(lat, lon, base_key):
     try:
         base_lat, base_lon = hq.lookup_coords(base_key)
         return _nm_distance(lat, lon, base_lat, base_lon) <= BASE_SNAP_NM
     except Exception:
-        return False
+        coords = KNOWN_BASES.get(base_key.lower())
+        if coords:
+            return _nm_distance(lat, lon, coords[0], coords[1]) <= BASE_SNAP_NM
+    return False
 
 def geo_lock_error(location_name):
     wa = get_whatsapp()
