@@ -1492,6 +1492,24 @@ def search_location():
         return jsonify({"found": False})
     parts = coord.split(",")
     return jsonify({"found": True, "lat": float(parts[0]), "lon": float(parts[1]), "display": disp})
+@app.route("/autocomplete", methods=["POST"])
+def autocomplete():
+    data = request.get_json()
+    query = (data.get("query") or "").strip()
+    if not query or len(query) < 3:
+        return jsonify({"predictions": []})
+    try:
+        import requests as req
+        r = req.get(
+            "https://maps.googleapis.com/maps/api/place/autocomplete/json",
+            params={"input": query, "key": GOOGLE_API_KEY, "components": "country:ke", "language": "en"},
+            timeout=5
+        )
+        data = r.json()
+        predictions = [{"description": p["description"], "main": p.get("structured_formatting", {}).get("main_text", ""), "secondary": p.get("structured_formatting", {}).get("secondary_text", "")} for p in data.get("predictions", [])]
+        return jsonify({"predictions": predictions})
+    except Exception as e:
+        return jsonify({"predictions": [], "error": str(e)})
 
 @app.route("/resolve_pin", methods=["POST"])
 @login_required

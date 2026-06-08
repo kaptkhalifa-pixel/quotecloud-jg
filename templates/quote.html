@@ -67,6 +67,14 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
 .leg-num { font-family: 'DM Sans', sans-serif; font-weight: 600; color: var(--grey-500); min-width: 16px; font-size: 0.78rem; }
 .btn-add-leg { padding: 9px 16px; border-radius: 2px; border: 1px solid var(--grey-300); color: var(--grey-700); background: var(--white); font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin: 4px 0 14px; letter-spacing: 0.5px; }
 .btn-add-leg:hover { border-color: var(--black); color: var(--black); }
+.ac-wrap { position: relative; }
+.ac-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--white); border: 1px solid var(--grey-300); border-top: none; border-radius: 0 0 2px 2px; z-index: 999; box-shadow: 0 8px 24px rgba(0,0,0,0.12); max-height: 220px; overflow-y: auto; }
+.ac-item { padding: 11px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--black); cursor: pointer; border-bottom: 1px solid var(--grey-100); display: flex; align-items: flex-start; gap: 10px; }
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover, .ac-item.active { background: var(--grey-50); }
+.ac-item-icon { color: var(--grey-500); font-size: 0.8rem; margin-top: 1px; flex-shrink: 0; }
+.ac-item-main { font-weight: 500; }
+.ac-item-sub { font-size: 0.72rem; color: var(--grey-500); margin-top: 1px; }
 .trust-bar { display: flex; gap: 0; padding: 18px 18px 6px; flex-wrap: wrap; justify-content: center; border-top: 1px solid var(--grey-100); }
 .trust-item { font-family: 'DM Sans', sans-serif; font-size: 0.6rem; font-weight: 600; color: var(--grey-500); letter-spacing: 1.5px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; padding: 5px 14px; border-right: 1px solid var(--grey-200); }
 .trust-item:last-child { border-right: none; }
@@ -201,7 +209,7 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
       <div id="m-one_way" class="form-body">
         <div class="field-group">
           <label class="field-label">From</label>
-          <input type="text" class="field-input" id="ow-pickup" placeholder="Name of place or Google Maps pin">
+          <div class="ac-wrap"><input type="text" class="field-input" id="ow-pickup" placeholder="Name of place or Google Maps pin" autocomplete="off"><div class="ac-dropdown" id="ac-ow-pickup" style="display:none"></div></div>
         </div>
         <div class="swap-row">
           <div class="swap-line"></div>
@@ -210,18 +218,18 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
         </div>
         <div class="field-group">
           <label class="field-label">To</label>
-          <input type="text" class="field-input" id="ow-dropoff" placeholder="Name of place or Google Maps pin">
+          <div class="ac-wrap"><input type="text" class="field-input" id="ow-dropoff" placeholder="Name of place or Google Maps pin" autocomplete="off"><div class="ac-dropdown" id="ac-ow-dropoff" style="display:none"></div></div>
         </div>
         <button class="btn-quote" onclick="submitQuote('one_way')">Get Instant Quote</button>
       </div>
       <div id="m-return" style="display:none" class="form-body">
         <div class="field-group">
           <label class="field-label">From</label>
-          <input type="text" class="field-input" id="rt-pickup" placeholder="Name of place or Google Maps pin">
+          <div class="ac-wrap"><input type="text" class="field-input" id="rt-pickup" placeholder="Name of place or Google Maps pin" autocomplete="off"><div class="ac-dropdown" id="ac-rt-pickup" style="display:none"></div></div>
         </div>
         <div class="field-group">
           <label class="field-label">To</label>
-          <input type="text" class="field-input" id="rt-dropoff" placeholder="Name of place or Google Maps pin">
+          <div class="ac-wrap"><input type="text" class="field-input" id="rt-dropoff" placeholder="Name of place or Google Maps pin" autocomplete="off"><div class="ac-dropdown" id="ac-rt-dropoff" style="display:none"></div></div>
         </div>
         <div class="form-row-2" style="margin-bottom:16px">
           <div class="field-group" style="margin-bottom:0">
@@ -353,7 +361,93 @@ let config = {};
 let fxRates = {};
 let lastResults = [];
 let GAPI_KEY = '';
+let acTimers = {};
+let mapsApiKey = '';
 
+async function initAutocomplete() {
+  try {
+    let r = await fetch('/get_maps_key');
+    let d = await r.json();
+    mapsApiKey = d.key || '';
+  } catch(e) {}
+  document.querySelectorAll('.field-input').forEach(input => {
+    if (input.id && (input.id.includes('pickup') || input.id.includes('dropoff'))) {
+      attachAc(input);
+    }
+  });
+}
+
+function attachAc(input) {
+  let dropId = 'ac-' + input.id;
+  let drop = document.getElementById(dropId);
+  if (!drop) return;
+  input.addEventListener('input', () => {
+    clearTimeout(acTimers[input.id]);
+    let val = input.value.trim();
+    if (val.length < 3 || val.startsWith('http') || val.includes(',')) {
+      drop.style.display = 'none'; return;
+    }
+    acTimers[input.id] = setTimeout(() => fetchSuggestions(val, drop, input), 300);
+  });
+  input.addEventListener('keydown', e => {
+    let items = drop.querySelectorAll('.ac-item');
+    let active = drop.querySelector('.ac-item.active');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!active) items[0]?.classList.add('active');
+      else { active.classList.remove('active'); (active.nextElementSibling || items[0])?.classList.add('active'); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!active) items[items.length-1]?.classList.add('active');
+      else { active.classList.remove('active'); (active.previousElementSibling || items[items.length-1])?.classList.add('active'); }
+    } else if (e.key === 'Enter') {
+      if (active) { e.preventDefault(); active.click(); }
+    } else if (e.key === 'Escape') {
+      drop.style.display = 'none';
+    }
+  });
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !drop.contains(e.target)) drop.style.display = 'none';
+  });
+}
+
+async function fetchSuggestions(query, drop, input) {
+  try {
+    let r = await fetch('/autocomplete', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({query})
+    });
+    let data = await r.json();
+    if (data.predictions && data.predictions.length) {
+      renderSuggestions(data.predictions, drop, input);
+    } else {
+      drop.style.display = 'none';
+    }
+  } catch(e) {
+    drop.style.display = 'none';
+  }
+}
+
+function renderSuggestions(predictions, drop, input) {
+  drop.innerHTML = predictions.slice(0,6).map(p => {
+    let main = p.main || p.description;
+    let sub = p.secondary || '';
+    return `<div class="ac-item" data-desc="${p.description}" onclick="selectSuggestion(this,'${input.id}')">
+      <span class="ac-item-icon">📍</span>
+      <div><div class="ac-item-main">${main}</div>${sub?`<div class="ac-item-sub">${sub}</div>`:''}</div>
+    </div>`;
+  }).join('');
+  drop.style.display = 'block';
+}
+
+function selectSuggestion(el, inputId) {
+  let desc = el.dataset.desc;
+  let input = document.getElementById(inputId);
+  let drop = document.getElementById('ac-' + inputId);
+  if (input) input.value = desc;
+  if (drop) drop.style.display = 'none';
+}
 async function init() {
   try {
     let r = await fetch('/settings/config/public');
