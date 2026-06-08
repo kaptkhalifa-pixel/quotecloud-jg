@@ -297,24 +297,8 @@ def get_base_key_for_aircraft(ac_cfg):
                 pass
     return base_name
 
-KNOWN_BASES = {
-    "wilson": (-1.319167, 36.9275),
-    "wilson airport": (-1.319167, 36.9275),
-    "nairobi": (-1.292066, 36.821946),
-    "kisumu": (-0.0917, 34.7679),
-    "mombasa": (-4.0425, 39.6682),
-    "nanyuki": (0.011389, 37.073056),
-}
-
-def snap_to_base(lat, lon, base_key):
-    try:
-        base_lat, base_lon = hq.lookup_coords(base_key)
-        return _nm_distance(lat, lon, base_lat, base_lon) <= BASE_SNAP_NM
-    except Exception:
-        coords = KNOWN_BASES.get(base_key.lower())
-        if coords:
-            return _nm_distance(lat, lon, coords[0], coords[1]) <= BASE_SNAP_NM
-    return False
+def snap_to_base_coords(lat, lon, base_lat, base_lon):
+    return _nm_distance(lat, lon, base_lat, base_lon) <= BASE_SNAP_NM
 
 def geo_lock_error(location_name):
     wa = get_whatsapp()
@@ -560,6 +544,8 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
     buffer_mins = float(rules.get("ground_time_buffer_minutes", 0))
     buffer_hours = (buffer_mins / 60.0) if buffer_enabled and buffer_mins > 0 else 0
 
+    base_lat_cfg = ac_cfg.get("base_lat")
+    base_lon_cfg = ac_cfg.get("base_lon")
     base_key = get_base_key_for_aircraft(ac_cfg)
     allow_urban_hops = (ac_cfg.get("type", "helicopter") == "helicopter" and
                         ac_cfg.get("allow_urban_hops", False))
@@ -570,8 +556,9 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
             parts = coord.split(",")
             if len(parts) == 2:
                 lat, lon = float(parts[0]), float(parts[1])
-                if snap_to_base(lat, lon, base_key):
-                    return base_key
+                if base_lat_cfg and base_lon_cfg:
+                    if snap_to_base_coords(lat, lon, float(base_lat_cfg), float(base_lon_cfg)):
+                        return base_key
         except Exception:
             pass
         return coord
@@ -1368,6 +1355,20 @@ def delete_airport():
 @login_required
 def get_aircraft():
     return jsonify(load_aircraft())
+@app.route("/aircraft/resolve_base", methods=["POST"])
+@login_required
+def resolve_base():
+    data = request.get_json()
+    location = (data.get("location") or "").strip()
+    if not location:
+        return jsonify({"error": "Location required"}), 400
+    disp, coord = resolve_location(location, user_label=location)
+    if not disp:
+        return jsonify({"found": False, "error": "Could not resolve location"})
+    parts = coord.split(",")
+    if len(parts) == 2:
+        return jsonify({"found": True, "lat": float(parts[0]), "lon": float(parts[1]), "display": disp})
+    return jsonify({"found": False})
 
 @app.route("/aircraft/save", methods=["POST"])
 @login_required

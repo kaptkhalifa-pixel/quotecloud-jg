@@ -1331,7 +1331,21 @@ function renderAircraft() {
             <option value="direct" ${ac.routing_mode==='direct'?'selected':''}>Direct</option>
           </select></div>
       </div>
-      <div class="form-group" style="margin-bottom:14px"><label>Home Airstrip</label><input class="ac-home" value="${ac.home_airstrip||'Wilson Airport, Nairobi'}"></div>
+      <div class="form-group" style="margin-bottom:14px"><label>Home Airstrip (display name)</label><input class="ac-home" value="${ac.home_airstrip||'Wilson Airport, Nairobi'}"></div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Base Coordinates (for 4NM snap)</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="ac-base-input" placeholder="Paste Maps pin, coords or place name" style="flex:1;min-width:160px" value="${ac.base_lat && ac.base_lon ? ac.base_lat+','+ac.base_lon : ''}">
+          <button class="btn btn-outline btn-sm" onclick="resolveAcBase(this)">Resolve</button>
+        </div>
+        <div class="ac-base-status" style="font-size:0.75rem;color:#888;margin-top:4px">${ac.base_lat && ac.base_lon ? '✅ Base set: '+ac.base_lat.toFixed(5)+', '+ac.base_lon.toFixed(5) : '⚠️ No base set — snap disabled'}</div>
+        <input type="hidden" class="ac-base-lat" value="${ac.base_lat||''}">
+        <input type="hidden" class="ac-base-lon" value="${ac.base_lon||''}">
+      </div>
+      <div class="toggle-row" style="margin-bottom:14px">
+        <input type="checkbox" class="ac-urban-hops" ${ac.allow_urban_hops?'checked':''} style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+        <label style="margin:0;font-size:0.88rem;font-weight:400;cursor:pointer">Allow urban hops (helicopter only — disables 4NM snap)</label>
+      </div>
       <div class="form-row">
         <div class="form-group"><label>Seats</label><input class="ac-seater" type="number" value="${ac.seater}"></div>
         <div class="form-group"><label>Speed (KTAS)</label><input class="ac-speed" type="number" value="${ac.speed}"></div>
@@ -1418,6 +1432,36 @@ function removeAcImage(btn, url) {
   }
   btn.parentElement.remove();
 }
+async function resolveAcBase(btn) {
+  let card = btn.closest('.ac-card');
+  let input = card.querySelector('.ac-base-input');
+  let status = card.querySelector('.ac-base-status');
+  let latField = card.querySelector('.ac-base-lat');
+  let lonField = card.querySelector('.ac-base-lon');
+  let location = input.value.trim();
+  if (!location) { status.textContent = '⚠️ Enter a location first.'; return; }
+  status.textContent = 'Resolving...';
+  try {
+    let r = await fetch('/aircraft/resolve_base', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ location })
+    });
+    let data = await r.json();
+    if (data.found) {
+      latField.value = data.lat;
+      lonField.value = data.lon;
+      input.value = data.lat.toFixed(5) + ',' + data.lon.toFixed(5);
+      status.textContent = '✅ Base set: ' + data.lat.toFixed(5) + ', ' + data.lon.toFixed(5) + ' (' + data.display + ')';
+      status.style.color = '#1b5e20';
+    } else {
+      status.textContent = '❌ Could not resolve. Try coords or a Maps pin.';
+      status.style.color = '#c00';
+    }
+  } catch(e) {
+    status.textContent = '❌ Error: ' + e.message;
+    status.style.color = '#c00';
+  }
+}
 
 async function saveAircraft() {
   let data = {};
@@ -1435,7 +1479,10 @@ async function saveAircraft() {
       type: card.querySelector('.ac-type').value,
       home_airstrip: card.querySelector('.ac-home').value,
       routing_mode: card.querySelector('.ac-routing').value,
-      images: aircraftData[card.dataset.key]?.images || []
+      images: aircraftData[card.dataset.key]?.images || [],
+      base_lat: parseFloat(card.querySelector('.ac-base-lat').value) || null,
+      base_lon: parseFloat(card.querySelector('.ac-base-lon').value) || null,
+      allow_urban_hops: card.querySelector('.ac-urban-hops').checked
     };
 
   });
