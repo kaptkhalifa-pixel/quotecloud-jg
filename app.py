@@ -270,9 +270,7 @@ def check_geo_lock(lat, lon):
         return True
     return (float(geo.get("lat_min", -5.0)) <= lat <= float(geo.get("lat_max", 5.0)) and
             float(geo.get("lon_min", 33.5)) <= lon <= float(geo.get("lon_max", 42.0)))
-WILSON_LAT = -1.321847
-WILSON_LON = 36.814881
-WILSON_SNAP_NM = 4.0
+BASE_SNAP_NM = 4.0
 
 def _nm_distance(lat1, lon1, lat2, lon2):
     import math
@@ -283,8 +281,17 @@ def _nm_distance(lat1, lon1, lat2, lon2):
     a = math.sin(dp/2)**2 + math.cos(p1)*math.cos(p2)*math.sin(dl/2)**2
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-def snap_to_wilson(lat, lon):
-    return _nm_distance(lat, lon, WILSON_LAT, WILSON_LON) <= WILSON_SNAP_NM
+def get_base_key_for_aircraft(ac_cfg):
+    home = ac_cfg.get("home_airstrip", "wilson")
+    base_name = home.split(",")[0].strip().lower()
+    return base_name
+
+def snap_to_base(lat, lon, base_key):
+    try:
+        base_lat, base_lon = hq.lookup_coords(base_key)
+        return _nm_distance(lat, lon, base_lat, base_lon) <= BASE_SNAP_NM
+    except Exception:
+        return False
 
 def geo_lock_error(location_name):
     wa = get_whatsapp()
@@ -392,8 +399,6 @@ def resolve_location(s, user_label=None):
         lat, lon = hq.parse_map_pin(s)
         if not check_geo_lock(lat, lon):
             return None, s
-        if snap_to_wilson(lat, lon):
-            return "Wilson Airport", f"{WILSON_LAT},{WILSON_LON}"
         display = reverse_geocode(lat, lon) or f"Pin, {lat:.5f}, {lon:.5f}"
         return display, f"{lat},{lon}"
     except Exception:
@@ -532,9 +537,32 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
     buffer_mins = float(rules.get("ground_time_buffer_minutes", 0))
     buffer_hours = (buffer_mins / 60.0) if buffer_enabled and buffer_mins > 0 else 0
 
+    base_key = get_base_key_for_aircraft(ac_cfg)
+    def maybe_snap(coord):
+        if not coord:
+            return coord
+        try:
+            parts = coord.split(",")
+            if len(parts) == 2:
+                lat, lon = float(parts[0]), float(parts[1])
+                if snap_to_base(lat, lon, base_key):
+                    return base_key
+        except Exception:
+            pass
+        return coord
+    if pickup_coord:
+        pickup_coord = maybe_snap(pickup_coord)
+    if dropoff_coord:
+        dropoff_coord = maybe_snap(dropoff_coord)
+    if legs:
+        for leg in legs:
+            leg["origin"] = maybe_snap(leg["origin"])
+            leg["destination"] = maybe_snap(leg["destination"])
+
     orig = hq.AIRCRAFT.copy()
     orig_pax = hq.PAX_ADMIN_FEE_USD
     hq.AIRCRAFT[ac_key] = {
+
         "label": f"{ac_cfg['label']} ({ac_cfg['seater']} seater)",
         "speed": speed,
         "rate": rate,
