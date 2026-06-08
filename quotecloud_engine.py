@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # =========================================================
-# HELI FLIGHT QUOTE SYSTEM v1.2.1
+# HELI FLIGHT QUOTE SYSTEM v1.2.2
 # Built by Jetman Global
 # Single-file CLI — Helicopter Charter Quotation Tool
 # Missions: Pickup or Drop Off | Round Trip | Safari / Campaign
@@ -14,7 +14,7 @@ try:
 except Exception:
     requests = None
 
-VERSION         = "1.2.1"
+VERSION         = "1.2.2"
 BASE_AIRPORT    = "wilson"
 USD_TO_KES      = 130.0
 
@@ -77,7 +77,7 @@ def ceil_0_1(h):   return math.ceil((h or 0.0) * 10) / 10
 def _fmt_usd(x):   return f"USD {float(x):,.2f}"
 
 # =========================================================
-# SECTION 2 — AIRPORTS DATABASE
+# SECTION 2 - AIRPORTS DATABASE
 # =========================================================
 
 AIRPORTS: Dict[str, Dict] = {}
@@ -182,7 +182,7 @@ def delete_airport(name_or_alias):
     del USER_AIRPORTS[k]; save_user_airports()
 
 # =========================================================
-# SECTION 3 — GEOMETRY & MAP PIN PARSING
+# SECTION 3 - GEOMETRY & MAP PIN PARSING
 # =========================================================
 
 R_NM = 3440.065
@@ -195,10 +195,8 @@ def haversine_nm(a_lat, a_lon, b_lat, b_lon):
 
 def parse_map_pin(s):
     s = (s or "").strip()
-    # Strip + signs Google adds between coordinates
     s = s.replace(",+", ",").replace("%2C+", ",")
 
-    # Format 1: raw lat,lon
     m = re.match(r'^\s*([-+]?\d+(\.\d+)?)\s*,\s*([-+]?\d+(\.\d+)?)\s*$', s)
     if m: return float(m.group(1)), float(m.group(3))
 
@@ -206,24 +204,19 @@ def parse_map_pin(s):
         u = urllib.parse.urlparse(s)
         q = urllib.parse.parse_qs(u.query)
 
-        # Format 2: ?q=lat,lon
         if "q" in q:
             m = re.match(r'^\s*([-+]?\d+(\.\d+)?)\s*,\s*([-+]?\d+(\.\d+)?)\s*$', q["q"][0])
             if m: return float(m.group(1)), float(m.group(3))
 
-        # Format 3: /@lat,lon,zoom
         m2 = re.search(r'@([-+]?\d+(\.\d+)?),([-+]?\d+(\.\d+)?),', u.path)
         if m2: return float(m2.group(1)), float(m2.group(3))
 
-        # Format 4: !3d!4d encoding
         m4 = re.search(r'!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)', s)
         if m4: return float(m4.group(1)), float(m4.group(2))
 
-        # Format 5: /maps/search/lat,lon
         m5 = re.search(r'/maps/search/([-+]?\d+\.\d+),([-+]?\d+\.\d+)', s)
         if m5: return float(m5.group(1)), float(m5.group(2))
 
-        # Format 6: /maps/place/.../@lat,lon
         m6 = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', s)
         if m6: return float(m6.group(1)), float(m6.group(2))
 
@@ -245,7 +238,6 @@ def _resolve_short_url(url: str) -> str:
             r = requests.get(url, allow_redirects=True, timeout=5,
                            headers={"User-Agent": "Mozilla/5.0"})
             resolved = r.url
-            # Strip + signs
             resolved = resolved.replace(",+", ",").replace("%2C+", ",")
             return resolved
         except: pass
@@ -260,7 +252,7 @@ def _to_coord(s):
         return (s.strip().title(), lat, lon, False)
 
 # =========================================================
-# SECTION 4 — MISSION CALCULATIONS
+# SECTION 4 - MISSION CALCULATIONS
 # =========================================================
 
 def _compute_leg(o_lat, o_lon, d_lat, d_lon, speed):
@@ -473,7 +465,7 @@ def compute_safari(legs, ac_key="as350"):
             "overnight_usd": overnight_usd, "total_usd": total}
 
 # =========================================================
-# SECTION 5 — CLI PRINTING
+# SECTION 5 - CLI PRINTING
 # =========================================================
 
 def _leg_tag(t):
@@ -549,7 +541,7 @@ def print_summary(result):
     print("="*55)
 
 # =========================================================
-# SECTION 6 — PDF GENERATION
+# SECTION 6 - PDF GENERATION
 # =========================================================
 
 def _read_json(path, default):
@@ -686,7 +678,140 @@ def generate_pdf(payload, out_path):
     if resp.status_code != 200:
         raise RuntimeError(f"API error ({resp.status_code}): {resp.text}")
     pathlib.Path(out_path).write_bytes(resp.content)
-# SECTION 7 — PDF PROMPT
+
+# =========================================================
+# SECTION 6b - WEASYPRINT PDF ENGINE
+# =========================================================
+
+def _build_pdf_html(payload):
+    from html import escape as esc
+    doc_type = str(payload.get("header", "Invoice"))
+    logo = payload.get("logo", "")
+    from_block = payload.get("from", "")
+    to_block = payload.get("to", "")
+    number = payload.get("number", "")
+    date = payload.get("date", "")
+    due_date = payload.get("due_date", "")
+    items = payload.get("items", [])
+    discount = float(payload.get("discounts", 0) or 0)
+    bank_block = payload.get("notes", "")
+    terms = payload.get("terms", "")
+    currency = payload.get("currency", "USD")
+
+    from_lines = [l for l in from_block.split("\n") if l.strip()]
+    company_name = from_lines[0] if from_lines else ""
+    company_rest = "<br>".join(esc(l) for l in from_lines[1:]) if len(from_lines) > 1 else ""
+
+    to_lines = [l for l in to_block.split("\n") if l.strip()]
+    client_name = to_lines[0] if to_lines else ""
+    client_rest = "<br>".join(esc(l) for l in to_lines[1:]) if len(to_lines) > 1 else ""
+
+    subtotal = 0.0
+    rows_html = ""
+    for item in items:
+        raw_name = str(item.get("name", ""))
+        qty = float(item.get("quantity", 1))
+        unit = float(item.get("unit_cost", 0))
+        amount = round(qty * unit, 2)
+        subtotal += amount
+        parts = raw_name.split("\n")
+        title = esc(parts[0])
+        detail = "<br>".join(esc(p) for p in parts[1:] if p.strip()) if len(parts) > 1 else ""
+        detail_html = f'<span class="item-detail">{detail}</span>' if detail else ""
+        qty_display = int(qty) if qty == int(qty) else qty
+        rows_html += f'<tr><td><span class="item-title">{title}</span>{detail_html}</td><td>{qty_display}</td><td>{currency} {unit:,.2f}</td><td>{currency} {amount:,.2f}</td></tr>'
+
+    total = round(subtotal - discount, 2)
+    discount_row = f'<div class="total-row discount"><span>Discount</span><span>&minus; {currency} {discount:,.2f}</span></div>' if discount > 0 else ""
+
+    doc_upper = doc_type.upper()
+    if doc_upper == "RECEIPT":
+        total_label, date_label2, date_val2 = "Amount Received", "Payment Date", date
+        show_bank, show_terms, bill_label = False, False, "Received From"
+        footer_right = "Thank you for your payment."
+    elif doc_upper == "INVOICE":
+        total_label, date_label2, date_val2 = "Total Due", "Due", due_date
+        show_bank, show_terms, bill_label = bool(bank_block), bool(terms), "Bill To"
+        footer_right = ""
+    else:
+        total_label, date_label2, date_val2 = "Total Estimate", "Valid Until", due_date
+        show_bank, show_terms, bill_label = False, bool(terms), "Prepared For"
+        footer_right = "Quote valid for 48 hours from date of issue."
+
+    bank_html = ""
+    if show_bank and bank_block:
+        bank_lines = "<br>".join(esc(l) for l in bank_block.split("\n") if l.strip())
+        bank_html = f'<div class="bank-section"><div class="section-title">Bank Details</div><div class="bank-detail">{bank_lines}</div></div>'
+
+    terms_html = ""
+    if show_terms and terms:
+        terms_lines = "<br>".join(esc(l) for l in terms.split("\n") if l.strip())
+        terms_html = f'<div class="terms-section"><div class="section-title">Terms &amp; Conditions</div><div class="terms-text">{terms_lines}</div></div>'
+
+    bottom_html = f'<div class="bottom-grid">{bank_html}{terms_html}</div>' if (bank_html or terms_html) else ""
+
+    css = (
+        "*{box-sizing:border-box;margin:0;padding:0}"
+        "@page{size:A4;margin:0}"
+        "html,body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#fff}"
+        ".accent-bar{height:2.5pt;background:#000}"
+        ".page{width:210mm;min-height:297mm;background:#fff;padding:16mm 16mm 24mm;position:relative}"
+        ".header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10mm;padding-bottom:8mm;border-bottom:0.5pt solid #000}"
+        ".logo{height:90pt;object-fit:contain;display:block;margin-bottom:6pt}"
+        ".company-block{font-size:9pt;color:#111;line-height:1.85}"
+        ".company-name{font-weight:bold;color:#000;font-size:10pt;display:block;margin-bottom:1pt}"
+        ".doc-type{font-size:28pt;letter-spacing:4pt;text-transform:uppercase;color:#000;line-height:1;text-align:right}"
+        ".doc-number{font-size:7pt;color:#555;margin-top:6pt;letter-spacing:1pt;text-transform:uppercase;text-align:right}"
+        ".meta-row{display:flex;gap:8mm;margin-bottom:8mm;align-items:flex-start}"
+        ".bill-to{flex:1}"
+        ".party-label{font-size:6.5pt;font-weight:bold;letter-spacing:2pt;text-transform:uppercase;color:#555;margin-bottom:6pt}"
+        ".party-name{font-size:13pt;font-weight:bold;color:#000;margin-bottom:4pt}"
+        ".party-detail{font-size:8.5pt;color:#111;line-height:1.9}"
+        ".dates-box{flex:1.4;border:0.5pt solid #e0e0e0;display:flex}"
+        ".date-item{flex:1;padding:8pt 12pt;border-right:0.5pt solid #e0e0e0}"
+        ".date-item:last-child{border-right:none}"
+        ".date-label{font-size:6.5pt;font-weight:bold;letter-spacing:1.5pt;text-transform:uppercase;color:#555;margin-bottom:4pt}"
+        ".date-value{font-size:11pt;font-weight:bold;color:#000}"
+        "table{width:100%;border-collapse:collapse;margin-bottom:6mm}"
+        "thead tr{border-top:0.5pt solid #000;border-bottom:0.5pt solid #000}"
+        "thead th{padding:6pt 9pt;font-size:6.5pt;font-weight:bold;letter-spacing:1.5pt;text-transform:uppercase;color:#000;text-align:left}"
+        "thead th:nth-child(2),thead th:nth-child(3){text-align:center}"
+        "thead th:last-child{text-align:right}"
+        "tbody tr{border-bottom:0.5pt solid #f0f0f0}"
+        "tbody td{padding:9pt 9pt;font-size:9pt;color:#111;vertical-align:top;line-height:1.6}"
+        "tbody td:nth-child(2),tbody td:nth-child(3){text-align:center;color:#555}"
+        "tbody td:last-child{text-align:right;font-weight:bold;white-space:nowrap}"
+        ".item-title{font-weight:bold;color:#000;font-size:8.5pt;display:block;margin-bottom:3pt}"
+        ".item-detail{font-size:7pt;color:#666;line-height:1.75;display:block}"
+        ".totals-wrap{display:flex;justify-content:flex-end;margin-bottom:8mm}"
+        ".totals{width:60mm}"
+        ".total-row{display:flex;justify-content:space-between;padding:4pt 0;font-size:8pt;color:#555;border-bottom:0.5pt solid #f5f5f5}"
+        ".total-row.discount{color:#c00}"
+        ".total-final{display:flex;justify-content:space-between;align-items:baseline;padding:9pt 0 0;margin-top:4pt;border-top:0.5pt solid #000}"
+        ".total-final-label{font-size:10pt;font-weight:bold;letter-spacing:1pt;text-transform:uppercase}"
+        ".total-final-amount{font-size:14pt;font-weight:bold}"
+        ".bottom-grid{display:flex;gap:8mm;margin-bottom:8mm}"
+        ".bank-section{flex:1}"
+        ".terms-section{flex:1.4}"
+        ".section-title{font-size:6.5pt;font-weight:bold;letter-spacing:2pt;text-transform:uppercase;color:#555;margin-bottom:7pt;padding-bottom:5pt;border-bottom:0.5pt solid #ddd}"
+        ".bank-detail{font-size:8pt;color:#111;line-height:2}"
+        ".terms-text{font-size:7.5pt;font-weight:bold;color:#222;line-height:1.85}"
+        ".footer{position:absolute;bottom:10mm;left:16mm;right:16mm;border-top:0.5pt solid #ebebeb;padding-top:6pt;display:flex;justify-content:space-between}"
+        ".footer-brand{font-size:6.5pt;color:#ccc;letter-spacing:1.5pt;text-transform:uppercase}"
+        ".footer-right{font-size:6.5pt;color:#bbb;font-style:italic}"
+    )
+
+    return f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><style>{css}</style></head><body><div class="accent-bar"></div><div class="page"><div class="header"><div><img class="logo" src="{esc(logo)}" alt="Logo"><div class="company-block"><span class="company-name">{esc(company_name)}</span>{company_rest}</div></div><div><div class="doc-type">{esc(doc_type)}</div><div class="doc-number">Ref &mdash; {esc(number)}</div></div></div><div class="meta-row"><div class="bill-to"><div class="party-label">{esc(bill_label)}</div><div class="party-name">{esc(client_name)}</div><div class="party-detail">{client_rest}</div></div><div class="dates-box"><div class="date-item"><div class="date-label">Date</div><div class="date-value">{esc(date)}</div></div><div class="date-item"><div class="date-label">{esc(date_label2)}</div><div class="date-value">{esc(date_val2)}</div></div><div class="date-item"><div class="date-label">Currency</div><div class="date-value">{esc(currency)}</div></div></div></div><table><thead><tr><th style="width:52%">Description</th><th>Qty</th><th>Unit Rate</th><th>Amount</th></tr></thead><tbody>{rows_html}</tbody></table><div class="totals-wrap"><div class="totals"><div class="total-row"><span>Subtotal</span><span>{currency} {subtotal:,.2f}</span></div>{discount_row}<div class="total-final"><span class="total-final-label">{esc(total_label)}</span><span class="total-final-amount">{currency} {total:,.2f}</span></div></div></div>{bottom_html}<div class="footer"><div class="footer-brand">Powered by Quotecloud JG</div><div class="footer-right">{esc(footer_right)}</div></div></div></body></html>"""
+
+
+def generate_pdf_weasy(payload, out_path):
+    from weasyprint import HTML as WeasyprintHTML
+    pathlib.Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    html_string = _build_pdf_html(payload)
+    WeasyprintHTML(string=html_string, base_url=None).write_pdf(out_path)
+
+# =========================================================
+# SECTION 7 - PDF PROMPT
 # =========================================================
 
 def ask_pdf_export(result):
@@ -724,7 +849,7 @@ def ask_pdf_export(result):
         print(f"\n  PDF failed: {e}")
 
 # =========================================================
-# SECTION 8 — CLI MENU
+# SECTION 8 - CLI MENU
 # =========================================================
 
 def cli_get_location(prompt_msg):
@@ -772,7 +897,7 @@ def cli_get_location(prompt_msg):
 
 def cli_menu():
     print("\n" + "="*55)
-    print("  HELI FLIGHT  -  CHARTER QUOTE SYSTEM  v1.2.1")
+    print("  HELI FLIGHT  -  CHARTER QUOTE SYSTEM  v1.2.2")
     print("  Wilson Airport, Nairobi")
     print("="*55)
     print("  1.  Pickup or Drop Off      ( Same Day )")
@@ -852,72 +977,3 @@ def run():
 
 if __name__ == "__main__":
     run()
-
-def _build_pdf_html(payload):
-    from html import escape as esc
-    doc_type = str(payload.get("header", "Invoice"))
-    logo = payload.get("logo", "")
-    from_block = payload.get("from", "")
-    to_block = payload.get("to", "")
-    number = payload.get("number", "")
-    date = payload.get("date", "")
-    due_date = payload.get("due_date", "")
-    items = payload.get("items", [])
-    discount = float(payload.get("discounts", 0) or 0)
-    bank_block = payload.get("notes", "")
-    terms = payload.get("terms", "")
-    currency = payload.get("currency", "USD")
-    from_lines = [l for l in from_block.split("\n") if l.strip()]
-    company_name = from_lines[0] if from_lines else ""
-    company_rest = "<br>".join(esc(l) for l in from_lines[1:]) if len(from_lines) > 1 else ""
-    to_lines = [l for l in to_block.split("\n") if l.strip()]
-    client_name = to_lines[0] if to_lines else ""
-    client_rest = "<br>".join(esc(l) for l in to_lines[1:]) if len(to_lines) > 1 else ""
-    subtotal = 0.0
-    rows_html = ""
-    for item in items:
-        raw_name = str(item.get("name", ""))
-        qty = float(item.get("quantity", 1))
-        unit = float(item.get("unit_cost", 0))
-        amount = round(qty * unit, 2)
-        subtotal += amount
-        parts = raw_name.split("\n")
-        title = esc(parts[0])
-        detail = "<br>".join(esc(p) for p in parts[1:] if p.strip()) if len(parts) > 1 else ""
-        detail_html = f'<span class="item-detail">{detail}</span>' if detail else ""
-        qty_display = int(qty) if qty == int(qty) else qty
-        rows_html += f'<tr><td><span class="item-title">{title}</span>{detail_html}</td><td>{qty_display}</td><td>{currency} {unit:,.2f}</td><td>{currency} {amount:,.2f}</td></tr>'
-    total = round(subtotal - discount, 2)
-    discount_row = f'<div class="total-row discount"><span>Discount</span><span>&minus; {currency} {discount:,.2f}</span></div>' if discount > 0 else ""
-    doc_upper = doc_type.upper()
-    if doc_upper == "RECEIPT":
-        total_label, date_label2, date_val2 = "Amount Received", "Payment Date", date
-        show_bank, show_terms, bill_label = False, False, "Received From"
-        footer_right = "Thank you for your payment."
-    elif doc_upper == "INVOICE":
-        total_label, date_label2, date_val2 = "Total Due", "Due", due_date
-        show_bank, show_terms, bill_label = bool(bank_block), bool(terms), "Bill To"
-        footer_right = ""
-    else:
-        total_label, date_label2, date_val2 = "Total Estimate", "Valid Until", due_date
-        show_bank, show_terms, bill_label = False, bool(terms), "Prepared For"
-        footer_right = "Quote valid for 48 hours from date of issue."
-    bank_html = ""
-    if show_bank and bank_block:
-        bank_lines = "<br>".join(esc(l) for l in bank_block.split("\n") if l.strip())
-        bank_html = f'<div class="bank-section"><div class="section-title">Bank Details</div><div class="bank-detail">{bank_lines}</div></div>'
-    terms_html = ""
-    if show_terms and terms:
-        terms_lines = "<br>".join(esc(l) for l in terms.split("\n") if l.strip())
-        terms_html = f'<div class="terms-section"><div class="section-title">Terms &amp; Conditions</div><div class="terms-text">{terms_lines}</div></div>'
-    bottom_html = f'<div class="bottom-grid">{bank_html}{terms_html}</div>' if (bank_html or terms_html) else ""
-    css = "*{box-sizing:border-box;margin:0;padding:0}@page{size:A4;margin:0}html,body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#fff}.accent-bar{height:2.5pt;background:#000}.page{width:210mm;min-height:297mm;background:#fff;padding:16mm 16mm 24mm;position:relative}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10mm;padding-bottom:8mm;border-bottom:0.5pt solid #000}.logo{height:54pt;object-fit:contain;display:block;margin-bottom:6pt}.company-block{font-size:9pt;color:#333;line-height:1.85}.company-name{font-weight:bold;color:#000;font-size:10pt;display:block;margin-bottom:1pt}.doc-type{font-size:28pt;letter-spacing:4pt;text-transform:uppercase;color:#000;line-height:1;text-align:right}.doc-number{font-size:7pt;color:#999;margin-top:6pt;letter-spacing:1pt;text-transform:uppercase;text-align:right}.meta-row{display:flex;gap:8mm;margin-bottom:8mm;align-items:flex-start}.bill-to{flex:1}.party-label{font-size:6.5pt;font-weight:bold;letter-spacing:2pt;text-transform:uppercase;color:#aaa;margin-bottom:6pt}.party-name{font-size:13pt;color:#000;margin-bottom:4pt}.party-detail{font-size:8pt;color:#666;line-height:1.9}.dates-box{flex:1.4;border:0.5pt solid #e0e0e0;display:flex}.date-item{flex:1;padding:8pt 12pt;border-right:0.5pt solid #e0e0e0}.date-item:last-child{border-right:none}.date-label{font-size:6.5pt;font-weight:bold;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;margin-bottom:4pt}.date-value{font-size:11pt;color:#000}table{width:100%;border-collapse:collapse;margin-bottom:6mm}thead tr{border-top:0.5pt solid #000;border-bottom:0.5pt solid #000}thead th{padding:6pt 9pt;font-size:6.5pt;font-weight:bold;letter-spacing:1.5pt;text-transform:uppercase;color:#000;text-align:left}thead th:nth-child(2),thead th:nth-child(3){text-align:center}thead th:last-child{text-align:right}tbody tr{border-bottom:0.5pt solid #f0f0f0}tbody td{padding:9pt 9pt;font-size:9pt;color:#111;vertical-align:top;line-height:1.6}tbody td:nth-child(2),tbody td:nth-child(3){text-align:center;color:#555}tbody td:last-child{text-align:right;font-weight:bold;white-space:nowrap}.item-title{font-weight:bold;color:#000;font-size:8.5pt;display:block;margin-bottom:3pt}.item-detail{font-size:7pt;color:#999;line-height:1.75;display:block}.totals-wrap{display:flex;justify-content:flex-end;margin-bottom:8mm}.totals{width:60mm}.total-row{display:flex;justify-content:space-between;padding:4pt 0;font-size:8pt;color:#888;border-bottom:0.5pt solid #f5f5f5}.total-row.discount{color:#c00}.total-final{display:flex;justify-content:space-between;align-items:baseline;padding:9pt 0 0;margin-top:4pt;border-top:0.5pt solid #000}.total-final-label{font-size:10pt;font-weight:bold;letter-spacing:1pt;text-transform:uppercase}.total-final-amount{font-size:14pt;font-weight:bold}.bottom-grid{display:flex;gap:8mm;margin-bottom:8mm}.bank-section{flex:1}.terms-section{flex:1.4}.section-title{font-size:6.5pt;font-weight:bold;letter-spacing:2pt;text-transform:uppercase;color:#aaa;margin-bottom:7pt;padding-bottom:5pt;border-bottom:0.5pt solid #eee}.bank-detail{font-size:7.5pt;color:#555;line-height:2}.terms-text{font-size:7pt;color:#888;line-height:1.85}.footer{position:absolute;bottom:10mm;left:16mm;right:16mm;border-top:0.5pt solid #ebebeb;padding-top:6pt;display:flex;justify-content:space-between}.footer-brand{font-size:6.5pt;color:#ccc;letter-spacing:1.5pt;text-transform:uppercase}.footer-right{font-size:6.5pt;color:#bbb;font-style:italic}"
-    return f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><style>{css}</style></head><body><div class="accent-bar"></div><div class="page"><div class="header"><div><img class="logo" src="{esc(logo)}" alt="Logo"><div class="company-block"><span class="company-name">{esc(company_name)}</span>{company_rest}</div></div><div><div class="doc-type">{esc(doc_type)}</div><div class="doc-number">Ref &mdash; {esc(number)}</div></div></div><div class="meta-row"><div class="bill-to"><div class="party-label">{esc(bill_label)}</div><div class="party-name">{esc(client_name)}</div><div class="party-detail">{client_rest}</div></div><div class="dates-box"><div class="date-item"><div class="date-label">Date</div><div class="date-value">{esc(date)}</div></div><div class="date-item"><div class="date-label">{esc(date_label2)}</div><div class="date-value">{esc(date_val2)}</div></div><div class="date-item"><div class="date-label">Currency</div><div class="date-value">{esc(currency)}</div></div></div></div><table><thead><tr><th style="width:52%">Description</th><th>Qty</th><th>Unit Rate</th><th>Amount</th></tr></thead><tbody>{rows_html}</tbody></table><div class="totals-wrap"><div class="totals"><div class="total-row"><span>Subtotal</span><span>{currency} {subtotal:,.2f}</span></div>{discount_row}<div class="total-final"><span class="total-final-label">{esc(total_label)}</span><span class="total-final-amount">{currency} {total:,.2f}</span></div></div></div>{bottom_html}<div class="footer"><div class="footer-brand">Powered by Quotecloud JG</div><div class="footer-right">{esc(footer_right)}</div></div></div></body></html>"""
-
-
-def generate_pdf_weasy(payload, out_path):
-    from weasyprint import HTML as WeasyprintHTML
-    import pathlib
-    pathlib.Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-    html_string = _build_pdf_html(payload)
-    WeasyprintHTML(string=html_string, base_url=None).write_pdf(out_path)
