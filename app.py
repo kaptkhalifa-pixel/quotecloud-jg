@@ -864,7 +864,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             "unit_cost": str(ei.get("unit_cost", "0"))
         })
 
-    to_block = "\n".join(filter(None, [client_name, client_email, client_phone]))
+    to_block = "\n".join(filter(None, [client_name, client_phone, client_email]))
     bank_block = get_bank_details_block()
     terms = OPERATOR.get("invoice", {}).get("terms", "")
     token_override = extra_items.pop("_token_override", None) if isinstance(extra_items, dict) else None
@@ -1196,6 +1196,7 @@ def generate_receipt():
 
     to_block = "\n".join(filter(None, [
         rec.get("client_name", ""),
+        rec.get("client_phone", ""),
         rec.get("client_email", ""),
     ]))
 
