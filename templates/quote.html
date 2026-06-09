@@ -928,7 +928,9 @@ function renderResults(results, mission) {
   activeFilter = 'all';
   document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
   document.querySelector('.filter-pill')?.classList.add('active');
-  document.getElementById('sort-select').value = 'default';
+  lastResults.sort((a,b) => getResultTotal(a) - getResultTotal(b));
+  document.getElementById('sort-select').value = 'price_asc';
+
   let hasMultipleTypes = results.some(r=>r.ac_type==='helicopter') && results.some(r=>r.ac_type==='fixed_wing');
   document.getElementById('filter-bar').style.display = results.length > 1 ? 'flex' : 'none';
   applyFilterSort();
