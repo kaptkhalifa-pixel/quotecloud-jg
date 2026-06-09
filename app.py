@@ -268,8 +268,12 @@ def check_geo_lock(lat, lon):
     geo = get_geo_lock()
     if not geo.get("enabled", True):
         return True
-    return (float(geo.get("lat_min", -5.0)) <= lat <= float(geo.get("lat_max", 5.0)) and
-            float(geo.get("lon_min", 33.5)) <= lon <= float(geo.get("lon_max", 42.0)))
+    center_lat = float(geo.get("center_lat", -0.023))
+    center_lon = float(geo.get("center_lon", 37.906))
+    radius_km = float(geo.get("radius_km", 500))
+    radius_nm = radius_km / 1.852
+    return _nm_distance(lat, lon, center_lat, center_lon) <= radius_nm
+
 BASE_SNAP_NM = 4.0
 
 def _nm_distance(lat1, lon1, lat2, lon2):

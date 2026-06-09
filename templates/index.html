@@ -580,26 +580,25 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="settings-section">
       <h4>Operating Region</h4>
       <div class="form-row">
-        <div class="form-group"><label>Region Preset</label>
-          <select id="s-geo-preset" onchange="applyGeoPreset()">
-            <option value="kenya">Kenya</option>
-            <option value="east_africa">East Africa</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
         <div class="form-group"><label>Region Display Name</label><input type="text" id="s-geo-region-name" placeholder="Kenya"></div>
       </div>
       <div class="toggle-row">
         <input type="checkbox" id="s-geo-enabled">
         <label for="s-geo-enabled">Enable geographic lock</label>
       </div>
-      <div id="geo-custom-fields" style="display:none;margin-top:12px">
+      <div style="margin-top:12px">
         <div class="form-row">
-          <div class="form-group"><label>Lat Min</label><input type="number" id="s-geo-lat-min" step="0.1"></div>
-          <div class="form-group"><label>Lat Max</label><input type="number" id="s-geo-lat-max" step="0.1"></div>
-          <div class="form-group"><label>Lon Min</label><input type="number" id="s-geo-lon-min" step="0.1"></div>
-          <div class="form-group"><label>Lon Max</label><input type="number" id="s-geo-lon-max" step="0.1"></div>
+          <div class="form-group"><label>Center Latitude</label><input type="number" id="s-geo-center-lat" step="0.0001" placeholder="-0.023"></div>
+          <div class="form-group"><label>Center Longitude</label><input type="number" id="s-geo-center-lon" step="0.0001" placeholder="37.906"></div>
         </div>
+        <div class="form-group" style="margin-bottom:14px"><label>Radius (km)</label><input type="number" id="s-geo-radius-km" step="10" placeholder="500"></div>
+        <div class="form-group" style="margin-bottom:8px"><label>Or paste Google Maps pin to set center</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="s-geo-maps-pin" placeholder="https://maps.app.goo.gl/...">
+            <button class="btn btn-outline btn-sm" onclick="resolveGeoCenter()">Resolve</button>
+          </div>
+        </div>
+        <div id="s-geo-status" style="font-size:0.75rem;color:#888;margin-top:4px"></div>
       </div>
     </div>
     <button class="btn btn-block" onclick="saveGeoLock()">Save Geographic Settings</button>
@@ -1812,14 +1811,11 @@ async function loadSettings() {
   document.getElementById('s-email').value = c.email || '';
   document.getElementById('s-address').value = c.address || '';
   document.getElementById('s-base-airport').value = operatorConfig.base_airport || '';
-  document.getElementById('s-geo-preset').value = geo.preset || 'kenya';
   document.getElementById('s-geo-region-name').value = geo.region_name || 'Kenya';
   document.getElementById('s-geo-enabled').checked = geo.enabled !== false;
-  document.getElementById('s-geo-lat-min').value = geo.lat_min || -5.0;
-  document.getElementById('s-geo-lat-max').value = geo.lat_max || 5.0;
-  document.getElementById('s-geo-lon-min').value = geo.lon_min || 33.5;
-  document.getElementById('s-geo-lon-max').value = geo.lon_max || 42.0;
-  toggleGeoCustom();
+  document.getElementById('s-geo-center-lat').value = geo.center_lat || -0.023;
+  document.getElementById('s-geo-center-lon').value = geo.center_lon || 37.906;
+  document.getElementById('s-geo-radius-km').value = geo.radius_km || 500;
   document.getElementById('s-min-hours').value = qr.min_flight_hours || 1.0;
   document.getElementById('s-max-nights').value = qr.max_nights_before_pickup_drop || 3;
   document.getElementById('s-max-hours-day').value = qr.max_flight_hours_per_day || 10;
@@ -1861,23 +1857,6 @@ function toggleDisclaimer() {
   document.getElementById('disclaimer-field').style.display = (mode === 'fixed_wing' || mode === 'both') ? 'block' : 'none';
 }
 
-function toggleGeoCustom() {
-  document.getElementById('geo-custom-fields').style.display = document.getElementById('s-geo-preset').value === 'custom' ? 'block' : 'none';
-}
-
-function applyGeoPreset() {
-  let preset = document.getElementById('s-geo-preset').value;
-  toggleGeoCustom();
-  if (GEO_PRESETS[preset]) {
-    let p = GEO_PRESETS[preset];
-    document.getElementById('s-geo-lat-min').value = p.lat_min;
-    document.getElementById('s-geo-lat-max').value = p.lat_max;
-    document.getElementById('s-geo-lon-min').value = p.lon_min;
-    document.getElementById('s-geo-lon-max').value = p.lon_max;
-    document.getElementById('s-geo-region-name').value = p.name;
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('s-primary-color').addEventListener('input', function() { document.getElementById('s-primary-color-hex').value = this.value; });
   document.getElementById('s-accent-color').addEventListener('input', function() { document.getElementById('s-accent-color-hex').value = this.value; });
@@ -1913,10 +1892,32 @@ async function saveCompany() {
   await saveConfig('company-msg');
 }
 
+async function resolveGeoCenter() {
+  let pin = document.getElementById('s-geo-maps-pin').value.trim();
+  let status = document.getElementById('s-geo-status');
+  if (!pin) { status.textContent = 'Enter a Maps pin first.'; return; }
+  status.textContent = 'Resolving...';
+  try {
+    let r = await fetch('/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url:pin}) });
+    let data = await r.json();
+    if (data.found) {
+      document.getElementById('s-geo-center-lat').value = data.lat;
+      document.getElementById('s-geo-center-lon').value = data.lon;
+      status.textContent = '✅ Center set: ' + data.lat.toFixed(5) + ', ' + data.lon.toFixed(5);
+      status.style.color = '#1b5e20';
+    } else { status.textContent = '❌ Could not resolve pin.'; status.style.color = '#c00'; }
+  } catch(e) { status.textContent = '❌ Error: ' + e.message; status.style.color = '#c00'; }
+}
+
 async function saveGeoLock() {
-  let preset = document.getElementById('s-geo-preset').value;
-  let coords = GEO_PRESETS[preset] || { lat_min: parseFloat(document.getElementById('s-geo-lat-min').value), lat_max: parseFloat(document.getElementById('s-geo-lat-max').value), lon_min: parseFloat(document.getElementById('s-geo-lon-min').value), lon_max: parseFloat(document.getElementById('s-geo-lon-max').value) };
-  operatorConfig.geo_lock = { enabled: document.getElementById('s-geo-enabled').checked, region_name: document.getElementById('s-geo-region-name').value, preset, lat_min: coords.lat_min, lat_max: coords.lat_max, lon_min: coords.lon_min, lon_max: coords.lon_max };
+  operatorConfig.geo_lock = {
+    enabled: document.getElementById('s-geo-enabled').checked,
+    mode: 'radius',
+    region_name: document.getElementById('s-geo-region-name').value,
+    center_lat: parseFloat(document.getElementById('s-geo-center-lat').value) || -0.023,
+    center_lon: parseFloat(document.getElementById('s-geo-center-lon').value) || 37.906,
+    radius_km: parseFloat(document.getElementById('s-geo-radius-km').value) || 500
+  };
   await saveConfig('geo-msg');
 }
 
