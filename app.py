@@ -437,7 +437,7 @@ def resolve_location(s, user_label=None):
     clean = s.strip()
     if len(clean) < 3:
         return None, s
-    if not re.match(r"^[a-zA-Z0-9\s\-'\,\.]+$", clean):
+    if not re.match(r"^[a-zA-Z0-9\s\-'\,\.\(\)\/]+$", clean):
         return None, s
     if re.match(r"^[0-9\s]+$", clean):
         return None, s
