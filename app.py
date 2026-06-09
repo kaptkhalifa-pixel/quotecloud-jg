@@ -1057,7 +1057,7 @@ def manual_invoice():
         disc = float(discount) if discount else 0
         total = round(total - disc, 2)
 
-        to_block = "\n".join(filter(None, [client_name, client_email, client_phone]))
+        to_block = "\n".join(filter(None, [client_name, client_phone, client_email]))
         bank_block = bank_override if bank_override else get_bank_details_block()
         terms = terms_override if terms_override else OPERATOR.get("invoice", {}).get("terms", "")
 

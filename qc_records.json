@@ -105,5 +105,59 @@
     },
     "timestamp": "2026-06-09T11:25:15.417304",
     "type": "Quotation"
+  },
+  {
+    "amount": 2860.0,
+    "client_email": "khalif@khalifkairo.com",
+    "client_name": "Khalif Kairo",
+    "date": "09/06/2026",
+    "number": "JET-I-090626-8SS0TN",
+    "paid": true,
+    "paid_amount": 2860.0,
+    "paid_date": "09/06/2026",
+    "payment_log": [
+      {
+        "amount": 2860.0,
+        "date": "09/06/2026",
+        "mode": "M-Pesa",
+        "recorded_at": "09/06/2026 16:45",
+        "ref": "HGHVXC"
+      },
+      {
+        "amount": 2860.0,
+        "date": "09/06/2026",
+        "mode": "M-Pesa",
+        "receipt": "JET-R-090626-8SS0TN",
+        "recorded_at": "09/06/2026 16:45",
+        "ref": "HGHVXC"
+      }
+    ],
+    "payment_mode": "M-Pesa",
+    "payment_ref": "HGHVXC",
+    "pdf_url": "https://i.ibb.co/Jw8fYN4p/0b302bf15401.jpg",
+    "receipt_number": "JET-R-090626-8SS0TN",
+    "receipt_url": "https://i.ibb.co/992SrWKR/6ea37041b09e.jpg",
+    "result_summary": {},
+    "timestamp": "2026-06-09T16:39:11.299365",
+    "type": "Invoice"
+  },
+  {
+    "amount": 2860.0,
+    "client_email": "khalif@khalifkairo.com",
+    "client_name": "Khalif Kairo",
+    "client_whatsapp": "",
+    "date": "09/06/2026",
+    "number": "JET-R-090626-8SS0TN",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "pdf_url": "https://i.ibb.co/992SrWKR/6ea37041b09e.jpg",
+    "receipt_number": "",
+    "result_summary": {},
+    "timestamp": "2026-06-09T16:45:31.214345",
+    "type": "Receipt"
   }
 ]
