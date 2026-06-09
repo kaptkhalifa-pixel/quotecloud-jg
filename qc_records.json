@@ -84,5 +84,26 @@
     "result_summary": {},
     "timestamp": "2026-05-28T08:42:49.656452",
     "type": "Invoice"
+  },
+  {
+    "amount": 4730.0,
+    "client_email": "khalif",
+    "client_name": "khalif",
+    "date": "09/06/2026",
+    "number": "JET-Q-090626-9TAPV1",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": "",
+    "result_summary": {
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "mission": "one_way",
+      "pdf_url": "https://i.ibb.co/S4yJ3sX7/a792adb9f909.jpg"
+    },
+    "timestamp": "2026-06-09T11:25:15.417304",
+    "type": "Quotation"
   }
 ]
