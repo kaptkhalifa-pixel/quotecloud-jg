@@ -2121,7 +2121,8 @@ async function generateAndSendInvoice() {
   let enq = currentInvoiceEnquiry;
   let clientName = document.getElementById('ib-name').value.trim();
   let clientEmail = document.getElementById('ib-email').value.trim();
-  let clientWa = document.getElementById('ib-client-whatsapp').value.trim().replace(/\D/g,'');
+  let clientWaRaw = document.getElementById('ib-client-whatsapp').value.trim();
+  let clientWa = clientWaRaw.replace(/\D/g,'');
   let discount = parseFloat(document.getElementById('ib-discount').value) || 0;
   let notes = document.getElementById('ib-notes').value.trim();
   if (!clientName) { showMsg('ib-msg','Client name required.','error'); return; }
@@ -2144,7 +2145,7 @@ async function generateAndSendInvoice() {
   showMsg('ib-msg','Generating invoice...','success');
   try {
     let body = {
-      client_name: clientName, client_email: clientEmail, client_phone: clientWa,
+      client_name: clientName, client_email: clientEmail, client_phone: clientWaRaw,
       discount, note: notes, doc_type: 'Invoice', line_items: lineItems,
       source_token: enq.token
     };
