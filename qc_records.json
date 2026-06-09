@@ -159,5 +159,41 @@
     "result_summary": {},
     "timestamp": "2026-06-09T16:45:31.214345",
     "type": "Receipt"
+  },
+  {
+    "amount": 1740.0,
+    "client_email": "john.o@gmail.com",
+    "client_name": "John oroo",
+    "date": "09/06/2026",
+    "number": "JET-I-090626-9SSC8I",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "pdf_url": "https://i.ibb.co/Ngc4qTqf/33ab20a7f080.jpg",
+    "receipt_number": "",
+    "result_summary": {},
+    "timestamp": "2026-06-09T17:30:18.548549",
+    "type": "Invoice"
+  },
+  {
+    "amount": 1740.0,
+    "client_email": "john.o@gmail.com",
+    "client_name": "John oroo",
+    "date": "09/06/2026",
+    "number": "JET-I-090626-9SSC8I",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "pdf_url": "https://i.ibb.co/Ngc4qTqf/33ab20a7f080.jpg",
+    "receipt_number": "",
+    "result_summary": {},
+    "timestamp": "2026-06-09T17:30:42.291676",
+    "type": "Invoice"
   }
 ]

@@ -1661,9 +1661,12 @@ def booking_pdf():
         payload["notes_title"] = ""
         out_path = f"/tmp/{token}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
-        return send_file(out_path, as_attachment=False,
-                         download_name=f"{token}.pdf",
-                         mimetype="application/pdf")
+        pdf_url = upload_pdf_to_imgbb(out_path)
+        response = send_file(out_path, as_attachment=False,
+                             download_name=f"{token}.pdf",
+                             mimetype="application/pdf")
+        response.headers["X-PDF-URL"] = pdf_url or ""
+        return response
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 

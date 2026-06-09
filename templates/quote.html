@@ -1071,9 +1071,10 @@ async function submitBookingForm() {
       })
     });
     if (pdfResp.ok) {
+      let pdfUrl = pdfResp.headers.get('X-PDF-URL') || '';
       let pdfBlob = await pdfResp.blob();
       let pdfBlobUrl = URL.createObjectURL(pdfBlob);
-      document.getElementById('bm-pdf-link').href = pdfBlobUrl;
+      document.getElementById('bm-pdf-link').href = pdfUrl || pdfBlobUrl;
     }
   } catch(e) { console.log('PDF error:', e); }
   fetch('/booking/request', {
@@ -1108,7 +1109,6 @@ async function submitBookingForm() {
     let waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waLines.join('\n'))}`;
     document.getElementById('bm-wa-link').href = waUrl;
   }
-  document.getElementById('bm-pdf-link').href = `/booking/pdf/${token}`;
   document.getElementById('bm-token-display').textContent = `Ref: ${token}`;
   document.getElementById('bm-step1').style.display = 'none';
   document.getElementById('bm-step2').style.display = 'block';
