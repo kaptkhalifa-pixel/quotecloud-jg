@@ -1,7 +1,7 @@
 {
   "Bell 407": {
     "active": true,
-    "allow_urban_hops": false,
+    "allow_urban_hops": true,
     "base_lat": -1.3212872,
     "base_lon": 36.8144476,
     "home_airstrip": "Wilson Airport, Nairobi",

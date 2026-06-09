@@ -904,7 +904,10 @@ function applyFilterSort() {
   let sort = document.getElementById('sort-select')?.value || 'default';
   if (sort === 'price_asc') filtered.sort((a,b) => getResultTotal(a) - getResultTotal(b));
   else if (sort === 'price_desc') filtered.sort((a,b) => getResultTotal(b) - getResultTotal(a));
-  else if (sort === 'pax_desc') filtered.sort((a,b) => (b.seater||0) - (a.seater||0));
+  else if (sort === 'pax_desc') filtered.sort((a,b) => {
+    let getSeats = r => { let m = (r.ac_label||'').match(/\((\d+)\s*seater\)/i); return m ? parseInt(m[1]) : 0; };
+    return getSeats(b) - getSeats(a);
+  });
   let showDist = (config.quoting_rules||{}).show_distance_to_client || false;
   if (!filtered.length) {
     document.getElementById('results-inner').innerHTML = `<div class="error-card">No aircraft match this filter. Try "All" to see all options.</div>`;
