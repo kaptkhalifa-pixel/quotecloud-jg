@@ -1651,10 +1651,11 @@ def booking_pdf():
     try:
         client_name = data.get("client_name", "Client")
         client_email = data.get("client_email", "")
+        client_phone = data.get("client_phone", "")
         token = data.get("token", "")
         result = data.get("result", {})
         payload, _ = build_pdf_payload_from_result(
-            "Quotation", result, client_name, client_email, "", "", "0", [])
+            "Quotation", result, client_name, client_email, client_phone, "", "0", [])
         payload["number"] = token
         payload["notes"] = ""
         payload["notes_title"] = ""

@@ -119,6 +119,30 @@
     "total_usd": 4440,
     "updated_at": "2026-06-08T15:01:14.774161"
   },
+  "JET-Q-090626-00ZFX6": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "peter@gmail.com",
+    "client_name": "peter",
+    "client_whatsapp": "254721604342",
+    "created_at": "2026-06-09T11:31:08.971520",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Airspray Naivasha (39.3 nm)",
+      "total_usd": 700
+    },
+    "route_summary": "Wilson \u2192 Airspray Naivasha (39.3 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-090626-00ZFX6",
+    "total_usd": 700,
+    "updated_at": "2026-06-09T11:31:08.971525"
+  },
   "JET-Q-090626-2I884O": {
     "ac_key": "Cessna Grand Caravan",
     "ac_label": "Cessna Grand Caravan EX (12 seater)",
@@ -190,6 +214,30 @@
     "token": "JET-Q-090626-DIXKQR",
     "total_usd": 2910,
     "updated_at": "2026-06-09T10:45:32.431870"
+  },
+  "JET-Q-090626-EDRALS": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "khalif@khalifkairo.com",
+    "client_name": "khalif",
+    "client_whatsapp": "0722570570",
+    "created_at": "2026-06-09T11:42:48.724040",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Fairmont Mount Kenya Safari Club (79.4 nm)",
+      "total_usd": 960
+    },
+    "route_summary": "Wilson \u2192 Fairmont Mount Kenya Safari Club (79.4 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-090626-EDRALS",
+    "total_usd": 960,
+    "updated_at": "2026-06-09T11:42:48.724045"
   },
   "JET-Q-090626-I2DMGI": {
     "ac_key": "Cessna Grand Caravan",
@@ -286,6 +334,54 @@
     "token": "JET-Q-090626-W11KQN",
     "total_usd": 1090,
     "updated_at": "2026-06-09T10:46:44.731605"
+  },
+  "JET-Q-090626-YDDESG": {
+    "ac_key": "Cessna Grand Caravan",
+    "ac_label": "Cessna Grand Caravan EX (12 seater)",
+    "client_email": "kaptkhalifa@icloud.com",
+    "client_name": "khalif",
+    "client_whatsapp": "0722570570",
+    "created_at": "2026-06-09T11:43:08.147689",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna Grand Caravan",
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Fairmont Mount Kenya Safari Club (79.4 nm)",
+      "total_usd": 1710
+    },
+    "route_summary": "Wilson \u2192 Fairmont Mount Kenya Safari Club (79.4 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-090626-YDDESG",
+    "total_usd": 1710,
+    "updated_at": "2026-06-09T11:43:08.147693"
+  },
+  "JET-Q-090626-Z5EI7B": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "peter@gmail.com",
+    "client_name": "peter",
+    "client_whatsapp": "254721604342",
+    "created_at": "2026-06-09T11:31:08.521602",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Airspray Naivasha (39.3 nm)",
+      "total_usd": 700
+    },
+    "route_summary": "Wilson \u2192 Airspray Naivasha (39.3 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-090626-Z5EI7B",
+    "total_usd": 700,
+    "updated_at": "2026-06-09T11:31:08.521607"
   },
   "JET-Q-280526-3IVDOB": {
     "ac_key": "Cessna 206",
