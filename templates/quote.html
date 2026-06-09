@@ -160,6 +160,11 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
 .slider-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: background 0.2s; }
 .slider-dot.active { background: #fff; }
 .slider-counter { color: rgba(255,255,255,0.6); font-family: 'DM Sans', sans-serif; font-size: 0.75rem; margin-top: 8px; }
+.filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-pill { padding: 8px 14px; border: 1px solid var(--grey-200); border-radius: 20px; background: var(--white); color: var(--grey-500); font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.filter-pill.active { background: var(--black); color: var(--white); border-color: var(--black); }
+.filter-pill:hover:not(.active) { border-color: var(--grey-500); color: var(--grey-700); }
+.sort-select { padding: 8px 12px; border: 1px solid var(--grey-200); border-radius: 20px; background: var(--white); color: var(--grey-500); font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 600; cursor: pointer; outline: none; margin-left: auto; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
@@ -270,6 +275,17 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
     <div id="error-box" style="display:none;margin-top:16px"></div>
     <div id="results" style="display:none;margin-top:4px">
       <div class="section-label">Your Quote</div>
+      <div class="filter-bar" id="filter-bar" style="display:none">
+        <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-pill" onclick="setFilter('helicopter',this)">🚁 Helicopter <span style="font-weight:300;opacity:0.7">(lands anywhere)</span></button>
+        <button class="filter-pill" onclick="setFilter('fixed_wing',this)">✈ Fixed Wing</button>
+        <select class="sort-select" id="sort-select" onchange="applyFilterSort()">
+          <option value="default">Default Order</option>
+          <option value="price_asc">Price: Low → High</option>
+          <option value="price_desc">Price: High → Low</option>
+          <option value="pax_desc">Largest Aircraft</option>
+        </select>
+      </div>
       <div id="results-inner"></div>
       <div class="validity-notice" id="validity-notice"></div>
       <div class="fx-widget" id="fx-widget" style="display:none">
@@ -861,13 +877,54 @@ function switchOtab(el, id) {
   el.classList.add('active');
   document.getElementById(id).classList.add('active');
 }
+let activeFilter = 'all';
 
-function renderResults(results, mission) {
-  let showDist=(config.quoting_rules||{}).show_distance_to_client||false;
-  document.getElementById('results-inner').innerHTML = results.map((res,i)=>`
+function setFilter(type, el) {
+  activeFilter = type;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  applyFilterSort();
+}
+
+function getResultTotal(res) {
+  if (res.mission === 'return_both') {
+    let wd = res.wait_days || 0;
+    let maxN = res.max_nights || 3;
+    return wd >= maxN ? (res.option_b?.total_usd || 0) : (res.option_a?.total_usd || 0);
+  }
+  return res.total_usd || 0;
+}
+
+function applyFilterSort() {
+  let filtered = lastResults.filter(res => {
+    if (res.error) return false;
+    if (activeFilter === 'all') return true;
+    return res.ac_type === activeFilter;
+  });
+  let sort = document.getElementById('sort-select')?.value || 'default';
+  if (sort === 'price_asc') filtered.sort((a,b) => getResultTotal(a) - getResultTotal(b));
+  else if (sort === 'price_desc') filtered.sort((a,b) => getResultTotal(b) - getResultTotal(a));
+  else if (sort === 'pax_desc') filtered.sort((a,b) => (b.seater||0) - (a.seater||0));
+  let showDist = (config.quoting_rules||{}).show_distance_to_client || false;
+  if (!filtered.length) {
+    document.getElementById('results-inner').innerHTML = `<div class="error-card">No aircraft match this filter. Try "All" to see all options.</div>`;
+    return;
+  }
+  document.getElementById('results-inner').innerHTML = filtered.map((res,i) => `
     <div class="ac-card" style="animation-delay:${i*0.08}s;animation-fill-mode:both">
       ${renderOneAc(res, showDist, i===0)}
     </div>`).join('');
+}
+
+function renderResults(results, mission) {
+  activeFilter = 'all';
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  document.querySelector('.filter-pill')?.classList.add('active');
+  document.getElementById('sort-select').value = 'default';
+  let hasMultipleTypes = results.some(r=>r.ac_type==='helicopter') && results.some(r=>r.ac_type==='fixed_wing');
+  document.getElementById('filter-bar').style.display = results.length > 1 ? 'flex' : 'none';
+  applyFilterSort();
+
   let hours=(config.quoting_rules||{}).quote_validity_hours||48;
   document.getElementById('validity-notice').textContent=`Quote valid for ${hours} hours · Subject to availability`;
   document.getElementById('fx-widget').style.display='none';
