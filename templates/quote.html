@@ -225,6 +225,10 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
           <label class="field-label">To</label>
           <div class="ac-wrap"><input type="text" class="field-input" id="ow-dropoff" placeholder="Name of place or Google Maps pin" autocomplete="off"><div class="ac-dropdown" id="ac-ow-dropoff" style="display:none"></div></div>
         </div>
+        <div class="field-group">
+          <label class="field-label">Flight Date</label>
+          <input type="text" class="field-input" id="ow-date" placeholder="e.g. 25 Jun 2026">
+        </div>
         <button class="btn-quote" onclick="submitQuote('one_way')">Get Instant Quote</button>
       </div>
       <div id="m-return" style="display:none" class="form-body">
@@ -698,6 +702,7 @@ async function submitQuote(mission) {
       showResolving(false);
       body.pickup = (p&&isMapsUrl(rawP)) ? p.resolved : rawP;
       body.dropoff = (d&&isMapsUrl(rawD)) ? d.resolved : rawD;
+      body.depart = parseSmartDate(document.getElementById('ow-date').value) || '';
     } else if (mission==='return') {
       let rawP = document.getElementById('rt-pickup').value.trim();
       let rawD = document.getElementById('rt-dropoff').value.trim();
@@ -1135,7 +1140,7 @@ function requestInvoice() {
 function resetQuote() {
   document.getElementById('results').style.display='none';
   hideError(); lastResults=[];
-  ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','rt-depart','rt-return'].forEach(id=>{
+  ['ow-pickup','ow-dropoff','ow-date','rt-pickup','rt-dropoff','rt-depart','rt-return'].forEach(id=>{
     let el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('quote-card').scrollIntoView({behavior:'smooth',block:'start'});

@@ -707,8 +707,14 @@ def run_quote_engine(data):
                 return {"error": geo_lock_error(raw_d), "not_found": raw_d}, 400
             display_map[p_coord] = p_disp
             display_map[d_coord] = d_disp
+            ow_date = data.get("depart", "")
             results = [compute_for_aircraft("one_way", k, v, p_coord, d_coord,
                                             display_map=display_map) for k, v in active.items()]
+            if ow_date:
+                for res in results:
+                    for s in (res.get("segments") or []):
+                        if s.get("type") == "revenue":
+                            s["date"] = ow_date
         elif mission == "return":
             raw_p = data.get("pickup", "")
             raw_d = data.get("dropoff", "")
