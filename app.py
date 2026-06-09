@@ -64,14 +64,21 @@ def get_quoting_rules():
     })
 
 def get_geo_lock():
+    try:
+        p = pathlib.Path(OPERATOR_CONFIG_FILE)
+        if p.exists():
+            cfg = json.loads(p.read_text())
+            if cfg.get("geo_lock"):
+                return cfg["geo_lock"]
+    except Exception:
+        pass
     return OPERATOR.get("geo_lock", {
         "enabled": True,
         "region_name": "Kenya",
-        "preset": "kenya",
-        "lat_min": -5.0,
-        "lat_max": 5.0,
-        "lon_min": 33.5,
-        "lon_max": 42.0
+        "mode": "radius",
+        "center_lat": -0.023,
+        "center_lon": 37.906,
+        "radius_km": 500
     })
 
 def get_whatsapp():
