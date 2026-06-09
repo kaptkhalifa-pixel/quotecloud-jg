@@ -433,7 +433,7 @@ function renderSuggestions(predictions, drop, input) {
   drop.innerHTML = predictions.slice(0,6).map(p => {
     let main = p.main || p.description;
     let sub = p.secondary || '';
-    return `<div class="ac-item" data-desc="${p.description}" onclick="selectSuggestion(this,'${input.id}')">
+    return `<div class="ac-item" data-desc="${p.description}" data-main="${p.main || p.description}" onclick="selectSuggestion(this,'${input.id}')">
       <span class="ac-item-icon">📍</span>
       <div><div class="ac-item-main">${main}</div>${sub?`<div class="ac-item-sub">${sub}</div>`:''}</div>
     </div>`;
@@ -442,12 +442,13 @@ function renderSuggestions(predictions, drop, input) {
 }
 
 function selectSuggestion(el, inputId) {
-  let desc = el.dataset.desc;
+  let main = el.dataset.main || el.dataset.desc;
   let input = document.getElementById(inputId);
   let drop = document.getElementById('ac-' + inputId);
-  if (input) input.value = desc;
+  if (input) input.value = main;
   if (drop) drop.style.display = 'none';
 }
+
 async function init() {
   try {
     let r = await fetch('/settings/config/public');

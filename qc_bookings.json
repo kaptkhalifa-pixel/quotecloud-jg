@@ -119,6 +119,54 @@
     "total_usd": 4440,
     "updated_at": "2026-06-08T15:01:14.774161"
   },
+  "JET-Q-090626-2I884O": {
+    "ac_key": "Cessna Grand Caravan",
+    "ac_label": "Cessna Grand Caravan EX (12 seater)",
+    "client_email": "",
+    "client_name": "Ted\u2019s",
+    "client_whatsapp": "+254708651848",
+    "created_at": "2026-06-09T04:48:34.681432",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna Grand Caravan",
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Manda Airport, Lamu, Kenya (245.6 nm)",
+      "total_usd": 4830
+    },
+    "route_summary": "Wilson \u2192 Manda Airport, Lamu, Kenya (245.6 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-090626-2I884O",
+    "total_usd": 4830,
+    "updated_at": "2026-06-09T04:48:34.681438"
+  },
+  "JET-Q-090626-4Y4MHI": {
+    "ac_key": "Cessna Grand Caravan",
+    "ac_label": "Cessna Grand Caravan EX (12 seater)",
+    "client_email": "",
+    "client_name": "Ted\u2019s",
+    "client_whatsapp": "+254708651848",
+    "created_at": "2026-06-09T04:48:35.139967",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna Grand Caravan",
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Manda Airport, Lamu, Kenya (245.6 nm)",
+      "total_usd": 4830
+    },
+    "route_summary": "Wilson \u2192 Manda Airport, Lamu, Kenya (245.6 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-090626-4Y4MHI",
+    "total_usd": 4830,
+    "updated_at": "2026-06-09T04:48:35.139973"
+  },
   "JET-Q-280526-3IVDOB": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (4 seater)",
