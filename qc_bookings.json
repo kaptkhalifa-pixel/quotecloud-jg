@@ -291,6 +291,30 @@
     "total_usd": 2910,
     "updated_at": "2026-06-10T14:53:24.510744"
   },
+  "JET-Q-100626-WPBFDU": {
+    "ac_key": "Cessna Grand Caravan",
+    "ac_label": "Cessna Grand Caravan EX (12 seater)",
+    "client_email": "AA@gmail.com",
+    "client_name": "AA",
+    "client_whatsapp": "22",
+    "created_at": "2026-06-10T16:23:30.693290",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna Grand Caravan",
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "mission": "one_way",
+      "route_summary": "Nanyuki \u2192 Lamu (267.5 nm)",
+      "total_usd": 5740
+    },
+    "route_summary": "Nanyuki \u2192 Lamu (267.5 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-100626-WPBFDU",
+    "total_usd": 5740,
+    "updated_at": "2026-06-10T16:23:30.693295"
+  },
   "JET-Q-100626-Z4G0YR": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (5 seater)",
