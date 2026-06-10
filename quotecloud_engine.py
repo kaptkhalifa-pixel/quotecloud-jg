@@ -752,7 +752,7 @@ def _build_pdf_html(payload):
 
     css = (
         "*{box-sizing:border-box;margin:0;padding:0}"
-        "@page{size:A4;margin:0}"
+        "@page{size:A4;margin:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}"
         "html,body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#fff}"
         ".accent-bar{height:2.5pt;background:#000}"
         ".page{width:210mm;min-height:297mm;background:#fff;padding:16mm 16mm 24mm;position:relative}"
