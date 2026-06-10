@@ -195,5 +195,47 @@
     "result_summary": {},
     "timestamp": "2026-06-09T17:30:42.291676",
     "type": "Invoice"
+  },
+  {
+    "amount": 11790.0,
+    "client_email": "",
+    "client_name": "Ahmed",
+    "date": "10/06/2026",
+    "number": "JET-Q-100626-7DJNYL",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": "",
+    "result_summary": {
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "safari",
+      "pdf_url": "https://i.ibb.co/HT4QrHRk/c8545cee5b99.jpg"
+    },
+    "timestamp": "2026-06-10T10:36:30.165222",
+    "type": "Quotation"
+  },
+  {
+    "amount": 11790.0,
+    "client_email": "",
+    "client_name": "Ahmed",
+    "date": "10/06/2026",
+    "number": "JET-Q-100626-YIJ12V",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": "",
+    "result_summary": {
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "safari",
+      "pdf_url": "https://i.ibb.co/gLqRFk23/f1c3a3ff67cd.jpg"
+    },
+    "timestamp": "2026-06-10T11:05:22.232236",
+    "type": "Quotation"
   }
 ]

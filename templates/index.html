@@ -1209,6 +1209,47 @@ function renderResults(results) {
     </div>`).join('');
   document.getElementById('quote-result').innerHTML = html;
 }
+let adminAcTimers = {};
+async function adminAcFetch(query, drop, input) {
+  try {
+    let r = await fetch('/autocomplete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query}) });
+    let data = await r.json();
+    if (data.predictions && data.predictions.length) {
+      drop.innerHTML = data.predictions.slice(0,6).map(p => {
+        let main = p.main||p.description, sub = p.secondary||'';
+        return `<div onclick="adminAcSelect(this,'${input.id}')" data-main="${main}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem;display:flex;gap:8px;align-items:flex-start">
+          <span style="color:#888;flex-shrink:0">📍</span>
+          <div><div style="font-weight:500">${main}</div>${sub?`<div style="font-size:0.72rem;color:#888">${sub}</div>`:''}</div>
+        </div>`;
+      }).join('');
+      drop.style.display = 'block';
+    } else { drop.style.display = 'none'; }
+  } catch(e) { drop.style.display = 'none'; }
+}
+
+function adminAcSelect(el, inputId) {
+  let input = document.getElementById(inputId), drop = document.getElementById('aac-'+inputId);
+  if (input) input.value = el.dataset.main;
+  if (drop) drop.style.display = 'none';
+}
+
+function initAdminAc(inputId) {
+  let input = document.getElementById(inputId);
+  if (!input) return;
+  let drop = document.createElement('div');
+  drop.id = 'aac-' + inputId;
+  drop.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none';
+  input.parentElement.style.position = 'relative';
+  input.parentElement.appendChild(drop);
+  input.addEventListener('input', () => {
+    clearTimeout(adminAcTimers[inputId]);
+    let val = input.value.trim();
+    if (val.length < 3 || val.startsWith('http') || val.includes(',')) { drop.style.display='none'; return; }
+    adminAcTimers[inputId] = setTimeout(() => adminAcFetch(val, drop, input), 300);
+  });
+  input.addEventListener('keydown', e => { if (e.key==='Escape') drop.style.display='none'; });
+  document.addEventListener('click', e => { if (!input.contains(e.target) && !drop.contains(e.target)) drop.style.display='none'; });
+}
 
 async function generatePDF(allAircraft) {
   let docType = document.getElementById('pdf-doc-type').value;
@@ -1244,10 +1285,16 @@ async function generatePDF(allAircraft) {
     let body = { doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras };
     let r = await fetch('/pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('pdf-msg',e.error||'Failed','error'); return; }
+    let pdfUrl = r.headers.get('X-PDF-URL') || '';
+    let docNumber = r.headers.get('X-DOC-NUMBER') || '';
     let blob = await r.blob();
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a'); a.href = url; a.download = docType.toLowerCase()+'.pdf'; a.click();
-    showMsg('pdf-msg','Downloaded and saved to Records.','success');
+    let blobUrl = URL.createObjectURL(blob);
+    let a = document.createElement('a'); a.href = blobUrl; a.download = (docNumber||docType.toLowerCase())+'.pdf'; a.click();
+    let msg = 'Downloaded and saved to Records.';
+    if (pdfUrl) msg += ` <a href="${pdfUrl}" target="_blank" style="color:#1a56db;font-weight:600;text-decoration:underline">Open permanent link</a>`;
+    if (docNumber) msg += ` Added to Enquiries as <strong>${docNumber}</strong>.`;
+    showMsg('pdf-msg', msg, 'success');
+    loadEnquiries();
   } catch(e) { showMsg('pdf-msg','Error: '+e.message,'error'); }
 }
 
@@ -1864,6 +1911,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
   loadStateFromStorage();
+  ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff'].forEach(id => initAdminAc(id));
 });
 
 async function saveBranding() {

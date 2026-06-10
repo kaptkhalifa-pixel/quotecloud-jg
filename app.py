@@ -62,6 +62,31 @@ def get_quoting_rules():
         "currency_symbol": "$",
         "quote_validity_hours": 48
     })
+def parse_smart_date(s):
+    if not s or not str(s).strip():
+        return s
+    import re as _re
+    s = str(s).strip()
+    s = _re.sub(r'(\d+)(st|nd|rd|th)', r'\1', s, flags=_re.IGNORECASE)
+    fmts = [
+        ("%d/%m/%y", _re.compile(r'^\d{1,2}/\d{1,2}/\d{2}$')),
+        ("%d/%m/%Y", _re.compile(r'^\d{1,2}/\d{1,2}/\d{4}$')),
+        ("%d-%m-%y", _re.compile(r'^\d{1,2}-\d{1,2}-\d{2}$')),
+        ("%d-%m-%Y", _re.compile(r'^\d{1,2}-\d{1,2}-\d{4}$')),
+        ("%d.%m.%Y", _re.compile(r'^\d{1,2}\.\d{1,2}\.\d{4}$')),
+        ("%d %b %Y", _re.compile(r'^\d{1,2}\s+[A-Za-z]+\s+\d{4}$')),
+        ("%d %B %Y", _re.compile(r'^\d{1,2}\s+[A-Za-z]+\s+\d{4}$')),
+        ("%B %d %Y", _re.compile(r'^[A-Za-z]+\s+\d{1,2}\s+\d{4}$')),
+        ("%b %d %Y", _re.compile(r'^[A-Za-z]+\s+\d{1,2}\s+\d{4}$')),
+    ]
+    for fmt, pattern in fmts:
+        if pattern.match(s):
+            try:
+                d = datetime.datetime.strptime(s, fmt)
+                return d.strftime("%d/%m/%y")
+            except Exception:
+                continue
+    return s
 
 def get_geo_lock():
     try:
@@ -727,8 +752,8 @@ def run_quote_engine(data):
             display_map[p_coord] = p_disp
             display_map[d_coord] = d_disp
             results = [compute_for_aircraft("return", k, v, p_coord, d_coord,
-                                            depart=data.get("depart", ""),
-                                            ret=data.get("return_date", ""),
+                                            depart=parse_smart_date(data.get("depart", "")),
+                                            ret=parse_smart_date(data.get("return_date", "")),
                                             display_map=display_map) for k, v in active.items()]
         elif mission == "safari":
             legs = []
@@ -940,12 +965,50 @@ def pdf():
         save_record(doc_type, client_name, client_email, total, doc_number, {
             "ac_label": result.get("ac_label", ""),
             "mission": result.get("mission", ""),
-            "pdf_url": pdf_url or ""
+            "pdf_url": pdf_url or "",
+            "client_phone": client_phone,
+            "client_whatsapp": client_phone
         })
+        if doc_type in ("Quotation", "Quote"):
+            bookings = load_bookings()
+            route_summary = ""
+            segs = result.get("segments") or []
+            if result.get("mission") == "pick_and_drop":
+                segs = list(result.get("drop", {}).get("segments", [])) + list(result.get("pick", {}).get("segments", []))
+            rev = [s for s in segs if s.get("type") == "revenue"]
+            if rev:
+                route_summary = ", ".join(f"{s.get('origin','')} to {s.get('destination','')}" + (f" on {s['date']}" if s.get('date') else "") for s in rev)
+            bookings[doc_number] = {
+                "token": doc_number,
+                "status": "PENDING",
+                "client_name": client_name,
+                "client_email": client_email,
+                "client_whatsapp": client_phone,
+                "ac_label": result.get("ac_label", ""),
+                "ac_key": result.get("ac_key", ""),
+                "total_usd": total,
+                "mission": result.get("mission", ""),
+                "route_summary": route_summary,
+                "quote_snapshot": result,
+                "pdf_url": pdf_url or "",
+                "invoice_number": "",
+                "invoice_url": "",
+                "created_at": datetime.datetime.now().isoformat(),
+                "updated_at": datetime.datetime.now().isoformat(),
+                "payment_method": "",
+                "payment_ref": "",
+                "notes": note or "",
+                "source": "admin"
+            }
+            save_bookings(bookings)
 
-        return send_file(out_path, as_attachment=False,
-                         download_name=f"{doc_number}.pdf",
-                         mimetype="application/pdf")
+        response = send_file(out_path, as_attachment=False,
+                             download_name=f"{doc_number}.pdf",
+                             mimetype="application/pdf")
+        response.headers["X-PDF-URL"] = pdf_url or ""
+        response.headers["X-DOC-NUMBER"] = doc_number
+        return response
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
