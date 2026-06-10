@@ -266,5 +266,29 @@
     "token": "JET-Q-100626-TRSG38",
     "total_usd": 2910,
     "updated_at": "2026-06-10T14:53:24.510744"
+  },
+  "JET-Q-100626-Z4G0YR": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "",
+    "client_name": "jj",
+    "client_whatsapp": "254722570570",
+    "created_at": "2026-06-10T15:39:12.588707",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Rusinga Island \u2192 Kisumu (41 nm)",
+      "total_usd": 2065
+    },
+    "route_summary": "Rusinga Island \u2192 Kisumu (41 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-100626-Z4G0YR",
+    "total_usd": 2065,
+    "updated_at": "2026-06-10T15:39:12.588714"
   }
 }
