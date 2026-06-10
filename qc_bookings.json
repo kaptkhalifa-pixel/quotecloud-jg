@@ -99,6 +99,30 @@
     "total_usd": 2780,
     "updated_at": "2026-06-09T16:59:16.263588"
   },
+  "JET-Q-100626-6M0UXH": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "kk@gmail.com",
+    "client_name": "khalif",
+    "client_whatsapp": "0722750570",
+    "created_at": "2026-06-10T15:27:15.348466",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Lamu (251.7 nm)",
+      "total_usd": 2910
+    },
+    "route_summary": "Wilson \u2192 Lamu (251.7 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-100626-6M0UXH",
+    "total_usd": 2910,
+    "updated_at": "2026-06-10T15:27:15.348473"
+  },
   "JET-Q-100626-D4EX25": {
     "ac_key": "Airbus H125",
     "ac_label": "Airbus H125 (5 seater)",
