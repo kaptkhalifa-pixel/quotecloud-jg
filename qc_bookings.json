@@ -147,6 +147,30 @@
     "total_usd": 2910,
     "updated_at": "2026-06-10T15:27:15.348473"
   },
+  "JET-Q-100626-7SG6XN": {
+    "ac_key": "Bell 407",
+    "ac_label": "Bell 407 (5 seater)",
+    "client_email": "HH",
+    "client_name": "HH",
+    "client_whatsapp": "555",
+    "created_at": "2026-06-10T16:30:36.737996",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Bell 407",
+      "ac_label": "Bell 407 (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Nanyuki (81.4 nm) on 26/07/26",
+      "total_usd": 4145
+    },
+    "route_summary": "Wilson \u2192 Nanyuki (81.4 nm) on 26/07/26",
+    "status": "PENDING",
+    "token": "JET-Q-100626-7SG6XN",
+    "total_usd": 4145,
+    "updated_at": "2026-06-10T16:30:36.738002"
+  },
   "JET-Q-100626-D4EX25": {
     "ac_key": "Airbus H125",
     "ac_label": "Airbus H125 (5 seater)",
