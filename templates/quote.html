@@ -367,12 +367,13 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
   </div>
 </div>
 <div class="slider-overlay" id="img-slider">
-  <button class="slider-close" onclick="closeSlider()">✕</button>
+  <button class="slider-close" onclick="closeSlider()" style="position:absolute;top:20px;right:20px;color:#fff;font-size:1.8rem;cursor:pointer;background:rgba(0,0,0,0.4);border:none;line-height:1;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10">✕</button>
   <button class="slider-prev" onclick="sliderNav(-1)">‹</button>
-  <img class="slider-img" id="slider-img" src="">
+  <img class="slider-img" id="slider-img" src="" crossorigin="anonymous" style="max-width:94vw;max-height:80vh;object-fit:contain;cursor:pointer" onclick="window.open(sliderImages[sliderIndex],'_blank')">
   <button class="slider-next" onclick="sliderNav(1)">›</button>
   <div class="slider-dots" id="slider-dots"></div>
   <div class="slider-counter" id="slider-counter"></div>
+  <div style="margin-top:10px;font-family:'DM Sans',sans-serif;font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.3)">Tap image to open full size</div>
 </div>
 
 <script>
@@ -851,8 +852,9 @@ function renderOneAc(res, showDist, isDark) {
   let images = res.images || [];
   let imageHtml = '';
   if (images.length > 0) {
+    let imagesJson=encodeURIComponent(JSON.stringify(images));
     let thumbs = images.map((url, i) =>
-`<div onclick="openSlider(${JSON.stringify(images)},${i})" style="height:90px;width:130px;flex-shrink:0;cursor:pointer;border:1px solid var(--grey-200);border-radius:3px;overflow:hidden;-webkit-tap-highlight-color:transparent"><img src="${url}" style="width:100%;height:100%;object-fit:cover;pointer-events:none;display:block"></div>`
+`<div class="ac-photo-thumb" data-images="${imagesJson}" data-index="${i}" style="height:90px;width:130px;flex-shrink:0;cursor:pointer;border:1px solid var(--grey-200);border-radius:3px;overflow:hidden;position:relative"><img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none"><div style="position:absolute;inset:0"></div></div>`
     ).join('');
     imageHtml = `<div style="padding:12px 18px 16px;border-top:1px solid var(--grey-100)">
       <div style="font-family:'DM Sans',sans-serif;font-size:0.58rem;font-weight:600;color:var(--grey-500);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">Photos — Tap to expand</div>
@@ -1156,6 +1158,25 @@ function resetQuote() {
 
 init();
 initAutocomplete();
+
+document.addEventListener('touchend', function(e) {
+  let thumb = e.target.closest('.ac-photo-thumb');
+  if (thumb) {
+    e.preventDefault();
+    let images = JSON.parse(decodeURIComponent(thumb.dataset.images));
+    let index = parseInt(thumb.dataset.index) || 0;
+    openSlider(images, index);
+  }
+});
+document.addEventListener('click', function(e) {
+  let thumb = e.target.closest('.ac-photo-thumb');
+  if (thumb) {
+    let images = JSON.parse(decodeURIComponent(thumb.dataset.images));
+    let index = parseInt(thumb.dataset.index) || 0;
+    openSlider(images, index);
+  }
+});
+
 </script>
 </body>
 </html>
