@@ -1,6 +1,6 @@
 # =========================================================
 # QUOTECLOUD BY JETMAN GLOBAL
-# app.py v2.4.9
+# app.py v2.5.0
 # v2.4.9 changes:
 #   - Added /expand_maps_url route for client-side Maps resolution
 #   - Fixed missing @app.route decorator on /fx/rates
@@ -781,6 +781,15 @@ def run_quote_engine(data):
 
     except Exception as e:
         return {"error": str(e)}, 400
+def get_pdf_timestamp():
+    try:
+        import pytz
+        eat = pytz.timezone("Africa/Nairobi")
+        now = datetime.datetime.now(eat)
+        return now.strftime("Generated: %d %b %Y, %H:%M EAT")
+    except Exception:
+        now = datetime.datetime.utcnow()
+        return now.strftime("Generated: %d %b %Y, %H:%M UTC")
 
 def calc_pdf_total(result, extra_items, discount):
     base = float(result.get("total_usd", 0))
@@ -896,6 +905,9 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     doc_number = next_record_number(doc_type, token_override)
     disc = float(discount) if discount else 0
 
+    timestamp = get_pdf_timestamp()
+    terms_with_ts = (terms + "\n\n" + timestamp) if terms else timestamp
+
     payload = {
         "logo": OPERATOR.get("logo_url", ""),
         "from": get_company_from_block(),
@@ -908,7 +920,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         "fields": {"tax": False, "discounts": True, "shipping": False},
         "notes": bank_block,
         "notes_title": "BANK DETAILS",
-        "terms": terms,
+        "terms": terms_with_ts,
         "terms_title": "TERMS & CONDITIONS",
         "currency": "USD",
         "header": doc_type
@@ -1124,6 +1136,9 @@ def manual_invoice():
         bank_block = bank_override if bank_override else get_bank_details_block()
         terms = terms_override if terms_override else OPERATOR.get("invoice", {}).get("terms", "")
 
+        timestamp = get_pdf_timestamp()
+        terms_with_ts = (terms + "\n\n" + timestamp) if terms else timestamp
+
         payload = {
             "logo": OPERATOR.get("logo_url", ""),
             "from": get_company_from_block(),
@@ -1136,7 +1151,7 @@ def manual_invoice():
             "fields": {"tax": False, "discounts": True, "shipping": False},
             "notes": bank_block,
             "notes_title": "BANK DETAILS",
-            "terms": terms,
+            "terms": terms_with_ts,
             "terms_title": "TERMS & CONDITIONS",
             "currency": "USD",
             "header": doc_type
@@ -1732,10 +1747,27 @@ def booking_pdf():
         out_path = f"/tmp/{token}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_imgbb(out_path)
+        total = float(result.get("total_usd", 0))
+        if result.get("mission") == "return_both":
+            total = float((result.get("option_a") or {}).get("total_usd", 0))
+        save_record("Quotation", client_name, client_email, total, token, extra={
+            "pdf_url": pdf_url or "",
+            "client_phone": client_phone,
+            "client_whatsapp": client_phone,
+            "ac_label": result.get("ac_label", ""),
+            "mission": result.get("mission", ""),
+            "source": "client"
+        })
+        bookings = load_bookings()
+        if token in bookings:
+            bookings[token]["pdf_url"] = pdf_url or ""
+            bookings[token]["updated_at"] = datetime.datetime.now().isoformat()
+            save_bookings(bookings)
         response = send_file(out_path, as_attachment=False,
                              download_name=f"{token}.pdf",
                              mimetype="application/pdf")
         response.headers["X-PDF-URL"] = pdf_url or ""
+        response.headers["X-DOC-NUMBER"] = token
         return response
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -1766,6 +1798,9 @@ def booking_update():
         return jsonify({"error": "Booking not found"}), 404
     bookings[token]["status"] = status
     bookings[token]["updated_at"] = datetime.datetime.now().isoformat()
+    if status == "INVOICED":
+        bookings[token]["invoice_requested"] = False
+        bookings[token]["invoice_requested_at"] = ""
     if data.get("notes"):
         bookings[token]["notes"] = data["notes"]
     if data.get("payment_ref"):
@@ -1780,6 +1815,20 @@ def booking_update():
 def get_bookings():
     bookings = load_bookings()
     return jsonify(list(bookings.values()))
+@app.route("/booking/invoice_request", methods=["POST"])
+def booking_invoice_request():
+    data = request.get_json()
+    token = (data.get("token") or "").strip()
+    if not token:
+        return jsonify({"error": "Token required"}), 400
+    bookings = load_bookings()
+    if token not in bookings:
+        return jsonify({"error": "Booking not found"}), 404
+    bookings[token]["invoice_requested"] = True
+    bookings[token]["invoice_requested_at"] = datetime.datetime.now().isoformat()
+    bookings[token]["updated_at"] = datetime.datetime.now().isoformat()
+    save_bookings(bookings)
+    return jsonify({"success": True, "token": token})
 @app.route("/bookings/delete", methods=["POST"])
 @login_required
 def delete_bookings():
