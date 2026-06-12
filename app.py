@@ -1675,7 +1675,7 @@ def booking_request():
         quote_snapshot = data.get("quote_snapshot", {})
         if not client_name:
             return jsonify({"error": "Name required"}), 400
-        token = generate_booking_token()
+        token = data.get("token_override", "").strip() or generate_booking_token()
         bookings = load_bookings()
         route_summary = data.get("route_summary", "")
         client_whatsapp = data.get("client_whatsapp", "").strip()
