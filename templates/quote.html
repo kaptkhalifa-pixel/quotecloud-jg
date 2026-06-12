@@ -256,8 +256,14 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
         <div id="safari-legs">
           <div class="leg-row">
             <span class="leg-num">1</span>
-            <input type="text" placeholder="Name of place or Google Maps pin" class="leg-origin">
-            <input type="text" placeholder="Name of place or Google Maps pin" class="leg-dest">
+            <div style="position:relative;flex:1;min-width:100px">
+              <input type="text" placeholder="From" class="leg-origin field-input" id="leg-origin-1" autocomplete="off">
+              <div class="ac-dropdown" id="ac-leg-origin-1" style="display:none"></div>
+            </div>
+            <div style="position:relative;flex:1;min-width:100px">
+              <input type="text" placeholder="To" class="leg-dest field-input" id="leg-dest-1" autocomplete="off">
+              <div class="ac-dropdown" id="ac-leg-dest-1" style="display:none"></div>
+            </div>
             <input type="text" placeholder="Date" class="leg-date" style="max-width:100px">
           </div>
         </div>
@@ -392,7 +398,7 @@ async function initAutocomplete() {
     mapsApiKey = d.key || '';
   } catch(e) {}
   document.querySelectorAll('.field-input').forEach(input => {
-    if (input.id && (input.id.includes('pickup') || input.id.includes('dropoff'))) {
+    if (input.id && (input.id.includes('pickup') || input.id.includes('dropoff') || input.id.includes('leg-origin') || input.id.includes('leg-dest'))) {
       attachAc(input);
     }
   });
@@ -671,14 +677,25 @@ function parseSmartDate(s) {
 
 function addLeg() {
   let n = document.querySelectorAll('#safari-legs .leg-row').length + 1;
+  let ts = Date.now();
+  let originId = `leg-origin-${n}-${ts}`;
+  let destId = `leg-dest-${n}-${ts+1}`;
   let div = document.createElement('div');
   div.className = 'leg-row';
   div.innerHTML = `<span class="leg-num">${n}</span>
-    <input type="text" placeholder="From" class="leg-origin">
-    <input type="text" placeholder="To" class="leg-dest">
+    <div style="position:relative;flex:1;min-width:100px">
+      <input type="text" placeholder="From" class="leg-origin field-input" id="${originId}" autocomplete="off">
+      <div class="ac-dropdown" id="ac-${originId}" style="display:none"></div>
+    </div>
+    <div style="position:relative;flex:1;min-width:100px">
+      <input type="text" placeholder="To" class="leg-dest field-input" id="${destId}" autocomplete="off">
+      <div class="ac-dropdown" id="ac-${destId}" style="display:none"></div>
+    </div>
     <input type="text" placeholder="Date" class="leg-date" style="max-width:100px">
     <button onclick="this.parentElement.remove()" style="padding:5px 9px;border:1px solid #e0e0e0;background:#fff;color:#888;border-radius:2px;cursor:pointer;font-size:0.8rem;font-weight:700;font-family:'DM Sans',sans-serif">x</button>`;
   document.getElementById('safari-legs').appendChild(div);
+  attachAc(document.getElementById(originId));
+  attachAc(document.getElementById(destId));
 }
 
 function showResolving(show) {
