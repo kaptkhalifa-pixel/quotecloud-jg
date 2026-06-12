@@ -1167,6 +1167,12 @@ function requestInvoice() {
     document.getElementById('bm-wa-link').href = waUrl;
     window.open(waUrl, '_blank');
   }
+  fetch('/booking/invoice_request', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({token: currentBookingToken})
+  }).catch(e => console.log('Invoice request tracking error:', e));
+
   document.getElementById('bm-token-final').textContent = `Reference: ${currentBookingToken}`;
   document.getElementById('bm-step2').style.display = 'none';
   document.getElementById('bm-step3').style.display = 'block';
