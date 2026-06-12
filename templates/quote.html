@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="page-title">Charter Quotes</title>
 <style>body{visibility:hidden}</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -165,7 +167,12 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
 .filter-pill.active { background: var(--black); color: var(--white); border-color: var(--black); }
 .filter-pill:hover:not(.active) { border-color: var(--grey-500); color: var(--grey-700); }
 .sort-select { padding: 8px 12px; border: 1px solid var(--grey-200); border-radius: 20px; background: var(--white); color: var(--grey-500); font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 600; cursor: pointer; outline: none; margin-left: auto; }
-
+.flatpickr-calendar { font-family: 'DM Sans', sans-serif; border-radius: 3px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 1px solid var(--grey-200); }
+.flatpickr-day.selected, .flatpickr-day.selected:hover { background: var(--black); border-color: var(--black); }
+.flatpickr-day:hover { background: var(--grey-100); }
+.flatpickr-months .flatpickr-month { background: var(--black); color: #fff; }
+.flatpickr-current-month { color: #fff; }
+.flatpickr-weekday { color: var(--grey-500); font-family: 'DM Sans', sans-serif; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @media(max-width:480px) {
@@ -696,6 +703,7 @@ function addLeg() {
   document.getElementById('safari-legs').appendChild(div);
   attachAc(document.getElementById(originId));
   attachAc(document.getElementById(destId));
+  div.querySelectorAll('.leg-date').forEach(function(el){flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:false});});
 }
 
 function showResolving(show) {
@@ -1175,6 +1183,10 @@ function resetQuote() {
 
 init();
 initAutocomplete();
+flatpickr('#ow-date',{dateFormat:'d M Y',minDate:'today',disableMobile:false});
+let departPicker=flatpickr('#rt-depart',{dateFormat:'d M Y',minDate:'today',disableMobile:false,onChange:function(d){if(d[0])returnPicker.set('minDate',d[0]);}});
+let returnPicker=flatpickr('#rt-return',{dateFormat:'d M Y',minDate:'today',disableMobile:false});
+document.querySelectorAll('.leg-date').forEach(function(el){flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:false});});
 
 document.addEventListener('touchend', function(e) {
   let thumb = e.target.closest('.ac-photo-thumb');
