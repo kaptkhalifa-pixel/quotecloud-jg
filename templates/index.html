@@ -909,6 +909,7 @@ function showNav(tab, el) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('nav-' + tab).classList.add('active');
+  try { localStorage.setItem('qc_active_tab', tab); } catch(e) {}
   if (tab === 'locations') loadLocations();
   if (tab === 'aircraft') loadAircraft();
   if (tab === 'settings') loadSettings();
@@ -922,6 +923,7 @@ function showNavMobile(tab, el) {
   el.classList.add('active');
   document.getElementById('nav-' + tab).classList.add('active');
   window.scrollTo(0, 0);
+  try { localStorage.setItem('qc_active_tab', tab); } catch(e) {}
   if (tab === 'locations') loadLocations();
   if (tab === 'aircraft') loadAircraft();
   if (tab === 'settings') loadSettings();
@@ -1950,6 +1952,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
   loadStateFromStorage();
+  try {
+    let savedTab = localStorage.getItem('qc_active_tab');
+    if (savedTab && savedTab !== 'quote') {
+      let desktopEl = document.querySelector(`.nav-tab[onclick*="'${savedTab}'"]`);
+      let mobileEl = document.querySelector(`.mobile-nav-tab[onclick*="'${savedTab}'"]`);
+      if (desktopEl) showNav(savedTab, desktopEl);
+      else if (mobileEl) showNavMobile(savedTab, mobileEl);
+    }
+  } catch(e) {}
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','leg-origin-1','leg-dest-1'].forEach(id => initAdminAc(id));
   let adminDepartPicker = flatpickr('#rt-depart', {dateFormat:'d M Y',minDate:'today',disableMobile:false,onChange:function(d){if(d[0])adminReturnPicker.set('minDate',d[0]);}});
   let adminReturnPicker = flatpickr('#rt-return', {dateFormat:'d M Y',minDate:'today',disableMobile:false});
