@@ -416,6 +416,12 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
         <option value="month">This Month</option>
       </select>
       <input type="text" id="enq-search" oninput="filterEnquiries()" placeholder="Search name or ref..." style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;flex:1;min-width:150px;min-height:44px">
+      <select id="enq-sort" onchange="filterEnquiries()" style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;background:#fff;min-height:44px">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="value_desc">Highest Value</option>
+        <option value="value_asc">Lowest Value</option>
+      </select>
     </div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
       <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#555;cursor:pointer">
@@ -494,7 +500,15 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div class="filter-tab" onclick="filterRecordsByType('Invoice',this)">Invoices</div>
       <div class="filter-tab" onclick="filterRecordsByType('Receipt',this)">Receipts</div>
     </div>
-    <div class="search-bar"><input type="text" id="rec-search" placeholder="Search by client, number..." oninput="filterRecords()"></div>
+    <div class="search-bar">
+      <input type="text" id="rec-search" placeholder="Search by client, number..." oninput="filterRecords()">
+      <select id="rec-sort" onchange="filterRecords()" style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;background:#fff;min-height:44px;min-width:150px">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="amount_desc">Highest Amount</option>
+        <option value="amount_asc">Lowest Amount</option>
+      </select>
+    </div>
     <div class="db-table-wrap">
       <table class="db-table">
         <thead><tr><th>Number</th><th>Date</th><th>Type</th><th>Client</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
@@ -1596,6 +1610,11 @@ function filterRecords() {
     let matchSearch = !q || (r.client_name||'').toLowerCase().includes(q) || (r.number||'').toLowerCase().includes(q);
     return matchType && matchSearch;
   });
+  let sort = document.getElementById('rec-sort')?.value || 'newest';
+  if (sort === 'oldest') filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
+  else if (sort === 'newest') filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+  else if (sort === 'amount_desc') filtered.sort((a,b) => parseFloat(b.amount||0) - parseFloat(a.amount||0));
+  else if (sort === 'amount_asc') filtered.sort((a,b) => parseFloat(a.amount||0) - parseFloat(b.amount||0));
   renderRecords(filtered);
 }
 
@@ -1630,7 +1649,7 @@ function renderRecords(records) {
     document.getElementById('rec-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">No records found.</td></tr>';
     return;
   }
-  document.getElementById('rec-tbody').innerHTML = records.slice().reverse().map(r => {
+  document.getElementById('rec-tbody').innerHTML = records.map(r => {
     let typeKey = (r.type||'').toLowerCase();
     return `<tr>
       <td>
@@ -2089,6 +2108,11 @@ function filterEnquiries() {
     }
     return true;
   });
+  let sort = document.getElementById('enq-sort')?.value || 'newest';
+  if (sort === 'oldest') filtered.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  else if (sort === 'newest') filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  else if (sort === 'value_desc') filtered.sort((a,b) => parseFloat(b.total_usd||0) - parseFloat(a.total_usd||0));
+  else if (sort === 'value_asc') filtered.sort((a,b) => parseFloat(a.total_usd||0) - parseFloat(b.total_usd||0));
   renderEnquiries(filtered);
 }
 
@@ -2103,7 +2127,7 @@ function renderEnquiries(enqs) {
   let empty = document.getElementById('enq-empty');
   if (!enqs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  tbody.innerHTML = enqs.slice().reverse().map(e => {
+  tbody.innerHTML = enqs.map(e => {
     let date = e.created_at ? new Date(e.created_at).toLocaleDateString('en-GB') : '-';
     let waLink = e.client_whatsapp ? `<a href="https://wa.me/${e.client_whatsapp.replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-weight:600;text-decoration:none">📱 ${e.client_whatsapp}</a>` : '-';
     let route = (e.route_summary||'').substring(0,40) + ((e.route_summary||'').length>40?'...':'');
@@ -2120,6 +2144,7 @@ function renderEnquiries(enqs) {
       <td style="white-space:nowrap;font-size:0.75rem;color:#4a148c;font-weight:600">
         ${e.invoice_number ? `<span>${e.invoice_number}</span>` : '-'}
         ${e.invoice_url ? `<a href="${e.invoice_url}" target="_blank" style="display:block;color:#0d47a1;font-size:0.72rem;text-decoration:none;margin-top:2px">📄 View</a>` : ''}
+        ${e.invoice_requested && e.status !== 'INVOICED' ? `<span style="display:inline-block;background:#ff6f00;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:8px;margin-top:4px">INV REQ</span>` : ''}
       </td>
       <td style="white-space:nowrap;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <select onchange="updateEnqStatus('${e.token}',this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.75rem;min-height:32px">
