@@ -965,6 +965,54 @@
     "total_usd": 4570,
     "updated_at": "2026-06-11T07:20:51.399260"
   },
+  "JET-Q-120626-1AO3Y8": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "khalif@khalifkairo.com",
+    "client_name": "khalif",
+    "client_whatsapp": "+254722750570",
+    "created_at": "2026-06-12T21:37:59.550873",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Fairmont Mount Kenya Safari Club (79.4 nm) on 13/06/26",
+      "total_usd": 960
+    },
+    "route_summary": "Wilson \u2192 Fairmont Mount Kenya Safari Club (79.4 nm) on 13/06/26",
+    "status": "PENDING",
+    "token": "JET-Q-120626-1AO3Y8",
+    "total_usd": 960,
+    "updated_at": "2026-06-12T21:37:59.550882"
+  },
+  "JET-Q-120626-28AFTL": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "jane@gmail.com",
+    "client_name": "Jane doe",
+    "client_whatsapp": "+254722750570",
+    "created_at": "2026-06-12T21:48:09.688485",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Abeid Amani Karume International Airport (327.6 nm) on 20/06/26",
+      "total_usd": 3755
+    },
+    "route_summary": "Wilson \u2192 Abeid Amani Karume International Airport (327.6 nm) on 20/06/26",
+    "status": "PENDING",
+    "token": "JET-Q-120626-28AFTL",
+    "total_usd": 3755,
+    "updated_at": "2026-06-12T21:48:09.688490"
+  },
   "JET-Q-120626-71RVIT": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (5 seater)",
@@ -1082,5 +1130,31 @@
     "token": "JET-Q-120626-LTCAEM",
     "total_usd": 3570.0,
     "updated_at": "2026-06-12T14:10:27.770779"
+  },
+  "JET-Q-120626-WZUVDI": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "khalif@gmail.com",
+    "client_name": "khalif",
+    "client_whatsapp": "+254722750570",
+    "created_at": "2026-06-12T21:41:10.007437",
+    "invoice_requested": false,
+    "invoice_requested_at": "",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Fairmont Mount Kenya Safari Club (79.4 nm) on 13/06/26",
+      "total_usd": 960
+    },
+    "route_summary": "Wilson \u2192 Fairmont Mount Kenya Safari Club (79.4 nm) on 13/06/26",
+    "status": "INVOICED",
+    "token": "JET-Q-120626-WZUVDI",
+    "total_usd": 960,
+    "updated_at": "2026-06-12T21:42:06.702509"
   }
 }
