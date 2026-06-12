@@ -1581,9 +1581,16 @@ def autocomplete():
         return jsonify({"predictions": []})
     try:
         import requests as req
+        geo = get_geo_lock()
+        center_lat = geo.get("center_lat", -0.023)
+        center_lon = geo.get("center_lon", 37.906)
+        radius_km = geo.get("radius_km", 1500)
+        radius_m = int(float(radius_km) * 1000)
         r = req.get(
             "https://maps.googleapis.com/maps/api/place/autocomplete/json",
-            params={"input": query, "key": GOOGLE_API_KEY, "components": "country:ke", "language": "en"},
+            params={"input": query, "key": GOOGLE_API_KEY, "language": "en",
+                    "location": f"{center_lat},{center_lon}",
+                    "radius": radius_m, "strictbounds": False},
             timeout=5
         )
         data = r.json()
