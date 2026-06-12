@@ -989,6 +989,30 @@
     "total_usd": 960,
     "updated_at": "2026-06-12T21:37:59.550882"
   },
+  "JET-Q-120626-269XPS": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "khalif@khalifkairo.com",
+    "client_name": "khalif",
+    "client_whatsapp": "+254722750570",
+    "created_at": "2026-06-12T22:10:42.541682",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Arua (440.3 nm)",
+      "total_usd": 5055
+    },
+    "route_summary": "Wilson \u2192 Arua (440.3 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-120626-269XPS",
+    "total_usd": 5055,
+    "updated_at": "2026-06-12T22:10:42.541692"
+  },
   "JET-Q-120626-28AFTL": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (5 seater)",
@@ -1012,6 +1036,54 @@
     "token": "JET-Q-120626-28AFTL",
     "total_usd": 3755,
     "updated_at": "2026-06-12T21:48:09.688490"
+  },
+  "JET-Q-120626-2LGFWQ": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "jj",
+    "client_name": "JJ",
+    "client_whatsapp": "555",
+    "created_at": "2026-06-12T22:19:32.467022",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Nanyuki Airstrip (81.4 nm)",
+      "total_usd": 1025
+    },
+    "route_summary": "Wilson \u2192 Nanyuki Airstrip (81.4 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-120626-2LGFWQ",
+    "total_usd": 1025,
+    "updated_at": "2026-06-12T22:19:32.467027"
+  },
+  "JET-Q-120626-2Y0TJL": {
+    "ac_key": "Bell 407",
+    "ac_label": "Bell 407 (5 seater)",
+    "client_email": "JJ",
+    "client_name": "JJ",
+    "client_whatsapp": "77",
+    "created_at": "2026-06-12T22:24:59.099650",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Bell 407",
+      "ac_label": "Bell 407 (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Manda Airport (252.2 nm)",
+      "total_usd": 12135
+    },
+    "route_summary": "Wilson \u2192 Manda Airport (252.2 nm)",
+    "status": "PENDING",
+    "token": "JET-Q-120626-2Y0TJL",
+    "total_usd": 12135,
+    "updated_at": "2026-06-12T22:24:59.099657"
   },
   "JET-Q-120626-71RVIT": {
     "ac_key": "Cessna 206",
@@ -1138,8 +1210,8 @@
     "client_name": "khalif",
     "client_whatsapp": "+254722750570",
     "created_at": "2026-06-12T21:41:10.007437",
-    "invoice_requested": false,
-    "invoice_requested_at": "",
+    "invoice_requested": true,
+    "invoice_requested_at": "2026-06-12T22:26:32.506697",
     "mission": "one_way",
     "notes": "",
     "payment_method": "",
@@ -1152,9 +1224,9 @@
       "total_usd": 960
     },
     "route_summary": "Wilson \u2192 Fairmont Mount Kenya Safari Club (79.4 nm) on 13/06/26",
-    "status": "INVOICED",
+    "status": "PENDING",
     "token": "JET-Q-120626-WZUVDI",
     "total_usd": 960,
-    "updated_at": "2026-06-12T21:42:06.702509"
+    "updated_at": "2026-06-12T22:31:50.058942"
   }
 }
