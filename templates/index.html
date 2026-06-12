@@ -286,8 +286,14 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div id="safari-legs">
         <div class="leg-row">
           <span class="leg-num">1</span>
-          <input type="text" placeholder="From" class="leg-origin">
-          <input type="text" placeholder="To" class="leg-dest">
+          <div style="position:relative;flex:1;min-width:120px">
+            <input type="text" placeholder="From" class="leg-origin" id="leg-origin-1" autocomplete="off">
+            <div id="aac-leg-origin-1" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+          </div>
+          <div style="position:relative;flex:1;min-width:120px">
+            <input type="text" placeholder="To" class="leg-dest" id="leg-dest-1" autocomplete="off">
+            <div id="aac-leg-dest-1" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+          </div>
           <input type="text" placeholder="Date" class="leg-date" style="max-width:120px">
         </div>
       </div>
@@ -942,14 +948,25 @@ function parseSmartDate(s) {
 
 function addLeg() {
   let n = document.querySelectorAll('#safari-legs .leg-row').length + 1;
+  let ts = Date.now();
+  let originId = `leg-origin-${n}-${ts}`;
+  let destId = `leg-dest-${n}-${ts+1}`;
   let div = document.createElement('div');
   div.className = 'leg-row';
   div.innerHTML = `<span class="leg-num">${n}</span>
-    <input type="text" placeholder="From" class="leg-origin">
-    <input type="text" placeholder="To" class="leg-dest">
+    <div style="position:relative;flex:1;min-width:120px">
+      <input type="text" placeholder="From" class="leg-origin" id="${originId}" autocomplete="off">
+      <div id="aac-${originId}" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+    </div>
+    <div style="position:relative;flex:1;min-width:120px">
+      <input type="text" placeholder="To" class="leg-dest" id="${destId}" autocomplete="off">
+      <div id="aac-${destId}" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+    </div>
     <input type="text" placeholder="Date" class="leg-date" style="max-width:120px">
     <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>`;
   document.getElementById('safari-legs').appendChild(div);
+  initAdminAc(originId);
+  initAdminAc(destId);
 }
 
 async function submitQuote(mission) {
@@ -1911,7 +1928,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
   loadStateFromStorage();
-  ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff'].forEach(id => initAdminAc(id));
+  ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','leg-origin-1','leg-dest-1'].forEach(id => initAdminAc(id));
 });
 
 async function saveBranding() {
