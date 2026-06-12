@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ operator.company_name }} — Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -967,6 +969,7 @@ function addLeg() {
   document.getElementById('safari-legs').appendChild(div);
   initAdminAc(originId);
   initAdminAc(destId);
+  div.querySelectorAll('.leg-date').forEach(function(el){flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:false});});
 }
 
 async function submitQuote(mission) {
@@ -1929,6 +1932,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   loadStateFromStorage();
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','leg-origin-1','leg-dest-1'].forEach(id => initAdminAc(id));
+  let adminDepartPicker = flatpickr('#rt-depart', {dateFormat:'d M Y',minDate:'today',disableMobile:false,onChange:function(d){if(d[0])adminReturnPicker.set('minDate',d[0]);}});
+  let adminReturnPicker = flatpickr('#rt-return', {dateFormat:'d M Y',minDate:'today',disableMobile:false});
+  document.querySelectorAll('.leg-date').forEach(function(el){flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:false});});
 });
 
 async function saveBranding() {
