@@ -529,7 +529,17 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
         <div class="form-group"><label>Company Name</label><input type="text" id="s-company-name"></div>
         <div class="form-group"><label>Tagline</label><input type="text" id="s-tagline"></div>
       </div>
-      <div class="form-group-full"><label>Logo URL</label><input type="text" id="s-logo-url" oninput="previewLogo()"><img id="logo-preview" class="logo-preview" src="" style="display:none"></div>
+      <div class="form-group-full"><label>Logo URL</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="s-logo-url" oninput="previewLogo()" style="flex:1">
+          <label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap">
+            📷 Upload Logo
+            <input type="file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
+          </label>
+        </div>
+        <div id="logo-upload-status" style="font-size:0.75rem;color:#888;margin-top:4px"></div>
+        <img id="logo-preview" class="logo-preview" src="" style="display:none">
+      </div>
       <div class="form-group-full"><label>Footer Tagline</label><input type="text" id="s-footer-tagline"></div>
     </div>
     <div class="settings-section">
@@ -1922,6 +1932,29 @@ async function loadSettings() {
   document.getElementById('s-bank-branch').value = bk.branch || '';
   document.getElementById('s-invoice-prefix').value = inv.prefix || '';
   document.getElementById('s-invoice-terms').value = inv.terms || '';
+}
+async function uploadLogo(input) {
+  let status = document.getElementById('logo-upload-status');
+  status.textContent = 'Uploading...';
+  let formData = new FormData();
+  formData.append('image', input.files[0]);
+  try {
+    let r = await fetch('/upload_image', { method:'POST', body: formData });
+    let data = await r.json();
+    if (data.success) {
+      document.getElementById('s-logo-url').value = data.url;
+      previewLogo();
+      status.textContent = '✅ Logo uploaded successfully.';
+      status.style.color = '#1b5e20';
+    } else {
+      status.textContent = '❌ Upload failed.';
+      status.style.color = '#c00';
+    }
+  } catch(e) {
+    status.textContent = '❌ Error: ' + e.message;
+    status.style.color = '#c00';
+  }
+  input.value = '';
 }
 
 function previewLogo() {

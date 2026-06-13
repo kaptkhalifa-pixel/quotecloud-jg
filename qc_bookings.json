@@ -147,6 +147,56 @@
     "total_usd": 4210,
     "updated_at": "2026-06-13T08:03:01.635432"
   },
+  "JG-2026-FXMA99": {
+    "ac_key": "Cessna Grand Caravan",
+    "ac_label": "Cessna Grand Caravan EX (12 seater)",
+    "client_email": "test",
+    "client_name": "Test",
+    "client_whatsapp": "00",
+    "created_at": "2026-06-13T12:33:32.995280",
+    "invoice_requested": true,
+    "invoice_requested_at": "2026-06-13T12:33:56.611609",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna Grand Caravan",
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Garissa Airport (177.6 nm)",
+      "total_usd": 3530
+    },
+    "route_summary": "Wilson \u2192 Garissa Airport (177.6 nm)",
+    "status": "PENDING",
+    "token": "JG-2026-FXMA99",
+    "total_usd": 3530,
+    "updated_at": "2026-06-13T12:33:56.611616"
+  },
+  "JG-2026-G78GMS": {
+    "ac_key": "Airbus H125",
+    "ac_label": "Airbus H125 (5 seater)",
+    "client_email": "Francis Kiiru",
+    "client_name": "Francis Kiiru",
+    "client_whatsapp": "0703993102",
+    "created_at": "2026-06-13T12:18:10.524640",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Airbus H125",
+      "ac_label": "Airbus H125 (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Nairobi \u2192 Kisumu (149.1 nm) on 13/06/26",
+      "total_usd": 8140
+    },
+    "route_summary": "Nairobi \u2192 Kisumu (149.1 nm) on 13/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-G78GMS",
+    "total_usd": 8140,
+    "updated_at": "2026-06-13T12:18:10.524648"
+  },
   "JG-2026-IICC78": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (5 seater)",
@@ -198,6 +248,30 @@
     "token": "JG-2026-P3JELT",
     "total_usd": 7300,
     "updated_at": "2026-06-12T23:15:53.950849"
+  },
+  "JG-2026-T4J63V": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "oo",
+    "client_name": "oo",
+    "client_whatsapp": "33",
+    "created_at": "2026-06-13T12:14:02.917859",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Lamu \u2192 Julius Nyerere International Airport (Dar) (294.3 nm)",
+      "total_usd": 5250
+    },
+    "route_summary": "Lamu \u2192 Julius Nyerere International Airport (Dar) (294.3 nm)",
+    "status": "PENDING",
+    "token": "JG-2026-T4J63V",
+    "total_usd": 5250,
+    "updated_at": "2026-06-13T12:14:02.917864"
   },
   "JG-2026-TJTFGX": {
     "ac_key": "Cessna Grand Caravan",
