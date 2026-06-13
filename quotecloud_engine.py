@@ -737,6 +737,15 @@ def _build_pdf_html(payload):
         total_label, date_label2, date_val2 = "Total Estimate", "Valid Until", due_date
         show_bank, show_terms, bill_label = False, bool(terms), "Prepared For"
         footer_right = "Quote valid for 48 hours from date of issue."
+    try:
+        import pytz, datetime as _dt
+        _eat = pytz.timezone("Africa/Nairobi")
+        _now = _dt.datetime.now(_eat)
+        _ts = _now.strftime("%d/%m/%y %H:%Mhrs EAT")
+    except Exception:
+        import datetime as _dt
+        _ts = _dt.datetime.utcnow().strftime("%d/%m/%y %H:%Mhrs UTC")
+    footer_right = (footer_right + "<br><span style='font-size:10pt;color:#bbb'>" + _ts + "</span>") if footer_right else "<span style='font-size:10pt;color:#bbb'>" + _ts + "</span>"
 
     bank_html = ""
     if show_bank and bank_block:
