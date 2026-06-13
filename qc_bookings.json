@@ -1,4 +1,52 @@
 {
+  "JG-2026-0YT3D6": {
+    "ac_key": "Airbus H125",
+    "ac_label": "Airbus H125 (5 seater)",
+    "client_email": "franciskwanderi@gmail.com",
+    "client_name": "Francis Kiiru",
+    "client_whatsapp": "0703993102",
+    "created_at": "2026-06-13T12:05:56.074087",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Airbus H125",
+      "ac_label": "Airbus H125 (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Nairobi \u2192 Kisumu (149.1 nm) on 13/06/26",
+      "total_usd": 8140
+    },
+    "route_summary": "Nairobi \u2192 Kisumu (149.1 nm) on 13/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-0YT3D6",
+    "total_usd": 8140,
+    "updated_at": "2026-06-13T12:05:56.074093"
+  },
+  "JG-2026-1XFO8V": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "",
+    "client_name": "Robert",
+    "client_whatsapp": "0745550542",
+    "created_at": "2026-06-13T12:01:26.401147",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Siaya (172.9 nm) on 14/06/26",
+      "total_usd": 2065
+    },
+    "route_summary": "Wilson \u2192 Siaya (172.9 nm) on 14/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-1XFO8V",
+    "total_usd": 2065,
+    "updated_at": "2026-06-13T12:01:26.401153"
+  },
   "JG-2026-3ICUAD": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (5 seater)",
@@ -50,6 +98,30 @@
     "token": "JG-2026-3OXAJT",
     "total_usd": 4830,
     "updated_at": "2026-06-13T07:39:27.528584"
+  },
+  "JG-2026-7QQ5UC": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "33",
+    "client_name": "KK",
+    "client_whatsapp": "22",
+    "created_at": "2026-06-13T12:00:52.258201",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Kitui (70.9 nm)",
+      "total_usd": 895
+    },
+    "route_summary": "Wilson \u2192 Kitui (70.9 nm)",
+    "status": "PENDING",
+    "token": "JG-2026-7QQ5UC",
+    "total_usd": 895,
+    "updated_at": "2026-06-13T12:00:52.258206"
   },
   "JG-2026-7V9ZG6": {
     "ac_key": "Cessna 206",
