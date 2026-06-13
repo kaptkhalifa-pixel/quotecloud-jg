@@ -905,10 +905,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     doc_number = next_record_number(doc_type, token_override)
     disc = float(discount) if discount else 0
 
-    timestamp = get_pdf_timestamp()
-    terms_with_ts = (terms + "\n\n" + timestamp) if terms else timestamp
-
     payload = {
+
         "logo": OPERATOR.get("logo_url", ""),
         "from": get_company_from_block(),
         "to": to_block,
@@ -920,7 +918,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         "fields": {"tax": False, "discounts": True, "shipping": False},
         "notes": bank_block,
         "notes_title": "BANK DETAILS",
-        "terms": terms_with_ts,
+        "terms": terms,
         "terms_title": "TERMS & CONDITIONS",
         "currency": "USD",
         "header": doc_type
@@ -1136,9 +1134,6 @@ def manual_invoice():
         bank_block = bank_override if bank_override else get_bank_details_block()
         terms = terms_override if terms_override else OPERATOR.get("invoice", {}).get("terms", "")
 
-        timestamp = get_pdf_timestamp()
-        terms_with_ts = (terms + "\n\n" + timestamp) if terms else timestamp
-
         payload = {
             "logo": OPERATOR.get("logo_url", ""),
             "from": get_company_from_block(),
@@ -1151,7 +1146,7 @@ def manual_invoice():
             "fields": {"tax": False, "discounts": True, "shipping": False},
             "notes": bank_block,
             "notes_title": "BANK DETAILS",
-            "terms": terms_with_ts,
+            "terms": terms,
             "terms_title": "TERMS & CONDITIONS",
             "currency": "USD",
             "header": doc_type
