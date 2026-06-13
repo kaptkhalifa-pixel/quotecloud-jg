@@ -393,5 +393,51 @@
     "source": "client",
     "timestamp": "2026-06-13T12:33:32.758949",
     "type": "Quotation"
+  },
+  {
+    "amount": 6000.0,
+    "client_email": "",
+    "client_name": "Kim",
+    "date": "13/06/2026",
+    "number": "JET-Q-130626-WCI12Y",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "receipt_number": "",
+    "result_summary": {
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "client_phone": "\u202a+254\u00a0768\u00a0138744\u202c",
+      "client_whatsapp": "\u202a+254\u00a0768\u00a0138744\u202c",
+      "mission": "safari",
+      "pdf_url": "https://i.ibb.co/QtZZb5P/df58dbc9b999.jpg"
+    },
+    "timestamp": "2026-06-13T13:24:05.326933",
+    "type": "Quotation"
+  },
+  {
+    "ac_label": "Bell 407 (5 seater)",
+    "amount": 2500.0,
+    "client_email": "",
+    "client_name": "Patrick Mungai",
+    "client_phone": "+2540729 369 812",
+    "client_whatsapp": "+2540729 369 812",
+    "date": "13/06/2026",
+    "mission": "one_way",
+    "number": "JG-2026-AMIP93",
+    "paid": false,
+    "paid_amount": 0,
+    "paid_date": "",
+    "payment_log": [],
+    "payment_mode": "",
+    "payment_ref": "",
+    "pdf_url": "https://i.ibb.co/qLtnb62z/cfb54f86fabd.jpg",
+    "receipt_number": "",
+    "result_summary": {},
+    "source": "client",
+    "timestamp": "2026-06-13T13:44:56.768190",
+    "type": "Quotation"
   }
 ]

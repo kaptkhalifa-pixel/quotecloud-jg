@@ -846,6 +846,9 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
 
     flying_segs = [s for s in all_segments if s.get("type") and s.get("origin")]
     total_hrs = sum(float(s.get("hours", 0)) for s in flying_segs)
+    min_hrs = float(result.get("min_chargeable_hrs", 0))
+    if min_hrs > 0 and total_hrs < min_hrs:
+        total_hrs = min_hrs
 
     routing_lines = build_routing_lines(flying_segs)
     routing_text = "Routing:\n" + "\n".join(routing_lines) if routing_lines else ""

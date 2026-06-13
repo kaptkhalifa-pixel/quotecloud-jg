@@ -1,4 +1,96 @@
 {
+  "JET-Q-130626-WCI12Y": {
+    "ac_key": "Cessna Grand Caravan",
+    "ac_label": "Cessna Grand Caravan EX (12 seater)",
+    "client_email": "",
+    "client_name": "Kim",
+    "client_whatsapp": "\u202a+254\u00a0768\u00a0138744\u202c",
+    "created_at": "2026-06-13T13:24:05.330456",
+    "invoice_number": "",
+    "invoice_url": "",
+    "mission": "safari",
+    "notes": "Scenic flight, overhead Naivasha and Fairmont Mt Kenya",
+    "payment_method": "",
+    "payment_ref": "",
+    "pdf_url": "https://i.ibb.co/QtZZb5P/df58dbc9b999.jpg",
+    "quote_snapshot": {
+      "ac_key": "Cessna Grand Caravan",
+      "ac_label": "Cessna Grand Caravan EX (12 seater)",
+      "ac_type": "fixed_wing",
+      "aircraft": "Cessna Grand Caravan EX (12 seater)",
+      "billed_hours": 4.5,
+      "flight_cost": 5850,
+      "home_airstrip": "Wilson Airport, Nairobi",
+      "idle_day_rate_usd": 1300,
+      "images": [
+        "https://i.ibb.co/xKrRd8tH/126d72dc5b2d.jpg",
+        "https://i.ibb.co/ccTY4xX3/c5427a6a77ba.jpg",
+        "https://i.ibb.co/JwBfn8ND/2592a2d3f3a7.jpg",
+        "https://i.ibb.co/V0yVtqG9/cefdc2578ce2.jpg",
+        "https://i.ibb.co/RTbx02Dv/e36c0cc658ee.jpg",
+        "https://i.ibb.co/9mHVCy6H/24edf735681c.jpg"
+      ],
+      "min_applied": true,
+      "min_chargeable_hrs": 1,
+      "mission": "safari",
+      "overnight_rate_usd": 250,
+      "overnight_usd": 0,
+      "pax_fee_usd_display": 150,
+      "pax_fees": 150,
+      "rate_usd": 1300,
+      "routing_mode": "direct",
+      "segments": [
+        {
+          "cost": 364.78,
+          "date": "13/06/26",
+          "destination": "Airspray Naivasha",
+          "dist_nm": 39.3,
+          "hours": 0.2806,
+          "nm": 39.3,
+          "origin": "Wilson",
+          "type": "revenue"
+        },
+        {
+          "cost": 585.65,
+          "date": "13/06/26",
+          "destination": "Fairmont Mount Kenya Safari Club",
+          "dist_nm": 63.1,
+          "hours": 0.4505,
+          "nm": 63.1,
+          "origin": "Airspray Naivasha",
+          "type": "revenue"
+        },
+        {
+          "cost": 2644.2,
+          "date": "13/06/26",
+          "destination": "Mombasa",
+          "dist_nm": 284.8,
+          "hours": 2.034,
+          "nm": 284.8,
+          "origin": "Fairmont Mount Kenya Safari Club",
+          "type": "revenue"
+        },
+        {
+          "cost": 2197.78,
+          "date": null,
+          "destination": "Wilson Airport",
+          "dist_nm": 236.7,
+          "hours": 1.6906,
+          "nm": 236.7,
+          "origin": "Mombasa",
+          "type": "depositioning"
+        }
+      ],
+      "total_usd": 6000,
+      "waiting_usd": 0
+    },
+    "route_summary": "Wilson to Airspray Naivasha on 13/06/26, Airspray Naivasha to Fairmont Mount Kenya Safari Club on 13/06/26, Fairmont Mount Kenya Safari Club to Mombasa on 13/06/26",
+    "source": "admin",
+    "status": "PENDING",
+    "token": "JET-Q-130626-WCI12Y",
+    "total_usd": 6000.0,
+    "updated_at": "2026-06-13T13:24:05.330460"
+  },
   "JG-2026-0YT3D6": {
     "ac_key": "Airbus H125",
     "ac_label": "Airbus H125 (5 seater)",
@@ -146,6 +238,30 @@
     "token": "JG-2026-7V9ZG6",
     "total_usd": 4210,
     "updated_at": "2026-06-13T08:03:01.635432"
+  },
+  "JG-2026-AMIP93": {
+    "ac_key": "Bell 407",
+    "ac_label": "Bell 407 (5 seater)",
+    "client_email": "",
+    "client_name": "Patrick Mungai",
+    "client_whatsapp": "+2540729 369 812",
+    "created_at": "2026-06-13T13:44:57.015661",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Bell 407",
+      "ac_label": "Bell 407 (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Juja Preparatory School \u2192 Pin, Nairobi, Nairobi County (10.5 nm)",
+      "total_usd": 2500
+    },
+    "route_summary": "Juja Preparatory School \u2192 Pin, Nairobi, Nairobi County (10.5 nm)",
+    "status": "PENDING",
+    "token": "JG-2026-AMIP93",
+    "total_usd": 2500,
+    "updated_at": "2026-06-13T13:44:57.015666"
   },
   "JG-2026-FXMA99": {
     "ac_key": "Cessna Grand Caravan",
