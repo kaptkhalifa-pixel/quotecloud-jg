@@ -373,6 +373,21 @@ def resolve_location(s, user_label=None):
     if not s:
         return None, s
     original_input = user_label or s
+    if s.startswith("ChIJ"):
+        try:
+            import requests as req
+            gr = req.get("https://maps.googleapis.com/maps/api/geocode/json",
+                        params={"place_id": s, "key": GOOGLE_API_KEY},
+                        timeout=5)
+            gdata = gr.json()
+            if gdata.get("status") == "OK":
+                loc = gdata["results"][0]["geometry"]["location"]
+                lat, lon = float(loc["lat"]), float(loc["lng"])
+                if check_geo_lock(lat, lon):
+                    display = original_input.strip().title() if original_input != s else (reverse_geocode(lat, lon) or f"Pin, {lat:.5f}, {lon:.5f}")
+                    return display, f"{lat},{lon}"
+        except Exception:
+            pass
     if "goo.gl" in s or "maps.app" in s:
         try:
             import requests as req
