@@ -263,6 +263,54 @@
     "total_usd": 2500,
     "updated_at": "2026-06-13T13:44:57.015666"
   },
+  "JG-2026-EAS5MP": {
+    "ac_key": "Airbus H125",
+    "ac_label": "Airbus H125 (5 seater)",
+    "client_email": "",
+    "client_name": "Antony",
+    "client_whatsapp": "254702983821",
+    "created_at": "2026-06-13T14:15:40.487087",
+    "mission": "return_both",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Airbus H125",
+      "ac_label": "Airbus H125 (5 seater)",
+      "mission": "return_both",
+      "route_summary": "Karen Country Club \u2192 Kalawani (45.5 nm) on 15/06/26, Kalawani \u2192 Karen Country Club (45.5 nm) on 15/06/26",
+      "total_usd": 2970
+    },
+    "route_summary": "Karen Country Club \u2192 Kalawani (45.5 nm) on 15/06/26, Kalawani \u2192 Karen Country Club (45.5 nm) on 15/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-EAS5MP",
+    "total_usd": 2970,
+    "updated_at": "2026-06-13T14:15:40.487093"
+  },
+  "JG-2026-ES488D": {
+    "ac_key": "Airbus H125",
+    "ac_label": "Airbus H125 (5 seater)",
+    "client_email": "",
+    "client_name": "Patrick Muigai",
+    "client_whatsapp": "+2540729 369 812",
+    "created_at": "2026-06-13T14:01:58.879819",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Airbus H125",
+      "ac_label": "Airbus H125 (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Juja Preparatory School \u2192 The Place At Windsor (10.5 nm) on 29/08/26",
+      "total_usd": 2500
+    },
+    "route_summary": "Juja Preparatory School \u2192 The Place At Windsor (10.5 nm) on 29/08/26",
+    "status": "PENDING",
+    "token": "JG-2026-ES488D",
+    "total_usd": 2500,
+    "updated_at": "2026-06-13T14:01:58.879824"
+  },
   "JG-2026-FXMA99": {
     "ac_key": "Cessna Grand Caravan",
     "ac_label": "Cessna Grand Caravan EX (12 seater)",

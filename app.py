@@ -724,8 +724,10 @@ def run_quote_engine(data):
         if mission == "one_way":
             raw_p = data.get("pickup", "")
             raw_d = data.get("dropoff", "")
-            p_disp, p_coord = resolve_location(raw_p, user_label=raw_p)
-            d_disp, d_coord = resolve_location(raw_d, user_label=raw_d)
+            pid_p = data.get("pickup_place_id", "")
+            pid_d = data.get("dropoff_place_id", "")
+            p_disp, p_coord = resolve_location(pid_p or raw_p, user_label=raw_p)
+            d_disp, d_coord = resolve_location(pid_d or raw_d, user_label=raw_d)
             if p_disp is None:
                 return {"error": geo_lock_error(raw_p), "not_found": raw_p}, 400
             if d_disp is None:
@@ -743,8 +745,10 @@ def run_quote_engine(data):
         elif mission == "return":
             raw_p = data.get("pickup", "")
             raw_d = data.get("dropoff", "")
-            p_disp, p_coord = resolve_location(raw_p, user_label=raw_p)
-            d_disp, d_coord = resolve_location(raw_d, user_label=raw_d)
+            pid_p = data.get("pickup_place_id", "")
+            pid_d = data.get("dropoff_place_id", "")
+            p_disp, p_coord = resolve_location(pid_p or raw_p, user_label=raw_p)
+            d_disp, d_coord = resolve_location(pid_d or raw_d, user_label=raw_d)
             if p_disp is None:
                 return {"error": geo_lock_error(raw_p), "not_found": raw_p}, 400
             if d_disp is None:
@@ -1607,10 +1611,34 @@ def autocomplete():
             timeout=5
         )
         data = r.json()
-        predictions = [{"description": p["description"], "main": p.get("structured_formatting", {}).get("main_text", ""), "secondary": p.get("structured_formatting", {}).get("secondary_text", "")} for p in data.get("predictions", [])]
+        predictions = [{"description": p["description"], "main": p.get("structured_formatting", {}).get("main_text", ""), "secondary": p.get("structured_formatting", {}).get("secondary_text", ""), "place_id": p.get("place_id", "")} for p in data.get("predictions", [])]
         return jsonify({"predictions": predictions})
     except Exception as e:
         return jsonify({"predictions": [], "error": str(e)})
+@app.route("/resolve_place", methods=["POST"])
+def resolve_place():
+    data = request.get_json()
+    place_id = (data.get("place_id") or "").strip()
+    label = (data.get("label") or "").strip()
+    if not place_id:
+        return jsonify({"found": False}), 400
+    try:
+        import requests as req
+        r = req.get("https://maps.googleapis.com/maps/api/geocode/json",
+                    params={"place_id": place_id, "key": GOOGLE_API_KEY},
+                    timeout=5)
+        gdata = r.json()
+        if gdata.get("status") == "OK":
+            loc = gdata["results"][0]["geometry"]["location"]
+            lat, lon = float(loc["lat"]), float(loc["lng"])
+            if check_geo_lock(lat, lon):
+                display = label or reverse_geocode(lat, lon) or f"Pin, {lat:.5f}, {lon:.5f}"
+                return jsonify({"found": True, "lat": lat, "lon": lon, "display": display, "coord": f"{lat},{lon}"})
+            else:
+                return jsonify({"found": False, "geo_error": True, "display": label})
+    except Exception as e:
+        pass
+    return jsonify({"found": False})
 
 @app.route("/resolve_pin", methods=["POST"])
 @login_required
