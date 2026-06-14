@@ -1057,7 +1057,6 @@ async function submitQuote(mission) {
     renderResults(lastResults);
     document.getElementById('pdf-section').style.display = 'block';
     populatePdfAircraftSelector();
-    document.getElementById('pdf-section').scrollIntoView({behavior:'smooth', block:'start'});
   } catch(e) {
     document.getElementById('quote-result').innerHTML = `<div class="error-box">Network error: ${e.message}</div>`;
   }
@@ -1848,8 +1847,9 @@ function filterRecords() {
     return matchType && matchSearch;
   });
   let sort = document.getElementById('rec-sort')?.value || 'newest';
-  if (sort === 'oldest') filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
-  else if (sort === 'newest') filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+  const parseDMY = s => { if(!s) return 0; let p=s.split('/'); return p.length===3?new Date(p[2],p[1]-1,p[0]).getTime():0; };
+  if (sort === 'oldest') filtered.sort((a,b) => parseDMY(a.date) - parseDMY(b.date));
+  else if (sort === 'newest') filtered.sort((a,b) => parseDMY(b.date) - parseDMY(a.date));
   else if (sort === 'amount_desc') filtered.sort((a,b) => parseFloat(b.amount||0) - parseFloat(a.amount||0));
   else if (sort === 'amount_asc') filtered.sort((a,b) => parseFloat(a.amount||0) - parseFloat(b.amount||0));
   renderRecords(filtered);
