@@ -889,8 +889,9 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 </div>
 
 <script>
-// Quotecloud Admin v2.5.1 - Mobile optimized
+// Quotecloud Admin v2.6.0 - Mobile optimized
 let lastResults = [];
+let fxRates = {};
 let placeIdMap = {};
 let allLocations = [];
 let aircraftData = {};
@@ -1223,7 +1224,9 @@ function renderBilling(res, extraSegs) {
     let idleDays = idleRate > 0 ? Math.round(waitingUsd / idleRate) : 1;
     rows += `<div class="billing-row"><span>Idle Day Charge (${idleDays} day${idleDays!==1?'s':''} @ $${idleRate.toLocaleString()}/day)</span><span>USD $${parseFloat(waitingUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div></div>`;
+  let kesRate = fxRates['KES'] || 0;
+  let kesFx = kesRate > 0 ? `<div style="font-size:0.72rem;color:#888;text-align:right;margin-top:4px">≈ KES ${Math.round((res.total_usd||0)*kesRate).toLocaleString()}</div>` : '';
+  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>${kesFx}</div>`;
 }
 
 function renderOneAc(res) {
@@ -1317,6 +1320,7 @@ function renderAdjuster(res, idx) {
         <button class="btn btn-success" onclick="savePreset(${idx})">💾 Save as Preset</button>
       </div>
       <div class="preset-row" id="preset-chips-${idx}"></div>
+      <div id="adj-summary-${idx}" style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:0.82rem;color:#155724;display:none"></div>
       <hr class="adjuster-divider">
       <div class="adjuster-reverse">
         <div class="adjuster-reverse-title">🔄 Reverse Mode — Target Price</div>
@@ -1369,6 +1373,11 @@ function recalcAdjuster(idx) {
   lastResults[idx]._adj_rate = rate;
   lastResults[idx]._adj_pax = pax;
   lastResults[idx]._adj_total = total;
+  let kesRate = fxRates['KES'] || 0;
+  let kesFx = kesRate > 0 ? ` &nbsp;·&nbsp; KES ${Math.round(total*kesRate).toLocaleString()}` : '';
+  let adjSummary = document.getElementById('adj-summary-'+idx);
+  if (adjSummary) adjSummary.innerHTML = `<strong>Adjusted Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}</strong>${kesFx} &nbsp;·&nbsp; ${hrs} hrs @ $${rate}/hr`;
+  if (adjSummary) adjSummary.style.display = 'block';
 }
 
 function calcReverse(idx) {
@@ -2159,6 +2168,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ['paid-modal','log-modal','edit-modal','delete-modal','invoice-builder-modal','share-modal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
+  loadFX();
   loadStateFromStorage();
   try {
     let savedTab = localStorage.getItem('qc_active_tab');
@@ -2282,6 +2292,13 @@ async function changePassword() {
   } catch(e) { showMsg('pass-msg','Network error.','error'); }
 }
 let allEnquiries = [];
+async function loadFX() {
+  try {
+    let r = await fetch('/fx/rates');
+    let data = await r.json();
+    if (data.success) fxRates = data.rates;
+  } catch(e) {}
+}
 
 async function loadEnquiries() {
   try {
