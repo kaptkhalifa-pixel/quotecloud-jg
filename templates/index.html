@@ -1115,12 +1115,14 @@ function getSelectedResult() {
   } else {
     actual = res;
   }
-  actual.rate_usd = res.rate_usd;
+  actual.rate_usd = res._adj_rate || res.rate_usd;
   actual.overnight_rate_usd = res.overnight_rate_usd;
   actual.idle_day_rate_usd = res.idle_day_rate_usd;
-  actual.pax_fee_usd_display = res.pax_fee_usd_display;
+  actual.pax_fee_usd_display = res._adj_pax !== undefined ? res._adj_pax : res.pax_fee_usd_display;
   actual.ac_label = res.ac_label;
   actual.ac_key = res.ac_key;
+  if (res._adj_total !== undefined) actual.total_usd = res._adj_total;
+  if (res._adj_rate !== undefined) actual._was_adjusted = true;
   return actual;
 }
 
