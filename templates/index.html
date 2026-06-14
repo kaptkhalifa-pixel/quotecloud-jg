@@ -1339,6 +1339,9 @@ function renderAdjuster(res, idx) {
       <span id="adj-arrow-${idx}">▼</span>
     </div>
     <div class="adjuster-body" id="adj-body-${idx}">
+      <div style="background:#f0f4ff;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:0.78rem;color:#555">
+        <strong>Original:</strong> &nbsp; Rate: <strong>$${rate}/hr</strong> &nbsp;·&nbsp; Speed: <strong>${speed} KTAS</strong> &nbsp;·&nbsp; Pax/Admin: <strong>$${pax}</strong> &nbsp;·&nbsp; Total: <strong>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</strong>
+      </div>
       <div class="adjuster-grid">
         <div class="adjuster-field">
           <label>Rate / hr (USD)</label>
