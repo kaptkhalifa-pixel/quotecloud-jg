@@ -1287,9 +1287,45 @@ function renderResults(results) {
       <div class="ac-title">${res.ac_label||''}</div>
       ${renderOneAc(res)}
       ${renderAdjuster(res, i)}
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-sm" onclick="quickPDF(${i})">📄 Generate PDF</button>
+        <button class="btn btn-outline btn-sm" onclick="quickWA(${i})">💬 Share via WhatsApp</button>
+      </div>
     </div>`).join('');
   document.getElementById('quote-result').innerHTML = html;
   loadPresetChips();
+}
+
+function quickPDF(idx) {
+  let sel = document.getElementById('pdf-aircraft-select');
+  if (sel) { sel.value = idx; updateOptionSelector(); }
+  document.getElementById('pdf-section').style.display = 'block';
+  document.getElementById('pdf-section').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function quickWA(idx) {
+  let res = lastResults[idx];
+  if (!res) return;
+  let wa = prompt('WhatsApp number (with country code):');
+  if (!wa) return;
+  let total = res._adj_total || res.total_usd || 0;
+  if (res.mission === 'return_both') total = res._adj_total || res.option_a?.total_usd || 0;
+  let segs = res.segments || res.option_a?.segments || [];
+  let route = segs.filter(s=>s.type==='revenue').map(s=>s.origin+' → '+s.destination+(s.date?' on '+s.date:'')).join(', ');
+  let lines = [
+    `Dear Client,`,
+    ``,
+    `Please find below a charter quote from ${operatorConfig.company_name||'us'}:`,
+    ``,
+    `Aircraft: ${res.ac_label||''}`,
+    `Route: ${route}`,
+    `Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`,
+    ``,
+    `Quote valid 48 hours · Subject to availability.`,
+    `Please confirm to proceed.`
+  ];
+  let url = 'https://wa.me/'+wa.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(lines.join('\n'));
+  window.open(url, '_blank');
 }
 
 function renderAdjuster(res, idx) {
