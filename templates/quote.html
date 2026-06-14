@@ -467,7 +467,7 @@ function renderSuggestions(predictions, drop, input) {
   drop.innerHTML = predictions.slice(0,6).map(p => {
     let main = p.main || p.description;
     let sub = p.secondary || '';
-    return `<div class="ac-item" data-desc="${p.description}" data-main="${p.main || p.description}" onclick="selectSuggestion(this,'${input.id}')">
+    return `<div class="ac-item" data-desc="${p.description}" data-main="${p.main || p.description}" data-placeid="${p.place_id||''}" onclick="selectSuggestion(this,'${input.id}')">
       <span class="ac-item-icon">📍</span>
       <div><div class="ac-item-main">${main}</div>${sub?`<div class="ac-item-sub">${sub}</div>`:''}</div>
     </div>`;
@@ -478,6 +478,7 @@ function renderSuggestions(predictions, drop, input) {
 function selectSuggestion(el, inputId) {
   let main = el.dataset.main || el.dataset.desc;
   let input = document.getElementById(inputId);
+  clientPlaceIdMap[inputId] = el.dataset.placeid || '';
   let drop = document.getElementById('ac-' + inputId);
   if (input) input.value = main;
   if (drop) drop.style.display = 'none';
@@ -711,6 +712,7 @@ function showResolving(show) {
   if (show) bar.classList.add('active');
   else bar.classList.remove('active');
 }
+let clientPlaceIdMap = {};
 
 async function submitQuote(mission) {
   let body = { mission };
@@ -728,6 +730,8 @@ async function submitQuote(mission) {
       showResolving(false);
       body.pickup = (p&&isMapsUrl(rawP)) ? p.resolved : rawP;
       body.dropoff = (d&&isMapsUrl(rawD)) ? d.resolved : rawD;
+      if (clientPlaceIdMap['ow-pickup']) body.pickup_place_id = clientPlaceIdMap['ow-pickup'];
+      if (clientPlaceIdMap['ow-dropoff']) body.dropoff_place_id = clientPlaceIdMap['ow-dropoff'];
       body.depart = parseSmartDate(document.getElementById('ow-date').value) || '';
     } else if (mission==='return') {
       let rawP = document.getElementById('rt-pickup').value.trim();
