@@ -125,6 +125,25 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .otab-content { display: none; }
 .otab-content.active { display: block; }
 
+/* QUOTE ADJUSTER */
+.adjuster-panel { background: #fff; border: 1.5px dashed #ddd; border-radius: 10px; padding: 14px; margin-top: 12px; }
+.adjuster-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: #555; padding: 6px 0; user-select: none; }
+.adjuster-toggle:hover { color: #333; }
+.adjuster-body { display: none; margin-top: 12px; }
+.adjuster-body.open { display: block; }
+.adjuster-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.adjuster-field label { font-size: 0.65rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+.adjuster-field input { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.88rem; font-family: inherit; }
+.adjuster-field input:focus { border-color: #1a56db; outline: none; }
+.adjuster-divider { border: none; border-top: 1px solid #eee; margin: 12px 0; }
+.adjuster-reverse { background: #f8f9fa; border-radius: 8px; padding: 12px; }
+.adjuster-reverse-title { font-size: 0.72rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.adjuster-result { font-size: 0.82rem; color: #1a56db; font-weight: 600; margin-top: 8px; min-height: 20px; }
+.preset-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.preset-chip { padding: 4px 10px; border-radius: 12px; border: 1px solid #ddd; background: #fff; font-size: 0.72rem; font-weight: 600; cursor: pointer; color: #555; transition: all 0.2s; }
+.preset-chip:hover { border-color: #1a56db; color: #1a56db; }
+.preset-chip.active { background: #1a56db; color: #fff; border-color: #1a56db; }
+
 /* PDF SECTION */
 .pdf-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee; }
 
@@ -1257,13 +1276,157 @@ function switchOtab(el, id) {
 }
 
 function renderResults(results) {
-  let html = results.map(res => `
-    <div class="ac-card">
+  lastResults = results;
+  let html = results.map((res, i) => `
+    <div class="ac-card" id="ac-card-${i}">
       <div class="ac-title">${res.ac_label||''}</div>
       ${renderOneAc(res)}
+      ${renderAdjuster(res, i)}
     </div>`).join('');
   document.getElementById('quote-result').innerHTML = html;
+  loadPresetChips();
 }
+
+function renderAdjuster(res, idx) {
+  let rate = res.rate_usd || 0;
+  let speed = res.speed_ktas || res.speed || 120;
+  let pax = res.pax_fee_usd || res.pax_fee_usd_display || 0;
+  return `
+  <div class="adjuster-panel">
+    <div class="adjuster-toggle" onclick="toggleAdjuster(${idx})">
+      <span>⚙ Adjust Variables</span>
+      <span id="adj-arrow-${idx}">▼</span>
+    </div>
+    <div class="adjuster-body" id="adj-body-${idx}">
+      <div class="adjuster-grid">
+        <div class="adjuster-field">
+          <label>Rate / hr (USD)</label>
+          <input type="number" id="adj-rate-${idx}" value="${rate}" oninput="recalcAdjuster(${idx})">
+        </div>
+        <div class="adjuster-field">
+          <label>Speed (KTAS)</label>
+          <input type="number" id="adj-speed-${idx}" value="${speed}" oninput="recalcAdjuster(${idx})">
+        </div>
+        <div class="adjuster-field">
+          <label>Pax / Admin (USD)</label>
+          <input type="number" id="adj-pax-${idx}" value="${pax}" oninput="recalcAdjuster(${idx})">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="recalcAdjuster(${idx})">↺ Recalculate</button>
+        <button class="btn btn-success" onclick="savePreset(${idx})">💾 Save as Preset</button>
+      </div>
+      <div class="preset-row" id="preset-chips-${idx}"></div>
+      <hr class="adjuster-divider">
+      <div class="adjuster-reverse">
+        <div class="adjuster-reverse-title">🔄 Reverse Mode — Target Price</div>
+        <div class="adjuster-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div class="adjuster-field">
+            <label>Target Total (USD)</label>
+            <input type="number" id="adj-target-${idx}" placeholder="e.g. 15000" oninput="calcReverse(${idx})">
+          </div>
+          <div class="adjuster-field">
+            <label>Keep Pax/Admin</label>
+            <input type="number" id="adj-rev-pax-${idx}" value="${pax}" oninput="calcReverse(${idx})">
+          </div>
+        </div>
+        <div class="adjuster-result" id="adj-rev-result-${idx}"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleAdjuster(idx) {
+  let body = document.getElementById('adj-body-'+idx);
+  let arrow = document.getElementById('adj-arrow-'+idx);
+  body.classList.toggle('open');
+  arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+}
+
+function getTotalHours(res) {
+  let segs = res.segments || [];
+  if (res.mission === 'return_both') segs = res.option_a?.segments || [];
+  let t = 0;
+  segs.forEach(s => { if (s.hours && s.type) t += parseFloat(s.hours); });
+  return Math.round(t * 10) / 10;
+}
+
+function recalcAdjuster(idx) {
+  let res = lastResults[idx];
+  if (!res) return;
+  let rate = parseFloat(document.getElementById('adj-rate-'+idx).value) || 0;
+  let pax = parseFloat(document.getElementById('adj-pax-'+idx).value) || 0;
+  let hrs = getTotalHours(res);
+  let flightCost = Math.round(hrs * rate * 100) / 100;
+  let total = Math.round((flightCost + pax) * 100) / 100;
+  let card = document.getElementById('ac-card-'+idx);
+  let totalEl = card.querySelector('.billing-total span:last-child');
+  let flightEl = card.querySelectorAll('.billing-row')[0]?.querySelector('span:last-child');
+  let paxEl = card.querySelectorAll('.billing-row')[1]?.querySelector('span:last-child');
+  if (totalEl) totalEl.textContent = 'USD $' + total.toLocaleString(undefined, {minimumFractionDigits:2});
+  if (flightEl) flightEl.textContent = '$' + flightCost.toLocaleString(undefined, {minimumFractionDigits:2});
+  if (paxEl) paxEl.textContent = '$' + pax.toLocaleString();
+  lastResults[idx]._adj_rate = rate;
+  lastResults[idx]._adj_pax = pax;
+  lastResults[idx]._adj_total = total;
+}
+
+function calcReverse(idx) {
+  let res = lastResults[idx];
+  if (!res) return;
+  let target = parseFloat(document.getElementById('adj-target-'+idx).value) || 0;
+  let pax = parseFloat(document.getElementById('adj-rev-pax-'+idx).value) || 0;
+  let hrs = getTotalHours(res);
+  let el = document.getElementById('adj-rev-result-'+idx);
+  if (!target || !hrs) { el.textContent = ''; return; }
+  let impliedFlight = target - pax;
+  let impliedRate = Math.round((impliedFlight / hrs) * 100) / 100;
+  if (impliedRate < 0) { el.textContent = 'Target too low — increase target price.'; el.style.color='#dc3545'; return; }
+  el.style.color = '#1a56db';
+  el.innerHTML = `Implied Rate: <strong>$${impliedRate.toLocaleString(undefined,{minimumFractionDigits:2})}/hr</strong> &nbsp;·&nbsp; Flight Cost: <strong>$${impliedFlight.toLocaleString(undefined,{minimumFractionDigits:2})}</strong> &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
+}
+
+function applyReverseRate(idx, rate, pax) {
+  document.getElementById('adj-rate-'+idx).value = rate;
+  document.getElementById('adj-pax-'+idx).value = pax;
+  recalcAdjuster(idx);
+}
+
+function loadPresetChips() {
+  let presets = operatorConfig.rate_presets || [];
+  document.querySelectorAll('[id^="preset-chips-"]').forEach(el => {
+    let idx = el.id.replace('preset-chips-','');
+    el.innerHTML = presets.map((p,pi) =>
+      `<span class="preset-chip" onclick="applyPreset(${idx},${pi})">${p.name}</span>`
+    ).join('');
+  });
+}
+
+function applyPreset(idx, pi) {
+  let presets = operatorConfig.rate_presets || [];
+  let p = presets[pi];
+  if (!p) return;
+  document.getElementById('adj-rate-'+idx).value = p.rate;
+  document.getElementById('adj-pax-'+idx).value = p.pax;
+  if (p.speed) document.getElementById('adj-speed-'+idx).value = p.speed;
+  recalcAdjuster(idx);
+  document.querySelectorAll(`#preset-chips-${idx} .preset-chip`).forEach((c,i) => c.classList.toggle('active', i===pi));
+}
+
+async function savePreset(idx) {
+  let name = prompt('Preset name (e.g. Peak Season, Wet Lease):');
+  if (!name) return;
+  let rate = parseFloat(document.getElementById('adj-rate-'+idx).value) || 0;
+  let pax = parseFloat(document.getElementById('adj-pax-'+idx).value) || 0;
+  let speed = parseFloat(document.getElementById('adj-speed-'+idx).value) || 0;
+  let presets = operatorConfig.rate_presets || [];
+  presets.push({name, rate, pax, speed});
+  operatorConfig.rate_presets = presets;
+  await fetch('/settings/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(operatorConfig)});
+  loadPresetChips();
+  showMsg('quote-msg', `Preset "${name}" saved.`, 'success');
+}
+
 let adminAcTimers = {};
 async function adminAcFetch(query, drop, input) {
   try {
