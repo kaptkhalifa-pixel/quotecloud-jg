@@ -741,6 +741,7 @@ def run_quote_engine(data):
             raw_d = data.get("dropoff", "")
             pid_p = data.get("pickup_place_id", "")
             pid_d = data.get("dropoff_place_id", "")
+            print(f"DEBUG place_ids: pickup={pid_p!r} dropoff={pid_d!r}", flush=True)
             p_disp, p_coord = resolve_location(pid_p or raw_p, user_label=raw_p)
             d_disp, d_coord = resolve_location(pid_d or raw_d, user_label=raw_d)
             if p_disp is None:

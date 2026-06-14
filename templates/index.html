@@ -872,6 +872,8 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 <script>
 // Quotecloud Admin v2.5.1 - Mobile optimized
 let lastResults = [];
+let placeIdMap = {};
+let placeIdMap = {};
 let allLocations = [];
 let aircraftData = {};
 let operatorConfig = {};
@@ -1005,15 +1007,15 @@ async function submitQuote(mission) {
     let owDropoff = document.getElementById('ow-dropoff');
     body.pickup = owPickup.value;
     body.dropoff = owDropoff.value;
-    if (owPickup.dataset.placeId) body.pickup_place_id = owPickup.dataset.placeId;
-    if (owDropoff.dataset.placeId) body.dropoff_place_id = owDropoff.dataset.placeId;
+    if (placeIdMap['ow-pickup']) body.pickup_place_id = placeIdMap['ow-pickup'];
+    if (placeIdMap['ow-dropoff']) body.dropoff_place_id = placeIdMap['ow-dropoff'];
   } else if (mission === 'return') {
     let rtPickup = document.getElementById('rt-pickup');
     let rtDropoff = document.getElementById('rt-dropoff');
     body.pickup = rtPickup.value;
     body.dropoff = rtDropoff.value;
-    if (rtPickup.dataset.placeId) body.pickup_place_id = rtPickup.dataset.placeId;
-    if (rtDropoff.dataset.placeId) body.dropoff_place_id = rtDropoff.dataset.placeId;
+    if (placeIdMap['rt-pickup']) body.pickup_place_id = placeIdMap['rt-pickup'];
+    if (placeIdMap['rt-dropoff']) body.dropoff_place_id = placeIdMap['rt-dropoff'];
     body.depart = parseSmartDate(document.getElementById('rt-depart').value);
     body.return_date = parseSmartDate(document.getElementById('rt-return').value);
   } else {
@@ -1285,7 +1287,7 @@ function adminAcSelect(el, inputId) {
   let input = document.getElementById(inputId), drop = document.getElementById('aac-'+inputId);
   if (input) {
     input.value = el.dataset.main;
-    input.dataset.placeId = el.dataset.placeid || '';
+    placeIdMap[inputId] = el.dataset.placeid || '';
   }
   if (drop) drop.style.display = 'none';
 }
