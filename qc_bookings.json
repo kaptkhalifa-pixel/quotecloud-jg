@@ -115,6 +115,30 @@
     "total_usd": 8140,
     "updated_at": "2026-06-13T12:05:56.074093"
   },
+  "JG-2026-10IBQ0": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "petterjudah@gmail.com",
+    "client_name": "Peter Judah",
+    "client_whatsapp": "0710452377",
+    "created_at": "2026-06-13T16:49:05.862136",
+    "mission": "return_both",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "return_both",
+      "route_summary": "Wilson \u2192 Kibwezi Town (95.3 nm) on 14/06/26, Kibwezi Town \u2192 Wilson (95.3 nm) on 14/06/26",
+      "total_usd": 1155
+    },
+    "route_summary": "Wilson \u2192 Kibwezi Town (95.3 nm) on 14/06/26, Kibwezi Town \u2192 Wilson (95.3 nm) on 14/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-10IBQ0",
+    "total_usd": 1155,
+    "updated_at": "2026-06-13T16:49:05.862144"
+  },
   "JG-2026-1XFO8V": {
     "ac_key": "Cessna 206",
     "ac_label": "Cessna 206 Station air (5 seater)",
@@ -138,6 +162,32 @@
     "token": "JG-2026-1XFO8V",
     "total_usd": 2065,
     "updated_at": "2026-06-13T12:01:26.401153"
+  },
+  "JG-2026-3C6VB9": {
+    "ac_key": "Bell 407",
+    "ac_label": "Bell 407 (5 seater)",
+    "client_email": "",
+    "client_name": "RONNIE SAFARI",
+    "client_whatsapp": "+254758783995",
+    "created_at": "2026-06-13T15:47:50.446468",
+    "invoice_requested": true,
+    "invoice_requested_at": "2026-06-13T15:48:24.579131",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Bell 407",
+      "ac_label": "Bell 407 (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Matuu (45.3 nm) on 16/06/26",
+      "total_usd": 2500
+    },
+    "route_summary": "Wilson \u2192 Matuu (45.3 nm) on 16/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-3C6VB9",
+    "total_usd": 2500,
+    "updated_at": "2026-06-13T15:48:24.579138"
   },
   "JG-2026-3ICUAD": {
     "ac_key": "Cessna 206",
@@ -167,6 +217,30 @@
     "total_usd": 2780,
     "updated_at": "2026-06-13T08:01:07.349169"
   },
+  "JG-2026-3M99OT": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "petterjudah@gmail.com",
+    "client_name": "Peter Judah",
+    "client_whatsapp": "0710452377",
+    "created_at": "2026-06-14T08:03:58.819682",
+    "mission": "return_both",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "return_both",
+      "route_summary": "Wilson \u2192 Amboseli National Park (83 nm) on 03/07/26, Amboseli National Park \u2192 Wilson (83 nm) on 05/07/26",
+      "total_usd": 1975
+    },
+    "route_summary": "Wilson \u2192 Amboseli National Park (83 nm) on 03/07/26, Amboseli National Park \u2192 Wilson (83 nm) on 05/07/26",
+    "status": "PENDING",
+    "token": "JG-2026-3M99OT",
+    "total_usd": 1975,
+    "updated_at": "2026-06-14T08:03:58.819688"
+  },
   "JG-2026-3OXAJT": {
     "ac_key": "Cessna Grand Caravan",
     "ac_label": "Cessna Grand Caravan EX (12 seater)",
@@ -190,6 +264,30 @@
     "token": "JG-2026-3OXAJT",
     "total_usd": 4830,
     "updated_at": "2026-06-13T07:39:27.528584"
+  },
+  "JG-2026-62FN8Z": {
+    "ac_key": "Bell 407",
+    "ac_label": "Bell 407 (5 seater)",
+    "client_email": "",
+    "client_name": "Fiona",
+    "client_whatsapp": "0702061826",
+    "created_at": "2026-06-14T07:18:51.860811",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Bell 407",
+      "ac_label": "Bell 407 (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 The Hill School (6474.2 nm)",
+      "total_usd": 304475
+    },
+    "route_summary": "Wilson \u2192 The Hill School (6474.2 nm)",
+    "status": "PENDING",
+    "token": "JG-2026-62FN8Z",
+    "total_usd": 304475,
+    "updated_at": "2026-06-14T07:18:51.860816"
   },
   "JG-2026-7QQ5UC": {
     "ac_key": "Cessna 206",
@@ -385,6 +483,84 @@
     "total_usd": 2780,
     "updated_at": "2026-06-13T09:58:51.443028"
   },
+  "JG-2026-MIJPXY": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "kylemaxwell58@gmail.com",
+    "client_name": "kylemax",
+    "client_whatsapp": "+254748455791",
+    "created_at": "2026-06-13T21:52:13.695447",
+    "invoice_number": "JET-I-140626-EOIT3Y",
+    "invoice_requested": false,
+    "invoice_requested_at": "",
+    "invoice_url": "https://i.ibb.co/gMdPBXQG/b0fe56b6e002.jpg",
+    "mission": "return_both",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "return_both",
+      "route_summary": "",
+      "total_usd": 4650
+    },
+    "route_summary": "",
+    "status": "INVOICED",
+    "token": "JG-2026-MIJPXY",
+    "total_usd": 4650,
+    "updated_at": "2026-06-14T07:14:11.692492"
+  },
+  "JG-2026-MNPYUJ": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "petterjudah@gmail.com",
+    "client_name": "Peter Judah",
+    "client_whatsapp": "0710452377",
+    "created_at": "2026-06-13T16:46:35.777575",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Kibwezi Town (95.3 nm) on 30/06/26",
+      "total_usd": 1155
+    },
+    "route_summary": "Wilson \u2192 Kibwezi Town (95.3 nm) on 30/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-MNPYUJ",
+    "total_usd": 1155,
+    "updated_at": "2026-06-13T16:46:35.777580"
+  },
+  "JG-2026-O0R3E1": {
+    "ac_key": "Airbus H125",
+    "ac_label": "Airbus H125 (5 seater)",
+    "client_email": "maina17peter@gmail.com",
+    "client_name": "PETER MAINA",
+    "client_whatsapp": "0727696771",
+    "created_at": "2026-06-13T17:47:48.271724",
+    "invoice_requested": true,
+    "invoice_requested_at": "2026-06-13T17:47:53.455223",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Airbus H125",
+      "ac_label": "Airbus H125 (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Othaya (46.9 nm) on 15/06/26",
+      "total_usd": 2735
+    },
+    "route_summary": "Wilson \u2192 Othaya (46.9 nm) on 15/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-O0R3E1",
+    "total_usd": 2735,
+    "updated_at": "2026-06-13T17:47:53.455229"
+  },
   "JG-2026-P3JELT": {
     "ac_key": "Cessna Grand Caravan",
     "ac_label": "Cessna Grand Caravan EX (12 seater)",
@@ -412,6 +588,58 @@
     "token": "JG-2026-P3JELT",
     "total_usd": 7300,
     "updated_at": "2026-06-12T23:15:53.950849"
+  },
+  "JG-2026-Q19OA5": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "petterjudah@gmail.com",
+    "client_name": "Peter Judah",
+    "client_whatsapp": "0710452377",
+    "created_at": "2026-06-14T08:03:18.098384",
+    "invoice_number": "JET-I-140626-ET7M8Q",
+    "invoice_requested": false,
+    "invoice_requested_at": "",
+    "invoice_url": "https://i.ibb.co/fz0gr5qq/6f0010fb5286.jpg",
+    "mission": "return_both",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "return_both",
+      "route_summary": "Wilson \u2192 Amboseli National Park (83 nm) on 03/07/26, Amboseli National Park \u2192 Wilson (83 nm) on 05/07/26",
+      "total_usd": 1975
+    },
+    "route_summary": "Wilson \u2192 Amboseli National Park (83 nm) on 03/07/26, Amboseli National Park \u2192 Wilson (83 nm) on 05/07/26",
+    "status": "INVOICED",
+    "token": "JG-2026-Q19OA5",
+    "total_usd": 1975,
+    "updated_at": "2026-06-14T10:51:12.101055"
+  },
+  "JG-2026-SB4ONZ": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "petterjudah@gmail.com",
+    "client_name": "Peter Judah",
+    "client_whatsapp": "0710452377",
+    "created_at": "2026-06-14T08:00:01.787351",
+    "mission": "return_both",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "return_both",
+      "route_summary": "Wilson \u2192 Amboseli National Park (83 nm) on 26/06/26, Amboseli National Park \u2192 Wilson (83 nm) on 28/06/26",
+      "total_usd": 1975
+    },
+    "route_summary": "Wilson \u2192 Amboseli National Park (83 nm) on 26/06/26, Amboseli National Park \u2192 Wilson (83 nm) on 28/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-SB4ONZ",
+    "total_usd": 1975,
+    "updated_at": "2026-06-14T08:00:01.787357"
   },
   "JG-2026-T4J63V": {
     "ac_key": "Cessna 206",
@@ -485,6 +713,60 @@
     "total_usd": 5085,
     "updated_at": "2026-06-13T11:34:05.168588"
   },
+  "JG-2026-Y12KUE": {
+    "ac_key": "Airbus H125",
+    "ac_label": "Airbus H125 (5 seater)",
+    "client_email": "markwillwesonga@gmail.com",
+    "client_name": "Mark william efumbi",
+    "client_whatsapp": "254725773173",
+    "created_at": "2026-06-14T07:07:31.461505",
+    "invoice_number": "JET-I-140626-29R1OZ",
+    "invoice_requested": false,
+    "invoice_requested_at": "",
+    "invoice_url": "https://i.ibb.co/bR7srpY0/c9c20d7c7eee.jpg",
+    "mission": "return_both",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Airbus H125",
+      "ac_label": "Airbus H125 (5 seater)",
+      "mission": "return_both",
+      "route_summary": "Jomo Kenyatta International Airport (Nbo) \u2192 Karatina (51.8 nm) on 14/06/26, Karatina \u2192 Jomo Kenyatta International Airport (Nbo) (51.8 nm) on 15/06/26",
+      "total_usd": 3505
+    },
+    "route_summary": "Jomo Kenyatta International Airport (Nbo) \u2192 Karatina (51.8 nm) on 14/06/26, Karatina \u2192 Jomo Kenyatta International Airport (Nbo) (51.8 nm) on 15/06/26",
+    "status": "INVOICED",
+    "token": "JG-2026-Y12KUE",
+    "total_usd": 3505,
+    "updated_at": "2026-06-14T07:14:06.586302"
+  },
+  "JG-2026-YA1XYI": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "rayonyango20@gmail.com",
+    "client_name": "Ray",
+    "client_whatsapp": "+254748352093",
+    "created_at": "2026-06-13T15:05:39.683542",
+    "invoice_requested": true,
+    "invoice_requested_at": "2026-06-13T15:05:48.187643",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Wilson \u2192 Kajiei Primary School (136.9 nm) on 23/06/26",
+      "total_usd": 1610
+    },
+    "route_summary": "Wilson \u2192 Kajiei Primary School (136.9 nm) on 23/06/26",
+    "status": "PENDING",
+    "token": "JG-2026-YA1XYI",
+    "total_usd": 1610,
+    "updated_at": "2026-06-13T15:05:48.187649"
+  },
   "JG-2026-YIUMB1": {
     "ac_key": "Airbus H125",
     "ac_label": "Airbus H125 (5 seater)",
@@ -508,5 +790,29 @@
     "token": "JG-2026-YIUMB1",
     "total_usd": 9315,
     "updated_at": "2026-06-13T06:49:28.991760"
+  },
+  "JG-2026-YWLH50": {
+    "ac_key": "Cessna 206",
+    "ac_label": "Cessna 206 Station air (5 seater)",
+    "client_email": "Clintonkipyegon21@gmail.com",
+    "client_name": "Clinton kipyegon",
+    "client_whatsapp": "0723977058",
+    "created_at": "2026-06-13T19:30:17.110958",
+    "mission": "one_way",
+    "notes": "",
+    "payment_method": "",
+    "payment_ref": "",
+    "quote_snapshot": {
+      "ac_key": "Cessna 206",
+      "ac_label": "Cessna 206 Station air (5 seater)",
+      "mission": "one_way",
+      "route_summary": "Nairobi \u2192 Maasai Mara National Reserve (108.3 nm) on 30/12/26",
+      "total_usd": 1285
+    },
+    "route_summary": "Nairobi \u2192 Maasai Mara National Reserve (108.3 nm) on 30/12/26",
+    "status": "PENDING",
+    "token": "JG-2026-YWLH50",
+    "total_usd": 1285,
+    "updated_at": "2026-06-13T19:30:17.110965"
   }
 }

@@ -1271,7 +1271,7 @@ async function adminAcFetch(query, drop, input) {
     if (data.predictions && data.predictions.length) {
       drop.innerHTML = data.predictions.slice(0,6).map(p => {
         let main = p.main||p.description, sub = p.secondary||'';
-        return `<div onclick="adminAcSelect(this,'${input.id}')" data-main="${main}" data-place-id="${p.place_id||''}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem;display:flex;gap:8px;align-items:flex-start">
+        return `<div onclick="adminAcSelect(this,'${input.id}')" data-main="${main}" data-placeid="${p.place_id||''}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem;display:flex;gap:8px;align-items:flex-start">
           <span style="color:#888;flex-shrink:0">📍</span>
           <div><div style="font-weight:500">${main}</div>${sub?`<div style="font-size:0.72rem;color:#888">${sub}</div>`:''}</div>
         </div>`;
@@ -1285,7 +1285,7 @@ function adminAcSelect(el, inputId) {
   let input = document.getElementById(inputId), drop = document.getElementById('aac-'+inputId);
   if (input) {
     input.value = el.dataset.main;
-    input.dataset.placeId = el.dataset.placeId || '';
+    input.dataset.placeId = el.dataset.placeid || '';
   }
   if (drop) drop.style.display = 'none';
 }
