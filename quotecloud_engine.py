@@ -816,13 +816,26 @@ def _build_pdf_html(payload):
 
 def generate_pdf_weasy(payload, out_path):
     from weasyprint import HTML as WeasyprintHTML
+    import requests as _req, base64 as _b64, mimetypes as _mt
     pathlib.Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    logo_url = payload.get("logo", "")
+    if logo_url and logo_url.startswith("http"):
+        try:
+            resp = _req.get(logo_url, timeout=8)
+            if resp.status_code == 200:
+                mime = resp.headers.get("Content-Type", "image/png").split(";")[0]
+                b64 = _b64.b64encode(resp.content).decode()
+                payload = dict(payload)
+                payload["logo"] = f"data:{mime};base64,{b64}"
+        except Exception:
+            pass
     html_string = _build_pdf_html(payload)
     WeasyprintHTML(string=html_string, base_url=None).write_pdf(
         out_path,
         presentational_hints=True,
         uncompressed_pdf=False
     )
+
 # =========================================================
 # SECTION 7 - PDF PROMPT
 # =========================================================
