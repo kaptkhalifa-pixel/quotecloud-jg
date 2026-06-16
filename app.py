@@ -889,6 +889,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
                 "quantity": "1",
                 "unit_cost": str(flight_line_total)
             })
+            # Force exact total by zeroing pax if already baked in
+            pax_preview = 0
         else:
             items.append({
                 "name": "Aircraft Charter\n" + "\n".join(item_parts),
@@ -897,12 +899,21 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             })
 
     pax_fee = result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0
-    if pax_fee > 0:
+    was_adjusted_check = result.get("_was_adjusted", False)
+    if pax_fee > 0 and not was_adjusted_check:
         items.append({
             "name": "Passenger Taxes & Admin Fees",
             "quantity": "1",
             "unit_cost": str(pax_fee)
         })
+    elif pax_fee > 0 and was_adjusted_check:
+        adj_pax = float(result.get("pax_fee_usd_display") or 0)
+        if adj_pax > 0:
+            items.append({
+                "name": "Passenger Taxes & Admin Fees",
+                "quantity": "1",
+                "unit_cost": str(round(adj_pax, 2))
+            })
 
     overnight_usd = result.get("overnight_usd") or result.get("overnight_cost_usd") or 0
     if overnight_usd > 0 and overnight_rate > 0:
