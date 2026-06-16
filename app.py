@@ -845,7 +845,9 @@ def build_routing_lines(segments):
     return lines
 
 def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
-                                   client_phone, note, discount, extra_items):
+                                   client_phone, note, discount, extra_items,
+                                   currency="USD", kes_rate=0):
+
     items = []
     ac_label = result.get("ac_label", "Aircraft")
     rate = result.get("rate_usd", 0)
@@ -949,6 +951,26 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     doc_number = next_record_number(doc_type, token_override)
     disc = float(discount) if discount else 0
 
+    import math
+    def to_kes(usd_amount):
+        if kes_rate <= 0: return usd_amount
+        raw = float(usd_amount) * kes_rate
+        return math.ceil(raw / 1000) * 1000
+
+    if currency == "KES" and kes_rate > 0:
+        kes_items = []
+        for item in items:
+            kes_items.append({
+                "name": item["name"],
+                "quantity": item["quantity"],
+                "unit_cost": str(int(to_kes(float(item["unit_cost"]) * float(item["quantity"])) / float(item["quantity"])))
+            })
+        items = kes_items
+        disc = int(to_kes(disc)) if disc > 0 else 0
+        pdf_currency = "KES"
+    else:
+        pdf_currency = "USD"
+
     payload = {
 
         "logo": OPERATOR.get("logo_url", ""),
@@ -964,7 +986,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         "notes_title": "BANK DETAILS",
         "terms": terms,
         "terms_title": "TERMS & CONDITIONS",
-        "currency": "USD",
+        "currency": pdf_currency,
         "header": doc_type
     }
 
@@ -1007,9 +1029,12 @@ def pdf():
         discount = data.get("discount", "0")
         extra_items = data.get("extras", [])
 
+        currency = data.get("currency", "USD")
+        kes_rate = float(data.get("kes_rate", 0))
         payload, doc_number = build_pdf_payload_from_result(
             doc_type, result, client_name, client_email,
-            client_phone, note, discount, extra_items)
+            client_phone, note, discount, extra_items,
+            currency=currency, kes_rate=kes_rate)
 
         out_path = f"/tmp/{doc_number}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
