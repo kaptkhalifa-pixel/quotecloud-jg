@@ -1467,7 +1467,9 @@ function recalcAdjuster(idx) {
   let kesFx = kesRate > 0 ? ` &nbsp;·&nbsp; KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}` : '';
   let adjSummary = document.getElementById('adj-summary-'+idx);
   let rateDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(rateUsd*kesRate/1000)*1000).toLocaleString()}/hr` : `$${rateUsd}/hr`;
-  if (adjSummary) adjSummary.innerHTML = `<strong>Adjusted Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}</strong>${kesFx} &nbsp;·&nbsp; ${hrs} hrs @ ${rateDisplay} &nbsp; <button onclick="confirmApply(${idx})" style="padding:4px 12px;background:#1b5e20;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:8px">Apply New Values →</button>`;
+  let totalDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}` : `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  let paxDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(pax*kesRate/1000)*1000).toLocaleString()}` : `$${Math.round(pax*100)/100}`;
+  if (adjSummary) adjSummary.innerHTML = `<strong>Adjusted Total: ${totalDisplay}</strong> &nbsp;·&nbsp; ${hrs} hrs @ ${rateDisplay} · Pax: ${paxDisplay} &nbsp; <button onclick="confirmApply(${idx})" style="padding:4px 12px;background:#1b5e20;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:8px">Apply New Values →</button>`;
   if (adjSummary) adjSummary.style.display = 'block';
 }
 function confirmApply(idx) {
