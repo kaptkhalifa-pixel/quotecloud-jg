@@ -879,11 +879,22 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             item_parts.append(routing_text)
         if note_line:
             item_parts.append(note_line)
-        items.append({
-            "name": "Aircraft Charter\n" + "\n".join(item_parts),
-            "quantity": str(round(total_hrs, 2)),
-            "unit_cost": str(rate)
-        })
+        was_adjusted = result.get("_was_adjusted", False)
+        adj_total = float(result.get("total_usd", 0))
+        pax_preview = float(result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0)
+        if was_adjusted and adj_total > 0:
+            flight_line_total = round(adj_total - pax_preview, 2)
+            items.append({
+                "name": "Aircraft Charter\n" + "\n".join(item_parts),
+                "quantity": "1",
+                "unit_cost": str(flight_line_total)
+            })
+        else:
+            items.append({
+                "name": "Aircraft Charter\n" + "\n".join(item_parts),
+                "quantity": str(round(total_hrs, 2)),
+                "unit_cost": str(rate)
+            })
 
     pax_fee = result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0
     if pax_fee > 0:
