@@ -1572,7 +1572,9 @@ async function generatePDF(allAircraft) {
     let docNumber = r.headers.get('X-DOC-NUMBER') || '';
     let blob = await r.blob();
     let blobUrl = URL.createObjectURL(blob);
-    let a = document.createElement('a'); a.href = blobUrl; a.download = (docNumber||docType.toLowerCase())+'.pdf'; a.click();
+    try {
+      let a = document.createElement('a'); a.href = blobUrl; a.download = (docNumber||docType.toLowerCase())+'.pdf'; a.click();
+    } catch(dlErr) { console.log('Download error (non-fatal):', dlErr); }
     let res2 = lastResults[parseInt(document.getElementById('pdf-aircraft-select').value)||0] || {};
     let acLabel = res2.ac_label || '';
     let wasAdj = res2._adj_rate ? ` · Adjusted Rate: $${res2._adj_rate}/hr` : ` · Rate: $${res2.rate_usd||''}/hr`;
