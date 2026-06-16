@@ -1584,6 +1584,7 @@ async function generatePDF(allAircraft) {
     if (pdfUrl) msgLines.push(`<a href="${pdfUrl}" target="_blank" style="color:#1a56db;font-weight:600;text-decoration:underline">📄 View Permanent Link</a>`);
     let ind = document.getElementById('pdf-generating-indicator');
     if (ind) ind.remove();
+    try { localStorage.setItem('qc_pending_msg', msgLines.join('<br>')); } catch(e) {}
     appendPdfMsg(msgLines.join('<br>'));
     loadEnquiries();
     loadRecords();
@@ -2238,6 +2239,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   loadFX();
   loadStateFromStorage();
+  try {
+    let pendingMsg = localStorage.getItem('qc_pending_msg');
+    if (pendingMsg) {
+      setTimeout(() => appendPdfMsg(pendingMsg), 500);
+      localStorage.removeItem('qc_pending_msg');
+    }
+  } catch(e) {}
   try {
     let savedTab = localStorage.getItem('qc_active_tab');
     if (savedTab && savedTab !== 'quote') {
