@@ -971,6 +971,19 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         items = kes_items
         disc = int(to_kes(disc)) if disc > 0 else 0
         pdf_currency = "KES"
+    elif currency == "BOTH" and kes_rate > 0:
+        both_items = []
+        for item in items:
+            qty = float(item["quantity"])
+            line_total = float(item["unit_cost"]) * qty
+            kes_total = to_kes(line_total)
+            both_items.append({
+                "name": item["name"] + f"\n  ≈ KES {int(kes_total):,}",
+                "quantity": item["quantity"],
+                "unit_cost": item["unit_cost"]
+            })
+        items = both_items
+        pdf_currency = "USD"
     else:
         pdf_currency = "USD"
 
