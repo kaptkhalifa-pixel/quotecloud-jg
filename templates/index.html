@@ -1237,7 +1237,8 @@ function calcTotalHours(segs) {
 }
 
 function renderBilling(res, extraSegs) {
-  let rate = res.rate_usd || 0;
+  let rate = res._adj_rate || res.rate_usd || 0;
+
   let allSegs = extraSegs ? [...(res.segments||[]),...extraSegs] : (res.segments||[]);
   let totalHrs = calcTotalHours(allSegs);
   let rows = '';
@@ -1263,7 +1264,8 @@ function renderBilling(res, extraSegs) {
   }
   let kesRate = fxRates['KES'] || 0;
   let kesFx = kesRate > 0 ? `<div style="font-size:0.72rem;color:#888;text-align:right;margin-top:4px">≈ KES ${Math.round((res.total_usd||0)*kesRate).toLocaleString()}</div>` : '';
-  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>${kesFx}</div>`;
+  let displayTotal = res._adj_total || res.total_usd || 0;
+  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${displayTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>${kesFx}</div>`;
 }
 
 function renderOneAc(res) {
