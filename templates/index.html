@@ -718,7 +718,36 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <button class="btn btn-block" onclick="saveBank()">Save Bank Details</button>
     <div id="bank-msg"></div>
   </div>
+  <div class="card">
+    <h3>FX Rate Manager</h3>
+    <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px;border-left:3px solid {{ operator.branding.primary_color }}">Control the exchange rates used across the platform for KES quoting and PDF generation. Auto mode fetches live rates. Manual mode lets you set your own fixed rates.</p>
+    <div class="settings-section">
+      <div class="toggle-row" style="margin-bottom:16px">
+        <input type="checkbox" id="s-fx-manual" onchange="toggleFxMode()" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+        <label for="s-fx-manual" style="font-weight:600">Use Manual Rates (override live FX)</label>
+      </div>
+      <div id="fx-auto-status" style="font-size:0.82rem;color:#1b5e20;background:#e8f5e9;padding:10px 14px;border-radius:8px;margin-bottom:16px">
+        ✅ Auto mode — rates fetched live from open.er-api.com
+      </div>
+      <div id="fx-manual-fields" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label>USD 1 = KES</label><input type="number" id="s-fx-kes" placeholder="e.g. 129" step="0.01"></div>
+          <div class="form-group"><label>USD 1 = EUR</label><input type="number" id="s-fx-eur" placeholder="e.g. 0.92" step="0.001"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>USD 1 = GBP</label><input type="number" id="s-fx-gbp" placeholder="e.g. 0.79" step="0.001"></div>
+          <div class="form-group"><label>USD 1 = TZS</label><input type="number" id="s-fx-tzs" placeholder="e.g. 2650" step="1"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px"><label>USD 1 = UGX</label><input type="number" id="s-fx-ugx" placeholder="e.g. 3750" step="1"></div>
+      </div>
+      <div id="fx-live-rates" style="font-size:0.82rem;color:#555;margin-bottom:12px"></div>
+    </div>
+    <button class="btn btn-block" onclick="saveFxRates()">Save FX Settings</button>
+    <div id="fx-msg"></div>
+  </div>
 
+  <div class="card">
+    <h3>Change Password</h3>
   <div class="card">
     <h3>Change Password</h3>
     <div class="form-group" style="margin-bottom:14px"><label>Current Password</label><input type="password" id="s-current-pass"></div>
@@ -2194,6 +2223,18 @@ async function loadSettings() {
   document.getElementById('s-bank-branch').value = bk.branch || '';
   document.getElementById('s-invoice-prefix').value = inv.prefix || '';
   document.getElementById('s-invoice-terms').value = inv.terms || '';
+  let fx = operatorConfig.fx || {};
+  let isManual = fx.mode === 'manual';
+  document.getElementById('s-fx-manual').checked = isManual;
+  let fxr = fx.rates || {};
+  document.getElementById('s-fx-kes').value = fxr.KES || '';
+  document.getElementById('s-fx-eur').value = fxr.EUR || '';
+  document.getElementById('s-fx-gbp').value = fxr.GBP || '';
+  document.getElementById('s-fx-tzs').value = fxr.TZS || '';
+  document.getElementById('s-fx-ugx').value = fxr.UGX || '';
+  toggleFxMode();
+  let liveDiv = document.getElementById('fx-live-rates');
+  if (liveDiv && fxRates['KES']) liveDiv.textContent = `Current live rate: USD 1 = KES ${fxRates['KES']?.toFixed(2)}`;
 }
 async function uploadLogo(input) {
   let status = document.getElementById('logo-upload-status');
@@ -2760,6 +2801,34 @@ function updateCurrencyDisplay() {
       totalEl.textContent = 'USD $' + total.toLocaleString(undefined,{minimumFractionDigits:2});
     }
   });
+}
+function toggleFxMode() {
+  let isManual = document.getElementById('s-fx-manual').checked;
+  document.getElementById('fx-manual-fields').style.display = isManual ? 'block' : 'none';
+  document.getElementById('fx-auto-status').style.display = isManual ? 'none' : 'block';
+}
+
+async function saveFxRates() {
+  let isManual = document.getElementById('s-fx-manual').checked;
+  let body = {
+    mode: isManual ? 'manual' : 'auto',
+    KES: parseFloat(document.getElementById('s-fx-kes').value) || 0,
+    EUR: parseFloat(document.getElementById('s-fx-eur').value) || 0,
+    GBP: parseFloat(document.getElementById('s-fx-gbp').value) || 0,
+    TZS: parseFloat(document.getElementById('s-fx-tzs').value) || 0,
+    UGX: parseFloat(document.getElementById('s-fx-ugx').value) || 0
+  };
+  try {
+    let r = await fetch('/fx/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    let data = await r.json();
+    if (data.success) {
+      showMsg('fx-msg', 'FX settings saved. Reloading rates...', 'success');
+      await loadFX();
+      showMsg('fx-msg', `FX saved. Live KES rate: ${fxRates['KES']?.toFixed(2) || 'N/A'}`, 'success');
+    } else {
+      showMsg('fx-msg', data.error || 'Error', 'error');
+    }
+  } catch(e) { showMsg('fx-msg', 'Network error', 'error'); }
 }
 
 function appendPdfMsg(html) {
