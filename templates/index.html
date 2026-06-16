@@ -1416,8 +1416,16 @@ function recalcAdjuster(idx) {
   let kesRate = fxRates['KES'] || 0;
   let kesFx = kesRate > 0 ? ` &nbsp;·&nbsp; KES ${Math.round(total*kesRate).toLocaleString()}` : '';
   let adjSummary = document.getElementById('adj-summary-'+idx);
-  if (adjSummary) adjSummary.innerHTML = `<strong>Adjusted Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}</strong>${kesFx} &nbsp;·&nbsp; ${hrs} hrs @ $${rate}/hr`;
+  if (adjSummary) adjSummary.innerHTML = `<strong>Adjusted Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}</strong>${kesFx} &nbsp;·&nbsp; ${hrs} hrs @ $${rate}/hr &nbsp; <button onclick="confirmApply(${idx})" style="padding:4px 12px;background:#1b5e20;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:8px">Apply New Values →</button>`;
   if (adjSummary) adjSummary.style.display = 'block';
+}
+function confirmApply(idx) {
+  let rate = parseFloat(document.getElementById('adj-rate-'+idx).value) || 0;
+  let pax = parseFloat(document.getElementById('adj-pax-'+idx).value) || 0;
+  let total = lastResults[idx]._adj_total || 0;
+  let adjSummary = document.getElementById('adj-summary-'+idx);
+  if (adjSummary) adjSummary.innerHTML = `✅ <strong>New values applied.</strong> PDF will use Rate: $${rate}/hr, Pax/Admin: $${pax}, Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}. Proceed to Generate PDF below.`;
+  adjSummary.style.background = '#c8e6c9';
 }
 
 function calcReverse(idx) {
@@ -1565,6 +1573,7 @@ async function generatePDF(allAircraft) {
     if (docNumber) msg += ` Added to Enquiries as <strong>${docNumber}</strong>.`;
     showMsg('pdf-msg', msg, 'success');
     loadEnquiries();
+    loadRecords();
   } catch(e) { showMsg('pdf-msg','Error: '+e.message,'error'); }
 }
 
