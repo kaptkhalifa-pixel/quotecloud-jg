@@ -1585,7 +1585,12 @@ async function generatePDF(allAircraft) {
     appendPdfMsg(msgLines.join('<br>'));
     loadEnquiries();
     loadRecords();
-  } catch(e) { showMsg('pdf-msg','Error: '+e.message,'error'); }
+  } catch(e) { 
+    let ind3 = document.getElementById('pdf-generating-indicator'); 
+    if (ind3) ind3.remove();
+    console.error('PDF error:', e);
+    showMsg('pdf-msg','Error: '+e.message,'error'); 
+  }
 }
 
 async function loadLocations() {
