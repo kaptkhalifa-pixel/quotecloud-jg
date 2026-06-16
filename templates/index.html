@@ -1568,10 +1568,14 @@ async function generatePDF(allAircraft) {
     let blob = await r.blob();
     let blobUrl = URL.createObjectURL(blob);
     let a = document.createElement('a'); a.href = blobUrl; a.download = (docNumber||docType.toLowerCase())+'.pdf'; a.click();
-    let msg = 'Downloaded and saved to Records.';
-    if (pdfUrl) msg += ` <a href="${pdfUrl}" target="_blank" style="color:#1a56db;font-weight:600;text-decoration:underline">Open permanent link</a>`;
-    if (docNumber) msg += ` Added to Enquiries as <strong>${docNumber}</strong>.`;
-    showMsg('pdf-msg', msg, 'success');
+    let res2 = lastResults[parseInt(document.getElementById('pdf-aircraft-select').value)||0] || {};
+    let acLabel = res2.ac_label || '';
+    let wasAdj = res2._adj_rate ? ` · Adjusted Rate: $${res2._adj_rate}/hr` : ` · Rate: $${res2.rate_usd||''}/hr`;
+    let adjTotal = res2._adj_total ? ` · Total: USD $${res2._adj_total.toLocaleString(undefined,{minimumFractionDigits:2})}` : '';
+    let msgLines = [`<strong>${docType} — ${acLabel}</strong>${wasAdj}${adjTotal}`];
+    msgLines.push(`Ref: <strong>${docNumber}</strong> · Saved to Records`);
+    if (pdfUrl) msgLines.push(`<a href="${pdfUrl}" target="_blank" style="color:#1a56db;font-weight:600;text-decoration:underline">📄 View Permanent Link</a>`);
+    appendPdfMsg(msgLines.join('<br>'));
     loadEnquiries();
     loadRecords();
   } catch(e) { showMsg('pdf-msg','Error: '+e.message,'error'); }
@@ -2702,6 +2706,15 @@ async function updateEnqStatus(token, status) {
     if (data.success) loadEnquiries();
     else alert(data.error || 'Error updating status');
   } catch(e) { alert('Network error'); }
+}
+function appendPdfMsg(html) {
+  let el = document.getElementById('pdf-msg');
+  if (!el) return;
+  let div = document.createElement('div');
+  div.className = 'success-box';
+  div.style.cssText = 'margin-top:10px;position:relative;padding-right:32px';
+  div.innerHTML = html + `<button onclick="this.parentElement.remove()" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:1rem;cursor:pointer;color:#555;line-height:1">✕</button>`;
+  el.appendChild(div);
 }
 
 function showMsg(id, msg, type) {
