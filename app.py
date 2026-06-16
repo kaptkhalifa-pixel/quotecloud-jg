@@ -960,10 +960,13 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     if currency == "KES" and kes_rate > 0:
         kes_items = []
         for item in items:
+            qty = float(item["quantity"])
+            line_total = float(item["unit_cost"]) * qty
+            kes_total = to_kes(line_total)
             kes_items.append({
                 "name": item["name"],
-                "quantity": item["quantity"],
-                "unit_cost": str(int(to_kes(float(item["unit_cost"]) * float(item["quantity"])) / float(item["quantity"])))
+                "quantity": "1",
+                "unit_cost": str(int(kes_total))
             })
         items = kes_items
         disc = int(to_kes(disc)) if disc > 0 else 0
