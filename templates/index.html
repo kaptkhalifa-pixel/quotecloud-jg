@@ -1558,11 +1558,16 @@ async function generatePDF(allAircraft) {
 
   let result = getSelectedResult();
   if (!result) return alert('Run a quote first.');
-  showMsg('pdf-msg','Generating...','success');
+  let genDiv = document.createElement('div');
+  genDiv.id = 'pdf-generating-indicator';
+  genDiv.className = 'success-box';
+  genDiv.style.cssText = 'margin-top:10px;color:#888';
+  genDiv.textContent = 'Generating...';
+  document.getElementById('pdf-msg').appendChild(genDiv);
   try {
     let body = { doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras };
     let r = await fetch('/pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-    if (!r.ok) { let e = await r.json(); showMsg('pdf-msg',e.error||'Failed','error'); return; }
+    if (!r.ok) { let e = await r.json(); let ind2=document.getElementById('pdf-generating-indicator'); if(ind2)ind2.remove(); showMsg('pdf-msg',e.error||'Failed','error'); return; }
     let pdfUrl = r.headers.get('X-PDF-URL') || '';
     let docNumber = r.headers.get('X-DOC-NUMBER') || '';
     let blob = await r.blob();
@@ -1575,6 +1580,8 @@ async function generatePDF(allAircraft) {
     let msgLines = [`<strong>${docType} — ${acLabel}</strong>${wasAdj}${adjTotal}`];
     msgLines.push(`Ref: <strong>${docNumber}</strong> · Saved to Records`);
     if (pdfUrl) msgLines.push(`<a href="${pdfUrl}" target="_blank" style="color:#1a56db;font-weight:600;text-decoration:underline">📄 View Permanent Link</a>`);
+    let ind = document.getElementById('pdf-generating-indicator');
+    if (ind) ind.remove();
     appendPdfMsg(msgLines.join('<br>'));
     loadEnquiries();
     loadRecords();
