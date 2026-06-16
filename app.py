@@ -990,22 +990,18 @@ def pdf():
             client_phone, note, discount, extra_items)
 
         out_path = f"/tmp/{doc_number}.pdf"
-        try:
-            hq.generate_pdf_weasy(payload, out_path)
-        except Exception as pdf_err:
-            import traceback
-            print(f"WeasyPrint error: {pdf_err}")
-            print(traceback.format_exc())
-            return jsonify({"error": f"PDF generation failed: {str(pdf_err)}"}), 500
-
+        hq.generate_pdf_weasy(payload, out_path)
         import os
         pdf_size = os.path.getsize(out_path) if os.path.exists(out_path) else 0
         print(f"PDF generated: {out_path} size={pdf_size} bytes")
         pdf_url = upload_pdf_to_imgbb(out_path)
         print(f"imgbb result: {pdf_url}")
+        # Read PDF into memory before any other operations
+        with open(out_path, "rb") as f:
+            pdf_bytes = f.read()
 
         total = calc_pdf_total(result, extra_items, discount)
-        save_record(doc_type, client_name, client_email, total, doc_number, {
+        save_record(doc_type, client_name, client_email, total, doc_number, extra={
             "ac_label": result.get("ac_label", ""),
             "mission": result.get("mission", ""),
             "pdf_url": pdf_url or "",
@@ -1045,7 +1041,8 @@ def pdf():
             }
             save_bookings(bookings)
 
-        response = send_file(out_path, as_attachment=False,
+        import io
+        response = send_file(io.BytesIO(pdf_bytes), as_attachment=False,
                              download_name=f"{doc_number}.pdf",
                              mimetype="application/pdf")
         response.headers["X-PDF-URL"] = pdf_url or ""
