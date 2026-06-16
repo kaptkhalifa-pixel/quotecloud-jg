@@ -1401,7 +1401,13 @@ function renderAdjuster(res, idx) {
       <div id="adj-summary-${idx}" style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:0.82rem;color:#155724;display:none"></div>
       <hr class="adjuster-divider">
       <div class="adjuster-reverse">
-        <div class="adjuster-reverse-title">🔄 Reverse Mode — Target Price</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div class="adjuster-reverse-title" style="margin:0">🔄 Reverse Mode — Target Price</div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:#555;cursor:pointer;margin:0">
+            <input type="checkbox" id="adj-kes-toggle-${idx}" onchange="calcReverse(${idx})" style="width:16px;height:16px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+            KES Mode
+          </label>
+        </div>
         <div class="adjuster-grid" style="grid-template-columns:1fr 1fr;gap:10px">
           <div class="adjuster-field">
             <label>Target Total (USD)</label>
