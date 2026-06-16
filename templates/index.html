@@ -1362,71 +1362,65 @@ function quickWA(idx) {
   let url = 'https://wa.me/'+wa.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(lines.join('\n'));
   window.open(url, '_blank');
 }
-
-function renderAdjuster(res, idx) {
-  let rate = res.rate_usd || 0;
-  let speed = res.speed_ktas || res.speed || 120;
-  let pax = res.pax_fee_usd || res.pax_fee_usd_display || 0;
-  return `
-  <div class="adjuster-panel">
-    <div class="adjuster-toggle" onclick="toggleAdjuster(${idx})">
-      <span>⚙ Adjust Variables</span>
-      <span id="adj-arrow-${idx}">▼</span>
-    </div>
-    <div class="adjuster-body" id="adj-body-${idx}">
-      <div style="background:#f0f4ff;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:0.78rem;color:#555">
-        <strong>Original:</strong> &nbsp; Rate: <strong>$${rate}/hr</strong> &nbsp;·&nbsp; Speed: <strong>${speed} KTAS</strong> &nbsp;·&nbsp; Pax/Admin: <strong>$${pax}</strong> &nbsp;·&nbsp; Total: <strong>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</strong>
-      </div>
-      <div class="adjuster-grid">
-        <div class="adjuster-field">
-          <label>Rate / hr (USD)</label>
-          <input type="number" id="adj-rate-${idx}" value="${rate}" oninput="recalcAdjuster(${idx})">
-        </div>
-        <div class="adjuster-field">
-          <label>Speed (KTAS)</label>
-          <input type="number" id="adj-speed-${idx}" value="${speed}" oninput="recalcAdjuster(${idx})">
-        </div>
-        <div class="adjuster-field">
-          <label>Pax / Admin (USD)</label>
-          <input type="number" id="adj-pax-${idx}" value="${pax}" oninput="recalcAdjuster(${idx})">
-        </div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-primary" onclick="recalcAdjuster(${idx})">↺ Recalculate</button>
-        <button class="btn btn-success" onclick="savePreset(${idx})">💾 Save as Preset</button>
-      </div>
-      <div class="preset-row" id="preset-chips-${idx}"></div>
-      <div id="adj-summary-${idx}" style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:0.82rem;color:#155724;display:none"></div>
-      <hr class="adjuster-divider">
-      <div class="adjuster-reverse">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div class="adjuster-reverse-title" style="margin:0">🔄 Reverse Mode — Target Price</div>
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:#555;cursor:pointer;margin:0">
-            <input type="checkbox" id="adj-kes-toggle-${idx}" onchange="calcReverse(${idx})" style="width:16px;height:16px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-            KES Mode
-          </label>
-        </div>
-        <div class="adjuster-grid" style="grid-template-columns:1fr 1fr;gap:10px">
-          <div class="adjuster-field">
-            <label>Target Total (USD)</label>
-            <input type="number" id="adj-target-${idx}" placeholder="e.g. 15000" oninput="calcReverse(${idx})">
-          </div>
-          <div class="adjuster-field">
-            <label>Keep Pax/Admin</label>
-            <input type="number" id="adj-rev-pax-${idx}" value="${pax}" oninput="calcReverse(${idx})">
-          </div>
-        </div>
-        <div class="adjuster-result" id="adj-rev-result-${idx}"></div>
-      </div>
-    </div>
-  </div>`;
-}
-
 function toggleAdjuster(idx) {
   let body = document.getElementById('adj-body-'+idx);
   let arrow = document.getElementById('adj-arrow-'+idx);
   body.classList.toggle('open');
   arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+}
+function toggleAdjKesMode(idx) {
+  let isKes = document.getElementById('adj-kes-mode-'+idx)?.checked;
+  let kesRate = fxRates['KES'] || 0;
+  let res = lastResults[idx];
+  if (!res || !kesRate) return;
+
+  let rateField = document.getElementById('adj-rate-'+idx);
+  let paxField = document.getElementById('adj-pax-'+idx);
+  let rateLabel = document.getElementById('adj-rate-label-'+idx);
+  let paxLabel = document.getElementById('adj-pax-label-'+idx);
+  let targetLabel = document.getElementById('adj-target-label-'+idx);
+  let paxRevLabel = document.getElementById('adj-pax-rev-label-'+idx);
+  let origRate = document.getElementById('adj-orig-rate-'+idx);
+  let origPax = document.getElementById('adj-orig-pax-'+idx);
+  let origTotal = document.getElementById('adj-orig-total-'+idx);
+
+  if (isKes) {
+    let rateUsd = parseFloat(rateField.value) || 0;
+    let paxUsd = parseFloat(paxField.value) || 0;
+    rateField.value = Math.ceil(rateUsd * kesRate / 1000) * 1000;
+    paxField.value = Math.ceil(paxUsd * kesRate / 1000) * 1000;
+    if (rateLabel) rateLabel.textContent = 'Rate / hr (KES)';
+    if (paxLabel) paxLabel.textContent = 'Pax / Admin (KES)';
+    if (targetLabel) targetLabel.textContent = 'Target Total (KES)';
+    if (paxRevLabel) paxRevLabel.textContent = 'Keep Pax/Admin (KES)';
+    let origRateVal = res.rate_usd || 0;
+    let origPaxVal = res.pax_fee_usd || res.pax_fee_usd_display || 0;
+    let origTotalVal = res.total_usd || 0;
+    if (origRate) origRate.textContent = `KES ${(Math.ceil(origRateVal*kesRate/1000)*1000).toLocaleString()}/hr`;
+    if (origPax) origPax.textContent = `KES ${(Math.ceil(origPaxVal*kesRate/1000)*1000).toLocaleString()}`;
+    if (origTotal) origTotal.textContent = `KES ${(Math.ceil(origTotalVal*kesRate/1000)*1000).toLocaleString()}`;
+    let revPax = document.getElementById('adj-rev-pax-'+idx);
+    if (revPax) revPax.value = Math.ceil(parseFloat(revPax.value||paxUsd) * kesRate / 1000) * 1000;
+  } else {
+    let rateKes = parseFloat(rateField.value) || 0;
+    let paxKes = parseFloat(paxField.value) || 0;
+    rateField.value = Math.round(rateKes / kesRate * 100) / 100;
+    paxField.value = Math.round(paxKes / kesRate * 100) / 100;
+    if (rateLabel) rateLabel.textContent = 'Rate / hr (USD)';
+    if (paxLabel) paxLabel.textContent = 'Pax / Admin (USD)';
+    if (targetLabel) targetLabel.textContent = 'Target Total (USD)';
+    if (paxRevLabel) paxRevLabel.textContent = 'Keep Pax/Admin (USD)';
+    let origRateVal = res.rate_usd || 0;
+    let origPaxVal = res.pax_fee_usd || res.pax_fee_usd_display || 0;
+    let origTotalVal = res.total_usd || 0;
+    if (origRate) origRate.textContent = `$${origRateVal}/hr`;
+    if (origPax) origPax.textContent = `$${origPaxVal}`;
+    if (origTotal) origTotal.textContent = `USD $${origTotalVal.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    let revPax = document.getElementById('adj-rev-pax-'+idx);
+    if (revPax) revPax.value = Math.round(parseFloat(revPax.value||0) / kesRate * 100) / 100;
+  }
+  recalcAdjuster(idx);
+  calcReverse(idx);
 }
 
 function getTotalHours(res) {
@@ -1440,8 +1434,14 @@ function getTotalHours(res) {
 function recalcAdjuster(idx) {
   let res = lastResults[idx];
   if (!res) return;
-  let rate = parseFloat(document.getElementById('adj-rate-'+idx).value) || 0;
-  let pax = parseFloat(document.getElementById('adj-pax-'+idx).value) || 0;
+  let isKes = document.getElementById('adj-kes-mode-'+idx)?.checked;
+  let kesRate = fxRates['KES'] || 0;
+  let rateRaw = parseFloat(document.getElementById('adj-rate-'+idx).value) || 0;
+  let paxRaw = parseFloat(document.getElementById('adj-pax-'+idx).value) || 0;
+  let rateUsd = isKes && kesRate > 0 ? rateRaw / kesRate : rateRaw;
+  let paxUsd = isKes && kesRate > 0 ? paxRaw / kesRate : paxRaw;
+  let rate = rateUsd;
+  let pax = paxUsd;
   let hrs = getTotalHours(res);
   let flightCost = Math.round(hrs * rate * 100) / 100;
   let total = Math.round((flightCost + pax) * 100) / 100;
@@ -1449,16 +1449,25 @@ function recalcAdjuster(idx) {
   let totalEl = card.querySelector('.billing-total span:last-child');
   let flightEl = card.querySelectorAll('.billing-row')[0]?.querySelector('span:last-child');
   let paxEl = card.querySelectorAll('.billing-row')[1]?.querySelector('span:last-child');
-  if (totalEl) totalEl.textContent = 'USD $' + total.toLocaleString(undefined, {minimumFractionDigits:2});
-  if (flightEl) flightEl.textContent = '$' + flightCost.toLocaleString(undefined, {minimumFractionDigits:2});
-  if (paxEl) paxEl.textContent = '$' + pax.toLocaleString();
-  lastResults[idx]._adj_rate = rate;
-  lastResults[idx]._adj_pax = pax;
+  if (isKes && kesRate > 0) {
+    let totalKes = Math.ceil(total * kesRate / 1000) * 1000;
+    let flightKes = Math.ceil(flightCost * kesRate / 1000) * 1000;
+    let paxKes = Math.ceil(pax * kesRate / 1000) * 1000;
+    if (totalEl) totalEl.textContent = 'KES ' + totalKes.toLocaleString();
+    if (flightEl) flightEl.textContent = 'KES ' + flightKes.toLocaleString();
+    if (paxEl) paxEl.textContent = 'KES ' + paxKes.toLocaleString();
+  } else {
+    if (totalEl) totalEl.textContent = 'USD $' + total.toLocaleString(undefined, {minimumFractionDigits:2});
+    if (flightEl) flightEl.textContent = '$' + flightCost.toLocaleString(undefined, {minimumFractionDigits:2});
+    if (paxEl) paxEl.textContent = '$' + pax.toLocaleString();
+  }
+  lastResults[idx]._adj_rate = rateUsd;
+  lastResults[idx]._adj_pax = paxUsd;
   lastResults[idx]._adj_total = total;
-  let kesRate = fxRates['KES'] || 0;
-  let kesFx = kesRate > 0 ? ` &nbsp;·&nbsp; KES ${Math.round(total*kesRate).toLocaleString()}` : '';
+  let kesFx = kesRate > 0 ? ` &nbsp;·&nbsp; KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}` : '';
   let adjSummary = document.getElementById('adj-summary-'+idx);
-  if (adjSummary) adjSummary.innerHTML = `<strong>Adjusted Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}</strong>${kesFx} &nbsp;·&nbsp; ${hrs} hrs @ $${rate}/hr &nbsp; <button onclick="confirmApply(${idx})" style="padding:4px 12px;background:#1b5e20;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:8px">Apply New Values →</button>`;
+  let rateDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(rateUsd*kesRate/1000)*1000).toLocaleString()}/hr` : `$${rateUsd}/hr`;
+  if (adjSummary) adjSummary.innerHTML = `<strong>Adjusted Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}</strong>${kesFx} &nbsp;·&nbsp; ${hrs} hrs @ ${rateDisplay} &nbsp; <button onclick="confirmApply(${idx})" style="padding:4px 12px;background:#1b5e20;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:8px">Apply New Values →</button>`;
   if (adjSummary) adjSummary.style.display = 'block';
 }
 function confirmApply(idx) {
@@ -1473,9 +1482,8 @@ function confirmApply(idx) {
 function calcReverse(idx) {
   let res = lastResults[idx];
   if (!res) return;
-  let kesToggle = document.getElementById('adj-kes-toggle-'+idx);
   let kesRate = fxRates['KES'] || 0;
-  let isKes = kesToggle && kesToggle.checked && kesRate > 0;
+  let isKes = document.getElementById('adj-kes-mode-'+idx)?.checked && kesRate > 0;
   let targetRaw = parseFloat(document.getElementById('adj-target-'+idx).value) || 0;
   let paxRaw = parseFloat(document.getElementById('adj-rev-pax-'+idx).value) || 0;
   let target = isKes ? targetRaw / kesRate : targetRaw;
@@ -1500,10 +1508,69 @@ function calcReverse(idx) {
   }
 }
 
-function applyReverseRate(idx, rate, pax) {
-  document.getElementById('adj-rate-'+idx).value = rate;
-  document.getElementById('adj-pax-'+idx).value = pax;
-  recalcAdjuster(idx);
+function renderAdjuster(res, idx) {
+  let rate = res.rate_usd || 0;
+  let speed = res.speed_ktas || res.speed || 120;
+  let pax = res.pax_fee_usd || res.pax_fee_usd_display || 0;
+  let kesRate = fxRates['KES'] || 0;
+  let rateKes = kesRate > 0 ? Math.ceil(rate * kesRate / 1000) * 1000 : 0;
+  let paxKes = kesRate > 0 ? Math.ceil(pax * kesRate / 1000) * 1000 : 0;
+  let totalKes = kesRate > 0 ? Math.ceil((res.total_usd||0) * kesRate / 1000) * 1000 : 0;
+  return `
+  <div class="adjuster-panel">
+    <div class="adjuster-toggle" onclick="toggleAdjuster(${idx})">
+      <span>⚙ Adjust Variables</span>
+      <span id="adj-arrow-${idx}">▼</span>
+    </div>
+    <div class="adjuster-body" id="adj-body-${idx}">
+      <div style="background:#f0f4ff;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:0.78rem;color:#555" id="adj-original-${idx}">
+        <strong>Original:</strong> &nbsp; Rate: <strong id="adj-orig-rate-${idx}">$${rate}/hr</strong> &nbsp;·&nbsp; Speed: <strong>${speed} KTAS</strong> &nbsp;·&nbsp; Pax/Admin: <strong id="adj-orig-pax-${idx}">$${pax}</strong> &nbsp;·&nbsp; Total: <strong id="adj-orig-total-${idx}">USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</strong>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:#555;cursor:pointer;background:#f0f4ff;padding:6px 12px;border-radius:20px;border:1px solid #c5cae9">
+          <input type="checkbox" id="adj-kes-mode-${idx}" onchange="toggleAdjKesMode(${idx})" style="width:14px;height:14px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          🇰🇪 KES Mode
+        </label>
+      </div>
+      <div class="adjuster-grid">
+        <div class="adjuster-field">
+          <label id="adj-rate-label-${idx}">Rate / hr (USD)</label>
+          <input type="number" id="adj-rate-${idx}" value="${rate}" oninput="recalcAdjuster(${idx})">
+        </div>
+        <div class="adjuster-field">
+          <label>Speed (KTAS)</label>
+          <input type="number" id="adj-speed-${idx}" value="${speed}" oninput="recalcAdjuster(${idx})">
+        </div>
+        <div class="adjuster-field">
+          <label id="adj-pax-label-${idx}">Pax / Admin (USD)</label>
+          <input type="number" id="adj-pax-${idx}" value="${pax}" oninput="recalcAdjuster(${idx})">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="recalcAdjuster(${idx})">↺ Recalculate</button>
+        <button class="btn btn-success" onclick="savePreset(${idx})">💾 Save as Preset</button>
+      </div>
+      <div class="preset-row" id="preset-chips-${idx}"></div>
+      <div id="adj-summary-${idx}" style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:0.82rem;color:#155724;display:none"></div>
+      <hr class="adjuster-divider">
+      <div class="adjuster-reverse">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div class="adjuster-reverse-title" style="margin:0">🔄 Reverse — Target Price</div>
+        </div>
+        <div class="adjuster-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div class="adjuster-field">
+            <label id="adj-target-label-${idx}">Target Total (USD)</label>
+            <input type="number" id="adj-target-${idx}" placeholder="e.g. 15000" oninput="calcReverse(${idx})">
+          </div>
+          <div class="adjuster-field">
+            <label id="adj-pax-rev-label-${idx}">Keep Pax/Admin (USD)</label>
+            <input type="number" id="adj-rev-pax-${idx}" value="${pax}" oninput="calcReverse(${idx})">
+          </div>
+        </div>
+        <div class="adjuster-result" id="adj-rev-result-${idx}"></div>
+      </div>
+    </div>
+  </div>`;
 }
 
 function loadPresetChips() {
