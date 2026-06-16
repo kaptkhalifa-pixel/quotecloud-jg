@@ -748,8 +748,6 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
   <div class="card">
     <h3>Change Password</h3>
-  <div class="card">
-    <h3>Change Password</h3>
     <div class="form-group" style="margin-bottom:14px"><label>Current Password</label><input type="password" id="s-current-pass"></div>
     <div class="form-row">
       <div class="form-group"><label>New Password</label><input type="password" id="s-new-pass"></div>
@@ -1475,16 +1473,31 @@ function confirmApply(idx) {
 function calcReverse(idx) {
   let res = lastResults[idx];
   if (!res) return;
-  let target = parseFloat(document.getElementById('adj-target-'+idx).value) || 0;
-  let pax = parseFloat(document.getElementById('adj-rev-pax-'+idx).value) || 0;
+  let kesToggle = document.getElementById('adj-kes-toggle-'+idx);
+  let kesRate = fxRates['KES'] || 0;
+  let isKes = kesToggle && kesToggle.checked && kesRate > 0;
+  let targetRaw = parseFloat(document.getElementById('adj-target-'+idx).value) || 0;
+  let paxRaw = parseFloat(document.getElementById('adj-rev-pax-'+idx).value) || 0;
+  let target = isKes ? targetRaw / kesRate : targetRaw;
+  let pax = isKes ? paxRaw / kesRate : paxRaw;
   let hrs = getTotalHours(res);
   let el = document.getElementById('adj-rev-result-'+idx);
-  if (!target || !hrs) { el.textContent = ''; return; }
+  let targetLabel = document.getElementById('adj-target-label-'+idx);
+  let paxLabel = document.getElementById('adj-pax-label-'+idx);
+  if (targetLabel) targetLabel.textContent = isKes ? 'Target Total (KES)' : 'Target Total (USD)';
+  if (paxLabel) paxLabel.textContent = isKes ? 'Keep Pax/Admin (KES)' : 'Keep Pax/Admin (USD)';
+  if (!targetRaw || !hrs) { el.textContent = ''; return; }
   let impliedFlight = target - pax;
   let impliedRate = Math.round((impliedFlight / hrs) * 100) / 100;
   if (impliedRate < 0) { el.textContent = 'Target too low — increase target price.'; el.style.color='#dc3545'; return; }
   el.style.color = '#1a56db';
-  el.innerHTML = `Implied Rate: <strong>$${impliedRate.toLocaleString(undefined,{minimumFractionDigits:2})}/hr</strong> &nbsp;·&nbsp; Flight Cost: <strong>$${impliedFlight.toLocaleString(undefined,{minimumFractionDigits:2})}</strong> &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
+  if (isKes) {
+    let impliedRateKes = Math.ceil((impliedRate * kesRate) / 1000) * 1000;
+    let impliedFlightKes = Math.ceil((impliedFlight * kesRate) / 1000) * 1000;
+    el.innerHTML = `Implied Rate: <strong>KES ${impliedRateKes.toLocaleString()}/hr</strong> &nbsp;·&nbsp; Flight Cost: <strong>KES ${impliedFlightKes.toLocaleString()}</strong> &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
+  } else {
+    el.innerHTML = `Implied Rate: <strong>$${impliedRate.toLocaleString(undefined,{minimumFractionDigits:2})}/hr</strong> &nbsp;·&nbsp; Flight Cost: <strong>$${impliedFlight.toLocaleString(undefined,{minimumFractionDigits:2})}</strong> &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
+  }
 }
 
 function applyReverseRate(idx, rate, pax) {
