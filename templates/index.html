@@ -348,6 +348,13 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
           <option value="Receipt">Receipt</option>
         </select>
       </div>
+      <div class="form-group"><label>Currency</label>
+        <select id="pdf-currency" onchange="updateCurrencyDisplay()">
+          <option value="USD">USD — US Dollar</option>
+          <option value="KES">KES — Kenya Shilling</option>
+          <option value="BOTH">BOTH — Show USD & KES</option>
+        </select>
+      </div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Client Name</label><input type="text" id="pdf-name" placeholder="Full name"></div>
@@ -1565,7 +1572,9 @@ async function generatePDF(allAircraft) {
   genDiv.textContent = 'Generating...';
   document.getElementById('pdf-msg').appendChild(genDiv);
   try {
-    let body = { doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras };
+    let currency = document.getElementById('pdf-currency')?.value || 'USD';
+    let kesRate = fxRates['KES'] || 0;
+    let body = { doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras, currency, kes_rate: kesRate };
     let r = await fetch('/pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); let ind2=document.getElementById('pdf-generating-indicator'); if(ind2)ind2.remove(); showMsg('pdf-msg',e.error||'Failed','error'); return; }
     let pdfUrl = r.headers.get('X-PDF-URL') || '';
@@ -2729,6 +2738,30 @@ async function updateEnqStatus(token, status) {
     else alert(data.error || 'Error updating status');
   } catch(e) { alert('Network error'); }
 }
+function updateCurrencyDisplay() {
+  let currency = document.getElementById('pdf-currency')?.value || 'USD';
+  let kesRate = fxRates['KES'] || 0;
+  let cards = document.querySelectorAll('.ac-card');
+  cards.forEach(card => {
+    let totalEl = card.querySelector('.billing-total span:last-child');
+    if (!totalEl) return;
+    let idx = card.id.replace('ac-card-','');
+    let res = lastResults[parseInt(idx)];
+    if (!res) return;
+    let total = res._adj_total || res.total_usd || 0;
+    if (res.mission === 'return_both') total = res._adj_total || res.option_a?.total_usd || 0;
+    if (currency === 'KES' && kesRate > 0) {
+      let kes = Math.ceil((total * kesRate) / 1000) * 1000;
+      totalEl.textContent = 'KES ' + kes.toLocaleString();
+    } else if (currency === 'BOTH' && kesRate > 0) {
+      let kes = Math.ceil((total * kesRate) / 1000) * 1000;
+      totalEl.innerHTML = `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})} <span style="font-size:0.75rem;color:#888;display:block">≈ KES ${kes.toLocaleString()}</span>`;
+    } else {
+      totalEl.textContent = 'USD $' + total.toLocaleString(undefined,{minimumFractionDigits:2});
+    }
+  });
+}
+
 function appendPdfMsg(html) {
   let el = document.getElementById('pdf-msg');
   if (!el) return;
