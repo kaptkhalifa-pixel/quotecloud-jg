@@ -1471,11 +1471,22 @@ function recalcAdjuster(idx) {
   if (adjSummary) adjSummary.style.display = 'block';
 }
 function confirmApply(idx) {
-  let rate = parseFloat(document.getElementById('adj-rate-'+idx).value) || 0;
-  let pax = parseFloat(document.getElementById('adj-pax-'+idx).value) || 0;
+  let isKes = document.getElementById('adj-kes-mode-'+idx)?.checked;
+  let kesRate = fxRates['KES'] || 0;
+  let rateUsd = lastResults[idx]._adj_rate || 0;
+  let paxUsd = lastResults[idx]._adj_pax || 0;
   let total = lastResults[idx]._adj_total || 0;
   let adjSummary = document.getElementById('adj-summary-'+idx);
-  if (adjSummary) adjSummary.innerHTML = `✅ <strong>New values applied.</strong> PDF will use Rate: $${rate}/hr, Pax/Admin: $${pax}, Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}. Proceed to Generate PDF below.`;
+  let rateDisplay = isKes && kesRate > 0 
+    ? `KES ${(Math.ceil(rateUsd*kesRate/1000)*1000).toLocaleString()}/hr`
+    : `$${Math.round(rateUsd*100)/100}/hr`;
+  let paxDisplay = isKes && kesRate > 0
+    ? `KES ${(Math.ceil(paxUsd*kesRate/1000)*1000).toLocaleString()}`
+    : `$${Math.round(paxUsd*100)/100}`;
+  let totalDisplay = isKes && kesRate > 0
+    ? `KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}`
+    : `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  if (adjSummary) adjSummary.innerHTML = `✅ <strong>New values applied.</strong> Rate: ${rateDisplay} · Pax/Admin: ${paxDisplay} · Total: ${totalDisplay}. Proceed to Generate PDF below.`;
   adjSummary.style.background = '#c8e6c9';
 }
 
