@@ -1630,6 +1630,21 @@ def expand_maps_url():
 
 @app.route("/fx/rates", methods=["GET"])
 def fx_rates():
+    fx_config = OPERATOR.get("fx", {})
+    if fx_config.get("mode") == "manual":
+        manual_rates = fx_config.get("rates", {})
+        return jsonify({
+            "success": True,
+            "rates": {
+                "KES": float(manual_rates.get("KES", 0)),
+                "EUR": float(manual_rates.get("EUR", 0)),
+                "GBP": float(manual_rates.get("GBP", 0)),
+                "TZS": float(manual_rates.get("TZS", 0)),
+                "UGX": float(manual_rates.get("UGX", 0))
+            },
+            "updated": "Manual rate set by operator",
+            "mode": "manual"
+        })
     try:
         import requests as req
         r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
@@ -1645,11 +1660,33 @@ def fx_rates():
                     "TZS": rates.get("TZS", 0),
                     "UGX": rates.get("UGX", 0)
                 },
-                "updated": data.get("time_last_update_utc", "")
+                "updated": data.get("time_last_update_utc", ""),
+                "mode": "auto"
             })
     except Exception:
         pass
-    return jsonify({"success": False, "rates": {}})
+    return jsonify({"success": False, "rates": {}, "mode": "auto"})
+
+@app.route("/fx/save", methods=["POST"])
+@login_required
+def fx_save():
+    global OPERATOR
+    data = request.get_json()
+    try:
+        OPERATOR["fx"] = {
+            "mode": data.get("mode", "auto"),
+            "rates": {
+                "KES": float(data.get("KES", 0)),
+                "EUR": float(data.get("EUR", 0)),
+                "GBP": float(data.get("GBP", 0)),
+                "TZS": float(data.get("TZS", 0)),
+                "UGX": float(data.get("UGX", 0))
+            }
+        }
+        pathlib.Path(OPERATOR_CONFIG_FILE).write_text(json.dumps(OPERATOR, indent=2))
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/search_location", methods=["POST"])
 @login_required
