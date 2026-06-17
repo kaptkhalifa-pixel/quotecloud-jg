@@ -883,7 +883,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             item_parts.append(note_line)
         was_adjusted = result.get("_was_adjusted", False)
         adj_total = float(result.get("total_usd", 0))
-        pax_preview = float(result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0)
+        pax_preview = float(result.get("pax_fee_usd_display") if result.get("pax_fee_usd_display") is not None else (result.get("pax_fee_usd") or 0))
         if was_adjusted and adj_total > 0:
             flight_line_total = round(adj_total - pax_preview, 2)
             items.append({

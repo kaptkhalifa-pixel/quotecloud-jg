@@ -1719,8 +1719,26 @@ async function generatePDF(allAircraft) {
     } catch(dlErr) { console.log('Download error (non-fatal):', dlErr); }
     let res2 = lastResults[parseInt(document.getElementById('pdf-aircraft-select').value)||0] || {};
     let acLabel = res2.ac_label || '';
-    let wasAdj = res2._adj_rate ? ` · Adjusted Rate: $${res2._adj_rate}/hr` : ` · Rate: $${res2.rate_usd||''}/hr`;
-    let adjTotal = res2._adj_total ? ` · Total: USD $${res2._adj_total.toLocaleString(undefined,{minimumFractionDigits:2})}` : '';
+    let msgIdx = parseInt(document.getElementById('pdf-aircraft-select').value)||0;
+    let msgIsKes = document.getElementById('adj-kes-mode-'+msgIdx)?.checked;
+    let msgKesRate = fxRates['KES'] || 0;
+    let wasAdj;
+    if (res2._adj_rate !== undefined) {
+      let rateUsdClean = Math.round(res2._adj_rate * 100) / 100;
+      wasAdj = msgIsKes && msgKesRate > 0
+        ? ` · Adjusted Rate: KES ${(Math.ceil(rateUsdClean*msgKesRate/1000)*1000).toLocaleString()}/hr`
+        : ` · Adjusted Rate: $${rateUsdClean}/hr`;
+    } else {
+      wasAdj = ` · Rate: $${res2.rate_usd||''}/hr`;
+    }
+    let adjTotal;
+    if (res2._adj_total !== undefined) {
+      adjTotal = msgIsKes && msgKesRate > 0
+        ? ` · Total: KES ${(Math.ceil(res2._adj_total*msgKesRate/1000)*1000).toLocaleString()}`
+        : ` · Total: USD $${res2._adj_total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    } else {
+      adjTotal = '';
+    }
     let msgLines = [`<strong>${docType} — ${acLabel}</strong>${wasAdj}${adjTotal}`];
     msgLines.push(`Ref: <strong>${docNumber}</strong> · Saved to Records`);
     if (pdfUrl) msgLines.push(`<a href="${pdfUrl}" target="_blank" style="color:#1a56db;font-weight:600;text-decoration:underline">📄 View Permanent Link</a>`);
