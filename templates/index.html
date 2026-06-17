@@ -1497,8 +1497,10 @@ function recalcAdjuster(idx) {
     adjSummary.innerHTML = `${warningLine}<strong>Preview: ${totalDisplay}</strong> &nbsp;·&nbsp; ${hrs} hrs @ ${rateDisplay} · Pax: ${paxDisplay} &nbsp; <button onclick="confirmApply(${idx})" style="padding:4px 12px;background:#1b5e20;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:8px">Apply →</button>`;
     adjSummary.style.display = 'block';
   }
+}
 
 function confirmApply(idx) {
+
   let isKes = document.getElementById('adj-kes-mode-'+idx)?.checked;
   let kesRate = fxRates['KES'] || 0;
   let rateUsd = lastResults[idx]._adj_rate || 0;
