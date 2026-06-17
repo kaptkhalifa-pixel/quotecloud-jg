@@ -967,7 +967,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
                 "quantity": item["quantity"],
                 "unit_cost": str(int(unit_kes))
             })
-        items = les_items
+        items = kes_items
 
         disc = int(to_kes(disc)) if disc > 0 else 0
         pdf_currency = "KES"
