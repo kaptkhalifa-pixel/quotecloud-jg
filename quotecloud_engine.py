@@ -718,14 +718,8 @@ def _build_pdf_html(payload):
         title = esc(parts[0])
         detail = "<br>".join(esc(p) for p in parts[1:] if p.strip()) if len(parts) > 1 else ""
         detail_html = f'<span class="item-detail">{detail}</span>' if detail else ""
-        if item.get("hide_unit"):
-            qty_cell = ""
-            unit_cell = ""
-        else:
-            qty_display = int(qty) if qty == int(qty) else qty
-            qty_cell = str(qty_display)
-            unit_cell = f"{currency} {unit:,.2f}"
-        rows_html += f'<tr><td><span class="item-title">{title}</span>{detail_html}</td><td>{qty_cell}</td><td>{unit_cell}</td><td>{currency} {amount:,.2f}</td></tr>'
+        qty_display = int(qty) if qty == int(qty) else qty
+        rows_html += f'<tr><td><span class="item-title">{title}</span>{detail_html}</td><td>{qty_display}</td><td>{currency} {unit:,.2f}</td><td>{currency} {amount:,.2f}</td></tr>'
 
     total = round(subtotal - discount, 2)
     discount_row = f'<div class="total-row discount"><span>Discount</span><span>&minus; {currency} {discount:,.2f}</span></div>' if discount > 0 else ""

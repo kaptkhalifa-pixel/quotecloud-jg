@@ -885,15 +885,11 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         adj_total = float(result.get("total_usd", 0))
         pax_preview = float(result.get("pax_fee_usd_display") if result.get("pax_fee_usd_display") is not None else (result.get("pax_fee_usd") or 0))
         if was_adjusted and adj_total > 0:
-            flight_line_total = round(adj_total - pax_preview, 2)
             items.append({
                 "name": "Aircraft Charter\n" + "\n".join(item_parts),
-                "quantity": "1",
-                "unit_cost": str(flight_line_total),
-                "hide_unit": True
+                "quantity": str(round(total_hrs, 2)),
+                "unit_cost": str(rate)
             })
-            # Force exact total by zeroing pax if already baked in
-            pax_preview = 0
         else:
             items.append({
                 "name": "Aircraft Charter\n" + "\n".join(item_parts),
@@ -915,8 +911,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             items.append({
                 "name": "Passenger Taxes & Admin Fees",
                 "quantity": "1",
-                "unit_cost": str(round(adj_pax, 2)),
-                "hide_unit": True
+                "unit_cost": str(round(adj_pax, 2))
             })
 
     overnight_usd = result.get("overnight_usd") or result.get("overnight_cost_usd") or 0
@@ -963,17 +958,17 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         kes_items = []
         for item in items:
             qty = float(item["quantity"])
-            line_total = float(item["unit_cost"]) * qty
-            kes_total = to_kes(line_total)
-            new_item = {
+            unit = float(item["unit_cost"])
+            line_total_usd = qty * unit
+            line_total_kes = to_kes(line_total_usd)
+            unit_kes = round(line_total_kes / qty) if qty > 0 else line_total_kes
+            kes_items.append({
                 "name": item["name"],
-                "quantity": "1",
-                "unit_cost": str(int(kes_total))
-            }
-            if item.get("hide_unit"):
-                new_item["hide_unit"] = True
-            kes_items.append(new_item)
-        items = kes_items
+                "quantity": item["quantity"],
+                "unit_cost": str(int(unit_kes))
+            })
+        items = les_items
+
         disc = int(to_kes(disc)) if disc > 0 else 0
         pdf_currency = "KES"
     elif currency == "BOTH" and kes_rate > 0:
