@@ -1422,6 +1422,22 @@ function toggleAdjKesMode(idx) {
   recalcAdjuster(idx);
   calcReverse(idx);
 }
+function applyReverseRate(idx, rate, pax) {
+  let isKes = document.getElementById('adj-kes-mode-'+idx)?.checked;
+  let kesRate = fxRates['KES'] || 0;
+  if (isKes && kesRate > 0) {
+    document.getElementById('adj-rate-'+idx).value = Math.ceil(rate * kesRate / 1000) * 1000;
+    document.getElementById('adj-pax-'+idx).value = Math.ceil(pax * kesRate / 1000) * 1000;
+  } else {
+    document.getElementById('adj-rate-'+idx).value = Math.round(rate * 100) / 100;
+    document.getElementById('adj-pax-'+idx).value = Math.round(pax * 100) / 100;
+  }
+  recalcAdjuster(idx);
+  let adjSummary = document.getElementById('adj-summary-'+idx);
+  if (adjSummary) adjSummary.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function getTotalHours(res) {
 
 function getTotalHours(res) {
   let segs = res.segments || [];
