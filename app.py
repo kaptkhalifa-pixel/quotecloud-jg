@@ -31,6 +31,34 @@ def init_firestore():
 
 db = init_firestore()
 
+TENANT_ID = os.environ.get("TENANT_ID", "jetman-global")
+
+def tenant_doc():
+    return db.collection("tenants").document(TENANT_ID)
+
+def tenant_collection(name):
+    return tenant_doc().collection(name)
+
+def load_operator_config():
+    try:
+        snap = tenant_doc().get()
+        if snap.exists:
+            data = snap.to_dict()
+            if data:
+                return data
+    except Exception as e:
+        print(f"Firestore load_operator_config error: {e}")
+    file_config = load_operator_config_from_file()
+    if file_config:
+        save_operator_config(file_config)
+    return file_config
+
+def save_operator_config(config):
+    try:
+        tenant_doc().set(config, merge=False)
+    except Exception as e:
+        print(f"Firestore save_operator_config error: {e}")
+
 app = Flask(__name__)
 
 OPERATOR_CONFIG_FILE = "operator_config.json"
@@ -38,16 +66,17 @@ AIRCRAFT_CONFIG_FILE = "hf_aircraft.json"
 RECORDS_FILE = "qc_records.json"
 BOOKINGS_FILE = "qc_bookings.json"
 
-def load_operator_config():
+def load_operator_config_from_file():
     p = pathlib.Path(OPERATOR_CONFIG_FILE)
     if p.exists():
         try:
             return json.loads(p.read_text())
         except Exception as e:
-            print(f"ERROR loading operator config: {e}")
+            print(f"ERROR loading operator config file: {e}")
     return {}
 
 OPERATOR = load_operator_config()
+
 if not OPERATOR.get("branding"):
     OPERATOR["branding"] = {"primary_color": "#1a56db", "accent_color": "#f59e0b", "button_color": "#f59e0b", "button_text": "#ffffff"}
 if not OPERATOR.get("company_name"):
@@ -109,15 +138,10 @@ def parse_smart_date(s):
     return s
 
 def get_geo_lock():
-    try:
-        p = pathlib.Path(OPERATOR_CONFIG_FILE)
-        if p.exists():
-            cfg = json.loads(p.read_text())
-            if cfg.get("geo_lock"):
-                return cfg["geo_lock"]
-    except Exception:
-        pass
+    if OPERATOR.get("geo_lock"):
+        return OPERATOR["geo_lock"]
     return OPERATOR.get("geo_lock", {
+
         "enabled": True,
         "region_name": "Kenya",
         "mode": "radius",
@@ -193,12 +217,13 @@ def logout():
     return redirect(url_for("login"))
 
 def load_aircraft():
-    p = pathlib.Path(AIRCRAFT_CONFIG_FILE)
-    if p.exists():
-        try:
-            return json.loads(p.read_text())
-        except Exception:
-            pass
+    try:
+        docs = tenant_collection("aircraft").stream()
+        result = {doc.id: doc.to_dict() for doc in docs}
+        if result:
+            return result
+    except Exception as e:
+        print(f"Firestore load_aircraft error: {e}")
     default = {
         "as350": {
             "label": "Airbus AS350",
@@ -214,22 +239,48 @@ def load_aircraft():
             "routing_mode": "standard"
         }
     }
-    pathlib.Path(AIRCRAFT_CONFIG_FILE).write_text(json.dumps(default, indent=2))
+    save_aircraft(default)
     return default
 
 def save_aircraft(data):
-    pathlib.Path(AIRCRAFT_CONFIG_FILE).write_text(json.dumps(data, indent=2))
+    try:
+        col = tenant_collection("aircraft")
+        batch = db.batch()
+        existing = col.stream()
+        for doc in existing:
+            batch.delete(doc.reference)
+        batch.commit()
+        batch = db.batch()
+        for key, ac in data.items():
+            doc_ref = col.document(key)
+            batch.set(doc_ref, ac)
+        batch.commit()
+    except Exception as e:
+        print(f"Firestore save_aircraft error: {e}")
+
 def load_bookings():
-    p = pathlib.Path(BOOKINGS_FILE)
-    if p.exists():
-        try:
-            return json.loads(p.read_text())
-        except Exception:
-            pass
-    return {}
+    try:
+        docs = tenant_collection("bookings").stream()
+        return {doc.id: doc.to_dict() for doc in docs}
+    except Exception as e:
+        print(f"Firestore load_bookings error: {e}")
+        return {}
 
 def save_bookings(bookings):
-    pathlib.Path(BOOKINGS_FILE).write_text(json.dumps(bookings, indent=2))
+    try:
+        col = tenant_collection("bookings")
+        batch = db.batch()
+        existing = col.stream()
+        for doc in existing:
+            batch.delete(doc.reference)
+        batch.commit()
+        batch = db.batch()
+        for token, b in bookings.items():
+            doc_ref = col.document(token)
+            batch.set(doc_ref, b)
+        batch.commit()
+    except Exception as e:
+        print(f"Firestore save_bookings error: {e}")
 
 def generate_token(doc_type="Q"):
     import random, string
@@ -252,7 +303,7 @@ def inherit_token(token, new_type):
 
 def load_records():
     try:
-        docs = db.collection("records").order_by("timestamp").stream()
+        docs = tenant_collection("records").order_by("timestamp").stream()
         return [doc.to_dict() for doc in docs]
     except Exception as e:
         print(f"Firestore load_records error: {e}")
@@ -260,14 +311,15 @@ def load_records():
 
 def save_records(records):
     try:
+        col = tenant_collection("records")
         batch = db.batch()
-        existing = db.collection("records").stream()
+        existing = col.stream()
         for doc in existing:
             batch.delete(doc.reference)
         batch.commit()
         batch = db.batch()
         for rec in records:
-            doc_ref = db.collection("records").document(rec["number"])
+            doc_ref = col.document(rec["number"])
             batch.set(doc_ref, rec)
         batch.commit()
     except Exception as e:
@@ -1627,7 +1679,7 @@ def save_settings():
     global OPERATOR
     data = request.get_json()
     try:
-        pathlib.Path(OPERATOR_CONFIG_FILE).write_text(json.dumps(data, indent=2))
+        save_operator_config(data)
         OPERATOR = data
         return jsonify({"success": True})
     except Exception as e:
@@ -1649,7 +1701,7 @@ def change_password():
         return jsonify({"error": "Passwords do not match."}), 400
     try:
         OPERATOR["env"]["admin_pass"] = new_pass
-        pathlib.Path(OPERATOR_CONFIG_FILE).write_text(json.dumps(OPERATOR, indent=2))
+        save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -1727,7 +1779,7 @@ def fx_save():
                 "UGX": float(data.get("UGX", 0))
             }
         }
-        pathlib.Path(OPERATOR_CONFIG_FILE).write_text(json.dumps(OPERATOR, indent=2))
+        save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
