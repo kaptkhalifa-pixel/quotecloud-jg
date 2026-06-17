@@ -1438,9 +1438,8 @@ function applyReverseRate(idx, rate, pax) {
 }
 
 function getTotalHours(res) {
-
-function getTotalHours(res) {
   let segs = res.segments || [];
+
   if (res.mission === 'return_both') segs = res.option_a?.segments || [];
   let t = 0;
   segs.forEach(s => { if (s.hours && s.type) t += parseFloat(s.hours); });
