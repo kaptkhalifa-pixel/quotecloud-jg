@@ -11,6 +11,26 @@ from flask import Flask, render_template, request, jsonify, send_file, session, 
 from functools import wraps
 import quotecloud_engine as hq
 
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+def init_firestore():
+    if firebase_admin._apps:
+        return firestore.client()
+    cred_json = os.environ.get("FIREBASE_CREDENTIALS_JSON")
+    if cred_json:
+        cred_dict = json.loads(cred_json)
+        cred = credentials.Certificate(cred_dict)
+    else:
+        key_path = pathlib.Path(__file__).parent / "firebase-key.json"
+        if not key_path.exists():
+            raise RuntimeError("No Firebase credentials found (env var or local file).")
+        cred = credentials.Certificate(str(key_path))
+    firebase_admin.initialize_app(cred)
+    return firestore.client()
+
+db = init_firestore()
+
 app = Flask(__name__)
 
 OPERATOR_CONFIG_FILE = "operator_config.json"
@@ -231,16 +251,27 @@ def inherit_token(token, new_type):
     return generate_token(new_type)
 
 def load_records():
-    p = pathlib.Path(RECORDS_FILE)
-    if p.exists():
-        try:
-            return json.loads(p.read_text())
-        except Exception:
-            pass
-    return []
+    try:
+        docs = db.collection("records").order_by("timestamp").stream()
+        return [doc.to_dict() for doc in docs]
+    except Exception as e:
+        print(f"Firestore load_records error: {e}")
+        return []
 
 def save_records(records):
-    pathlib.Path(RECORDS_FILE).write_text(json.dumps(records, indent=2))
+    try:
+        batch = db.batch()
+        existing = db.collection("records").stream()
+        for doc in existing:
+            batch.delete(doc.reference)
+        batch.commit()
+        batch = db.batch()
+        for rec in records:
+            doc_ref = db.collection("records").document(rec["number"])
+            batch.set(doc_ref, rec)
+        batch.commit()
+    except Exception as e:
+        print(f"Firestore save_records error: {e}")
 
 def next_record_number(doc_type="Quotation", token_override=None):
     if token_override:
