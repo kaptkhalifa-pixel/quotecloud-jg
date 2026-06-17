@@ -1489,9 +1489,15 @@ function recalcAdjuster(idx) {
   let rateDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(rateUsd*kesRate/1000)*1000).toLocaleString()}/hr` : `$${rateUsd}/hr`;
   let totalDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}` : `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   let paxDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(pax*kesRate/1000)*1000).toLocaleString()}` : `$${Math.round(pax*100)/100}`;
-  if (adjSummary) adjSummary.innerHTML = `<strong>Adjusted Total: ${totalDisplay}</strong> &nbsp;·&nbsp; ${hrs} hrs @ ${rateDisplay} · Pax: ${paxDisplay} &nbsp; <button onclick="confirmApply(${idx})" style="padding:4px 12px;background:#1b5e20;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:8px">Apply New Values →</button>`;
-  if (adjSummary) adjSummary.style.display = 'block';
-}
+  if (adjSummary) {
+    let wasApplied = adjSummary.dataset.applied === 'true';
+    adjSummary.dataset.applied = 'false';
+    adjSummary.style.background = '#fff3e0';
+    let warningLine = wasApplied ? `<div style="font-size:0.72rem;color:#e65100;margin-bottom:4px">⚠ This will overwrite your previously applied values.</div>` : '';
+    adjSummary.innerHTML = `${warningLine}<strong>Preview: ${totalDisplay}</strong> &nbsp;·&nbsp; ${hrs} hrs @ ${rateDisplay} · Pax: ${paxDisplay} &nbsp; <button onclick="confirmApply(${idx})" style="padding:4px 12px;background:#1b5e20;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:8px">Apply →</button>`;
+    adjSummary.style.display = 'block';
+  }
+
 function confirmApply(idx) {
   let isKes = document.getElementById('adj-kes-mode-'+idx)?.checked;
   let kesRate = fxRates['KES'] || 0;
@@ -1510,7 +1516,8 @@ function confirmApply(idx) {
     : `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   if (adjSummary) adjSummary.innerHTML = `✅ <strong>New values applied.</strong> Rate: ${rateDisplay} · Pax/Admin: ${paxDisplay} · Total: ${totalDisplay}. Proceed to Generate PDF below.`;
   adjSummary.style.background = '#c8e6c9';
-  adjSummary.scrollIntoView({behavior:'smooth', block:'nearest'});
+  adjSummary.dataset.applied = 'true';
+  adjSummary.scrollIntoView({behavior:'smooth', block:'center'});
 }
 
 function calcReverse(idx) {
@@ -1583,7 +1590,6 @@ function renderAdjuster(res, idx) {
         </div>
       </div>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="recalcAdjuster(${idx})">↺ Recalculate</button>
         <button class="btn btn-success" onclick="savePreset(${idx})">💾 Save as Preset</button>
       </div>
       <div class="preset-row" id="preset-chips-${idx}"></div>
