@@ -1438,8 +1438,8 @@ function recalcAdjuster(idx) {
   let kesRate = fxRates['KES'] || 0;
   let rateRaw = parseFloat(document.getElementById('adj-rate-'+idx).value) || 0;
   let paxRaw = parseFloat(document.getElementById('adj-pax-'+idx).value) || 0;
-  let rateUsd = isKes && kesRate > 0 ? rateRaw / kesRate : rateRaw;
-  let paxUsd = isKes && kesRate > 0 ? paxRaw / kesRate : paxRaw;
+  let rateUsd = isKes && kesRate > 0 ? Math.round(rateRaw / kesRate) : rateRaw;
+  let paxUsd = isKes && kesRate > 0 ? Math.round(paxRaw / kesRate) : paxRaw;
   let rate = rateUsd;
   let pax = paxUsd;
   let hrs = getTotalHours(res);
@@ -1490,6 +1490,7 @@ function confirmApply(idx) {
     : `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   if (adjSummary) adjSummary.innerHTML = `✅ <strong>New values applied.</strong> Rate: ${rateDisplay} · Pax/Admin: ${paxDisplay} · Total: ${totalDisplay}. Proceed to Generate PDF below.`;
   adjSummary.style.background = '#c8e6c9';
+  adjSummary.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 function calcReverse(idx) {
@@ -1509,12 +1510,14 @@ function calcReverse(idx) {
   if (paxLabel) paxLabel.textContent = isKes ? 'Keep Pax/Admin (KES)' : 'Keep Pax/Admin (USD)';
   if (!targetRaw || !hrs) { el.textContent = ''; return; }
   let impliedFlight = target - pax;
-  let impliedRate = Math.round((impliedFlight / hrs) * 100) / 100;
+  let impliedRate = isKes 
+    ? Math.round((impliedFlight / hrs) * 100) / 100
+    : Math.round((impliedFlight / hrs) * 100) / 100;
   if (impliedRate < 0) { el.textContent = 'Target too low — increase target price.'; el.style.color='#dc3545'; return; }
   el.style.color = '#1a56db';
   if (isKes) {
-    let impliedRateKes = Math.ceil((impliedRate * kesRate) / 1000) * 1000;
     let impliedFlightKes = Math.ceil((impliedFlight * kesRate) / 1000) * 1000;
+    let impliedRateKes = Math.round(impliedFlightKes / hrs);
     el.innerHTML = `Implied Rate: <strong>KES ${impliedRateKes.toLocaleString()}/hr</strong> &nbsp;·&nbsp; Flight Cost: <strong>KES ${impliedFlightKes.toLocaleString()}</strong> &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
   } else {
     el.innerHTML = `Implied Rate: <strong>$${impliedRate.toLocaleString(undefined,{minimumFractionDigits:2})}/hr</strong> &nbsp;·&nbsp; Flight Cost: <strong>$${impliedFlight.toLocaleString(undefined,{minimumFractionDigits:2})}</strong> &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
