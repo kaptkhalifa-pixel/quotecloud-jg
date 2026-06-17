@@ -176,8 +176,8 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .filter-tab.active { background: {{ operator.branding.primary_color }}; color: #fff; border-color: {{ operator.branding.primary_color }}; }
 
 /* SEARCH BAR */
-.search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
-.search-bar input { flex: 1; }
+.search-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.search-bar input { flex: 1; min-width: 200px; }
 
 /* LEG ROWS */
 .leg-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
@@ -527,7 +527,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div class="filter-tab" onclick="filterRecordsByType('Receipt',this)">Receipts</div>
     </div>
     <div class="search-bar">
-      <input type="text" id="rec-search" placeholder="Search by client, number..." oninput="filterRecords()">
+      <input type="text" id="rec-search" placeholder="Search by client name or reference code..." oninput="filterRecords()" style="flex:2;min-width:0">
       <select id="rec-sort" onchange="filterRecords()" style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;background:#fff;min-height:44px;min-width:150px">
         <option value="newest">Newest First</option>
         <option value="oldest">Oldest First</option>
@@ -2113,9 +2113,14 @@ function getPaymentActions(rec) {
 
 function renderRecords(records) {
   if (!records.length) {
-    document.getElementById('rec-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">No records found.</td></tr>';
+    let q = document.getElementById('rec-search')?.value.trim();
+    let msg = q
+      ? `No records match "${q}". Try the client name or part of the reference code.`
+      : 'No records yet. Generated quotes, invoices, and receipts will appear here.';
+    document.getElementById('rec-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px 16px;line-height:1.6">${msg}</td></tr>`;
     return;
   }
+
   document.getElementById('rec-tbody').innerHTML = records.map(r => {
     let typeKey = (r.type||'').toLowerCase();
     return `<tr>
