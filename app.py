@@ -889,7 +889,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             items.append({
                 "name": "Aircraft Charter\n" + "\n".join(item_parts),
                 "quantity": "1",
-                "unit_cost": str(flight_line_total)
+                "unit_cost": str(flight_line_total),
+                "hide_unit": True
             })
             # Force exact total by zeroing pax if already baked in
             pax_preview = 0
@@ -914,7 +915,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             items.append({
                 "name": "Passenger Taxes & Admin Fees",
                 "quantity": "1",
-                "unit_cost": str(round(adj_pax, 2))
+                "unit_cost": str(round(adj_pax, 2)),
+                "hide_unit": True
             })
 
     overnight_usd = result.get("overnight_usd") or result.get("overnight_cost_usd") or 0
@@ -963,11 +965,14 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             qty = float(item["quantity"])
             line_total = float(item["unit_cost"]) * qty
             kes_total = to_kes(line_total)
-            kes_items.append({
+            new_item = {
                 "name": item["name"],
                 "quantity": "1",
                 "unit_cost": str(int(kes_total))
-            })
+            }
+            if item.get("hide_unit"):
+                new_item["hide_unit"] = True
+            kes_items.append(new_item)
         items = kes_items
         disc = int(to_kes(disc)) if disc > 0 else 0
         pdf_currency = "KES"
