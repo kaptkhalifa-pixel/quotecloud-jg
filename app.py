@@ -1154,7 +1154,7 @@ def pdf():
             "client_phone": client_phone,
             "client_whatsapp": client_phone
         })
-        if doc_type in ("Quotation", "Quote"):
+        if True:
             bookings = load_bookings()
             route_summary = ""
             segs = result.get("segments") or []
@@ -1246,6 +1246,39 @@ def pdf_all():
                 "ac_label": res.get("ac_label", ""),
                 "mission": actual.get("mission", "")
             })
+
+            bookings = load_bookings()
+            route_summary = ""
+            segs = actual.get("segments") or []
+            if actual.get("mission") == "pick_and_drop":
+                segs = list(actual.get("drop", {}).get("segments", [])) + list(actual.get("pick", {}).get("segments", []))
+            rev = [s for s in segs if s.get("type") == "revenue"]
+            if rev:
+                route_summary = ", ".join(f"{s.get('origin','')} to {s.get('destination','')}" + (f" on {s['date']}" if s.get('date') else "") for s in rev)
+            bookings[doc_number] = {
+                "token": doc_number,
+                "status": "PENDING",
+                "client_name": client_name,
+                "client_email": client_email,
+                "client_whatsapp": client_phone,
+                "ac_label": res.get("ac_label", ""),
+                "ac_key": res.get("ac_key", ""),
+                "total_usd": total,
+                "mission": actual.get("mission", ""),
+                "route_summary": route_summary,
+                "quote_snapshot": actual,
+                "pdf_url": "",
+                "invoice_number": "",
+                "invoice_url": "",
+                "created_at": datetime.datetime.now().isoformat(),
+                "updated_at": datetime.datetime.now().isoformat(),
+                "payment_method": "",
+                "payment_ref": "",
+                "notes": note or "",
+                "source": "admin"
+            }
+            save_bookings(bookings)
+
             generated.append({
                 "number": doc_number,
                 "path": out_path,
