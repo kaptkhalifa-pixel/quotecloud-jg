@@ -14,22 +14,37 @@ import quotecloud_engine as hq
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+FIREBASE_STORAGE_BUCKET = "quotecloud-264db.firebasestorage.app"
+
 def init_firestore():
     if firebase_admin._apps:
         return firestore.client()
     cred_json = os.environ.get("FIREBASE_CREDENTIALS_JSON")
     if cred_json:
-        cred_dict = json.loads(cred_json)
+        cred_dict = json.loads(cred_json.strip())
         cred = credentials.Certificate(cred_dict)
     else:
         key_path = pathlib.Path(__file__).parent / "firebase-key.json"
         if not key_path.exists():
             raise RuntimeError("No Firebase credentials found (env var or local file).")
         cred = credentials.Certificate(str(key_path))
-    firebase_admin.initialize_app(cred)
+    firebase_admin.initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})
     return firestore.client()
 
 db = init_firestore()
+
+def upload_pdf_to_firebase(pdf_path, doc_number):
+    try:
+        from firebase_admin import storage as fb_storage
+        bucket = fb_storage.bucket()
+        blob_path = f"tenants/{TENANT_ID}/pdfs/{doc_number}.pdf"
+        blob = bucket.blob(blob_path)
+        blob.upload_from_filename(pdf_path, content_type="application/pdf")
+        blob.make_public()
+        return blob.public_url
+    except Exception as e:
+        print(f"Firebase Storage upload error: {e}")
+        return None
 
 TENANT_ID = os.environ.get("TENANT_ID", "jetman-global")
 
@@ -1142,8 +1157,8 @@ def pdf():
         import os
         pdf_size = os.path.getsize(out_path) if os.path.exists(out_path) else 0
         print(f"PDF generated: {out_path} size={pdf_size} bytes")
-        pdf_url = upload_pdf_to_imgbb(out_path)
-        print(f"imgbb result: {pdf_url}")
+        pdf_url = upload_pdf_to_firebase(out_path, doc_number)
+        print(f"Firebase Storage result: {pdf_url}")
         # Read PDF into memory before any other operations
         with open(out_path, "rb") as f:
             pdf_bytes = f.read()
@@ -1521,7 +1536,7 @@ def generate_receipt():
 
     out_path = f"/tmp/{receipt_number}.pdf"
     hq.generate_pdf_weasy(payload, out_path)
-    receipt_pdf_url = upload_pdf_to_imgbb(out_path)
+    receipt_pdf_url = upload_pdf_to_firebase(out_path, doc_number)
 
     rec["paid"] = paid_amount >= total
     rec["paid_amount"] = round(paid_amount, 2)
@@ -2031,7 +2046,7 @@ def booking_pdf():
         payload["notes_title"] = ""
         out_path = f"/tmp/{token}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
-        pdf_url = upload_pdf_to_imgbb(out_path)
+        pdf_url = upload_pdf_to_firebase(out_path, doc_number)
         total = float(result.get("total_usd", 0))
         if result.get("mission") == "return_both":
             total = float((result.get("option_a") or {}).get("total_usd", 0))
