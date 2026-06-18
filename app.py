@@ -1847,7 +1847,7 @@ def autocomplete():
             local_matches.append({
                 "description": name.title(),
                 "main": name.title(),
-                "secondary": "Saved Location",
+                "secondary": "Verified Location",
                 "place_id": "",
                 "local_key": key
             })

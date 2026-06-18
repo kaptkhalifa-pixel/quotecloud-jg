@@ -1661,7 +1661,7 @@ async function adminAcFetch(query, drop, input) {
       drop.innerHTML = data.predictions.slice(0,6).map(p => {
         let main = p.main||p.description, sub = p.secondary||'';
         let isLocal = sub === 'Verified Location';
-        let icon = isLocal ? '✅' : '📍';
+        let icon = isLocal ? '⭐' : '📍';
         let subColor = isLocal ? '#1b5e20' : '#888';
         return `<div onclick="adminAcSelect(this,'${input.id}')" data-main="${main}" data-placeid="${p.place_id||''}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem;display:flex;gap:8px;align-items:flex-start">
           <span style="color:${subColor};flex-shrink:0">${icon}</span>
