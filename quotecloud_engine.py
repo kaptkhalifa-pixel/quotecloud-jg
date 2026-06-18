@@ -114,11 +114,40 @@ def _write_csv(path, data):
         w = csv.DictWriter(f, fieldnames=["name", "lat", "lon", "aliases"])
         w.writeheader(); w.writerows(rows)
 
+_firestore_collection_fn = None
+
+def set_firestore_collection_fn(fn):
+    global _firestore_collection_fn
+    _firestore_collection_fn = fn
+
 def load_airports():
     global USER_AIRPORTS
+    if _firestore_collection_fn:
+        try:
+            col = _firestore_collection_fn("airports")
+            docs = col.stream()
+            result = {}
+            for doc in docs:
+                d = doc.to_dict()
+                result[doc.id] = {"lat": d.get("lat"), "lon": d.get("lon"), "aliases": d.get("aliases", [])}
+            USER_AIRPORTS = result
+            return
+        except Exception as e:
+            print(f"Firestore load_airports error: {e}")
     USER_AIRPORTS = _read_csv(USER_AIRPORTS_FILE)
 
 def save_user_airports():
+    if _firestore_collection_fn:
+        try:
+            col = _firestore_collection_fn("airports")
+            existing = list(col.stream())
+            for doc in existing:
+                doc.reference.delete()
+            for key, rec in USER_AIRPORTS.items():
+                col.document(key).set(rec)
+            return
+        except Exception as e:
+            print(f"Firestore save_user_airports error: {e}")
     _write_csv(USER_AIRPORTS_FILE, USER_AIRPORTS)
 
 def _resolve_key(q):

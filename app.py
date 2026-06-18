@@ -188,6 +188,7 @@ def get_bank_details_block():
         lines.append(f"PAYBILL: {bank['paybill']}")
     return "\n".join(lines)
 
+hq.set_firestore_collection_fn(tenant_collection)
 hq.load_airports()
 
 def login_required(f):
