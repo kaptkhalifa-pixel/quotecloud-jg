@@ -301,12 +301,14 @@ def compute_one_way(pickup, dropoff, ac_key="as350"):
     if abs(src[1] - dst[1]) < 1e-4 and abs(src[2] - dst[2]) < 1e-4:
         raise ValueError(f"Pickup and drop-off are the same location ({src[0]}). Please enter two different locations.")
 
-    base_lat, base_lon = lookup_coords(BASE_AIRPORT)
+    base_key_for_ac = prof.get("base_key", BASE_AIRPORT)
+    base_label_for_ac = prof.get("base_label", "Wilson Airport, Nairobi")
+    base_lat, base_lon = lookup_coords(base_key_for_ac)
     segments = []
 
     if not (abs(src[1] - base_lat) < 1e-4 and abs(src[2] - base_lon) < 1e-4):
         nm_p, hrs_p = _compute_leg(base_lat, base_lon, src[1], src[2], speed)
-        segments.append({"type": "positioning", "origin": "Wilson Airport",
+        segments.append({"type": "positioning", "origin": base_label_for_ac,
                          "destination": src[0], "nm": nm_p, "hours": hrs_p,
                          "cost": _flight_cost(hrs_p, rate), "date": None})
 
@@ -318,7 +320,7 @@ def compute_one_way(pickup, dropoff, ac_key="as350"):
     if not (abs(dst[1] - base_lat) < 1e-4 and abs(dst[2] - base_lon) < 1e-4):
         nm_d, hrs_d = _compute_leg(dst[1], dst[2], base_lat, base_lon, speed)
         segments.append({"type": "depositioning", "origin": dst[0],
-                         "destination": "Wilson Airport",
+                         "destination": base_label_for_ac,
                          "nm": nm_d, "hours": hrs_d,
                          "cost": _flight_cost(hrs_d, rate), "date": None})
 
@@ -359,12 +361,14 @@ def compute_return(pickup, dropoff, depart_str, return_str, ac_key="as350"):
 
     src = _to_coord(pickup)
     dst = _to_coord(dropoff)
-    base_lat, base_lon = lookup_coords(BASE_AIRPORT)
+    base_key_for_ac = prof.get("base_key", BASE_AIRPORT)
+    base_label_for_ac = prof.get("base_label", "Wilson Airport, Nairobi")
+    base_lat, base_lon = lookup_coords(base_key_for_ac)
     segments = []
 
     if not (abs(src[1] - base_lat) < 1e-4 and abs(src[2] - base_lon) < 1e-4):
         nm_p, hrs_p = _compute_leg(base_lat, base_lon, src[1], src[2], speed)
-        segments.append({"type": "positioning", "origin": "Wilson Airport",
+        segments.append({"type": "positioning", "origin": base_label_for_ac,
                          "destination": src[0], "nm": nm_p, "hours": hrs_p,
                          "cost": _flight_cost(hrs_p, rate), "date": None})
 
@@ -396,7 +400,7 @@ def compute_return(pickup, dropoff, depart_str, return_str, ac_key="as350"):
     if not (abs(src[1] - base_lat) < 1e-4 and abs(src[2] - base_lon) < 1e-4):
         nm_d, hrs_d = _compute_leg(src[1], src[2], base_lat, base_lon, speed)
         segments.append({"type": "depositioning", "origin": src[0],
-                         "destination": "Wilson Airport",
+                         "destination": base_label_for_ac,
                          "nm": nm_d, "hours": hrs_d,
                          "cost": _flight_cost(hrs_d, rate), "date": None})
 
@@ -437,11 +441,13 @@ def compute_safari(legs, ac_key="as350"):
     waiting = 0.0
 
     first_src = _to_coord(parsed[0]["origin"])
-    base_lat, base_lon = lookup_coords(BASE_AIRPORT)
+    base_key_for_ac = prof.get("base_key", BASE_AIRPORT)
+    base_label_for_ac = prof.get("base_label", "Wilson Airport, Nairobi")
+    base_lat, base_lon = lookup_coords(base_key_for_ac)
 
     if not (abs(first_src[1] - base_lat) < 1e-4 and abs(first_src[2] - base_lon) < 1e-4):
         nm_p, hrs_p = _compute_leg(base_lat, base_lon, first_src[1], first_src[2], speed)
-        segments.append({"type": "positioning", "origin": "Wilson Airport",
+        segments.append({"type": "positioning", "origin": base_label_for_ac,
                          "destination": first_src[0], "nm": nm_p, "hours": hrs_p,
                          "cost": _flight_cost(hrs_p, rate), "date": None})
 
@@ -476,7 +482,7 @@ def compute_safari(legs, ac_key="as350"):
     if not (abs(last_dst[1] - base_lat) < 1e-4 and abs(last_dst[2] - base_lon) < 1e-4):
         nm_d, hrs_d = _compute_leg(last_dst[1], last_dst[2], base_lat, base_lon, speed)
         segments.append({"type": "depositioning", "origin": last_dst[0],
-                         "destination": "Wilson Airport",
+                         "destination": base_label_for_ac,
                          "nm": nm_d, "hours": hrs_d,
                          "cost": _flight_cost(hrs_d, rate), "date": None})
 

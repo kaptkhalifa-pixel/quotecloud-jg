@@ -709,12 +709,13 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
     orig = hq.AIRCRAFT.copy()
     orig_pax = hq.PAX_ADMIN_FEE_USD
     hq.AIRCRAFT[ac_key] = {
-
         "label": f"{ac_cfg['label']} ({ac_cfg['seater']} seater)",
         "speed": speed,
         "rate": rate,
         "overnight": overnight_rate,
         "idle_day": idle_day_rate,
+        "base_key": base_key,
+        "base_label": ac_cfg.get("home_airstrip", "Wilson Airport, Nairobi"),
     }
     hq.PAX_ADMIN_FEE_USD = float(ac_cfg["pax_fee"])
     hq.MIN_CHARGEABLE_HR = float(rules.get("min_flight_hours", 1.0))
