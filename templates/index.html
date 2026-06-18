@@ -3037,7 +3037,7 @@ async function generateAndSendInvoice() {
   let finalTotal = Math.max(base + uplift - discount, 0);
   let genBtn = document.querySelector('#invoice-builder-modal .btn-success');
   if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Generating...'; }
-  showMsg('ib-msg','Generating invoice...','success');
+  document.getElementById('ib-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Generating invoice...</div>';
   try {
     let body = {
       client_name: clientName, client_email: clientEmail, client_phone: clientWaRaw,
