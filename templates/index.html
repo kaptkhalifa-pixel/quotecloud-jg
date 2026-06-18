@@ -788,7 +788,10 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 <div class="modal-overlay" id="invoice-builder-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <h4>Generate Invoice</h4>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
+      <h4 style="margin:0">Generate Invoice</h4>
+      <button onclick="closeInvoiceBuilder()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#888;line-height:1;padding:4px">✕</button>
+    </div>
     <input type="hidden" id="ib-token">
     <input type="hidden" id="ib-client-whatsapp">
     <div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:0.82rem;color:#555">
@@ -2924,12 +2927,37 @@ async function generateAndSendInvoice() {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ token: enq.token, status: 'INVOICED' })
     });
-    closeInvoiceBuilder();
     loadEnquiries();
-    setTimeout(() => openShareModal(invoiceDocNumber, invoicePdfUrl, null, 'Invoice', {
-      clientName, clientWa, finalTotal,
-      acLabel: enq.ac_label||'', route: enq.route_summary||'', token: enq.token
-    }), 500);
+    loadRecords();
+    let waLines = [
+      `Hello ${clientName},`,
+      ``,
+      `Please find your invoice from ${operatorConfig.company_name||'us'}.`,
+      ``,
+      `Ref: ${invoiceDocNumber}`,
+      `Route: ${enq.route_summary||''}`,
+      `Invoice Total: USD $${finalTotal.toLocaleString(undefined,{minimumFractionDigits:2})}`,
+      invoicePdfUrl ? `\nView Invoice: ${invoicePdfUrl}` : '',
+      ``,
+      `To confirm, please proceed with payment as per bank details on the invoice.`,
+      ``,
+      `Regards,`,
+      `${operatorConfig.company_name||'Reservations Team'}`
+    ].filter(l => l !== undefined).join('\n');
+    let waNum = clientWa.replace(/\D/g,'');
+    let waUrl = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waLines)}` : '';
+    let successHtml = `
+      <div style="background:#e8f5e9;border-radius:10px;padding:16px;margin-top:12px">
+        <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:8px">✅ Invoice Generated</div>
+        <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${invoiceDocNumber}</strong></div>
+        <div style="font-size:0.82rem;color:#333;margin-bottom:12px">Saved to Records & Enquiries</div>
+        ${invoicePdfUrl ? `<a href="${invoicePdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:8px 12px;border-radius:8px;margin-bottom:12px">📄 View Permanent Link</a>` : ''}
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${waUrl ? `<a href="${waUrl}" target="_blank" class="btn btn-success btn-sm" style="text-decoration:none">💬 Send via WhatsApp</a>` : ''}
+          <button class="btn btn-grey btn-sm" onclick="closeInvoiceBuilder()">✕ Close</button>
+        </div>
+      </div>`;
+    document.getElementById('ib-msg').innerHTML = successHtml;
   } catch(e) {
     showMsg('ib-msg','Error: '+e.message,'error');
   } finally {
