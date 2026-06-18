@@ -2691,9 +2691,7 @@ function renderEnquiries(enqs) {
           <option value="INVOICED">Invoiced</option>
           <option value="PAID">Paid</option>
         </select>
-        <button class="btn btn-info btn-sm" onclick="openBreakdownModal('${e.token}')">📊</button>
         <button class="btn btn-success btn-sm" onclick="openInvoiceBuilder(${JSON.stringify(e).replace(/"/g,'&quot;')})">📄 Invoice</button>
-        <button class="btn btn-outline btn-sm" onclick="reQuote('${e.token}')">✏️ Re-quote</button>
       </td>
     </tr>`;
   }).join('');
