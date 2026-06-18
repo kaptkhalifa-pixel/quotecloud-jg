@@ -2100,6 +2100,16 @@ def booking_update():
 def get_bookings():
     bookings = load_bookings()
     return jsonify(list(bookings.values()))
+
+@app.route("/booking/get", methods=["POST"])
+@login_required
+def booking_get():
+    data = request.get_json()
+    token = data.get("token", "")
+    bookings = load_bookings()
+    if token not in bookings:
+        return jsonify({"error": "Booking not found"}), 404
+    return jsonify(bookings[token])
 @app.route("/booking/invoice_request", methods=["POST"])
 def booking_invoice_request():
     data = request.get_json()

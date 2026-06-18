@@ -2458,7 +2458,7 @@ function toggleDisclaimer() {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('s-primary-color').addEventListener('input', function() { document.getElementById('s-primary-color-hex').value = this.value; });
   document.getElementById('s-accent-color').addEventListener('input', function() { document.getElementById('s-accent-color-hex').value = this.value; });
-  ['paid-modal','log-modal','edit-modal','delete-modal','invoice-builder-modal','share-modal'].forEach(id => {
+  ['paid-modal','log-modal','edit-modal','delete-modal','invoice-builder-modal','share-modal','breakdown-modal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
   loadFX();
@@ -2691,7 +2691,9 @@ function renderEnquiries(enqs) {
           <option value="INVOICED">Invoiced</option>
           <option value="PAID">Paid</option>
         </select>
+        <button class="btn btn-info btn-sm" onclick="openBreakdownModal('${e.token}')">📊</button>
         <button class="btn btn-success btn-sm" onclick="openInvoiceBuilder(${JSON.stringify(e).replace(/"/g,'&quot;')})">📄 Invoice</button>
+        <button class="btn btn-outline btn-sm" onclick="reQuote('${e.token}')">✏️ Re-quote</button>
       </td>
     </tr>`;
   }).join('');
@@ -2721,6 +2723,130 @@ function openInvoiceBuilder(enq) {
 
 function closeInvoiceBuilder() {
   document.getElementById('invoice-builder-modal').classList.remove('active');
+}
+function closeBreakdownModal() {
+  document.getElementById('breakdown-modal').classList.remove('active');
+}
+
+async function openBreakdownModal(token) {
+  let r = await fetch('/booking/get', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({token})
+  });
+  let booking = await r.json();
+  if (booking.error) { alert(booking.error); return; }
+  let snap = booking.quote_snapshot || {};
+  let segs = snap.segments || [];
+  let rate = snap.rate_usd || 0;
+  let pax = snap.pax_fees || snap.pax_fee_usd_display || 0;
+  let total = snap.total_usd || 0;
+  let billed = snap.billed_hours || 0;
+  let flightCost = snap.flight_cost || 0;
+  let overnight = snap.overnight_usd || 0;
+  let ovRate = snap.overnight_rate_usd || 0;
+  let waiting = snap.waiting_usd || 0;
+  let idleRate = snap.idle_day_rate_usd || 0;
+  document.getElementById('breakdown-token').textContent =
+    `${token} · ${snap.ac_label||''} · ${snap.mission||''}`;
+  let rows = segs.map(s => {
+    if (s.note && !s.type) return '';
+    let nm = s.nm || s.dist_nm || 0;
+    let hrs = s.hours || 0;
+    let cost = s.cost || 0;
+    return `<tr>
+      <td><span class="tag tag-${s.type==='revenue'?'rev':s.type==='positioning'?'pos':'dep'}">${s.type}</span></td>
+      <td>${s.origin||''}</td>
+      <td>${s.destination||''}</td>
+      <td>${nm.toFixed(1)} nm</td>
+      <td>${(hrs*60).toFixed(0)} mins</td>
+      <td>$${cost.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+    </tr>`;
+  }).join('');
+  let html = `
+    <div style="background:#f0f4ff;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:0.82rem">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:#555">Rate</span><strong>USD $${rate.toLocaleString()}/hr</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:#555">Billed Hours</span><strong>${billed} hrs</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:#555">Aircraft</span><strong>${snap.ac_label||'-'}</strong>
+      </div>
+    </div>
+    <div class="route-table-wrap" style="margin-bottom:14px">
+      <table class="route-table">
+        <thead><tr><th>Type</th><th>From</th><th>To</th><th>Dist</th><th>Time</th><th>Cost</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="billing">
+      <div class="billing-row"><span>Flight Cost (${billed} hrs @ $${rate}/hr)</span><span>$${flightCost.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>
+      ${pax>0?`<div class="billing-row"><span>Pax / Admin Fee</span><span>$${parseFloat(pax).toLocaleString()}</span></div>`:''}
+      ${overnight>0?`<div class="billing-row"><span>Overnight (@ $${ovRate}/night)</span><span>$${overnight.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`:''}
+      ${waiting>0?`<div class="billing-row"><span>Idle Day (@ $${idleRate}/day)</span><span>$${waiting.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`:''}
+      <div class="billing-total"><span>TOTAL</span><span>USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>
+    </div>`;
+  document.getElementById('breakdown-content').innerHTML = html;
+  document.getElementById('breakdown-modal').classList.add('active');
+}
+
+async function reQuote(token) {
+  let r = await fetch('/booking/get', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({token})
+  });
+  let booking = await r.json();
+  if (booking.error) { alert(booking.error); return; }
+  let snap = booking.quote_snapshot || {};
+  let segs = snap.segments || [];
+  let mission = snap.mission || 'one_way';
+  let revSegs = segs.filter(s => s.type === 'revenue');
+  let desktopEl = document.querySelector(`.nav-tab[onclick*="'quote'"]`);
+  if (desktopEl) showNav('quote', desktopEl);
+  else {
+    let mobileEl = document.querySelector(`.mobile-nav-tab[onclick*="'quote'"]`);
+    if (mobileEl) showNavMobile('quote', mobileEl);
+  }
+  setTimeout(() => {
+    if (mission === 'one_way' || mission === 'pick_and_drop') {
+      let tab = document.querySelectorAll('.mtab')[0];
+      if (tab) showMission('one_way', tab);
+      if (revSegs[0]) {
+        document.getElementById('ow-pickup').value = revSegs[0].origin || '';
+        document.getElementById('ow-dropoff').value = revSegs[0].destination || '';
+      }
+    } else if (mission === 'return' || mission === 'return_both') {
+      let tab = document.querySelectorAll('.mtab')[1];
+      if (tab) showMission('return', tab);
+      if (revSegs[0]) {
+        document.getElementById('rt-pickup').value = revSegs[0].origin || '';
+        document.getElementById('rt-dropoff').value = revSegs[0].destination || '';
+      }
+    } else if (mission === 'safari') {
+      let tab = document.querySelectorAll('.mtab')[2];
+      if (tab) showMission('safari', tab);
+      document.getElementById('safari-legs').innerHTML = '';
+      revSegs.forEach((s, i) => {
+        if (i === 0) {
+          document.getElementById('leg-origin-1').value = s.origin || '';
+          document.getElementById('leg-dest-1').value = s.destination || '';
+        } else {
+          addLeg();
+          let rows = document.querySelectorAll('#safari-legs .leg-row');
+          let row = rows[rows.length-1];
+          if (row) {
+            row.querySelector('.leg-origin').value = s.origin || '';
+            row.querySelector('.leg-dest').value = s.destination || '';
+          }
+        }
+      });
+    }
+    window._reQuoteToken = token;
+    window._reQuoteRate = snap.rate_usd || 0;
+    window._reQuotePax = snap.pax_fees || snap.pax_fee_usd_display || 0;
+    showMsg('quote-result', `<div class="info-box">✏️ Re-quoting from <strong>${token}</strong> — adjust locations if needed, run the quote, amend rates, then generate PDF to inherit this token.</div>`, 'success');
+  }, 300);
 }
 
 function addUpliftItem() {
@@ -3048,5 +3174,19 @@ function btnFeedback(btn, state, text) {
 }
 
 </script>
+
+<!-- QUOTE BREAKDOWN MODAL -->
+<div class="modal-overlay" id="breakdown-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h4>📊 Quote Breakdown</h4>
+    <div id="breakdown-token" style="font-size:0.78rem;color:#888;margin-bottom:12px"></div>
+    <div id="breakdown-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-grey btn-block" onclick="closeBreakdownModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
