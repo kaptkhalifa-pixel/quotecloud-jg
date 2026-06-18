@@ -2921,8 +2921,10 @@ async function generateAndSendInvoice() {
     let invoicePdfUrl = r.headers.get('X-PDF-URL') || '';
     let invoiceDocNumber = r.headers.get('X-DOC-NUMBER') || enq.token;
     let blob = await r.blob();
-    let blobUrl = URL.createObjectURL(blob);
-    let a = document.createElement('a'); a.href = blobUrl; a.download = `${enq.token}-invoice.pdf`; a.click();
+    try {
+      let blobUrl = URL.createObjectURL(blob);
+      let a = document.createElement('a'); a.href = blobUrl; a.download = `${enq.token}-invoice.pdf`; a.click();
+    } catch(dlErr) { console.log('Download error (non-fatal):', dlErr); }
     await fetch('/booking/update', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ token: enq.token, status: 'INVOICED' })
