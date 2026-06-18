@@ -1835,6 +1835,21 @@ def autocomplete():
     query = (data.get("query") or "").strip()
     if not query or len(query) < 3:
         return jsonify({"predictions": []})
+
+    local_matches = []
+    q_lower = query.lower()
+    for key, rec in hq.USER_AIRPORTS.items():
+        name = rec.get("name", key)
+        aliases = rec.get("aliases", [])
+        if q_lower in key.lower() or q_lower in name.lower() or any(q_lower in a.lower() for a in aliases):
+            local_matches.append({
+                "description": name.title(),
+                "main": name.title(),
+                "secondary": "Saved Location",
+                "place_id": "",
+                "local_key": key
+            })
+
     try:
         import requests as req
         geo = get_geo_lock()
@@ -1849,11 +1864,14 @@ def autocomplete():
                     "radius": radius_m, "strictbounds": False},
             timeout=5
         )
-        data = r.json()
-        predictions = [{"description": p["description"], "main": p.get("structured_formatting", {}).get("main_text", ""), "secondary": p.get("structured_formatting", {}).get("secondary_text", ""), "place_id": p.get("place_id", "")} for p in data.get("predictions", [])]
-        return jsonify({"predictions": predictions})
-    except Exception as e:
-        return jsonify({"predictions": [], "error": str(e)})
+        gdata = r.json()
+        google_predictions = [{"description": p["description"], "main": p.get("structured_formatting", {}).get("main_text", ""), "secondary": p.get("structured_formatting", {}).get("secondary_text", ""), "place_id": p.get("place_id", "")} for p in gdata.get("predictions", [])]
+    except Exception:
+        google_predictions = []
+
+    predictions = local_matches + google_predictions
+    return jsonify({"predictions": predictions})
+
 @app.route("/resolve_place", methods=["POST"])
 def resolve_place():
     data = request.get_json()

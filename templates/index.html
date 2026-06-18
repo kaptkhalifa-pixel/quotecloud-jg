@@ -1660,9 +1660,12 @@ async function adminAcFetch(query, drop, input) {
     if (data.predictions && data.predictions.length) {
       drop.innerHTML = data.predictions.slice(0,6).map(p => {
         let main = p.main||p.description, sub = p.secondary||'';
+        let isLocal = sub === 'Saved Location';
+        let icon = isLocal ? '⭐' : '📍';
+        let subColor = isLocal ? '#1b5e20' : '#888';
         return `<div onclick="adminAcSelect(this,'${input.id}')" data-main="${main}" data-placeid="${p.place_id||''}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem;display:flex;gap:8px;align-items:flex-start">
-          <span style="color:#888;flex-shrink:0">📍</span>
-          <div><div style="font-weight:500">${main}</div>${sub?`<div style="font-size:0.72rem;color:#888">${sub}</div>`:''}</div>
+          <span style="color:${subColor};flex-shrink:0">${icon}</span>
+          <div><div style="font-weight:500">${main}</div>${sub?`<div style="font-size:0.72rem;color:${subColor};font-weight:${isLocal?'600':'400'}">${sub}</div>`:''}</div>
         </div>`;
       }).join('');
       drop.style.display = 'block';
@@ -1822,12 +1825,14 @@ function renderLocations(locs) {
 async function resolveMapPin() {
   let url = document.getElementById('loc-maps').value.trim();
   if (!url) return;
+  showMsg('loc-msg','Resolving pin...','success');
   let r = await fetch('/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url}) });
   let data = await r.json();
   if (!data.found) { showMsg('loc-msg','Could not resolve pin.','error'); return; }
   document.getElementById('loc-name').value = data.display;
   document.getElementById('loc-lat').value = data.lat;
   document.getElementById('loc-lon').value = data.lon;
+  showMsg('loc-msg', `✅ Resolved: ${data.display} (${data.lat.toFixed(5)}, ${data.lon.toFixed(5)})`, 'success');
 }
 
 async function addLocation() {
