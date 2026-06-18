@@ -796,6 +796,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <input type="hidden" id="ib-client-whatsapp">
     <div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:0.82rem;color:#555">
       <div id="ib-summary"></div>
+      <div id="ib-warning" style="display:none;margin-top:10px"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Client Name</label><input type="text" id="ib-name"></div>
@@ -2474,6 +2475,103 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   } catch(e) {}
   try {
+    let invSuccess = localStorage.getItem('qc_invoice_success');
+    if (invSuccess) {
+      let d = JSON.parse(invSuccess);
+      localStorage.removeItem('qc_invoice_success');
+      let waLines = [
+        `Hello ${d.clientName},`,
+        ``,
+        `Please find your invoice from ${operatorConfig.company_name||'us'}.`,
+        ``,
+        `Ref: ${d.docNumber}`,
+        `Route: ${d.route}`,
+        `Invoice Total: USD $${parseFloat(d.finalTotal).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        d.pdfUrl ? `\nView Invoice: ${d.pdfUrl}` : '',
+        ``,
+        `To confirm, please proceed with payment as per bank details on the invoice.`,
+        ``,
+        `Regards,`,
+        `${operatorConfig.company_name||'Reservations Team'}`
+      ].filter(l => l !== undefined).join('\n');
+      let waNum = (d.clientWa||'').replace(/\D/g,'');
+      let waUrl = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waLines)}` : '';
+      setTimeout(() => {
+        let desktopEl = document.querySelector(`.nav-tab[onclick*="'enquiries'"]`);
+        if (desktopEl) showNav('enquiries', desktopEl);
+        let successHtml = `
+          <div style="background:#e8f5e9;border-radius:10px;padding:16px;margin:12px 0">
+            <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:8px">✅ Invoice Generated</div>
+            <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${d.docNumber}</strong></div>
+            <div style="font-size:0.82rem;color:#555;margin-bottom:12px">${d.route}</div>
+            ${d.pdfUrl ? `<a href="${d.pdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:8px 12px;border-radius:8px;margin-bottom:12px">📄 View Invoice</a>` : ''}
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              ${waUrl ? `<a href="${waUrl}" target="_blank" class="btn btn-success btn-sm" style="text-decoration:none">💬 Send via WhatsApp</a>` : ''}
+            </div>
+          </div>`;
+        let enqTab = document.getElementById('nav-enquiries');
+        if (enqTab) {
+          let existing = enqTab.querySelector('#invoice-persist-msg');
+          if (!existing) {
+            let div = document.createElement('div');
+            div.id = 'invoice-persist-msg';
+            div.innerHTML = successHtml;
+            enqTab.querySelector('.card')?.prepend(div);
+          }
+        }
+      }, 800);
+    }
+  } catch(e) {}
+  try {
+    let invSuccess = localStorage.getItem('qc_invoice_success');
+    if (invSuccess) {
+      let d = JSON.parse(invSuccess);
+      localStorage.removeItem('qc_invoice_success');
+      let waLines = [
+        `Hello ${d.clientName},`,
+        ``,
+        `Please find your invoice from ${operatorConfig.company_name||'us'}.`,
+        ``,
+        `Ref: ${d.docNumber}`,
+        `Route: ${d.route}`,
+        `Invoice Total: USD $${parseFloat(d.finalTotal).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        d.pdfUrl ? `\nView Invoice: ${d.pdfUrl}` : '',
+        ``,
+        `To confirm, please proceed with payment as per bank details on the invoice.`,
+        ``,
+        `Regards,`,
+        `${operatorConfig.company_name||'Reservations Team'}`
+      ].filter(l => l !== undefined).join('\n');
+      let waNum = (d.clientWa||'').replace(/\D/g,'');
+      let waUrl = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waLines)}` : '';
+      setTimeout(() => {
+        let desktopEl = document.querySelector(`.nav-tab[onclick*="'enquiries'"]`);
+        if (desktopEl) showNav('enquiries', desktopEl);
+        let successHtml = `
+          <div style="background:#e8f5e9;border-radius:10px;padding:16px;margin:12px 0">
+            <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:8px">✅ Invoice Generated</div>
+            <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${d.docNumber}</strong></div>
+            <div style="font-size:0.82rem;color:#555;margin-bottom:12px">${d.route}</div>
+            ${d.pdfUrl ? `<a href="${d.pdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:8px 12px;border-radius:8px;margin-bottom:12px">📄 View Invoice</a>` : ''}
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              ${waUrl ? `<a href="${waUrl}" target="_blank" class="btn btn-success btn-sm" style="text-decoration:none">💬 Send via WhatsApp</a>` : ''}
+            </div>
+          </div>`;
+        let enqTab = document.getElementById('nav-enquiries');
+        if (enqTab) {
+          let existing = enqTab.querySelector('#invoice-persist-msg');
+          if (!existing) {
+            let div = document.createElement('div');
+            div.id = 'invoice-persist-msg';
+            div.innerHTML = successHtml;
+            enqTab.querySelector('.card')?.prepend(div);
+          }
+        }
+      }, 800);
+    }
+  } catch(e) {}
+
+  try {
     let savedTab = localStorage.getItem('qc_active_tab');
     if (savedTab && savedTab !== 'quote') {
       let desktopEl = document.querySelector(`.nav-tab[onclick*="'${savedTab}'"]`);
@@ -2715,6 +2813,35 @@ function openInvoiceBuilder(enq) {
   document.getElementById('ib-summary').innerHTML =
     `<strong>${enq.token}</strong> &nbsp;·&nbsp; ${enq.client_name} &nbsp;·&nbsp; ${enq.ac_label||''}<br>
      <span style="color:#888">${enq.route_summary||''}</span>`;
+
+  let ibWarning = document.getElementById('ib-warning');
+  let ibGenBtn = document.querySelector('#invoice-builder-modal .btn-success');
+  let isPaid = enq.status === 'PAID';
+  let hasInvoice = !!enq.invoice_number;
+
+  if (isPaid && hasInvoice) {
+    ibWarning.style.display = 'block';
+    ibWarning.innerHTML = `<div style="background:#fdecea;border:1.5px solid #dc3545;border-radius:8px;padding:12px 14px;font-size:0.82rem;line-height:1.6">
+      <strong style="color:#c62828">🔒 Invoice Locked — Payment Recorded</strong><br>
+      <span style="color:#555">Invoice <strong>${enq.invoice_number}</strong> has a recorded payment against it. 
+      This booking is financially closed. To issue a new invoice, please create a fresh enquiry.</span>
+      ${enq.invoice_url ? `<br><a href="${enq.invoice_url}" target="_blank" style="color:#0d47a1;font-size:0.78rem;margin-top:4px;display:inline-block">📄 View existing invoice</a>` : ''}
+    </div>`;
+    if (ibGenBtn) { ibGenBtn.disabled = true; ibGenBtn.style.opacity = '0.4'; ibGenBtn.style.cursor = 'not-allowed'; }
+  } else if (hasInvoice) {
+    ibWarning.style.display = 'block';
+    ibWarning.innerHTML = `<div style="background:#fff3e0;border:1.5px solid #ff6f00;border-radius:8px;padding:12px 14px;font-size:0.82rem;line-height:1.6">
+      <strong style="color:#e65100">⚠️ Invoice Already Exists</strong><br>
+      <span style="color:#555">Invoice <strong>${enq.invoice_number}</strong> was previously generated. 
+      Generating a new one creates a separate document with a new reference — the original is preserved in Records.</span>
+      ${enq.invoice_url ? `<br><a href="${enq.invoice_url}" target="_blank" style="color:#0d47a1;font-size:0.78rem;margin-top:4px;display:inline-block">📄 View existing invoice</a>` : ''}
+    </div>`;
+    if (ibGenBtn) { ibGenBtn.disabled = false; ibGenBtn.style.opacity = ''; ibGenBtn.style.cursor = ''; }
+  } else {
+    ibWarning.style.display = 'none';
+    ibWarning.innerHTML = '';
+    if (ibGenBtn) { ibGenBtn.disabled = false; ibGenBtn.style.opacity = ''; ibGenBtn.style.cursor = ''; }
+  }
   document.getElementById('ib-base-line').textContent =
     `${enq.ac_label||'Aircraft Charter'} — ${enq.route_summary||''} — USD $${base.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   document.getElementById('ib-total-base').textContent = `$${base.toLocaleString(undefined,{minimumFractionDigits:2})}`;
@@ -2931,6 +3058,16 @@ async function generateAndSendInvoice() {
     });
     loadEnquiries();
     loadRecords();
+    try {
+      localStorage.setItem('qc_invoice_success', JSON.stringify({
+        docNumber: invoiceDocNumber,
+        pdfUrl: invoicePdfUrl,
+        clientName,
+        clientWa: clientWa,
+        finalTotal,
+        route: enq.route_summary||''
+      }));
+    } catch(e) {}
     let waLines = [
       `Hello ${clientName},`,
       ``,
