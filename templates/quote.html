@@ -467,9 +467,11 @@ function renderSuggestions(predictions, drop, input) {
   drop.innerHTML = predictions.slice(0,6).map(p => {
     let main = p.main || p.description;
     let sub = p.secondary || '';
+    let isLocal = sub === 'Verified Location';
+    let icon = isLocal ? '⭐' : '📍';
     return `<div class="ac-item" data-desc="${p.description}" data-main="${p.main || p.description}" data-placeid="${p.place_id||''}" onclick="selectSuggestion(this,'${input.id}')">
-      <span class="ac-item-icon">📍</span>
-      <div><div class="ac-item-main">${main}</div>${sub?`<div class="ac-item-sub">${sub}</div>`:''}</div>
+      <span class="ac-item-icon">${icon}</span>
+      <div><div class="ac-item-main">${main}</div>${sub?`<div class="ac-item-sub" style="${isLocal?'color:#1b5e20;font-weight:600':''}">${sub}</div>`:''}</div>
     </div>`;
   }).join('');
   drop.style.display = 'block';
