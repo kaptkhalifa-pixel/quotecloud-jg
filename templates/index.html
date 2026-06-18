@@ -2748,6 +2748,7 @@ async function openBreakdownModal(token) {
   let idleRate = snap.idle_day_rate_usd || 0;
   document.getElementById('breakdown-token').textContent =
     `${token} · ${snap.ac_label||''} · ${snap.mission||''}`;
+  let routeSummary = booking.route_summary || '';
   let rows = segs.map(s => {
     if (s.note && !s.type) return '';
     let nm = s.nm || s.dist_nm || 0;
@@ -2765,15 +2766,22 @@ async function openBreakdownModal(token) {
   let html = `
     <div style="background:#f0f4ff;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:0.82rem">
       <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:#555">Aircraft</span><strong>${snap.ac_label||'-'}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
         <span style="color:#555">Rate</span><strong>USD $${rate.toLocaleString()}/hr</strong>
       </div>
       <div style="display:flex;justify-content:space-between;margin-bottom:4px">
         <span style="color:#555">Billed Hours</span><strong>${billed} hrs</strong>
       </div>
       <div style="display:flex;justify-content:space-between">
-        <span style="color:#555">Aircraft</span><strong>${snap.ac_label||'-'}</strong>
+        <span style="color:#555">Mission</span><strong>${(snap.mission||'').replace(/_/g,' ')}</strong>
       </div>
     </div>
+    ${routeSummary ? `<div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:0.82rem;color:#333;line-height:1.7;border-left:3px solid #0d47a1">
+      <div style="font-size:0.72rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Route</div>
+      ${routeSummary}
+    </div>` : ''}
     <div class="route-table-wrap" style="margin-bottom:14px">
       <table class="route-table">
         <thead><tr><th>Type</th><th>From</th><th>To</th><th>Dist</th><th>Time</th><th>Cost</th></tr></thead>
