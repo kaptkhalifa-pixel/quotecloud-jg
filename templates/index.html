@@ -3048,27 +3048,13 @@ async function generateAndSendInvoice() {
     if (!r.ok) { let e = await r.json(); showMsg('ib-msg', e.error||'Failed','error'); return; }
     let invoicePdfUrl = r.headers.get('X-PDF-URL') || '';
     let invoiceDocNumber = r.headers.get('X-DOC-NUMBER') || enq.token;
-    let blob = await r.blob();
-    try {
-      let blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
-    } catch(dlErr) { console.log('PDF open error (non-fatal):', dlErr); }
+    await r.blob(); // consume response body, PDF available via permanent link below
     await fetch('/booking/update', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ token: enq.token, status: 'INVOICED' })
     });
     loadEnquiries();
     loadRecords();
-    try {
-      localStorage.setItem('qc_invoice_success', JSON.stringify({
-        docNumber: invoiceDocNumber,
-        pdfUrl: invoicePdfUrl,
-        clientName,
-        clientWa: clientWa,
-        finalTotal,
-        route: enq.route_summary||''
-      }));
-    } catch(e) {}
     let waLines = [
       `Hello ${clientName},`,
       ``,
