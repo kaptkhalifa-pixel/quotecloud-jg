@@ -1157,7 +1157,7 @@ def pdf():
         import os
         pdf_size = os.path.getsize(out_path) if os.path.exists(out_path) else 0
         print(f"PDF generated: {out_path} size={pdf_size} bytes")
-        pdf_url = upload_pdf_to_firebase(out_path, doc_number)
+        pdf_url = upload_pdf_to_firebase(out_path, token)
         print(f"Firebase Storage result: {pdf_url}")
         # Read PDF into memory before any other operations
         with open(out_path, "rb") as f:
