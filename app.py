@@ -2046,7 +2046,7 @@ def booking_pdf():
         payload["notes_title"] = ""
         out_path = f"/tmp/{token}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
-        pdf_url = upload_pdf_to_firebase(out_path, doc_number)
+        pdf_url = upload_pdf_to_firebase(out_path, token)
         total = float(result.get("total_usd", 0))
         if result.get("mission") == "return_both":
             total = float((result.get("option_a") or {}).get("total_usd", 0))
