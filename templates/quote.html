@@ -495,7 +495,7 @@ async function init() {
     GAPI_KEY = kd.key || '';
     applyBranding();
     document.body.style.visibility = 'visible';
-    loadFX();
+    await loadFX();
   } catch(e) { console.error('Init failed:', e); document.body.style.visibility = 'visible'; }
 }
 
