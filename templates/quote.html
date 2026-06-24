@@ -533,12 +533,14 @@ function applyBranding() {
   }
 }
 
+let showKes = true;
 async function loadFX() {
   try {
     let r = await fetch('/fx/rates');
     let data = await r.json();
     if (data.success) {
       fxRates = data.rates;
+      showKes = data.show_kes !== false;
       if (data.updated) document.getElementById('fx-updated').textContent = 'Rates: ' + new Date(data.updated).toLocaleDateString();
     }
   } catch(e) {}
@@ -851,7 +853,7 @@ function renderBilling(res) {
     rows+=`<div class="billing-row"><span>Idle Day <span style="color:#aaa;font-size:0.72rem">${days} day${days!==1?'s':''} @ $${ir.toLocaleString()}</span></span><span>$${parseFloat(wu).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
   let kesRate = fxRates['KES'] || 0;
-  let kesFx = kesRate > 0 ? `<div style="font-family:'DM Sans',sans-serif;font-size:0.62rem;color:var(--grey-500);text-align:right;margin-top:4px;letter-spacing:0.3px">Live FX &nbsp;·&nbsp; KES ${Math.round((res.total_usd||0) * kesRate).toLocaleString()}</div>` : '';
+  let kesFx = (showKes && kesRate > 0) ? `<div style="font-family:'DM Sans',sans-serif;font-size:0.62rem;color:var(--grey-500);text-align:right;margin-top:4px;letter-spacing:0.3px">Live FX &nbsp;·&nbsp; KES ${Math.round((res.total_usd||0) * kesRate).toLocaleString()}</div>` : '';
   return `<div class="billing">${rows}<div class="billing-total"><span>Total Estimate</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>${kesFx}</div>`;
 }
 

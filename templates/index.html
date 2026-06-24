@@ -726,6 +726,10 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
         <input type="checkbox" id="s-fx-manual" onchange="toggleFxMode()" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
         <label for="s-fx-manual" style="font-weight:600">Use Manual Rates (override live FX)</label>
       </div>
+      <div class="toggle-row" style="margin-bottom:16px">
+        <input type="checkbox" id="s-fx-show-kes" checked style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+        <label for="s-fx-show-kes" style="font-weight:600">Show KES conversion on client quote page</label>
+      </div>
       <div id="fx-auto-status" style="font-size:0.82rem;color:#1b5e20;background:#e8f5e9;padding:10px 14px;border-radius:8px;margin-bottom:16px">
         ✅ Auto mode — rates fetched live from open.er-api.com
       </div>
@@ -2404,6 +2408,7 @@ async function loadSettings() {
   let fx = operatorConfig.fx || {};
   let isManual = fx.mode === 'manual';
   document.getElementById('s-fx-manual').checked = isManual;
+  document.getElementById('s-fx-show-kes').checked = fx.show_kes !== false;
   let fxr = fx.rates || {};
   document.getElementById('s-fx-kes').value = fxr.KES || '';
   document.getElementById('s-fx-eur').value = fxr.EUR || '';
@@ -3272,6 +3277,7 @@ async function saveFxRates() {
   let isManual = document.getElementById('s-fx-manual').checked;
   let body = {
     mode: isManual ? 'manual' : 'auto',
+    show_kes: document.getElementById('s-fx-show-kes').checked,
     KES: parseFloat(document.getElementById('s-fx-kes').value) || 0,
     EUR: parseFloat(document.getElementById('s-fx-eur').value) || 0,
     GBP: parseFloat(document.getElementById('s-fx-gbp').value) || 0,

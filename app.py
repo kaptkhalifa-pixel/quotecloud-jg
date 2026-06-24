@@ -1777,10 +1777,12 @@ def expand_maps_url():
 @app.route("/fx/rates", methods=["GET"])
 def fx_rates():
     fx_config = OPERATOR.get("fx", {})
+    show_kes = fx_config.get("show_kes", True)
     if fx_config.get("mode") == "manual":
         manual_rates = fx_config.get("rates", {})
         return jsonify({
             "success": True,
+            "show_kes": show_kes,
             "rates": {
                 "KES": float(manual_rates.get("KES", 0)),
                 "EUR": float(manual_rates.get("EUR", 0)),
@@ -1791,6 +1793,7 @@ def fx_rates():
             "updated": "Manual rate set by operator",
             "mode": "manual"
         })
+
     try:
         import requests as req
         r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
@@ -1799,6 +1802,7 @@ def fx_rates():
             rates = data.get("rates", {})
             return jsonify({
                 "success": True,
+                "show_kes": show_kes,
                 "rates": {
                     "KES": rates.get("KES", 0),
                     "EUR": rates.get("EUR", 0),
@@ -1809,6 +1813,7 @@ def fx_rates():
                 "updated": data.get("time_last_update_utc", ""),
                 "mode": "auto"
             })
+
     except Exception:
         pass
     return jsonify({"success": False, "rates": {}, "mode": "auto"})
@@ -1821,6 +1826,7 @@ def fx_save():
     try:
         OPERATOR["fx"] = {
             "mode": data.get("mode", "auto"),
+            "show_kes": data.get("show_kes", True),
             "rates": {
                 "KES": float(data.get("KES", 0)),
                 "EUR": float(data.get("EUR", 0)),
