@@ -392,7 +392,10 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div class="form-group"><label>Or paste Google Maps link</label><input type="text" id="loc-maps" placeholder="https://maps.app.goo.gl/..."></div>
       <div class="form-group" style="display:flex;align-items:flex-end"><button class="btn btn-outline" onclick="resolveMapPin()" style="width:100%">Resolve Pin</button></div>
     </div>
-    <button class="btn btn-block" onclick="addLocation()">Add Location</button>
+    <div class="btn-row">
+      <button class="btn btn-block" id="loc-submit-btn" onclick="addLocation()">Add Location</button>
+      <button class="btn btn-grey btn-sm" id="loc-cancel-edit" onclick="cancelLocationEdit()" style="display:none">Cancel Edit</button>
+    </div>
     <div id="loc-msg"></div>
   </div>
   <div class="card">
@@ -1826,8 +1829,70 @@ function renderLocations(locs) {
     <td>${l.name||l.key}</td><td>${l.lat||''}</td><td>${l.lon||''}</td>
     <td>${(l.aliases||[]).join(', ')||'-'}</td>
     <td><span class="badge-user">Custom</span></td>
-    <td><button class="btn btn-danger btn-sm" onclick="deleteLocation('${l.name||l.key}')">Del</button></td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-outline btn-sm" onclick='editLocationStart(${JSON.stringify(l).replace(/'/g,"&apos;")})'>Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteLocation('${l.name||l.key}')">Del</button>
+    </td>
   </tr>`).join('');
+}
+
+let editingLocationKey = null;
+
+function editLocationStart(l) {
+  editingLocationKey = l.name || l.key;
+  document.getElementById('loc-name').value = l.name || l.key || '';
+  document.getElementById('loc-lat').value = l.lat || '';
+  document.getElementById('loc-lon').value = l.lon || '';
+  document.getElementById('loc-alias').value = (l.aliases||[])[0] || '';
+  document.getElementById('loc-maps').value = '';
+  let btn = document.getElementById('loc-submit-btn');
+  btn.textContent = 'Save Changes';
+  btn.onclick = saveLocationEdit;
+  document.getElementById('loc-cancel-edit').style.display = 'inline-block';
+  document.getElementById('loc-name').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function cancelLocationEdit() {
+  editingLocationKey = null;
+  document.getElementById('loc-name').value = '';
+  document.getElementById('loc-lat').value = '';
+  document.getElementById('loc-lon').value = '';
+  document.getElementById('loc-alias').value = '';
+  document.getElementById('loc-maps').value = '';
+  let btn = document.getElementById('loc-submit-btn');
+  btn.textContent = 'Add Location';
+  btn.onclick = addLocation;
+  document.getElementById('loc-cancel-edit').style.display = 'none';
+  document.getElementById('loc-msg').innerHTML = '';
+}
+
+async function saveLocationEdit() {
+  let name = document.getElementById('loc-name').value.trim();
+  let lat = document.getElementById('loc-lat').value.trim();
+  let lon = document.getElementById('loc-lon').value.trim();
+  let alias = document.getElementById('loc-alias').value.trim();
+  if (!name||!lat||!lon) return showMsg('loc-msg','Name, lat and lon required.','error');
+  document.getElementById('loc-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Saving changes...</div>';
+  try {
+    let r = await fetch('/edit_airport', { method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        name: editingLocationKey,
+        new_name: name,
+        lat: parseFloat(lat),
+        lon: parseFloat(lon),
+        set_aliases: alias ? [alias] : []
+      }) });
+    let data = await r.json();
+    if (data.success) {
+      showMsg('loc-msg', `✅ "${name}" updated successfully.`, 'success');
+      cancelLocationEdit();
+      loadLocations();
+    } else {
+      showMsg('loc-msg', data.error||'Error', 'error');
+    }
+  } catch(e) {
+    showMsg('loc-msg', 'Network error: '+e.message, 'error');
+  }
 }
 
 async function resolveMapPin() {
@@ -1849,11 +1914,25 @@ async function addLocation() {
   let lon = document.getElementById('loc-lon').value.trim();
   let alias = document.getElementById('loc-alias').value.trim();
   if (!name||!lat||!lon) return showMsg('loc-msg','Name, lat and lon required.','error');
-  let r = await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({name, lat:parseFloat(lat), lon:parseFloat(lon), aliases:alias?[alias]:[]}) });
-  let data = await r.json();
-  if (data.success) { showMsg('loc-msg','Location added.','success'); loadLocations(); }
-  else showMsg('loc-msg',data.error||'Error','error');
+  document.getElementById('loc-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Adding location...</div>';
+  try {
+    let r = await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name, lat:parseFloat(lat), lon:parseFloat(lon), aliases:alias?[alias]:[]}) });
+    let data = await r.json();
+    if (data.success) {
+      showMsg('loc-msg', `✅ "${name}" added successfully.`, 'success');
+      document.getElementById('loc-name').value = '';
+      document.getElementById('loc-lat').value = '';
+      document.getElementById('loc-lon').value = '';
+      document.getElementById('loc-alias').value = '';
+      document.getElementById('loc-maps').value = '';
+      loadLocations();
+    } else {
+      showMsg('loc-msg', data.error||'Error', 'error');
+    }
+  } catch(e) {
+    showMsg('loc-msg', 'Network error: '+e.message, 'error');
+  }
 }
 
 async function deleteLocation(name) {
