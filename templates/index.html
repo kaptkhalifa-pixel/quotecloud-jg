@@ -2151,7 +2151,7 @@ async function loadRecords() {
   let termsEl = document.getElementById('mi-terms');
   if (bankEl && !bankEl.value) bankEl.value = bankLines;
   if (termsEl && !termsEl.value) termsEl.value = operatorConfig.invoice?.terms || '';
-  renderRecords(allRecords);
+  filterRecords();
 }
 
 function filterRecordsByType(type, el) {
