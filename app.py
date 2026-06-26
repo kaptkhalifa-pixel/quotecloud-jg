@@ -377,24 +377,6 @@ def save_record(record_type, client_name, client_email, amount, doc_number, resu
         rec.update(extra)
     records.append(rec)
     save_records(records)
-def upload_pdf_to_imgbb(pdf_path):
-    try:
-        import requests as req
-        import base64
-        with open(pdf_path, "rb") as f:
-            pdf_data = base64.b64encode(f.read()).decode("utf-8")
-        imgbb_key = "c6febd5ceb1476c58ddcf727d5b68969"
-        r = req.post(
-            "https://api.imgbb.com/1/upload",
-            data={"key": imgbb_key, "image": pdf_data},
-            timeout=30
-        )
-        result = r.json()
-        if result.get("success"):
-            return result["data"]["url"]
-    except Exception:
-        pass
-    return None
 def check_geo_lock(lat, lon):
     geo = get_geo_lock()
     if not geo.get("enabled", True):
@@ -1380,7 +1362,7 @@ def manual_invoice():
 
         out_path = f"/tmp/{doc_number}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
-        pdf_url = upload_pdf_to_imgbb(out_path)
+        pdf_url = upload_pdf_to_firebase(out_path, doc_number)
         save_record(doc_type, client_name, client_email, total, doc_number,
                     extra={"pdf_url": pdf_url or ""})
 
@@ -1953,23 +1935,19 @@ def backup_configs():
 @login_required
 def upload_image():
     try:
-        import requests as req
-        import base64
+        from firebase_admin import storage as fb_storage
+        import uuid
         file = request.files.get("image")
         if not file:
             return jsonify({"error": "No image provided"}), 400
-        image_data = base64.b64encode(file.read()).decode("utf-8")
-        imgbb_key = "c6febd5ceb1476c58ddcf727d5b68969"
-        r = req.post(
-            "https://api.imgbb.com/1/upload",
-            data={"key": imgbb_key, "image": image_data},
-            timeout=30
-        )
-        result = r.json()
-        if result.get("success"):
-            url = result["data"]["url"]
-            return jsonify({"success": True, "url": url})
-        return jsonify({"error": "Upload failed"}), 400
+        ext = pathlib.Path(file.filename or "image.jpg").suffix or ".jpg"
+        unique_name = f"{uuid.uuid4().hex}{ext}"
+        bucket = fb_storage.bucket()
+        blob_path = f"tenants/{TENANT_ID}/images/{unique_name}"
+        blob = bucket.blob(blob_path)
+        blob.upload_from_file(file, content_type=file.mimetype or "image/jpeg")
+        blob.make_public()
+        return jsonify({"success": True, "url": blob.public_url})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 @app.route("/booking/request", methods=["POST"])
