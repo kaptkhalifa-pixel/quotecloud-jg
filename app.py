@@ -1518,7 +1518,7 @@ def generate_receipt():
 
     out_path = f"/tmp/{receipt_number}.pdf"
     hq.generate_pdf_weasy(payload, out_path)
-    receipt_pdf_url = upload_pdf_to_firebase(out_path, doc_number)
+    receipt_pdf_url = upload_pdf_to_firebase(out_path, receipt_number)
 
     rec["paid"] = paid_amount >= total
     rec["paid_amount"] = round(paid_amount, 2)
