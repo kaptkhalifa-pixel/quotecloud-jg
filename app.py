@@ -1366,13 +1366,37 @@ def manual_invoice():
         save_record(doc_type, client_name, client_email, total, doc_number,
                     extra={"pdf_url": pdf_url or ""})
 
-        if source_token:
-            bookings = load_bookings()
-            if source_token in bookings:
-                bookings[source_token]["invoice_number"] = doc_number
-                bookings[source_token]["invoice_url"] = pdf_url or ""
-                bookings[source_token]["updated_at"] = datetime.datetime.now().isoformat()
-                save_bookings(bookings)
+        bookings = load_bookings()
+        if source_token and source_token in bookings:
+            bookings[source_token]["invoice_number"] = doc_number
+            bookings[source_token]["invoice_url"] = pdf_url or ""
+            bookings[source_token]["status"] = "INVOICED"
+            bookings[source_token]["updated_at"] = datetime.datetime.now().isoformat()
+            save_bookings(bookings)
+        elif not source_token:
+            bookings[doc_number] = {
+                "token": doc_number,
+                "status": "INVOICED" if doc_type == "Invoice" else "PENDING",
+                "client_name": client_name,
+                "client_email": client_email,
+                "client_whatsapp": client_phone,
+                "ac_label": "",
+                "ac_key": "",
+                "total_usd": total,
+                "mission": "manual",
+                "route_summary": ", ".join(it.get("name","") for it in items)[:120],
+                "quote_snapshot": {},
+                "pdf_url": pdf_url or "",
+                "invoice_number": doc_number if doc_type == "Invoice" else "",
+                "invoice_url": pdf_url or "" if doc_type == "Invoice" else "",
+                "created_at": datetime.datetime.now().isoformat(),
+                "updated_at": datetime.datetime.now().isoformat(),
+                "payment_method": "",
+                "payment_ref": "",
+                "notes": note or "",
+                "source": "admin_manual"
+            }
+            save_bookings(bookings)
 
         response = send_file(out_path, as_attachment=False,
                              download_name=f"{doc_number}.pdf",
@@ -1545,12 +1569,27 @@ def generate_receipt():
                 extra={"pdf_url": receipt_pdf_url or "",
                        "client_whatsapp": rec.get("client_whatsapp", "")})
 
+    if rec.get("paid"):
+        bookings = load_bookings()
+        matching_token = None
+        for tok, b in bookings.items():
+            if b.get("invoice_number") == number:
+                matching_token = tok
+                break
+        if matching_token:
+            bookings[matching_token]["status"] = "PAID"
+            bookings[matching_token]["payment_method"] = payment_mode
+            bookings[matching_token]["payment_ref"] = payment_ref
+            bookings[matching_token]["updated_at"] = datetime.datetime.now().isoformat()
+            save_bookings(bookings)
+
     response = send_file(out_path, as_attachment=False,
                          download_name=f"{receipt_number}.pdf",
                          mimetype="application/pdf")
     response.headers["X-PDF-URL"] = receipt_pdf_url or ""
     response.headers["X-DOC-NUMBER"] = receipt_number
     return response
+
 @app.route("/records/update_whatsapp", methods=["POST"])
 @login_required
 def update_record_whatsapp():
