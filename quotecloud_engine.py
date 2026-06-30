@@ -803,7 +803,7 @@ def _build_pdf_html(payload):
 
     css = (
         "*{box-sizing:border-box;margin:0;padding:0}"
-        "@page{size:420mm 594mm;margin:28mm 32mm}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}"
+        "@page{size:420mm 594mm;margin:12mm 20mm}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}"
         "html,body{width:420mm;min-height:594mm;font-family:Arial,sans-serif;background:#fff}"
         ".accent-bar{height:3pt;background:#000}"
         ".page{width:420mm;min-height:594mm;background:#fff;padding:32mm 32mm 48mm;position:relative}"
