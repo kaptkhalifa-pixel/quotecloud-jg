@@ -1342,6 +1342,25 @@ def manual_invoice():
         bank_block = bank_override if bank_override else get_bank_details_block()
         terms = terms_override if terms_override else OPERATOR.get("invoice", {}).get("terms", "")
 
+        kes_note = ""
+        fx_config = OPERATOR.get("fx", {})
+        if fx_config.get("show_kes", True):
+            kes_rate_inv = 0
+            try:
+                if fx_config.get("mode") == "manual":
+                    kes_rate_inv = float(fx_config.get("rates", {}).get("KES", 0))
+                else:
+                    import requests as req
+                    r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
+                    rdata = r.json()
+                    if rdata.get("result") == "success":
+                        kes_rate_inv = float(rdata.get("rates", {}).get("KES", 0))
+            except Exception:
+                kes_rate_inv = 0
+            if kes_rate_inv > 0:
+                kes_total = round(total * kes_rate_inv)
+                kes_note = f"\n\nApprox. KES {kes_total:,} (1 USD = KES {kes_rate_inv:.2f})"
+
         payload = {
             "logo": OPERATOR.get("logo_url", ""),
             "from": get_company_from_block(),
@@ -1352,7 +1371,7 @@ def manual_invoice():
             "items": items,
             "discounts": disc,
             "fields": {"tax": False, "discounts": True, "shipping": False},
-            "notes": bank_block + (f"\n\nNote: {note}" if note else ""),
+            "notes": bank_block + (f"\n\nNote: {note}" if note else "") + kes_note,
             "notes_title": "BANK DETAILS",
             "terms": terms,
             "terms_title": "TERMS & CONDITIONS",
