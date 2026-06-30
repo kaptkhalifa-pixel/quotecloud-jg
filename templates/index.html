@@ -3107,18 +3107,14 @@ async function generateAndSendInvoice() {
   let notes = document.getElementById('ib-notes').value.trim();
   if (!clientName) { showMsg('ib-msg','Client name required.','error'); return; }
   let base = parseFloat(enq.total_usd || 0);
-  let lineItems = [{
-    description: `${enq.ac_label||'Aircraft Charter'}\n${enq.route_summary||''}`,
-    quantity: 1,
-    unit_cost: base
-  }];
+  let upliftItems = [];
   document.querySelectorAll('#ib-uplift-items .line-item-row').forEach(row => {
     let desc = row.querySelector('.ib-desc')?.value.trim();
     let qty = parseFloat(row.querySelector('.ib-qty')?.value) || 1;
     let unit = parseFloat(row.querySelector('.ib-unit')?.value) || 0;
-    if (desc && unit > 0) lineItems.push({ description: desc, quantity: qty, unit_cost: unit });
+    if (desc && unit > 0) upliftItems.push({ name: desc, quantity: String(qty), unit_cost: String(unit) });
   });
-  let uplift = lineItems.slice(1).reduce((s,i) => s + i.quantity * i.unit_cost, 0);
+  let uplift = upliftItems.reduce((s,i) => s + parseFloat(i.quantity) * parseFloat(i.unit_cost), 0);
   let finalTotal = Math.max(base + uplift - discount, 0);
   let genBtn = document.querySelector('#invoice-builder-modal .btn-success');
   if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Generating...'; }
@@ -3126,10 +3122,10 @@ async function generateAndSendInvoice() {
   try {
     let body = {
       client_name: clientName, client_email: clientEmail, client_phone: clientWaRaw,
-      discount, note: notes, doc_type: 'Invoice', line_items: lineItems,
+      discount, note: notes, uplift_items: upliftItems,
       source_token: enq.token
     };
-    let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    let r = await fetch('/booking/invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('ib-msg', e.error||'Failed','error'); return; }
     let invoicePdfUrl = r.headers.get('X-PDF-URL') || '';
     let invoiceDocNumber = r.headers.get('X-DOC-NUMBER') || enq.token;

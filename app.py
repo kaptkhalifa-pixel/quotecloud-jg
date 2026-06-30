@@ -1300,6 +1300,92 @@ def pdf_download_temp():
 
 @app.route("/manual_invoice", methods=["POST"])
 @login_required
+@app.route("/booking/invoice", methods=["POST"])
+@login_required
+def booking_invoice():
+    data = request.get_json()
+    try:
+        source_token = data.get("source_token", "")
+        client_name = data.get("client_name", "Client")
+        client_email = data.get("client_email", "")
+        client_phone = data.get("client_phone", "")
+        note = data.get("note", "")
+        discount = data.get("discount", "0")
+        uplift_items = data.get("uplift_items", [])
+
+        bookings = load_bookings()
+        booking = bookings.get(source_token)
+        if not booking:
+            return jsonify({"error": "Booking not found"}), 404
+
+        snap = booking.get("quote_snapshot", {})
+        if not snap:
+            return jsonify({"error": "No quote data found for this booking"}), 400
+
+        fx_config = OPERATOR.get("fx", {})
+        show_kes = fx_config.get("show_kes", True)
+        kes_rate_inv = 0
+        pdf_currency_mode = "USD"
+        if show_kes:
+            try:
+                if fx_config.get("mode") == "manual":
+                    kes_rate_inv = float(fx_config.get("rates", {}).get("KES", 0))
+                else:
+                    import requests as req
+                    r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
+                    rdata = r.json()
+                    if rdata.get("result") == "success":
+                        kes_rate_inv = float(rdata.get("rates", {}).get("KES", 0))
+                if kes_rate_inv > 0:
+                    pdf_currency_mode = "BOTH"
+            except Exception:
+                kes_rate_inv = 0
+
+        payload, doc_number = build_pdf_payload_from_result(
+            "Invoice", snap, client_name, client_email, client_phone, note, "0", uplift_items,
+            currency=pdf_currency_mode, kes_rate=kes_rate_inv)
+
+        payload["number"] = inherit_token(source_token, "I")
+        doc_number = payload["number"]
+
+        disc = float(discount) if discount else 0
+        base_total = float(snap.get("total_usd", 0))
+        if snap.get("mission") == "return_both":
+            base_total = float((snap.get("option_a") or {}).get("total_usd", 0))
+        uplift_total = sum(float(it.get("quantity", 1)) * float(it.get("unit_cost", 0)) for it in uplift_items)
+        final_total = round(base_total + uplift_total - disc, 2)
+        payload["discounts"] = disc
+
+        if kes_rate_inv > 0:
+            kes_total_val = round(final_total * kes_rate_inv)
+            today_str = datetime.date.today().strftime("%-d/%-m/%y")
+            payload["kes_note"] = f"KES {kes_total_val:,} (rate 1 USD = KES {kes_rate_inv:.2f}, date {today_str})"
+
+        out_path = f"/tmp/{doc_number}.pdf"
+        hq.generate_pdf_weasy(payload, out_path)
+        pdf_url = upload_pdf_to_firebase(out_path, doc_number)
+
+        save_record("Invoice", client_name, client_email, final_total, doc_number,
+                    extra={"pdf_url": pdf_url or ""})
+
+        bookings[source_token]["invoice_number"] = doc_number
+        bookings[source_token]["invoice_url"] = pdf_url or ""
+        bookings[source_token]["status"] = "INVOICED"
+        bookings[source_token]["updated_at"] = datetime.datetime.now().isoformat()
+        save_bookings(bookings)
+
+        with open(out_path, "rb") as f:
+            pdf_bytes = f.read()
+        import io
+        response = send_file(io.BytesIO(pdf_bytes), as_attachment=False,
+                             download_name=f"{doc_number}.pdf",
+                             mimetype="application/pdf")
+        response.headers["X-PDF-URL"] = pdf_url or ""
+        response.headers["X-DOC-NUMBER"] = doc_number
+        return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 def manual_invoice():
     data = request.get_json()
     try:
