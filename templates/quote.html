@@ -1137,7 +1137,8 @@ async function submitBookingForm() {
       client_whatsapp: whatsapp,
       token_override: token,
       route_summary: routeSummary,
-      quote_snapshot: res
+      quote_snapshot: res,
+      selected_total: total
     })
   }).catch(e => console.log('Booking save error:', e));
   let waNum = ((config.contact||{}).whatsapp || '').replace(/^\+/, '').replace(/\s/g, '');
