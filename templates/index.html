@@ -460,6 +460,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <button class="btn btn-danger btn-sm" onclick="deleteSelectedEnquiries()">🗑 Delete Selected</button>
       <span id="enq-selected-count" style="font-size:0.78rem;color:#888"></span>
     </div>
+    <div id="enq-delete-msg"></div>
     <div class="db-table-wrap">
       <table class="db-table" id="enq-table">
         <thead>
@@ -3297,18 +3298,25 @@ function updateSelectedCount() {
 
 async function deleteSelectedEnquiries() {
   let checked = Array.from(document.querySelectorAll('.enq-checkbox:checked')).map(c => c.value);
-  if (!checked.length) { alert('Select at least one enquiry to delete.'); return; }
+  if (!checked.length) { showMsg('enq-delete-msg', 'Select at least one enquiry to delete.', 'error'); return; }
   let password = prompt(`Enter admin password to delete ${checked.length} enquiry(ies):`);
   if (!password) return;
+  document.getElementById('enq-delete-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Deleting...</div>';
   try {
     let r = await fetch('/bookings/delete', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ tokens: checked, password })
     });
     let data = await r.json();
-    if (data.success) { loadEnquiries(); }
-    else alert(data.error || 'Delete failed.');
-  } catch(e) { alert('Network error.'); }
+    if (data.success) {
+      showMsg('enq-delete-msg', `✅ ${data.deleted} enquiry(ies) deleted.`, 'success');
+      loadEnquiries();
+    } else {
+      showMsg('enq-delete-msg', data.error || 'Delete failed.', 'error');
+    }
+  } catch(e) {
+    showMsg('enq-delete-msg', 'Network error: '+e.message, 'error');
+  }
 }
 
 async function updateEnqStatus(token, status) {
