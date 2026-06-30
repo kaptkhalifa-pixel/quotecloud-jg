@@ -760,6 +760,11 @@ def _build_pdf_html(payload):
     total_display = round(total)
     discount_row = f'<div class="total-row discount"><span>Discount</span><span>&minus; {currency} {discount:,.2f}</span></div>' if discount > 0 else ""
 
+    kes_line_html = ""
+    kes_note = payload.get("kes_note", "")
+    if kes_note:
+        kes_line_html = f'<div class="total-kes-note">{esc(kes_note)}</div>'
+
     doc_upper = doc_type.upper()
     if doc_upper == "RECEIPT":
         total_label, date_label2, date_val2 = "Amount Received", "Payment Date", date
@@ -836,6 +841,7 @@ def _build_pdf_html(payload):
         ".total-final{display:flex;justify-content:space-between;align-items:baseline;padding:18pt 0 0;margin-top:8pt;border-top:2pt solid #000}"
         ".total-final-label{font-size:20pt;font-weight:bold;letter-spacing:2pt;text-transform:uppercase}"
         ".total-final-amount{font-size:28pt;font-weight:bold}"
+        ".total-kes-note{font-size:10pt;color:#666;text-align:right;margin-top:4px;font-weight:normal}"
         ".bottom-grid{display:flex;gap:16mm;margin-bottom:16mm}"
         ".bank-section{flex:1}"
         ".terms-section{flex:1.4}"
@@ -847,7 +853,7 @@ def _build_pdf_html(payload):
         ".footer-right{font-size:13pt;color:#666;font-style:italic}"
     )
 
-    return f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><style>{css}</style></head><body><div class="accent-bar"></div><div class="page"><div class="header"><div><img class="logo" src="{esc(logo)}" alt="Logo"><div class="company-block"><span class="company-name">{esc(company_name)}</span>{company_rest}</div></div><div><div class="doc-type">{esc(doc_type)}</div><div class="doc-number">Ref &mdash; {esc(number)}</div></div></div><div class="meta-row"><div class="bill-to"><div class="party-label">{esc(bill_label)}</div><div class="party-name">{esc(client_name)}</div><div class="party-detail">{client_rest}</div></div><div class="dates-box"><div class="date-item"><div class="date-label">Date</div><div class="date-value">{esc(date)}</div></div><div class="date-item"><div class="date-label">{esc(date_label2)}</div><div class="date-value">{esc(date_val2)}</div></div><div class="date-item"><div class="date-label">Currency</div><div class="date-value">{esc(currency)}</div></div></div></div><table><thead><tr><th style="width:52%">Description</th><th>Qty</th><th>Unit Rate</th><th>Amount</th></tr></thead><tbody>{rows_html}</tbody></table><div class="totals-wrap"><div class="totals"><div class="total-row"><span>Subtotal</span><span>{currency} {subtotal:,.2f}</span></div>{discount_row}<div class="total-final"><span class="total-final-label">{esc(total_label)}</span><span class="total-final-amount">{currency} {total_display:,.0f}</span></div></div></div>{bottom_html}<div class="footer"><div class="footer-brand">Powered by Quotecloud JG</div><div class="footer-right">{footer_right_html}</div></div></div></body></html>"""
+    return f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><style>{css}</style></head><body><div class="accent-bar"></div><div class="page"><div class="header"><div><img class="logo" src="{esc(logo)}" alt="Logo"><div class="company-block"><span class="company-name">{esc(company_name)}</span>{company_rest}</div></div><div><div class="doc-type">{esc(doc_type)}</div><div class="doc-number">Ref &mdash; {esc(number)}</div></div></div><div class="meta-row"><div class="bill-to"><div class="party-label">{esc(bill_label)}</div><div class="party-name">{esc(client_name)}</div><div class="party-detail">{client_rest}</div></div><div class="dates-box"><div class="date-item"><div class="date-label">Date</div><div class="date-value">{esc(date)}</div></div><div class="date-item"><div class="date-label">{esc(date_label2)}</div><div class="date-value">{esc(date_val2)}</div></div><div class="date-item"><div class="date-label">Currency</div><div class="date-value">{esc(currency)}</div></div></div></div><table><thead><tr><th style="width:52%">Description</th><th>Qty</th><th>Unit Rate</th><th>Amount</th></tr></thead><tbody>{rows_html}</tbody></table><div class="totals-wrap"><div class="totals"><div class="total-row"><span>Subtotal</span><span>{currency} {subtotal:,.2f}</span></div>{discount_row}<div class="total-final"><span class="total-final-label">{esc(total_label)}</span><span class="total-final-amount">{currency} {total_display:,.0f}</span></div>{kes_line_html}</div></div>{bottom_html}<div class="footer"><div class="footer-brand">Powered by Quotecloud JG</div><div class="footer-right">{footer_right_html}</div></div></div></body></html>"""
 
 
 def generate_pdf_weasy(payload, out_path):

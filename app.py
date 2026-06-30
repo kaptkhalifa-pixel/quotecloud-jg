@@ -1359,7 +1359,8 @@ def manual_invoice():
                 kes_rate_inv = 0
             if kes_rate_inv > 0:
                 kes_total = round(total * kes_rate_inv)
-                kes_note = f"\n\nApprox. KES {kes_total:,} (1 USD = KES {kes_rate_inv:.2f})"
+                today_str = datetime.date.today().strftime("%-d/%-m/%y")
+                kes_note = f"KES {kes_total:,} (rate 1 USD = KES {kes_rate_inv:.2f}, date {today_str})"
 
         payload = {
             "logo": OPERATOR.get("logo_url", ""),
@@ -1371,11 +1372,12 @@ def manual_invoice():
             "items": items,
             "discounts": disc,
             "fields": {"tax": False, "discounts": True, "shipping": False},
-            "notes": bank_block + (f"\n\nNote: {note}" if note else "") + kes_note,
+            "notes": bank_block + (f"\n\nNote: {note}" if note else ""),
             "notes_title": "BANK DETAILS",
             "terms": terms,
             "terms_title": "TERMS & CONDITIONS",
             "currency": "USD",
+            "kes_note": kes_note,
             "header": doc_type
         }
 
