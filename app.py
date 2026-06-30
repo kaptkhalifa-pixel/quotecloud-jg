@@ -1298,8 +1298,6 @@ def pdf_download_temp():
     return send_file(path, as_attachment=True,
                      download_name=name, mimetype="application/pdf")
 
-@app.route("/manual_invoice", methods=["POST"])
-@login_required
 @app.route("/booking/invoice", methods=["POST"])
 @login_required
 def booking_invoice():
@@ -1386,6 +1384,8 @@ def booking_invoice():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route("/manual_invoice", methods=["POST"])
+@login_required
 def manual_invoice():
     data = request.get_json()
     try:
