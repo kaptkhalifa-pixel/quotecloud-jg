@@ -2118,7 +2118,7 @@ def booking_request():
             "client_whatsapp": client_whatsapp,
             "ac_label": quote_snapshot.get("ac_label", ""),
             "ac_key": quote_snapshot.get("ac_key", ""),
-            "total_usd": quote_snapshot.get("total_usd", 0),
+            "total_usd": data.get("selected_total") or quote_snapshot.get("total_usd") or float((quote_snapshot.get("option_a") or {}).get("total_usd", 0)),
             "mission": quote_snapshot.get("mission", ""),
             "route_summary": route_summary,
             "quote_snapshot": quote_snapshot,
