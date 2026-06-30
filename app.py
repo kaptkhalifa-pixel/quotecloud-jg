@@ -2137,7 +2137,8 @@ def booking_update():
 @login_required
 def get_bookings():
     bookings = load_bookings()
-    return jsonify(list(bookings.values()))
+    visible = [b for b in bookings.values() if not b.get("deleted")]
+    return jsonify(visible)
 
 @app.route("/booking/get", methods=["POST"])
 @login_required
@@ -2176,7 +2177,8 @@ def delete_bookings():
     deleted = 0
     for token in tokens:
         if token in bookings:
-            del bookings[token]
+            bookings[token]["deleted"] = True
+            bookings[token]["deleted_at"] = datetime.datetime.now().isoformat()
             deleted += 1
     save_bookings(bookings)
     return jsonify({"success": True, "deleted": deleted})
