@@ -2062,8 +2062,29 @@ def booking_pdf():
         client_phone = data.get("client_phone", "")
         token = data.get("token", "")
         result = data.get("result", {})
+
+        fx_config = OPERATOR.get("fx", {})
+        show_kes = fx_config.get("show_kes", True)
+        kes_rate_for_pdf = 0
+        pdf_currency_mode = "USD"
+        if show_kes:
+            try:
+                import requests as req
+                if fx_config.get("mode") == "manual":
+                    kes_rate_for_pdf = float(fx_config.get("rates", {}).get("KES", 0))
+                else:
+                    r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
+                    rdata = r.json()
+                    if rdata.get("result") == "success":
+                        kes_rate_for_pdf = float(rdata.get("rates", {}).get("KES", 0))
+                if kes_rate_for_pdf > 0:
+                    pdf_currency_mode = "BOTH"
+            except Exception:
+                kes_rate_for_pdf = 0
+
         payload, _ = build_pdf_payload_from_result(
-            "Quotation", result, client_name, client_email, client_phone, "", "0", [])
+            "Quotation", result, client_name, client_email, client_phone, "", "0", [],
+            currency=pdf_currency_mode, kes_rate=kes_rate_for_pdf)
         payload["number"] = token
         payload["notes"] = ""
         payload["notes_title"] = ""
