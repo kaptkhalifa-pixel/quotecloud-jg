@@ -1084,7 +1084,17 @@ async function submitBookingForm() {
   if (res.mission === 'return_both') {
     let wd = res.wait_days || 0;
     let maxN = res.max_nights || 3;
-    actual = wd >= maxN ? {...res.option_b, mission:'pick_and_drop'} : {...res.option_a};
+    if (wd >= maxN) {
+      actual = {...res.option_b, mission:'pick_and_drop'};
+    } else {
+      let obContent = document.getElementById(`ob-${res.ac_key}`);
+      let clientChosePickDrop = obContent && obContent.classList.contains('active');
+      if (clientChosePickDrop) {
+        actual = {...res.option_b, mission:'pick_and_drop'};
+      } else {
+        actual = {...res.option_a};
+      }
+    }
     actual.rate_usd = res.rate_usd;
     actual.overnight_rate_usd = res.overnight_rate_usd;
     actual.idle_day_rate_usd = res.idle_day_rate_usd;
@@ -1092,6 +1102,7 @@ async function submitBookingForm() {
     actual.ac_label = res.ac_label;
     actual.ac_key = res.ac_key;
   }
+
   let prefix = (config.invoice_prefix || 'JG');
   let token = `${prefix}-${new Date().getFullYear()}-${Math.random().toString(36).substr(2,6).toUpperCase()}`;
   currentBookingToken = token;
