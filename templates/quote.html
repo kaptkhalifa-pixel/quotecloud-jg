@@ -1101,6 +1101,14 @@ async function submitBookingForm() {
     actual.pax_fee_usd_display = res.pax_fee_usd_display;
     actual.ac_label = res.ac_label;
     actual.ac_key = res.ac_key;
+    if (!actual.total_usd || actual.total_usd === 0) {
+      if (actual.mission === 'pick_and_drop') {
+        actual.total_usd = (res.option_b?.total_usd) || 
+          ((res.option_b?.drop?.total_usd || 0) + (res.option_b?.pick?.total_usd || 0));
+      } else {
+        actual.total_usd = res.option_a?.total_usd || 0;
+      }
+    }
     res._selected_total = actual.total_usd;
   }
 
