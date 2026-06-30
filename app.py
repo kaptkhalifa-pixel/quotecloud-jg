@@ -2106,6 +2106,13 @@ def booking_pdf():
         payload, _ = build_pdf_payload_from_result(
             "Quotation", result, client_name, client_email, client_phone, "", "0", [],
             currency=pdf_currency_mode, kes_rate=kes_rate_for_pdf)
+        if kes_rate_for_pdf > 0:
+            total_for_kes = float(result.get("total_usd", 0))
+            if result.get("mission") == "return_both":
+                total_for_kes = float((result.get("option_a") or {}).get("total_usd", 0))
+            kes_total_val = round(total_for_kes * kes_rate_for_pdf)
+            today_str = datetime.date.today().strftime("%-d/%-m/%y")
+            payload["kes_note"] = f"KES {kes_total_val:,} (rate 1 USD = KES {kes_rate_for_pdf:.2f}, date {today_str})"
         payload["number"] = token
         payload["notes"] = ""
         payload["notes_title"] = ""
