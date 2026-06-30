@@ -1101,12 +1101,13 @@ async function submitBookingForm() {
     actual.pax_fee_usd_display = res.pax_fee_usd_display;
     actual.ac_label = res.ac_label;
     actual.ac_key = res.ac_key;
+    res._selected_total = actual.total_usd;
   }
 
   let prefix = (config.invoice_prefix || 'JG');
   let token = `${prefix}-${new Date().getFullYear()}-${Math.random().toString(36).substr(2,6).toUpperCase()}`;
   currentBookingToken = token;
-  let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
+  let total = res.mission === 'return_both' ? (actual.total_usd || 0) : (res.total_usd || 0);
   let routeSummary = buildRouteSummary(res);
   try {
     let pdfResp = await fetch('/booking/pdf', {
@@ -1162,7 +1163,7 @@ async function submitBookingForm() {
 
 function requestInvoice() {
   let res = currentBookingResult;
-  let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
+  let total = res.mission === 'return_both' ? (res._selected_total || res.option_a?.total_usd || 0) : (res.total_usd || 0);
   let routeSummary = buildRouteSummary(res);
   let waNum = ((config.contact||{}).whatsapp || '').replace(/^\+/, '').replace(/\s/g, '');
   let waUrl = '#';
