@@ -2101,6 +2101,7 @@ def booking_request():
     data = request.get_json()
     try:
         client_name = data.get("client_name", "").strip()
+        print(f"DEBUG booking_request: selected_total={data.get('selected_total')} snap_total={data.get('quote_snapshot',{}).get('total_usd')} option_a_total={data.get('quote_snapshot',{}).get('option_a',{}).get('total_usd') if data.get('quote_snapshot',{}).get('option_a') else None}")
         client_email = data.get("client_email", "").strip()
         quote_snapshot = data.get("quote_snapshot", {})
         if not client_name:

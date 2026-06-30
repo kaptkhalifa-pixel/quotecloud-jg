@@ -1110,6 +1110,15 @@ async function submitBookingForm() {
       }
     }
     res._selected_total = actual.total_usd;
+    console.log('DEBUG return total:', {
+      mission: actual.mission,
+      actual_total_usd: actual.total_usd,
+      option_a_total: res.option_a?.total_usd,
+      option_b_total: res.option_b?.total_usd,
+      option_b_drop: res.option_b?.drop?.total_usd,
+      option_b_pick: res.option_b?.pick?.total_usd,
+      selected_total: res._selected_total
+    });
   }
 
   let prefix = (config.invoice_prefix || 'JG');
