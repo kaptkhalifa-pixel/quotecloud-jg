@@ -841,7 +841,7 @@ def _build_pdf_html(payload):
         ".total-final{display:flex;justify-content:space-between;align-items:baseline;padding:18pt 0 0;margin-top:8pt;border-top:2pt solid #000}"
         ".total-final-label{font-size:20pt;font-weight:bold;letter-spacing:2pt;text-transform:uppercase}"
         ".total-final-amount{font-size:28pt;font-weight:bold}"
-        ".total-kes-note{font-size:10pt;color:#666;text-align:right;margin-top:4px;font-weight:normal}"
+        ".total-kes-note{font-size:13pt;color:#444;text-align:right;margin-top:4px;font-weight:bold}"
         ".bottom-grid{display:flex;gap:16mm;margin-bottom:16mm}"
         ".bank-section{flex:1}"
         ".terms-section{flex:1.4}"
