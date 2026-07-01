@@ -983,10 +983,11 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             })
 
     pax_fee = result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0
+    pax_label = result.get("_adj_pax_label") or "Passenger Taxes & Admin Fees"
     was_adjusted_check = result.get("_was_adjusted", False)
     if pax_fee > 0 and not was_adjusted_check:
         items.append({
-            "name": "Passenger Taxes & Admin Fees",
+            "name": pax_label,
             "quantity": "1",
             "unit_cost": str(pax_fee)
         })
@@ -994,7 +995,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         adj_pax = float(result.get("pax_fee_usd_display") or 0)
         if adj_pax > 0:
             items.append({
-                "name": "Passenger Taxes & Admin Fees",
+                "name": pax_label,
                 "quantity": "1",
                 "unit_cost": str(round(adj_pax, 2))
             })
