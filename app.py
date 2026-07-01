@@ -1862,6 +1862,134 @@ def save_settings():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+# ============================================================
+# PASSWORD RESET FLOW — Powered by Resend
+# ============================================================
+
+def get_resend_api_key():
+    return os.environ.get("RESEND_API_KEY", "")
+
+def get_admin_email():
+    return os.environ.get("ADMIN_EMAIL", OPERATOR.get("contact", {}).get("email", ""))
+
+def send_reset_email(to_email, reset_link, company_name):
+    try:
+        import resend
+        resend.api_key = get_resend_api_key()
+        params = {
+            "from": "Quotecloud <noreply@jetman.co.ke>",
+            "to": [to_email],
+            "subject": f"Password Reset — {company_name}",
+            "html": f"""
+            <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:40px 24px;background:#fff">
+              <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:32px">Quotecloud · Password Reset</div>
+              <h1 style="font-size:22px;font-weight:600;color:#000;margin-bottom:12px">Reset your password</h1>
+              <p style="font-size:14px;color:#555;line-height:1.7;margin-bottom:32px">
+                A password reset was requested for your <strong>{company_name}</strong> admin account. 
+                Click the button below to set a new password. This link expires in <strong>1 hour</strong>.
+              </p>
+              <a href="{reset_link}" style="display:inline-block;background:#000;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px">Reset Password →</a>
+              <p style="font-size:12px;color:#999;margin-top:32px;line-height:1.6">
+                If you didn't request this, ignore this email — your password won't change.<br>
+                Link: {reset_link}
+              </p>
+            </div>
+            """
+        }
+        resend.Emails.send(params)
+        return True
+    except Exception as e:
+        print(f"Resend error: {e}")
+        return False
+
+def save_reset_token(token, email):
+    try:
+        if db:
+            expiry = (datetime.datetime.now() + datetime.timedelta(hours=1)).isoformat()
+            tenant_collection("password_resets").document(token).set({
+                "token": token,
+                "email": email,
+                "expiry": expiry,
+                "used": False,
+                "created_at": datetime.datetime.now().isoformat()
+            })
+            return True
+    except Exception as e:
+        print(f"Save reset token error: {e}")
+    return False
+
+def get_reset_token(token):
+    try:
+        if db:
+            doc = tenant_collection("password_resets").document(token).get()
+            if doc.exists:
+                return doc.to_dict()
+    except Exception as e:
+        print(f"Get reset token error: {e}")
+    return None
+
+def invalidate_reset_token(token):
+    try:
+        if db:
+            tenant_collection("password_resets").document(token).update({"used": True})
+    except Exception as e:
+        print(f"Invalidate token error: {e}")
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "GET":
+        return render_template("forgot_password.html")
+    data = request.get_json()
+    email = (data.get("email") or "").strip().lower()
+    admin_email = get_admin_email().strip().lower()
+    if not email:
+        return jsonify({"error": "Email required"}), 400
+    if email != admin_email:
+        return jsonify({"success": True, "message": "If that email matches our records, a reset link has been sent."})
+    token = generate_token("PR")
+    base_url = request.host_url.rstrip("/")
+    reset_link = f"{base_url}/reset-password/{token}"
+    save_reset_token(token, email)
+    company_name = OPERATOR.get("company_name", "Quotecloud")
+    sent = send_reset_email(email, reset_link, company_name)
+    if sent:
+        return jsonify({"success": True, "message": "Reset link sent. Check your email."})
+    return jsonify({"error": "Failed to send email. Please contact support."}), 500
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if request.method == "GET":
+        record = get_reset_token(token)
+        if not record:
+            return render_template("reset_password.html", error="Invalid or expired reset link.", token=token, valid=False)
+        if record.get("used"):
+            return render_template("reset_password.html", error="This reset link has already been used.", token=token, valid=False)
+        expiry = datetime.datetime.fromisoformat(record.get("expiry", ""))
+        if datetime.datetime.now() > expiry:
+            return render_template("reset_password.html", error="This reset link has expired. Please request a new one.", token=token, valid=False)
+        return render_template("reset_password.html", token=token, valid=True, error=None)
+
+    data = request.get_json()
+    new_pass = data.get("new_password", "")
+    confirm = data.get("confirm_password", "")
+    if not new_pass or len(new_pass) < 6:
+        return jsonify({"error": "Password must be at least 6 characters."}), 400
+    if new_pass != confirm:
+        return jsonify({"error": "Passwords do not match."}), 400
+    record = get_reset_token(token)
+    if not record or record.get("used"):
+        return jsonify({"error": "Invalid or already used reset link."}), 400
+    expiry = datetime.datetime.fromisoformat(record.get("expiry", ""))
+    if datetime.datetime.now() > expiry:
+        return jsonify({"error": "Reset link has expired."}), 400
+    try:
+        global OPERATOR
+        OPERATOR["env"]["admin_pass"] = new_pass
+        save_operator_config(OPERATOR)
+        invalidate_reset_token(token)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/settings/change_password", methods=["POST"])
 @login_required
