@@ -930,8 +930,28 @@ function whatsappEnquireAc(res) {
   let waNum = ((config.contact||{}).whatsapp || '').replace(/^\+/, '').replace(/\s/g, '');
   if (!waNum) return;
   let acLabel = res.ac_label || 'Aircraft';
-  let lines = ["Hi, I'd like to enquire about a charter.", ""];
-  lines.push(`Aircraft: ${acLabel}`);
+  let kesRate = fxRates['KES'] || 0;
+  let showKesLine = showKes && kesRate > 0;
+
+  function segLine(s) {
+    let type = s.type ? s.type.charAt(0).toUpperCase() + s.type.slice(1) : '';
+    let dist = s.nm ? ` · ${s.nm} nm` : '';
+    let time = s.hours ? ` · ${Math.floor(s.hours)}h ${Math.round((s.hours%1)*60)}m` : '';
+    let date = s.date ? ` on ${s.date}` : '';
+    return `  ${type}: ${s.origin} → ${s.destination}${dist}${time}${date}`;
+  }
+
+  function totalLine(usd) {
+    let t = `USD $${usd.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    if (showKesLine) t += ` (≈ KES ${Math.round(usd * kesRate).toLocaleString()})`;
+    return t;
+  }
+
+  let lines = ["Hello, I would like to enquire about a charter flight.", ""];
+  lines.push(`✈ Aircraft: ${acLabel}`);
+  if (res.rate_usd) lines.push(`Rate: USD $${res.rate_usd}/hr`);
+  lines.push("");
+
   if (res.mission === 'return_both') {
     let wd = res.wait_days || 0;
     let maxN = res.max_nights || 3;
@@ -939,31 +959,37 @@ function whatsappEnquireAc(res) {
     let isPickDrop = wd >= maxN || (obContent && obContent.classList.contains('active'));
     if (isPickDrop) {
       lines.push(`Option: Pick & Drop`);
-      lines.push(`Total: USD $${(res.option_b?.total_usd || 0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
-      let dropRevenue = (res.option_b?.drop?.segments||[]).filter(s=>s.type==='revenue');
-      let pickRevenue = (res.option_b?.pick?.segments||[]).filter(s=>s.type==='revenue');
-      if (dropRevenue.length) lines.push(`Drop: ${dropRevenue[0].origin} to ${dropRevenue[0].destination}${dropRevenue[0].date?' on '+dropRevenue[0].date:''}`);
-      if (pickRevenue.length) lines.push(`Pick: ${pickRevenue[0].origin} to ${pickRevenue[0].destination}${pickRevenue[0].date?' on '+pickRevenue[0].date:''}`);
+      lines.push(`Total: ${totalLine(res.option_b?.total_usd || 0)}`);
+      lines.push("");
+      lines.push("Drop Off:");
+      (res.option_b?.drop?.segments||[]).filter(s=>s.origin).forEach(s => lines.push(segLine(s)));
+      lines.push("Pick Up:");
+      (res.option_b?.pick?.segments||[]).filter(s=>s.origin).forEach(s => lines.push(segLine(s)));
     } else {
-      lines.push(`Option: Aircraft Waits (Option A)`);
-      lines.push(`Total: USD $${(res.option_a?.total_usd || 0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
-      let revSegs = (res.option_a?.segments||[]).filter(s=>s.type==='revenue');
-      revSegs.forEach(s => lines.push(`${s.origin} to ${s.destination}${s.date?' on '+s.date:''}`));
+      lines.push(`Option: Aircraft Waits`);
+      lines.push(`Total: ${totalLine(res.option_a?.total_usd || 0)}`);
+      lines.push("");
+      lines.push("Route:");
+      (res.option_a?.segments||[]).filter(s=>s.origin).forEach(s => lines.push(segLine(s)));
     }
   } else if (res.mission === 'pick_and_drop') {
     lines.push(`Option: Pick & Drop`);
-    lines.push(`Total: USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
-    let dropRev = (res.drop?.segments||[]).filter(s=>s.type==='revenue');
-    let pickRev = (res.pick?.segments||[]).filter(s=>s.type==='revenue');
-    if (dropRev.length) lines.push(`Drop: ${dropRev[0].origin} to ${dropRev[0].destination}${dropRev[0].date?' on '+dropRev[0].date:''}`);
-    if (pickRev.length) lines.push(`Pick: ${pickRev[0].origin} to ${pickRev[0].destination}${pickRev[0].date?' on '+pickRev[0].date:''}`);
+    lines.push(`Total: ${totalLine(res.total_usd || 0)}`);
+    lines.push("");
+    lines.push("Drop Off:");
+    (res.drop?.segments||[]).filter(s=>s.origin).forEach(s => lines.push(segLine(s)));
+    lines.push("Pick Up:");
+    (res.pick?.segments||[]).filter(s=>s.origin).forEach(s => lines.push(segLine(s)));
   } else {
-    lines.push(`Total: USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
-    let revSegs = (res.segments||[]).filter(s=>s.type==='revenue');
-    revSegs.forEach(s => lines.push(`${s.origin} to ${s.destination}${s.date?' on '+s.date:''}`));
+    lines.push(`Total: ${totalLine(res.total_usd || 0)}`);
+    lines.push("");
+    lines.push("Route:");
+    (res.segments||[]).filter(s=>s.origin).forEach(s => lines.push(segLine(s)));
   }
+
   lines.push("");
-  lines.push("Please confirm availability. Thank you.");
+  lines.push("Please confirm availability at your earliest convenience.");
+  lines.push("Thank you.");
   let url = `https://wa.me/${waNum}?text=${encodeURIComponent(lines.join('\n'))}`;
   window.open(url, '_blank');
 }
