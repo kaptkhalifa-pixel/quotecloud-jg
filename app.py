@@ -1093,7 +1093,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
 @app.route("/")
 def index():
     if not session.get("logged_in"):
-        return redirect(url_for("quote_page"))
+        return redirect(url_for("login"))
     return render_template("index.html", operator=OPERATOR)
 
 @app.route("/admin/quote", methods=["POST"])
