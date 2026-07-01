@@ -872,7 +872,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <div class="form-group-full" style="margin-bottom:16px"><label>Notes</label><textarea id="ib-notes" rows="2" placeholder="Any special notes..."></textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-success" onclick="generateAndSendInvoice()">Generate & Send via WhatsApp</button>
+      <button class="btn btn-success" onclick="generateAndSendInvoice()">Generate Invoice PDF</button>
       <button class="btn btn-grey" onclick="closeInvoiceBuilder()">Cancel</button>
     </div>
     <div id="ib-msg"></div>
@@ -3224,14 +3224,17 @@ async function generateAndSendInvoice() {
     ].filter(l => l !== undefined).join('\n');
     let waNum = clientWa.replace(/\D/g,'');
     let waUrl = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waLines)}` : '';
+    let clientEmail = document.getElementById('ib-email')?.value.trim() || '';
+    let emailUrl = clientEmail && invoicePdfUrl ? `mailto:${clientEmail}?subject=Invoice ${invoiceDocNumber}&body=${encodeURIComponent('Dear ' + clientName + ',\n\nPlease find your invoice attached.\n\nRef: ' + invoiceDocNumber + '\n\nView PDF: ' + invoicePdfUrl)}` : '';
     let successHtml = `
       <div style="background:#e8f5e9;border-radius:10px;padding:16px;margin-top:12px">
         <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:8px">✅ Invoice Generated</div>
         <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${invoiceDocNumber}</strong></div>
         <div style="font-size:0.82rem;color:#333;margin-bottom:12px">Saved to Records & Enquiries</div>
-        ${invoicePdfUrl ? `<a href="${invoicePdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:8px 12px;border-radius:8px;margin-bottom:12px">📄 View Permanent Link</a>` : ''}
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          ${waUrl ? `<a href="${waUrl}" target="_blank" class="btn btn-success btn-sm" style="text-decoration:none">💬 Send via WhatsApp</a>` : ''}
+        ${invoicePdfUrl ? `<a href="${invoicePdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:8px 12px;border-radius:8px;margin-bottom:12px">📄 View PDF</a>` : ''}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+          ${waUrl ? `<a href="${waUrl}" target="_blank" class="btn btn-success btn-sm" style="text-decoration:none">💬 WhatsApp</a>` : ''}
+          ${emailUrl ? `<a href="${emailUrl}" class="btn btn-sm" style="text-decoration:none;background:#0a0a0a;color:#fff">📧 Email</a>` : ''}
           <button class="btn btn-grey btn-sm" onclick="closeInvoiceBuilder()">✕ Close</button>
         </div>
       </div>`;
@@ -3239,7 +3242,7 @@ async function generateAndSendInvoice() {
   } catch(e) {
     showMsg('ib-msg','Error: '+e.message,'error');
   } finally {
-    if (genBtn) { genBtn.disabled = false; genBtn.textContent = 'Generate & Send via WhatsApp'; }
+    if (genBtn) { genBtn.disabled = false; genBtn.textContent = 'Generate Invoice PDF'; }
   }
 }
 let currentShareData = null;
