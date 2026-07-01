@@ -3243,6 +3243,7 @@ async function generateAndSendInvoice() {
   }
 }
 let currentShareData = null;
+let msgTemplates = { quote: '', invoice: '', receipt: '' };
 
 function openShareModal(docNumber, pdfUrl, recordNumber, docType, extra) {
   currentShareData = { docNumber, pdfUrl, recordNumber: recordNumber || docNumber, docType, extra: extra || {} };
@@ -3343,113 +3344,32 @@ function buildAndOpenWa() {
   let docNumber = d.docNumber || '';
   let docType = d.docType || 'Document';
   let extra = d.extra || {};
-  let pdfLine = pdfUrl ? `\n📄 View ${docType}: ${pdfUrl}` : '';
-  let lines;
-  if (docType === 'Invoice' && extra.clientName) {
-    lines = [
-      `Hello ${extra.clientName},`,
-      '',
-      `Please find herein your invoice for your charter booking.${pdfLine}`,
-      '',
-      `Ref: ${extra.token || docNumber}`,
-      `Aircraft: ${extra.acLabel || ''}`,
-      `Route: ${extra.route || ''}`,
-      `Invoice Total: USD $${(extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
-      '',
-      'PAYMENT TERMS:',
-      '• A deposit of 40% is required to secure your booking.',
-      '• Full balance must be cleared prior to departure.',
-      '• Kindly share copies of all passenger IDs and passports upon confirmation.',
-      '',
-      'For any queries, reach us anytime:',
-      '📞 +254 701 007 777',
-      '',
-      'Thank you for choosing Jetman Global.',
-      '',
-      'Warm regards,',
-      'Jetman Reservations Team'
-    ];
+  let rec = allRecords.find(r => r.number === docNumber) || {};
+  let clientName = rec.client_name || extra.clientName || 'Valued Client';
+  let company = config.company_name || 'Jetman Global';
+  let phone = config.contact?.phone || '+254 701 007 777';
+  let amount = parseFloat(rec.amount || extra.finalTotal || 0).toLocaleString(undefined, {minimumFractionDigits:2});
+  let pdfLine = pdfUrl ? `📄 View ${docType}: ${pdfUrl}` : '';
+  let templateKey = docType === 'Invoice' ? 'invoice' : docType === 'Receipt' ? 'receipt' : 'quote';
+  let template = msgTemplates[templateKey] || '';
+  let message;
+  if (template) {
+    message = template
+      .replace(/{client_name}/g, clientName)
+      .replace(/{company}/g, company)
+      .replace(/{phone}/g, phone)
+      .replace(/{ref}/g, extra.token || docNumber)
+      .replace(/{amount}/g, amount)
+      .replace(/{pdf_url}/g, pdfLine)
+      .replace(/{ac_label}/g, extra.acLabel || rec.ac_label || '')
+      .replace(/{route}/g, extra.route || rec.route_summary || '');
   } else {
-    let rec = allRecords.find(r => r.number === docNumber) || {};
-    let isInvoice = docType === 'Invoice';
-    let isReceipt = docType === 'Receipt';
-    let clientName = rec.client_name || extra.clientName || 'Valued Client';
-    let company = (config.company_name || 'Jetman Global');
-    let phone = (config.contact?.phone || '+254 701 007 777');
-    if (isReceipt) {
-      lines = [
-        `Dear ${clientName},`,
-        '',
-        `Thank you for your payment. Please find attached your receipt from ${company}.${pdfLine}`,
-        '',
-        `Ref: ${docNumber}`,
-        `Amount Received: USD $${parseFloat(rec.amount||extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
-        '',
-        'YOUR FLIGHT IS CONFIRMED. Here is what to expect:',
-        '• Our airport team will be in touch with you ahead of departure.',
-        '• Kindly have your ID/Passport ready for check-in procedures.',
-        '• Please arrive at least 30 minutes before your scheduled departure.',
-        '• Luggage allowance and any special requests will be confirmed by our team.',
-        '',
-        `For assistance at any time, reach us on:`,
-        `📞 ${phone}`,
-        '',
-        `We look forward to flying with you.`,
-        '',
-        'Warm regards,',
-        `${company} Reservations Team`
-      ];
-    } else if (isInvoice) {
-      lines = [
-        `Hello ${clientName},`,
-        '',
-        `Please find herein your invoice from ${company}.${pdfLine}`,
-        '',
-        `Ref: ${docNumber}`,
-        `Amount: USD $${parseFloat(rec.amount||extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
-        '',
-        'PAYMENT TERMS:',
-        '• A deposit of 40% is required to secure your booking.',
-        '• Full balance must be cleared prior to departure.',
-        '• Kindly share copies of all passenger IDs and passports upon confirmation.',
-        '',
-        `For any queries, reach us anytime:`,
-        `📞 ${phone}`,
-        '',
-        `Thank you for choosing ${company}.`,
-        '',
-        'Warm regards,',
-        `${company} Reservations Team`
-      ];
-    } else {
-      lines = [
-        `Hello ${clientName},`,
-        '',
-        `Please find herein your quotation from ${company}.${pdfLine}`,
-        '',
-        `Ref: ${docNumber}`,
-        `Amount: USD $${parseFloat(rec.amount||extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
-        '',
-        'TO CONFIRM YOUR BOOKING:',
-        '• This quote is valid for 48 hours.',
-        '• To proceed, please confirm and we will issue a formal invoice.',
-        '• Kindly have passenger IDs and passports ready upon booking.',
-        '',
-        `For any queries, reach us anytime:`,
-        `📞 ${phone}`,
-        '',
-        `Thank you for choosing ${company}.`,
-        '',
-        'Warm regards,',
-        `${company} Reservations Team`
-      ];
-    }
+    message = `Hello ${clientName},\n\nPlease find herein your ${docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n' + pdfLine : ''}\n\nRef: ${extra.token || docNumber}\nAmount: USD $${amount}\n\nFor any queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
   }
-  let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;
+  let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
   window.open(waUrl, '_blank');
   closeShareModal();
 }
-
 
 function toggleSelectAll(cb) {
   document.querySelectorAll('.enq-checkbox').forEach(c => c.checked = cb.checked);
@@ -3545,9 +3465,12 @@ async function loadMessageTemplates() {
   try {
     let r = await fetch('/settings/message_templates');
     let data = await r.json();
-    document.getElementById('s-msg-quote').value = data.quote || '';
-    document.getElementById('s-msg-invoice').value = data.invoice || '';
-    document.getElementById('s-msg-receipt').value = data.receipt || '';
+    msgTemplates.quote = data.quote || '';
+    msgTemplates.invoice = data.invoice || '';
+    msgTemplates.receipt = data.receipt || '';
+    if (document.getElementById('s-msg-quote')) document.getElementById('s-msg-quote').value = msgTemplates.quote;
+    if (document.getElementById('s-msg-invoice')) document.getElementById('s-msg-invoice').value = msgTemplates.invoice;
+    if (document.getElementById('s-msg-receipt')) document.getElementById('s-msg-receipt').value = msgTemplates.receipt;
   } catch(e) {}
 }
 
