@@ -2306,11 +2306,13 @@ async function confirmMarkPaid(generateReceipt) {
       let docNumber = r.headers.get('X-DOC-NUMBER') || '';
       let blob = await r.blob();
       let url = URL.createObjectURL(blob);
-      let a = document.createElement('a'); a.href = url; a.download = 'receipt.pdf'; a.click();
-      closePaidModal();
+      let a = document.createElement('a'); a.href = url; a.download = (docNumber||'receipt')+'.pdf'; a.click();
+      showMsg('paid-msg', `✅ Receipt <strong>${docNumber}</strong> generated successfully. Downloading now...`, 'success');
       loadRecords();
       if (pdfUrl) {
-        setTimeout(() => openShareModal(docNumber, pdfUrl, number, 'Receipt'), 800);
+        setTimeout(() => { closePaidModal(); openShareModal(docNumber, pdfUrl, number, 'Receipt'); }, 1500);
+      } else {
+        setTimeout(() => closePaidModal(), 1500);
       }
     } else {
       let data = await r.json();
@@ -3329,27 +3331,78 @@ function buildAndOpenWa() {
   } else {
     let rec = allRecords.find(r => r.number === docNumber) || {};
     let isInvoice = docType === 'Invoice';
-    lines = [
-      `Hello ${rec.client_name || extra.clientName || 'Valued Client'},`,
-      '',
-      `Please find herein your ${docType.toLowerCase()} from Jetman Global.${pdfLine}`,
-      '',
-      `Ref: ${docNumber}`,
-      `Amount: USD $${parseFloat(rec.amount||extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
-      '',
-      isInvoice ? 'PAYMENT TERMS:' : 'TO CONFIRM YOUR BOOKING:',
-      isInvoice
-        ? '• A deposit of 40% is required to secure your booking.\n• Full balance must be cleared prior to departure.\n• Kindly share copies of all passenger IDs and passports upon confirmation.'
-        : '• This quote is valid for 48 hours.\n• To proceed, please confirm and we will issue a formal invoice.\n• Kindly have passenger IDs and passports ready upon booking.',
-      '',
-      'For any queries, reach us anytime:',
-      '📞 +254 701 007 777',
-      '',
-      'Thank you for choosing Jetman Global.',
-      '',
-      'Warm regards,',
-      'Jetman Reservations Team'
-    ];
+    let isReceipt = docType === 'Receipt';
+    let clientName = rec.client_name || extra.clientName || 'Valued Client';
+    let company = (config.company_name || 'Jetman Global');
+    let phone = (config.contact?.phone || '+254 701 007 777');
+    if (isReceipt) {
+      lines = [
+        `Dear ${clientName},`,
+        '',
+        `Thank you for your payment. Please find attached your receipt from ${company}.${pdfLine}`,
+        '',
+        `Ref: ${docNumber}`,
+        `Amount Received: USD $${parseFloat(rec.amount||extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        '',
+        'YOUR FLIGHT IS CONFIRMED. Here is what to expect:',
+        '• Our airport team will be in touch with you ahead of departure.',
+        '• Kindly have your ID/Passport ready for check-in procedures.',
+        '• Please arrive at least 30 minutes before your scheduled departure.',
+        '• Luggage allowance and any special requests will be confirmed by our team.',
+        '',
+        `For assistance at any time, reach us on:`,
+        `📞 ${phone}`,
+        '',
+        `We look forward to flying with you.`,
+        '',
+        'Warm regards,',
+        `${company} Reservations Team`
+      ];
+    } else if (isInvoice) {
+      lines = [
+        `Hello ${clientName},`,
+        '',
+        `Please find herein your invoice from ${company}.${pdfLine}`,
+        '',
+        `Ref: ${docNumber}`,
+        `Amount: USD $${parseFloat(rec.amount||extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        '',
+        'PAYMENT TERMS:',
+        '• A deposit of 40% is required to secure your booking.',
+        '• Full balance must be cleared prior to departure.',
+        '• Kindly share copies of all passenger IDs and passports upon confirmation.',
+        '',
+        `For any queries, reach us anytime:`,
+        `📞 ${phone}`,
+        '',
+        `Thank you for choosing ${company}.`,
+        '',
+        'Warm regards,',
+        `${company} Reservations Team`
+      ];
+    } else {
+      lines = [
+        `Hello ${clientName},`,
+        '',
+        `Please find herein your quotation from ${company}.${pdfLine}`,
+        '',
+        `Ref: ${docNumber}`,
+        `Amount: USD $${parseFloat(rec.amount||extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        '',
+        'TO CONFIRM YOUR BOOKING:',
+        '• This quote is valid for 48 hours.',
+        '• To proceed, please confirm and we will issue a formal invoice.',
+        '• Kindly have passenger IDs and passports ready upon booking.',
+        '',
+        `For any queries, reach us anytime:`,
+        `📞 ${phone}`,
+        '',
+        `Thank you for choosing ${company}.`,
+        '',
+        'Warm regards,',
+        `${company} Reservations Team`
+      ];
+    }
   }
   let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;
   window.open(waUrl, '_blank');
