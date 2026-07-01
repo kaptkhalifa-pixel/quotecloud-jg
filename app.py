@@ -1094,9 +1094,12 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     return payload, doc_number
 
 @app.route("/")
+def root():
+    return redirect(url_for("quote_page"))
+
+@app.route("/admin")
+@login_required
 def index():
-    if not session.get("logged_in"):
-        return redirect(url_for("login"))
     return render_template("index.html", operator=OPERATOR)
 
 @app.route("/admin/quote", methods=["POST"])
