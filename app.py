@@ -1126,6 +1126,8 @@ def pdf():
     try:
         result = data["result"]
         doc_type = data.get("doc_type", "Quotation")
+        if doc_type in ("Invoice", "Receipt"):
+            return jsonify({"error": "Invoices and receipts must be generated from the CRM. Go to Enquiries to invoice this client."}), 400
         client_name = data.get("client_name", "Client")
         client_email = data.get("client_email", "")
         client_phone = data.get("client_phone", "")
