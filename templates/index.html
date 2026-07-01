@@ -769,7 +769,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 <div class="modal-overlay" id="share-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <h4>📤 Share via WhatsApp</h4>
+    <h4>📤 Share Document</h4>
     <input type="hidden" id="share-doc-number">
     <input type="hidden" id="share-pdf-url">
     <input type="hidden" id="share-record-number">
@@ -779,12 +779,20 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <a id="share-pdf-link" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:8px 12px;border-radius:8px">📄 View PDF</a>
     </div>
     <div style="margin-bottom:16px">
-      <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Client WhatsApp</label>
+      <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">WhatsApp</label>
       <div style="display:flex;gap:8px">
         <input type="tel" id="share-wa-input" placeholder="+254 7XX XXX XXX" style="flex:1">
-        <button class="btn btn-success btn-sm" onclick="saveAndShareWa()">📤 Send</button>
+        <button class="btn btn-success btn-sm" onclick="saveAndShareWa()">💬 WhatsApp</button>
       </div>
       <div style="font-size:0.72rem;color:#888;margin-top:6px" id="share-wa-hint"></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Email</label>
+      <div style="display:flex;gap:8px">
+        <input type="email" id="share-email-input" placeholder="client@email.com" style="flex:1">
+        <button class="btn btn-sm" onclick="sendShareEmail()" style="background:#0a0a0a;color:#fff">📧 Email</button>
+      </div>
+      <div style="font-size:0.72rem;color:#888;margin-top:6px" id="share-email-hint">Send PDF link directly to client's inbox via Resend.</div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-grey btn-block" onclick="closeShareModal()">Close</button>
@@ -3211,6 +3219,41 @@ function openShareModal(docNumber, pdfUrl, recordNumber, docType, extra) {
     setTimeout(() => buildAndOpenWa(), 300);
   }
 }
+async function sendShareEmail() {
+  let email = document.getElementById('share-email-input').value.trim();
+  if (!email) { showMsg('share-msg', 'Enter client email address.', 'error'); return; }
+  let d = currentShareData || {};
+  let rec = allRecords.find(r => r.number === d.docNumber) || {};
+  let btn = document.querySelector('#share-modal .btn[onclick="sendShareEmail()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+  try {
+    let r = await fetch('/share/email', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        to_email: email,
+        client_name: rec.client_name || d.extra?.clientName || 'Valued Client',
+        doc_type: d.docType || 'Document',
+        doc_number: d.docNumber,
+        pdf_url: d.pdfUrl || '',
+        amount: parseFloat(rec.amount || d.extra?.finalTotal || 0),
+        ac_label: d.extra?.acLabel || rec.ac_label || '',
+        route: d.extra?.route || ''
+      })
+    });
+    let data = await r.json();
+    if (data.success) {
+      showMsg('share-msg', `✅ Email sent to ${email}`, 'success');
+      if (btn) { btn.disabled = false; btn.textContent = '📧 Email'; }
+    } else {
+      showMsg('share-msg', data.error || 'Failed to send.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '📧 Email'; }
+    }
+  } catch(e) {
+    showMsg('share-msg', 'Network error.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '📧 Email'; }
+  }
+}
 
 function closeShareModal() {
   document.getElementById('share-modal').classList.remove('active');
@@ -3250,15 +3293,22 @@ function buildAndOpenWa() {
       `Route: ${extra.route || ''}`,
       `Invoice Total: USD $${(extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
       '',
-      'To confirm your booking, please proceed with payment as per the bank details on the invoice.',
+      'PAYMENT TERMS:',
+      '• A deposit of 40% is required to secure your booking.',
+      '• Full balance must be cleared prior to departure.',
+      '• Kindly share copies of all passenger IDs and passports upon confirmation.',
+      '',
+      'For any queries, reach us anytime:',
+      '📞 +254 701 007 777',
       '',
       'Thank you for choosing Jetman Global.',
       '',
-      'Regards,',
+      'Warm regards,',
       'Jetman Reservations Team'
     ];
   } else {
     let rec = allRecords.find(r => r.number === docNumber) || {};
+    let isInvoice = docType === 'Invoice';
     lines = [
       `Hello ${rec.client_name || extra.clientName || 'Valued Client'},`,
       '',
@@ -3267,9 +3317,17 @@ function buildAndOpenWa() {
       `Ref: ${docNumber}`,
       `Amount: USD $${parseFloat(rec.amount||extra.finalTotal||0).toLocaleString(undefined,{minimumFractionDigits:2})}`,
       '',
+      isInvoice ? 'PAYMENT TERMS:' : 'TO CONFIRM YOUR BOOKING:',
+      isInvoice
+        ? '• A deposit of 40% is required to secure your booking.\n• Full balance must be cleared prior to departure.\n• Kindly share copies of all passenger IDs and passports upon confirmation.'
+        : '• This quote is valid for 48 hours.\n• To proceed, please confirm and we will issue a formal invoice.\n• Kindly have passenger IDs and passports ready upon booking.',
+      '',
+      'For any queries, reach us anytime:',
+      '📞 +254 701 007 777',
+      '',
       'Thank you for choosing Jetman Global.',
       '',
-      'Regards,',
+      'Warm regards,',
       'Jetman Reservations Team'
     ];
   }

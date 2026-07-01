@@ -2473,7 +2473,67 @@ def wipe_data():
     pathlib.Path(RECORDS_FILE).write_text("[]")
     pathlib.Path(BOOKINGS_FILE).write_text("{}")
     return jsonify({"success": True, "message": "Wiped."})
-
+@app.route("/share/email", methods=["POST"])
+@login_required
+def share_email():
+    data = request.get_json()
+    try:
+        import resend
+        resend.api_key = os.environ.get("RESEND_API_KEY", "")
+        to_email = data.get("to_email", "")
+        client_name = data.get("client_name", "Valued Client")
+        doc_type = data.get("doc_type", "Document")
+        doc_number = data.get("doc_number", "")
+        pdf_url = data.get("pdf_url", "")
+        amount = float(data.get("amount", 0))
+        ac_label = data.get("ac_label", "")
+        route = data.get("route", "")
+        company_name = OPERATOR.get("company_name", "Jetman Global")
+        contact_phone = OPERATOR.get("contact", {}).get("phone", "+254 701 007 777")
+        is_invoice = doc_type == "Invoice"
+        pdf_btn = f'<a href="{pdf_url}" style="display:inline-block;background:#000;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;margin:20px 0">View {doc_type} →</a>' if pdf_url else ""
+        payment_section = """
+        <div style="background:#f8f8f8;border-left:3px solid #000;padding:16px 20px;margin:20px 0;border-radius:0 4px 4px 0">
+          <p style="font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px">Payment Terms</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• A deposit of 40% is required to secure your booking.</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• Full balance must be cleared prior to departure.</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• Kindly share copies of all passenger IDs and passports upon confirmation.</p>
+        </div>""" if is_invoice else """
+        <div style="background:#f8f8f8;border-left:3px solid #000;padding:16px 20px;margin:20px 0;border-radius:0 4px 4px 0">
+          <p style="font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px">To Confirm Your Booking</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• This quote is valid for 48 hours.</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• To proceed, confirm and we will issue a formal invoice.</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• Kindly have passenger IDs and passports ready upon booking.</p>
+        </div>"""
+        html = f"""
+        <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:40px 24px;background:#fff">
+          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:32px">{company_name} · Charter Aviation</div>
+          <h1 style="font-size:22px;font-weight:700;color:#000;margin-bottom:6px">{doc_type}</h1>
+          <p style="font-size:13px;color:#999;margin-bottom:32px">Ref — {doc_number}</p>
+          <p style="font-size:15px;color:#333;line-height:1.7;margin-bottom:8px">Dear {client_name},</p>
+          <p style="font-size:14px;color:#555;line-height:1.7;margin-bottom:4px">Please find herein your {doc_type.lower()} from {company_name}.</p>
+          {f'<p style="font-size:13px;color:#555;margin-bottom:4px">Aircraft: <strong>{ac_label}</strong></p>' if ac_label else ''}
+          {f'<p style="font-size:13px;color:#555;margin-bottom:4px">Route: <strong>{route}</strong></p>' if route else ''}
+          <p style="font-size:16px;font-weight:700;color:#000;margin:16px 0">Total: USD ${amount:,.2f}</p>
+          {pdf_btn}
+          {payment_section}
+          <p style="font-size:13px;color:#555;line-height:1.7">For any queries, reach us anytime:<br>
+          <strong>📞 {contact_phone}</strong></p>
+          <div style="margin-top:40px;padding-top:20px;border-top:1px solid #eee">
+            <p style="font-size:12px;color:#999;margin:0">Thank you for choosing {company_name}.</p>
+            <p style="font-size:12px;color:#999;margin:4px 0">Warm regards, {company_name} Reservations Team</p>
+          </div>
+        </div>"""
+        params = {
+            "from": f"{company_name} <noreply@jetman.co.ke>",
+            "to": [to_email],
+            "subject": f"{doc_type} — Ref {doc_number} — {company_name}",
+            "html": html
+        }
+        resend.Emails.send(params)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
 
