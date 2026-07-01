@@ -1182,6 +1182,7 @@ def pdf():
                 "mission": result.get("mission", ""),
                 "route_summary": route_summary,
                 "quote_snapshot": result,
+                "quote_extras": extra_items or [],
                 "pdf_url": pdf_url or "",
                 "invoice_number": "",
                 "invoice_url": "",

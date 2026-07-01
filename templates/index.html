@@ -329,8 +329,11 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
   <div class="card pdf-section" id="pdf-section" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-      <h3 style="margin:0">Generate PDF</h3>
+      <h3 style="margin:0">Generate Quotation</h3>
       <button class="btn btn-clear btn-sm" onclick="clearQuote()">Clear Quote</button>
+    </div>
+    <div style="font-size:0.78rem;color:#666;background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 14px;margin-bottom:16px;line-height:1.6">
+      This tool generates <strong>Quotations only</strong>. To issue an Invoice, first generate a Quotation here, then navigate to <strong>Enquiries</strong> to upgrade the document to an Invoice.
     </div>
     <div class="form-row">
       <div class="form-group"><label>Select Aircraft</label><select id="pdf-aircraft-select" onchange="updateOptionSelector()"></select></div>
@@ -1795,7 +1798,7 @@ async function generatePDF(allAircraft) {
     msgLines.push(`${docType} — ${acLabel}${wasAdj}${adjTotal}`);
     msgLines.push(`Ref: <strong>${docNumber}</strong> · Saved to CRM`);
     if (pdfUrl) msgLines.push(`<a href="${pdfUrl}" target="_blank" style="color:#1a56db;font-weight:600;text-decoration:underline">📄 View Permanent Link</a>`);
-    msgLines.push(`<div style="margin-top:8px;padding:10px 14px;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;font-size:0.8rem;color:#7c5700">⚠️ To invoice this client, go to <strong>Enquiries</strong> and use the Invoice Builder. Do not regenerate from here.</div>`);
+    msgLines.push(`<div style="margin-top:8px;padding:10px 14px;background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;font-size:0.8rem;color:#1a3a6b">✅ Quotation successfully generated. To invoice this client, navigate to <strong>Enquiries</strong> and use Create Invoice.</div>`);
     let ind = document.getElementById('pdf-generating-indicator');
     if (ind) ind.remove();
     try { localStorage.setItem('qc_pending_msg', msgLines.join('<br>')); } catch(e) {}
@@ -2897,6 +2900,17 @@ function openInvoiceBuilder(enq) {
   document.getElementById('ib-notes').value = '';
   document.getElementById('ib-uplift-items').innerHTML = '';
   document.getElementById('ib-msg').innerHTML = '';
+
+  let quoteExtras = enq.quote_extras || [];
+  quoteExtras.forEach((item, idx) => {
+    addUpliftItem(
+      `Extra ${idx + 1} — ${item.name || ''}`,
+      parseFloat(item.quantity || 1),
+      parseFloat(item.unit_cost || 0),
+      true
+    );
+  });
+
   let base = parseFloat(enq.total_usd || 0);
   document.getElementById('ib-summary').innerHTML =
     `<strong>${enq.token}</strong> &nbsp;·&nbsp; ${enq.client_name} &nbsp;·&nbsp; ${enq.ac_label||''}<br>
@@ -3073,15 +3087,19 @@ async function reQuote(token) {
   }, 300);
 }
 
-function addUpliftItem() {
+function addUpliftItem(prefillDesc='', prefillQty=1, prefillAmt=0, fromQuote=false) {
+  let existingCount = document.querySelectorAll('#ib-uplift-items .line-item-row').length;
+  let n = existingCount + 1;
+  let label = fromQuote ? `Extra ${n} (from quote)` : `Extra ${n}`;
   let div = document.createElement('div');
   div.className = 'line-item-row';
   div.innerHTML = `
-    <textarea placeholder="e.g. International Permit, Landing Fee, Catering..." class="ib-desc" rows="2" oninput="recalcInvoiceTotal()" style="flex:1;min-width:140px;min-height:60px"></textarea>
-    <input type="number" placeholder="Qty" class="ib-qty qty" value="1" oninput="recalcInvoiceTotal()" style="max-width:70px">
-    <input type="number" placeholder="USD" class="ib-unit amount" oninput="recalcInvoiceTotal()" style="max-width:110px">
+    <textarea placeholder="${label} — e.g. International Permit, Landing Fee..." class="ib-desc" rows="2" oninput="recalcInvoiceTotal()" style="flex:1;min-width:140px;min-height:60px">${prefillDesc}</textarea>
+    <input type="number" placeholder="Qty" class="ib-qty qty" value="${prefillQty}" oninput="recalcInvoiceTotal()" style="max-width:70px">
+    <input type="number" placeholder="USD" class="ib-unit amount" value="${prefillAmt > 0 ? prefillAmt : ''}" oninput="recalcInvoiceTotal()" style="max-width:110px">
     <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove();recalcInvoiceTotal()">✕</button>`;
   document.getElementById('ib-uplift-items').appendChild(div);
+  recalcInvoiceTotal();
 }
 
 function recalcInvoiceTotal() {
