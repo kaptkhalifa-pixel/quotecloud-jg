@@ -1721,7 +1721,7 @@ async function adminAcFetch(query, drop, input) {
         let isLocal = sub === 'Verified Location';
         let icon = isLocal ? '⭐' : '📍';
         let subColor = isLocal ? '#1b5e20' : '#888';
-        return `<div onclick="adminAcSelect(this,'${input.id}')" data-main="${main}" data-placeid="${p.place_id||''}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem;display:flex;gap:8px;align-items:flex-start">
+        return `<div onmousedown="adminAcSelect(this,'${input.id}')" ontouchend="adminAcSelect(this,'${input.id}')" data-main="${main}" data-placeid="${p.place_id||''}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem;display:flex;gap:8px;align-items:flex-start">
           <span style="color:${subColor};flex-shrink:0">${icon}</span>
           <div><div style="font-weight:500">${main}</div>${sub?`<div style="font-size:0.72rem;color:${subColor};font-weight:${isLocal?'600':'400'}">${sub}</div>`:''}</div>
         </div>`;
@@ -1743,11 +1743,14 @@ function adminAcSelect(el, inputId) {
 function initAdminAc(inputId) {
   let input = document.getElementById(inputId);
   if (!input) return;
-  let drop = document.createElement('div');
-  drop.id = 'aac-' + inputId;
-  drop.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none';
-  input.parentElement.style.position = 'relative';
-  input.parentElement.appendChild(drop);
+  let drop = document.getElementById('aac-' + inputId);
+  if (!drop) {
+    drop = document.createElement('div');
+    drop.id = 'aac-' + inputId;
+    drop.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none';
+    input.parentElement.style.position = 'relative';
+    input.parentElement.appendChild(drop);
+  }
   input.addEventListener('input', () => {
     clearTimeout(adminAcTimers[inputId]);
     let val = input.value.trim();
