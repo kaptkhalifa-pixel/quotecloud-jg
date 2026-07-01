@@ -547,6 +547,12 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
 <!-- SETTINGS TAB -->
 <div class="tab-content" id="nav-settings">
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- GROUP 1: IDENTITY & BRANDING -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:4px">01 · Identity & Branding</div>
+
   <div class="card">
     <h3>Branding & Identity</h3>
     <div class="settings-section">
@@ -618,7 +624,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   </div>
 
   <div class="card">
-    <h3>Company Details</h3>
+    <h3>Company & Contact</h3>
     <div class="form-row">
       <div class="form-group"><label>Phone</label><input type="tel" id="s-phone"></div>
       <div class="form-group"><label>WhatsApp (digits only)</label><input type="tel" id="s-whatsapp"></div>
@@ -632,6 +638,11 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <button class="btn btn-block" onclick="saveCompany()">Save Company Details</button>
     <div id="company-msg"></div>
   </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- GROUP 2: OPERATIONS -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:20px">02 · Operations</div>
 
   <div class="card">
     <h3>Geographic Coverage</h3>
@@ -699,6 +710,11 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div id="rules-msg"></div>
   </div>
 
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- GROUP 3: FINANCE & DOCUMENTS -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:20px">03 · Finance & Documents</div>
+
   <div class="card">
     <h3>Bank Details</h3>
     <div class="form-row">
@@ -749,6 +765,30 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <button class="btn btn-block" onclick="saveFxRates()">Save FX Settings</button>
     <div id="fx-msg"></div>
   </div>
+
+  <div class="card">
+    <h3>Message Templates</h3>
+    <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px">Customise the WhatsApp and email message body for each document type. Use {client_name}, {ref}, {amount}, {pdf_url}, {phone} as placeholders.</p>
+    <div class="settings-section">
+      <h4>Quotation Message</h4>
+      <textarea id="s-msg-quote" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
+    </div>
+    <div class="settings-section">
+      <h4>Invoice Message</h4>
+      <textarea id="s-msg-invoice" rows="7" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
+    </div>
+    <div class="settings-section">
+      <h4>Receipt Message</h4>
+      <textarea id="s-msg-receipt" rows="8" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
+    </div>
+    <button class="btn btn-block" onclick="saveMessageTemplates()">Save Message Templates</button>
+    <div id="msg-templates-msg"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- GROUP 4: SECURITY -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:20px">04 · Security</div>
 
   <div class="card">
     <h3>Change Password</h3>
@@ -2513,6 +2553,7 @@ async function loadSettings() {
   toggleFxMode();
   let liveDiv = document.getElementById('fx-live-rates');
   if (liveDiv && fxRates['KES']) liveDiv.textContent = `Current live rate: USD 1 = KES ${fxRates['KES']?.toFixed(2)}`;
+  await loadMessageTemplates();
 }
 async function uploadLogo(input) {
   let status = document.getElementById('logo-upload-status');
@@ -3481,6 +3522,35 @@ function updateCurrencyDisplay() {
     }
   });
 }
+async function saveMessageTemplates() {
+  let body = {
+    quote: document.getElementById('s-msg-quote').value.trim(),
+    invoice: document.getElementById('s-msg-invoice').value.trim(),
+    receipt: document.getElementById('s-msg-receipt').value.trim()
+  };
+  try {
+    let r = await fetch('/settings/message_templates/save', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    let data = await r.json();
+    if (data.success) showMsg('msg-templates-msg', '✅ Message templates saved.', 'success');
+    else showMsg('msg-templates-msg', data.error || 'Error', 'error');
+  } catch(e) {
+    showMsg('msg-templates-msg', 'Network error.', 'error');
+  }
+}
+
+async function loadMessageTemplates() {
+  try {
+    let r = await fetch('/settings/message_templates');
+    let data = await r.json();
+    document.getElementById('s-msg-quote').value = data.quote || '';
+    document.getElementById('s-msg-invoice').value = data.invoice || '';
+    document.getElementById('s-msg-receipt').value = data.receipt || '';
+  } catch(e) {}
+}
+
 function toggleFxMode() {
   let isManual = document.getElementById('s-fx-manual').checked;
   document.getElementById('fx-manual-fields').style.display = isManual ? 'block' : 'none';
