@@ -1205,8 +1205,13 @@ async function submitBookingForm() {
     });
   }
 
-  let prefix = (config.invoice_prefix || 'JG');
-  let token = `${prefix}-${new Date().getFullYear()}-${Math.random().toString(36).substr(2,6).toUpperCase()}`;
+  let prefix = (config.invoice_prefix || 'JET');
+  let now = new Date();
+  let dd = String(now.getDate()).padStart(2,'0');
+  let mm = String(now.getMonth()+1).padStart(2,'0');
+  let yy = String(now.getFullYear()).slice(-2);
+  let rand = Math.random().toString(36).substr(2,6).toUpperCase();
+  let token = `${prefix}-Q-${dd}${mm}${yy}-${rand}`;
   currentBookingToken = token;
   let total = res.mission === 'return_both' ? (actual.total_usd || 0) : (res.total_usd || 0);
   let routeSummary = buildRouteSummary(res);

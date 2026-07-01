@@ -483,7 +483,10 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 <!-- RECORDS TAB -->
 <div class="tab-content" id="nav-records">
   <div class="card">
-    <h3>Create Manual Document</h3>
+    <h3>Create Manual Quote</h3>
+    <div style="font-size:0.78rem;color:#666;background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 14px;margin-bottom:16px;line-height:1.6">
+      This tool generates <strong>Quotations only</strong>. Every quote is saved to CRM automatically. To upgrade to an Invoice, navigate to <strong>Enquiries</strong> and use the Invoice Builder there.
+    </div>
     <div class="form-row">
       <div class="form-group"><label>Client Name</label><input type="text" id="mi-name" placeholder="Full name"></div>
       <div class="form-group"><label>Email</label><input type="text" id="mi-email" placeholder="client@email.com"></div>
@@ -501,20 +504,11 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       </div>
       <button class="btn btn-outline btn-sm" onclick="addMiItem()" style="margin-top:8px">+ Add Line</button>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>Discount (USD)</label><input type="number" id="mi-discount" placeholder="0" min="0"></div>
-      <div class="form-group"><label>Document Type</label>
-        <select id="mi-type">
-          <option value="Invoice">Invoice</option>
-          <option value="Quotation">Quotation</option>
-          <option value="Receipt">Receipt</option>
-        </select>
-      </div>
-    </div>
+    <div class="form-group"><label>Discount (USD)</label><input type="number" id="mi-discount" placeholder="0" min="0"></div>
     <div class="form-group-full"><label>Notes</label><textarea id="mi-notes" rows="2" placeholder="Additional notes..."></textarea></div>
     <div class="form-group-full"><label>Bank Details</label><textarea id="mi-bank" rows="6" style="font-family:monospace;font-size:14px"></textarea></div>
     <div class="form-group-full"><label>Terms & Conditions</label><textarea id="mi-terms" rows="8"></textarea></div>
-    <button class="btn btn-block" onclick="createManualInvoice()">Generate & Download</button>
+    <button class="btn btn-block" id="mi-generate-btn" onclick="createManualInvoice()">Generate Quote PDF</button>
     <div id="mi-msg"></div>
   </div>
 
@@ -2467,17 +2461,36 @@ async function createManualInvoice() {
     if (desc) lineItems.push({ description: desc, quantity: qty, unit_cost: unit });
   });
   if (!lineItems.length) return showMsg('mi-msg','Add at least one line item.','error');
-  let body = { client_name: document.getElementById('mi-name').value, client_email: document.getElementById('mi-email').value, client_phone: document.getElementById('mi-phone').value, discount: document.getElementById('mi-discount').value || 0, note: document.getElementById('mi-notes').value, bank_block: document.getElementById('mi-bank').value, terms: document.getElementById('mi-terms').value, doc_type: document.getElementById('mi-type').value, line_items: lineItems };
-  showMsg('mi-msg','Generating...','success');
+  let body = { client_name: document.getElementById('mi-name').value, client_email: document.getElementById('mi-email').value, client_phone: document.getElementById('mi-phone').value, discount: document.getElementById('mi-discount').value || 0, note: document.getElementById('mi-notes').value, bank_block: document.getElementById('mi-bank').value, terms: document.getElementById('mi-terms').value, doc_type: 'Quotation', line_items: lineItems };
+  let miBtn = document.getElementById('mi-generate-btn');
+  if (miBtn) { miBtn.disabled = true; miBtn.textContent = 'Generating...'; }
+  document.getElementById('mi-msg').innerHTML = '';
   try {
     let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('mi-msg',e.error||'Failed','error'); return; }
+    let pdfUrl = r.headers.get('X-PDF-URL') || '';
+    let docNumber = r.headers.get('X-DOC-NUMBER') || '';
     let blob = await r.blob();
     let url = URL.createObjectURL(blob);
-    let a = document.createElement('a'); a.href = url; a.download = 'document.pdf'; a.click();
-    showMsg('mi-msg','Downloaded and saved to Records.','success');
+    let a = document.createElement('a'); a.href = url; a.download = (docNumber||'quote')+'.pdf'; a.click();
+    let btn = document.getElementById('mi-generate-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate Quote PDF'; }
+    document.getElementById('mi-msg').innerHTML = `
+      <div style="background:#e8f5e9;border-radius:8px;padding:14px;margin-top:12px">
+        <div style="font-weight:700;color:#1b5e20;margin-bottom:6px">✅ Quotation Generated</div>
+        <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${docNumber}</strong> · Saved to CRM</div>
+        ${pdfUrl ? `<a href="${pdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:6px 10px;border-radius:6px;margin-bottom:10px">📄 View Permanent Link</a>` : ''}
+        <div style="background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 12px;font-size:0.78rem;color:#1a3a6b;line-height:1.6">
+          📋 This quote is now in <strong>Enquiries</strong>. To upgrade it to an Invoice, navigate to Enquiries, find this ref, and use the Invoice Builder.
+        </div>
+      </div>`;
     loadRecords();
-  } catch(e) { showMsg('mi-msg','Error: '+e.message,'error'); }
+    loadEnquiries();
+  } catch(e) {
+    let btn = document.getElementById('mi-generate-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate Quote PDF'; }
+    showMsg('mi-msg','Error: '+e.message,'error');
+  }
 }
 
 async function loadSettings() {
