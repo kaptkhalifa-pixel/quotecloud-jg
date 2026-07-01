@@ -1,131 +1,59 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ operator.company_name }} — Login</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Inter', sans-serif;
-  background: {{ operator.branding.primary_color }};
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.login-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 48px 40px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  text-align: center;
-}
-.logo { max-height: 70px; margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto; }
-h1 {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 1.4rem;
-  color: {{ operator.branding.primary_color }};
-  margin-bottom: 8px;
-}
-.subtitle { font-size: 0.9rem; color: #666; margin-bottom: 32px; }
-.field { margin-bottom: 16px; text-align: left; }
-label { font-size: 0.85rem; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
-input[type="text"], input[type="password"] {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-  outline: none;
-  transition: border 0.2s;
-  font-family: inherit;
-}
-input[type="text"]:focus, input[type="password"]:focus {
-  border-color: {{ operator.branding.primary_color }};
-}
-.remember-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  text-align: left;
-}
-.remember-row input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: {{ operator.branding.primary_color }};
-}
-.remember-row label {
-  font-size: 0.88rem;
-  color: #555;
-  margin: 0;
-  cursor: pointer;
-  font-weight: 400;
-}
-.btn {
-  width: 100%;
-  padding: 13px;
-  background: {{ operator.branding.button_color }};
-  color: {{ operator.branding.button_text }};
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
-  transition: opacity 0.2s;
-}
-.btn:hover { opacity: 0.9; }
-.error {
-  background: #fff0f0;
-  border: 1px solid #ffcccc;
-  color: #cc0000;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 0.9rem;
-  margin-bottom: 16px;
-  text-align: left;
-}
-.powered {
-  margin-top: 32px;
-  font-size: 0.78rem;
-  color: #aaa;
-}
-.powered a { color: #aaa; text-decoration: none; }
-.powered a:hover { color: #888; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f7f7f7;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:48px;width:100%;max-width:400px}
+.logo-wrap{margin-bottom:28px}
+.logo-wrap img{height:48px;object-fit:contain;display:block}
+.eyebrow{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:#999;margin-bottom:24px}
+h1{font-size:1.3rem;font-weight:600;color:#000;margin-bottom:6px}
+.subtitle{font-size:0.82rem;color:#999;margin-bottom:32px}
+label{display:block;font-family:'Space Mono',monospace;font-size:0.58rem;text-transform:uppercase;letter-spacing:0.15em;color:#777;margin-bottom:8px}
+input[type="text"],input[type="password"]{width:100%;border:1.5px solid #e5e5e5;border-radius:2px;padding:13px 14px;font-family:'Inter',sans-serif;font-size:0.9rem;color:#000;outline:none;transition:border-color 0.2s;margin-bottom:20px}
+input[type="text"]:focus,input[type="password"]:focus{border-color:#000}
+.remember-row{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.remember-row input{width:16px;height:16px;cursor:pointer;accent-color:#000;margin-bottom:0}
+.remember-row label{font-size:0.82rem;color:#777;margin:0;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:normal;text-transform:none}
+button{width:100%;background:#000;color:#fff;border:none;padding:14px;font-family:'Space Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.12em;font-weight:700;cursor:pointer;border-radius:2px;transition:opacity 0.2s}
+button:hover{opacity:0.85}
+.error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:2px;padding:12px 14px;font-size:0.82rem;margin-bottom:20px}
+.forgot{display:block;text-align:center;margin-top:16px;font-size:0.78rem;color:#999;text-decoration:none;transition:color 0.2s}
+.forgot:hover{color:#000}
+.powered{margin-top:32px;text-align:center;font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:#ccc}
+.powered a{color:#ccc;text-decoration:none}
+.powered a:hover{color:#999}
 </style>
 </head>
 <body>
-<div class="login-card">
-  <img src="{{ operator.logo_url }}" class="logo" alt="{{ operator.company_name }}">
+<div class="card">
+  <div class="logo-wrap">
+    <img src="{{ operator.logo_url }}" alt="{{ operator.company_name }}">
+  </div>
+  <div class="eyebrow">{{ operator.company_name }}</div>
   <h1>Admin Login</h1>
-  <p class="subtitle">{{ operator.company_name }}</p>
+  <p class="subtitle">Sign in to manage your fleet and bookings.</p>
   {% if error %}
   <div class="error">{{ error }}</div>
   {% endif %}
   <form method="POST" action="/login">
-    <div class="field">
-      <label>Username</label>
-      <input type="text" name="username" autocomplete="username" required>
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" name="password" autocomplete="current-password" required>
-    </div>
+    <label>Username</label>
+    <input type="text" name="username" autocomplete="username" required autofocus>
+    <label>Password</label>
+    <input type="password" name="password" autocomplete="current-password" required>
     <div class="remember-row">
       <input type="checkbox" name="remember" id="remember">
       <label for="remember">Remember me for 7 days</label>
     </div>
-    <button type="submit" class="btn">Sign In</button>
+    <button type="submit">Sign In →</button>
   </form>
-  <p class="powered">
-    <a href="https://jetmanglobal.com" target="_blank">Quotecloud — Jetman Global</a>
-  </p>
+  <a href="/forgot-password" class="forgot">Forgot your password?</a>
+  <div class="powered"><a href="https://jetmanglobal.com" target="_blank">Powered by Quotecloud · Jetman Global</a></div>
 </div>
 </body>
 </html>

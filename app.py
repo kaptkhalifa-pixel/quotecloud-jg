@@ -1984,6 +1984,8 @@ def reset_password(token):
         return jsonify({"error": "Reset link has expired."}), 400
     try:
         global OPERATOR
+        if "env" not in OPERATOR or OPERATOR["env"] is None:
+            OPERATOR["env"] = {}
         OPERATOR["env"]["admin_pass"] = new_pass
         save_operator_config(OPERATOR)
         invalidate_reset_token(token)
