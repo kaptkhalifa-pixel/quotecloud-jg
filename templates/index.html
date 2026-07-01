@@ -3237,8 +3237,8 @@ async function generateAndSendInvoice() {
     ].filter(l => l !== undefined).join('\n');
     let waNum = clientWa.replace(/\D/g,'');
     let waUrl = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waLines)}` : '';
-    let clientEmail = document.getElementById('ib-email')?.value.trim() || '';
-    let emailUrl = clientEmail && invoicePdfUrl ? `mailto:${clientEmail}?subject=Invoice ${invoiceDocNumber}&body=${encodeURIComponent('Dear ' + clientName + ',\n\nPlease find your invoice attached.\n\nRef: ' + invoiceDocNumber + '\n\nView PDF: ' + invoicePdfUrl)}` : '';
+    let clientEmailForLink = document.getElementById('ib-email')?.value.trim() || '';
+    let emailUrl = clientEmailForLink && invoicePdfUrl ? `mailto:${clientEmailForLink}?subject=Invoice ${invoiceDocNumber}&body=${encodeURIComponent('Dear ' + clientName + ',\n\nPlease find your invoice attached.\n\nRef: ' + invoiceDocNumber + '\n\nView PDF: ' + invoicePdfUrl)}` : '';
     let successHtml = `
       <div style="background:#e8f5e9;border-radius:10px;padding:16px;margin-top:12px">
         <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:8px">✅ Invoice Generated</div>
