@@ -2281,7 +2281,7 @@ function renderRecords(records) {
       <td>${getPaymentBadge(r)}</td>
       <td style="white-space:nowrap">
         ${getPaymentActions(r)}
-        <button class="btn btn-outline btn-sm" style="background:#25D366;color:#fff;border:none" onclick="openShareModal('${r.number}','${r.pdf_url||''}','${r.number}','${r.type||'Document'}')">📤</button>
+        <button class="btn btn-outline btn-sm" style="background:#25D366;color:#fff;border:none" onclick="openShareModal('${r.number}','${r.pdf_url||''}','${r.number}','${r.type||'Document'}',{clientName:'${(r.client_name||'').replace(/'/g,'\\\'').replace(/"/g,'')}',finalTotal:${parseFloat(r.amount||0)},token:'${r.number}'})">📤</button>
         <button class="btn btn-outline btn-sm" onclick="openEditModal('${r.number}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.number}')">Del</button>
       </td>
