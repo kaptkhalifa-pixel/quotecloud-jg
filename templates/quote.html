@@ -895,10 +895,16 @@ function renderOneAc(res, showDist, isDark) {
     </div>`;
   }
   let acIndex = lastResults.indexOf(res);
-  let bookBtn = `<div style="padding:14px 18px;border-top:1px solid var(--grey-100)">
+  let bookBtn = `<div style="padding:14px 18px 0;border-top:1px solid var(--grey-100)">
     <button onclick="openBookingModal(lastResults[${acIndex}])" style="width:100%;padding:12px;background:#0a0a0a;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
       Get Quote PDF
+    </button>
+  </div>
+  <div style="padding:10px 18px 14px">
+    <button onclick="whatsappEnquireAc(lastResults[${acIndex}])" style="width:100%;padding:12px;background:#25D366;color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.28 7.044L.787 23.204l4.248-1.363C6.886 23.195 9.372 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.395 0-4.63-.735-6.484-1.99l-.464-.277-2.522.81.847-2.46-.303-.482C1.81 16.172 1.143 14.155 1.143 12 1.143 6.01 6.01 1.143 12 1.143c2.94 0 5.703 1.148 7.781 3.226A10.914 10.914 0 0 1 23.143 12c-.001 5.99-4.868 10.857-10.857 10.857H12z"/></svg>
+      WhatsApp Enquiry
     </button>
   </div>`;
   return `<div class="${headerClass}">
@@ -908,6 +914,48 @@ function renderOneAc(res, showDist, isDark) {
     </div>
     <span class="ac-badge ${badgeClass}">${badgeText}</span>
   </div>${content}${disclaimer}${imageHtml}${bookBtn}`;
+}
+function whatsappEnquireAc(res) {
+  if (!res) return;
+  let waNum = ((config.contact||{}).whatsapp || '').replace(/^\+/, '').replace(/\s/g, '');
+  if (!waNum) return;
+  let acLabel = res.ac_label || 'Aircraft';
+  let lines = ["Hi, I'd like to enquire about a charter.", ""];
+  lines.push(`Aircraft: ${acLabel}`);
+  if (res.mission === 'return_both') {
+    let wd = res.wait_days || 0;
+    let maxN = res.max_nights || 3;
+    let obContent = document.getElementById(`ob-${res.ac_key}`);
+    let isPickDrop = wd >= maxN || (obContent && obContent.classList.contains('active'));
+    if (isPickDrop) {
+      lines.push(`Option: Pick & Drop`);
+      lines.push(`Total: USD $${(res.option_b?.total_usd || 0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+      let dropRevenue = (res.option_b?.drop?.segments||[]).filter(s=>s.type==='revenue');
+      let pickRevenue = (res.option_b?.pick?.segments||[]).filter(s=>s.type==='revenue');
+      if (dropRevenue.length) lines.push(`Drop: ${dropRevenue[0].origin} to ${dropRevenue[0].destination}${dropRevenue[0].date?' on '+dropRevenue[0].date:''}`);
+      if (pickRevenue.length) lines.push(`Pick: ${pickRevenue[0].origin} to ${pickRevenue[0].destination}${pickRevenue[0].date?' on '+pickRevenue[0].date:''}`);
+    } else {
+      lines.push(`Option: Aircraft Waits (Option A)`);
+      lines.push(`Total: USD $${(res.option_a?.total_usd || 0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+      let revSegs = (res.option_a?.segments||[]).filter(s=>s.type==='revenue');
+      revSegs.forEach(s => lines.push(`${s.origin} to ${s.destination}${s.date?' on '+s.date:''}`));
+    }
+  } else if (res.mission === 'pick_and_drop') {
+    lines.push(`Option: Pick & Drop`);
+    lines.push(`Total: USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+    let dropRev = (res.drop?.segments||[]).filter(s=>s.type==='revenue');
+    let pickRev = (res.pick?.segments||[]).filter(s=>s.type==='revenue');
+    if (dropRev.length) lines.push(`Drop: ${dropRev[0].origin} to ${dropRev[0].destination}${dropRev[0].date?' on '+dropRev[0].date:''}`);
+    if (pickRev.length) lines.push(`Pick: ${pickRev[0].origin} to ${pickRev[0].destination}${pickRev[0].date?' on '+pickRev[0].date:''}`);
+  } else {
+    lines.push(`Total: USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+    let revSegs = (res.segments||[]).filter(s=>s.type==='revenue');
+    revSegs.forEach(s => lines.push(`${s.origin} to ${s.destination}${s.date?' on '+s.date:''}`));
+  }
+  lines.push("");
+  lines.push("Please confirm availability. Thank you.");
+  let url = `https://wa.me/${waNum}?text=${encodeURIComponent(lines.join('\n'))}`;
+  window.open(url, '_blank');
 }
 
 function switchOtab(el, id) {
