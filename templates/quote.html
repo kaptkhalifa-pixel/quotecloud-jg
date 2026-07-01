@@ -473,7 +473,7 @@ function renderSuggestions(predictions, drop, input) {
     let sub = p.secondary || '';
     let isLocal = sub === 'Verified Location';
     let icon = isLocal ? '⭐' : '📍';
-    return `<div class="ac-item" data-desc="${p.description}" data-main="${p.main || p.description}" data-placeid="${p.place_id||''}" onmousedown="selectSuggestion(this,'${input.id}')" ontouchend="selectSuggestion(this,'${input.id}')">
+    return `<div class="ac-item" data-desc="${p.description}" data-main="${p.main || p.description}" data-placeid="${p.place_id||''}" onmousedown="selectSuggestion(this,'${input.id}')" ontouchstart="this._touchStartY=event.touches[0].clientY" ontouchend="if(Math.abs(event.changedTouches[0].clientY-this._touchStartY)<8)selectSuggestion(this,'${input.id}')">
       <span class="ac-item-icon">${icon}</span>
       <div><div class="ac-item-main">${main}</div>${sub?`<div class="ac-item-sub" style="${isLocal?'color:#1b5e20;font-weight:600':''}">${sub}</div>`:''}</div>
     </div>`;

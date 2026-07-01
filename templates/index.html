@@ -1721,7 +1721,7 @@ async function adminAcFetch(query, drop, input) {
         let isLocal = sub === 'Verified Location';
         let icon = isLocal ? '⭐' : '📍';
         let subColor = isLocal ? '#1b5e20' : '#888';
-        return `<div onmousedown="adminAcSelect(this,'${input.id}')" ontouchend="adminAcSelect(this,'${input.id}')" data-main="${main}" data-placeid="${p.place_id||''}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem;display:flex;gap:8px;align-items:flex-start">
+        return `<div onmousedown="adminAcSelect(this,'${input.id}')" ontouchstart="this._tsY=event.touches[0].clientY" ontouchend="if(Math.abs(event.changedTouches[0].clientY-this._tsY)<8)adminAcSelect(this,'${input.id}')" data-main="${main}" data-placeid="${p.place_id||''}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem;display:flex;gap:8px;align-items:flex-start">
           <span style="color:${subColor};flex-shrink:0">${icon}</span>
           <div><div style="font-weight:500">${main}</div>${sub?`<div style="font-size:0.72rem;color:${subColor};font-weight:${isLocal?'600':'400'}">${sub}</div>`:''}</div>
         </div>`;
