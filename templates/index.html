@@ -3402,8 +3402,8 @@ function renderShareBar(p) {
         <input type="email" id="${id}-email" value="${p.clientEmail||''}" placeholder="client@email.com" style="width:100%">
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-success btn-sm" onclick="shareBarWa('${id}',${JSON.stringify(p).replace(/'/g,"\\'")})">💬 WhatsApp</button>
-        <button class="btn btn-sm" style="background:#0a0a0a;color:#fff" onclick="shareBarEmail('${id}',${JSON.stringify(p).replace(/'/g,"\\'")})">📧 Email</button>
+        <button class="btn btn-success btn-sm" onclick="shareBarWa('${id}')">💬 WhatsApp</button>
+        <button class="btn btn-sm" style="background:#0a0a0a;color:#fff" onclick="shareBarEmail('${id}')">📧 Email</button>
       </div>
       <div id="${id}-msg" style="margin-top:8px"></div>
     </div>`;
