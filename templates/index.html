@@ -3381,6 +3381,8 @@ function renderShareBar(p) {
       </div>
       <div id="${id}-msg" style="margin-top:8px"></div>
     </div>`;
+}
+
 function shareBarWa(id) {
   let p = shareBarData[id] || {};
   let wa = document.getElementById(id+'-wa')?.value.trim().replace(/\D/g,'');
