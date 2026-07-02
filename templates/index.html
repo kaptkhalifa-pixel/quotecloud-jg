@@ -3385,8 +3385,11 @@ function renderShareBar(p) {
 
 function shareBarWa(id) {
   let p = shareBarData[id] || {};
-  let wa = document.getElementById(id+'-wa')?.value.trim().replace(/\D/g,'');
-  if (!wa) { showMsg(id+'-msg','Enter WhatsApp number.','error'); return; }
+  let waInput = document.getElementById(id+'-wa');
+  if (!waInput) { alert('WA input not found for id: ' + id); return; }
+  let wa = waInput.value.trim().replace(/\D/g,'');
+  if (!wa) { alert('Enter a WhatsApp number first'); return; }
+
   let templateKey = p.docType === 'Invoice' ? 'invoice' : p.docType === 'Receipt' ? 'receipt' : 'quote';
   let template = msgTemplates[templateKey] || '';
   let pdfLine = p.pdfUrl ? `📄 View ${p.docType}: ${p.pdfUrl}` : '';
