@@ -2286,7 +2286,7 @@ function renderRecords(records) {
       <td>${getPaymentBadge(r)}</td>
       <td style="white-space:nowrap">
         ${getPaymentActions(r)}
-        <button class="btn btn-outline btn-sm" style="background:#25D366;color:#fff;border:none" onclick="openShareModal('${r.number}','${r.pdf_url||''}','${r.number}','${r.type||'Document'}',{clientName:'${(r.client_name||'').replace(/'/g,'\\\'').replace(/"/g,'')}',finalTotal:${parseFloat(r.amount||0)},token:'${r.number}'})">📤</button>
+        <button class="btn btn-outline btn-sm" style="background:#25D366;color:#fff;border:none" onclick="openShareModal('${r.number}','${r.pdf_url||''}','${r.number}','${r.type||'Document'}',{clientName:'${(r.client_name||'').replace(/'/g,'\\\'').replace(/"/g,'')}',finalTotal:${parseFloat(r.amount||0)},token:'${r.number}',clientEmail:'${(r.client_email||'').replace(/'/g,'\\\'').replace(/"/g,'')}',route:'${(r.route_summary||'').replace(/'/g,'\\\'').replace(/"/g,'')}',acLabel:'${(r.ac_label||'').replace(/'/g,'\\\'').replace(/"/g,'')}' })">📤</button>
         <button class="btn btn-outline btn-sm" onclick="openEditModal('${r.number}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.number}')">Del</button>
       </td>
@@ -3301,6 +3301,15 @@ function openShareModal(docNumber, pdfUrl, recordNumber, docType, extra) {
     } else {
       waInput.value = '';
       waHint.textContent = 'No WhatsApp on file — enter to send and save.';
+    }
+  }
+  let emailInput = document.getElementById('share-email-input');
+  if (emailInput) {
+    if (extra2.clientEmail) {
+      emailInput.value = extra2.clientEmail;
+    } else {
+      let rec = allRecords.find(r => r.number === (recordNumber || docNumber));
+      emailInput.value = rec?.client_email || '';
     }
   }
   document.getElementById('share-modal').classList.add('active');
