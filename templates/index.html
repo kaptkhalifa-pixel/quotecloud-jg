@@ -1595,8 +1595,8 @@ function calcReverse(idx) {
   if (!targetRaw || !hrs) { el.textContent = ''; return; }
 
   // Strip ALL fixed costs from target before calculating implied rate
-  let overnight = res.overnight_usd || res.overnight_cost_usd || 0;
-  let idle = res.waiting_usd || res.idle_cost_usd || 0;
+  let overnight = res._adj_overnight !== undefined ? res._adj_overnight : (res.overnight_usd || res.overnight_cost_usd || 0);
+  let idle = res._adj_idle !== undefined ? res._adj_idle : (res.waiting_usd || res.idle_cost_usd || 0);
   // For return_both use option_a
   if (res.mission === 'return_both') {
     overnight = res.option_a?.overnight_usd || 0;
