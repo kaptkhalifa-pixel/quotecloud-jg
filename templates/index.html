@@ -1557,7 +1557,7 @@ function recalcAdjuster(idx) {
     adjSummary.dataset.applied = 'false';
     adjSummary.style.background = '#fff3e0';
     let warningLine = wasApplied ? `<div style="font-size:0.72rem;color:#e65100;margin-bottom:4px">⚠ This will overwrite your previously applied values.</div>` : '';
-    adjSummary.innerHTML = `${warningLine}<strong>Preview: ${totalDisplay}</strong> &nbsp;·&nbsp; ${hrs} hrs @ ${rateDisplay} · Pax: ${paxDisplay} &nbsp; <button onclick="confirmApply(${idx})" style="padding:4px 12px;background:#1b5e20;color:#fff;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-left:8px">Apply →</button>`;
+    adjSummary.innerHTML = `${warningLine}<strong>Preview: ${totalDisplay}</strong> &nbsp;·&nbsp; ${hrs} hrs @ ${rateDisplay} · Pax: ${paxDisplay}`;
     adjSummary.style.display = 'block';
   }
 }
