@@ -1102,7 +1102,7 @@ function addLeg() {
   initAdminAc(originId);
   initAdminAc(destId);
   div.querySelectorAll('.leg-date').forEach(function(el){
-    flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:true,clickOpens:true,closeOnSelect:true});
+    flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:true,allowInput:true});
   });
 }
 
@@ -3100,7 +3100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let adminDepartPicker = flatpickr('#rt-depart', {dateFormat:'d M Y',minDate:'today',disableMobile:false,onChange:function(d){if(d[0])adminReturnPicker.set('minDate',d[0]);}});
   let adminReturnPicker = flatpickr('#rt-return', {dateFormat:'d M Y',minDate:'today',disableMobile:false});
   document.querySelectorAll('.leg-date').forEach(function(el){
-    flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:true,clickOpens:true,closeOnSelect:true});
+    flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:true,allowInput:true});
   });
 });
 
