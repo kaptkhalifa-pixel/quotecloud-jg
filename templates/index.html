@@ -1101,7 +1101,16 @@ function addLeg() {
   document.getElementById('safari-legs').appendChild(div);
   initAdminAc(originId);
   initAdminAc(destId);
-  div.querySelectorAll('.leg-date').forEach(function(el){flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:false});});
+  div.querySelectorAll('.leg-date').forEach(function(el){
+    let fp = flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:true,clickOpens:true,closeOnSelect:true});
+    let row = el.closest('.leg-row');
+    if (row) {
+      row.querySelectorAll('.leg-origin,.leg-dest').forEach(function(inp){
+        inp.addEventListener('focus', function(){ fp.close(); });
+        inp.addEventListener('touchstart', function(){ fp.close(); });
+      });
+    }
+  });
 }
 
 async function submitQuote(mission) {
@@ -3049,7 +3058,16 @@ document.addEventListener('DOMContentLoaded', () => {
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','leg-origin-1','leg-dest-1'].forEach(id => initAdminAc(id));
   let adminDepartPicker = flatpickr('#rt-depart', {dateFormat:'d M Y',minDate:'today',disableMobile:false,onChange:function(d){if(d[0])adminReturnPicker.set('minDate',d[0]);}});
   let adminReturnPicker = flatpickr('#rt-return', {dateFormat:'d M Y',minDate:'today',disableMobile:false});
-  document.querySelectorAll('.leg-date').forEach(function(el){flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:false});});
+  document.querySelectorAll('.leg-date').forEach(function(el){
+    let fp = flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:true,clickOpens:true,closeOnSelect:true});
+    let row = el.closest('.leg-row');
+    if (row) {
+      row.querySelectorAll('.leg-origin,.leg-dest').forEach(function(inp){
+        inp.addEventListener('focus', function(){ fp.close(); });
+        inp.addEventListener('touchstart', function(){ fp.close(); });
+      });
+    }
+  });
 });
 
 async function saveBranding() {
