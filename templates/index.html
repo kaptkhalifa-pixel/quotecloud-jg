@@ -1517,7 +1517,17 @@ function recalcAdjuster(idx) {
   let pax = paxUsd;
   let hrs = getTotalHours(res);
   let flightCost = Math.round(hrs * rate * 100) / 100;
-  let total = Math.round((flightCost + pax) * 100) / 100;
+  let ovRateAdj = parseFloat(document.getElementById('adj-ov-rate-'+idx)?.value) || 0;
+  let idleRateAdj = parseFloat(document.getElementById('adj-idle-rate-'+idx)?.value) || 0;
+  let baseOvUsd = res.overnight_usd || (res.mission==='return_both' ? res.option_a?.overnight_usd : 0) || 0;
+  let baseIdleUsd = res.waiting_usd || (res.mission==='return_both' ? res.option_a?.waiting_usd : 0) || 0;
+  let ovRateOrig = res.overnight_rate_usd || 0;
+  let idleRateOrig = res.idle_day_rate_usd || 0;
+  let nightsAdj = ovRateOrig > 0 && baseOvUsd > 0 ? Math.round(baseOvUsd / ovRateOrig) : 0;
+  let idleDaysAdj = idleRateOrig > 0 && baseIdleUsd > 0 ? Math.round(baseIdleUsd / idleRateOrig) : 0;
+  let ovCost = ovRateAdj > 0 ? nightsAdj * ovRateAdj : baseOvUsd;
+  let idleCost = idleRateAdj > 0 ? idleDaysAdj * idleRateAdj : baseIdleUsd;
+  let total = Math.round((flightCost + pax + ovCost + idleCost) * 100) / 100;
   let card = document.getElementById('ac-card-'+idx);
   let totalEl = card.querySelector('.billing-total span:last-child');
   let flightEl = card.querySelectorAll('.billing-row')[0]?.querySelector('span:last-child');
@@ -1600,11 +1610,11 @@ function confirmApply(idx) {
       </div>
       <div style="display:flex;gap:16px;flex-wrap:wrap">
         <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:2px solid #1b5e20">
-          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">New Price</div>
+          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Adjusted Price</div>
           <div style="font-size:1rem;font-weight:700;color:#1b5e20">${newTotalDisplay}</div>
         </div>
         <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:1px solid #ddd">
-          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Was</div>
+          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">System Default</div>
           <div style="font-size:1rem;font-weight:700;color:#888">${oldTotalDisplay}</div>
         </div>
       </div>
@@ -1722,13 +1732,13 @@ function renderAdjuster(res, idx) {
 
   let ghostToggle = `
     <div style="background:#1a1a1a;border-radius:8px;padding:12px 14px;margin-top:14px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="checkbox" id="adj-ghost-${idx}" onchange="toggleGhostManual(${idx})" style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-        <div>
-          <label for="adj-ghost-${idx}" style="font-size:0.85rem;font-weight:700;color:#fff;cursor:pointer;margin:0">👻 Ghost Mode</label>
-          <div style="font-size:0.72rem;color:#888;margin-top:2px">Bundle charter cost into one price — no rate breakdown shown to client. You can still add uplift line items.</div>
-        </div>
+      <div style="font-size:0.72rem;color:#888;margin-bottom:8px;line-height:1.5">Bundle charter cost into one price. No rate breakdown shown to client.</div>
+      <div style="display:flex;gap:8px">
+        <button id="adj-ghost-btn-${idx}" onclick="activateGhostMode(${idx})" class="btn btn-sm" style="background:#333;color:#fff;border:none;flex:1">👻 Activate Ghost Mode</button>
+        <button onclick="resetAdjuster(${idx})" class="btn btn-sm btn-outline" style="flex:1">↺ Reset</button>
       </div>
+      <div id="adj-ghost-status-${idx}" style="display:none;font-size:0.72rem;color:#25D366;margin-top:8px;font-weight:600">👻 Ghost Mode Active — Reset to undo</div>
+      <input type="hidden" id="adj-ghost-${idx}" value="0">
     </div>`;
 
   let manualTab = `
@@ -1740,10 +1750,7 @@ function renderAdjuster(res, idx) {
           <input type="number" id="adj-rate-${idx}" value="${rate}" oninput="recalcAdjuster(${idx})">
           <div style="font-size:0.7rem;color:#888;margin-top:3px">${hrs} hrs · original $${rate}/hr</div>
         </div>
-        <div class="adjuster-field">
-          <label>Speed (KTAS)</label>
-          <input type="number" id="adj-speed-${idx}" value="${speed}" oninput="recalcAdjuster(${idx})">
-        </div>
+        <input type="hidden" id="adj-speed-${idx}" value="${speed}">
         ${nights > 0 ? `
         <div class="adjuster-field">
           <label>Overnight Rate ($/night)</label>
@@ -1859,6 +1866,46 @@ function switchAdjTab(idx, tab) {
     manualBtn.style.background = '#f5f5f5'; manualBtn.style.color = '#555';
     reverseBtn.style.background = '#0d47a1'; reverseBtn.style.color = '#fff';
   }
+}
+function activateGhostMode(idx) {
+  if (!confirm('👻 Ghost Mode will bundle all charter costs into one price. No rate breakdown shown on PDF. Tap Reset to undo. Continue?')) return;
+  lastResults[idx]._ghost_mode = true;
+  document.getElementById('adj-ghost-'+idx).value = '1';
+  let btn = document.getElementById('adj-ghost-btn-'+idx);
+  if (btn) { btn.textContent = '👻 Ghost Mode Active'; btn.style.background = '#25D366'; btn.disabled = true; }
+  let status = document.getElementById('adj-ghost-status-'+idx);
+  if (status) status.style.display = 'block';
+}
+
+function resetAdjuster(idx) {
+  if (!confirm('Reset will clear all adjustments and return to system defaults. Continue?')) return;
+  let res = lastResults[idx];
+  res._ghost_mode = false;
+  res._locked = false;
+  res._adj_rate = undefined;
+  res._adj_pax = undefined;
+  res._adj_total = undefined;
+  res._implied_rate = undefined;
+  document.getElementById('adj-ghost-'+idx).value = '0';
+  let btn = document.getElementById('adj-ghost-btn-'+idx);
+  if (btn) { btn.textContent = '👻 Activate Ghost Mode'; btn.style.background = '#333'; btn.disabled = false; }
+  let status = document.getElementById('adj-ghost-status-'+idx);
+  if (status) status.style.display = 'none';
+  let adjSummary = document.getElementById('adj-summary-'+idx);
+  if (adjSummary) { adjSummary.style.display = 'none'; adjSummary.innerHTML = ''; }
+  let liveTotalEl = document.getElementById('adj-live-total-'+idx);
+  if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`; }
+  let applyBtn = document.getElementById('adj-rev-apply-'+idx);
+  if (applyBtn) { applyBtn.style.display = 'none'; applyBtn.innerHTML = `<button class="btn btn-success" onclick="applyFromReverse(${idx})">Apply Implied Rate →</button>`; }
+  let revResult = document.getElementById('adj-rev-result-'+idx);
+  if (revResult) revResult.innerHTML = '';
+  let targetEl = document.getElementById('adj-target-'+idx);
+  if (targetEl) targetEl.value = '';
+  let lockWarn = document.getElementById('adj-lock-warn-'+idx);
+  if (lockWarn) lockWarn.remove();
+  document.getElementById('adj-rate-'+idx).value = res.rate_usd || 0;
+  document.getElementById('adj-pax-'+idx).value = res.pax_fee_usd || res.pax_fee_usd_display || 0;
+  recalcAdjuster(idx);
 }
 
 function toggleGhostMode(idx) {
@@ -2057,7 +2104,8 @@ async function generatePDF(allAircraft) {
   try {
     let currency = document.getElementById('pdf-currency')?.value || 'USD';
     let kesRate = fxRates['KES'] || 0;
-    let ghostMode = result._ghost_mode || lastResults[parseInt(document.getElementById('pdf-aircraft-select').value)||0]?._ghost_mode || false;
+    let acIdx = parseInt(document.getElementById('pdf-aircraft-select').value)||0;
+    let ghostMode = lastResults[acIdx]?._ghost_mode || document.getElementById('adj-ghost-'+acIdx)?.value === '1' || false;
     let body = { doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras, currency, kes_rate: kesRate, ghost_mode: ghostMode };
     let r = await fetch('/pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); let ind2=document.getElementById('pdf-generating-indicator'); if(ind2)ind2.remove(); showMsg('pdf-msg',e.error||'Failed','error'); return; }
