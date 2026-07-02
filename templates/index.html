@@ -3390,8 +3390,8 @@ function shareBarWa(id) {
   let templateKey = p.docType === 'Invoice' ? 'invoice' : p.docType === 'Receipt' ? 'receipt' : 'quote';
   let template = msgTemplates[templateKey] || '';
   let pdfLine = p.pdfUrl ? `📄 View ${p.docType}: ${p.pdfUrl}` : '';
-  let company = config.company_name || operatorConfig?.company_name || 'Jetman Global';
-  let phone = config.contact?.phone || operatorConfig?.contact?.phone || '+254 701 007 777';
+  let company = (typeof config !== 'undefined' ? config.company_name : null) || operatorConfig?.company_name || 'Jetman Global';
+  let phone = (typeof config !== 'undefined' ? config.contact?.phone : null) || operatorConfig?.contact?.phone || '+254 701 007 777';
   let message;
   if (template) {
     message = template
@@ -3463,8 +3463,8 @@ function buildAndOpenWa() {
   let extra = d.extra || {};
   let rec = allRecords.find(r => r.number === docNumber) || {};
   let clientName = rec.client_name || extra.clientName || 'Valued Client';
-  let company = config.company_name || 'Jetman Global';
-  let phone = config.contact?.phone || '+254 701 007 777';
+  let company = (typeof config !== 'undefined' ? config.company_name : null) || operatorConfig?.company_name || 'Jetman Global';
+  let phone = (typeof config !== 'undefined' ? config.contact?.phone : null) || operatorConfig?.contact?.phone || '+254 701 007 777';
   let amount = parseFloat(rec.amount || extra.finalTotal || 0).toLocaleString(undefined, {minimumFractionDigits:2});
   let pdfLine = pdfUrl ? `📄 View ${docType}: ${pdfUrl}` : '';
   let templateKey = docType === 'Invoice' ? 'invoice' : docType === 'Receipt' ? 'receipt' : 'quote';
