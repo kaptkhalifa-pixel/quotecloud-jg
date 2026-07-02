@@ -325,7 +325,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
         </div>
       </div>
       <div class="btn-row" style="margin-top:10px">
-        <button class="btn btn-outline btn-sm" id="safari-add-leg-btn" onclick="addLeg()" style="opacity:0.4;pointer-events:none">+ Add Leg</button>
+        <button class="btn btn-outline btn-sm" id="safari-add-leg-btn" onclick="addLeg()">+ Add Leg</button>
         <button class="btn btn-sm" onclick="submitQuote('safari')">Get Quote →</button>
       </div>
       <div id="safari-guard-msg" style="font-size:0.78rem;color:#e65100;margin-top:8px"></div>
@@ -1129,7 +1129,6 @@ function checkLegDate(n) {
   let addBtn = document.getElementById('safari-add-leg-btn');
   if (!dateVal) {
     if (msgEl) msgEl.textContent = '';
-    if (addBtn) { addBtn.style.opacity = '0.4'; addBtn.style.pointerEvents = 'none'; }
     return;
   }
   let parsed = parseSmartDate(dateVal);
@@ -1155,10 +1154,28 @@ function checkLegDate(n) {
   } else {
     if (msgEl) msgEl.textContent = '';
   }
-  if (addBtn) { addBtn.style.opacity = '1'; addBtn.style.pointerEvents = 'auto'; }
 }
 
 function addLeg() {
+  // Validate all existing legs before adding new one
+  let existing = document.querySelectorAll('#safari-legs .leg-card');
+  let guardMsg = document.getElementById('safari-guard-msg');
+  for (let i = 0; i < existing.length; i++) {
+    let card = existing[i];
+    let origin = card.querySelector('.leg-origin')?.value.trim();
+    let dest = card.querySelector('.leg-dest')?.value.trim();
+    let date = card.querySelector('.leg-date')?.value.trim();
+    let legNum = i + 1;
+    if (!origin || !dest) {
+      if (guardMsg) guardMsg.textContent = `⚠️ Please fill From and To for Leg ${legNum} before adding another.`;
+      return;
+    }
+    if (!date) {
+      if (guardMsg) guardMsg.textContent = `⚠️ Please set a date for Leg ${legNum} before adding another.`;
+      return;
+    }
+  }
+  if (guardMsg) guardMsg.textContent = '';
   let n = document.querySelectorAll('#safari-legs .leg-card').length + 1;
   let div = document.createElement('div');
   div.className = 'leg-card';
@@ -1187,16 +1204,14 @@ function addLeg() {
   document.getElementById('safari-legs').appendChild(div);
   initAdminAc('leg-origin-'+n);
   initAdminAc('leg-dest-'+n);
-  let addBtn = document.getElementById('safari-add-leg-btn');
-  if (addBtn) { addBtn.style.opacity = '0.4'; addBtn.style.pointerEvents = 'none'; }
   div.querySelector('.leg-origin').focus();
 }
 
 function removeLeg(btn, n) {
   let card = document.getElementById('leg-card-'+n);
   if (card) card.remove();
-  let addBtn = document.getElementById('safari-add-leg-btn');
-  if (addBtn) { addBtn.style.opacity = '1'; addBtn.style.pointerEvents = 'auto'; }
+  let guardMsg = document.getElementById('safari-guard-msg');
+  if (guardMsg) guardMsg.textContent = '';
 }
 
 async function submitQuote(mission) {
