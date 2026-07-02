@@ -1535,6 +1535,14 @@ function recalcAdjuster(idx) {
   lastResults[idx]._adj_rate = rateUsd;
   lastResults[idx]._adj_pax = paxUsd;
   lastResults[idx]._adj_total = total;
+  let liveTotalEl = document.getElementById('adj-live-total-'+idx);
+  if (liveTotalEl) {
+    if (isKes && kesRate > 0) {
+      liveTotalEl.textContent = `KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}`;
+    } else {
+      liveTotalEl.textContent = `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    }
+  }
   let paxNameEl = document.getElementById('adj-pax-name-'+idx);
   if (paxNameEl && paxNameEl.value.trim()) {
     lastResults[idx]._adj_pax_label = paxNameEl.value.trim();
@@ -1595,8 +1603,16 @@ function calcReverse(idx) {
   if (!targetRaw || !hrs) { el.textContent = ''; return; }
 
   // Strip ALL fixed costs from target before calculating implied rate
-  let overnight = res._adj_overnight !== undefined ? res._adj_overnight : (res.overnight_usd || res.overnight_cost_usd || 0);
-  let idle = res._adj_idle !== undefined ? res._adj_idle : (res.waiting_usd || res.idle_cost_usd || 0);
+  let ovRateRev = parseFloat(document.getElementById('adj-ov-rate-rev-'+idx)?.value) || 0;
+  let idleRateRev = parseFloat(document.getElementById('adj-idle-rate-rev-'+idx)?.value) || 0;
+  let baseOv = res.overnight_usd || (res.mission==='return_both' ? res.option_a?.overnight_usd : 0) || 0;
+  let baseIdle = res.waiting_usd || (res.mission==='return_both' ? res.option_a?.waiting_usd : 0) || 0;
+  let ovRateOrig = res.overnight_rate_usd || 0;
+  let idleRateOrig = res.idle_day_rate_usd || 0;
+  let nights2 = ovRateOrig > 0 && baseOv > 0 ? Math.round(baseOv / ovRateOrig) : 0;
+  let idleDays2 = idleRateOrig > 0 && baseIdle > 0 ? Math.round(baseIdle / idleRateOrig) : 0;
+  let overnight = ovRateRev > 0 ? nights2 * ovRateRev : baseOv;
+  let idle = idleRateRev > 0 ? idleDays2 * idleRateRev : baseIdle;
   // For return_both use option_a
   if (res.mission === 'return_both') {
     overnight = res.option_a?.overnight_usd || 0;
@@ -1619,12 +1635,15 @@ function calcReverse(idx) {
   if (idle > 0) fixedBreakdown.push(`Idle $${idle}`);
   let fixedLine = fixedBreakdown.length ? ` &nbsp;·&nbsp; Fixed: ${fixedBreakdown.join(' + ')}` : '';
 
+  lastResults[idx]._implied_rate = impliedRate;
+  let applyBtn = document.getElementById('adj-rev-apply-'+idx);
+  if (applyBtn) applyBtn.style.display = 'block';
   if (isKes && kesRate > 0) {
     let impliedFlightKes = Math.ceil((impliedFlight * kesRate) / 1000) * 1000;
     let impliedRateKes = Math.round(impliedFlightKes / hrs);
-    el.innerHTML = `Implied Rate: <strong>KES ${impliedRateKes.toLocaleString()}/hr</strong> &nbsp;·&nbsp; Flight: <strong>KES ${impliedFlightKes.toLocaleString()}</strong>${fixedLine} &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
+    el.innerHTML = `<div style="background:#e8f5e9;border-radius:6px;padding:10px 12px;font-size:0.82rem"><div>Implied Rate: <strong>KES ${impliedRateKes.toLocaleString()}/hr</strong></div><div style="color:#555;margin-top:4px">Flight cost: KES ${impliedFlightKes.toLocaleString()}${fixedLine}</div></div>`;
   } else {
-    el.innerHTML = `Implied Rate: <strong>$${impliedRate.toLocaleString(undefined,{minimumFractionDigits:2})}/hr</strong> &nbsp;·&nbsp; Flight: <strong>$${impliedFlight.toLocaleString(undefined,{minimumFractionDigits:2})}</strong>${fixedLine} &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
+    el.innerHTML = `<div style="background:#e8f5e9;border-radius:6px;padding:10px 12px;font-size:0.82rem"><div>Implied Rate: <strong>$${impliedRate.toLocaleString(undefined,{minimumFractionDigits:2})}/hr</strong></div><div style="color:#555;margin-top:4px">Flight cost: $${impliedFlight.toLocaleString(undefined,{minimumFractionDigits:2})}${fixedLine}</div></div>`;
   }
 }
 
@@ -1632,68 +1651,171 @@ function renderAdjuster(res, idx) {
   let rate = res.rate_usd || 0;
   let speed = res.speed_ktas || res.speed || 120;
   let pax = res.pax_fee_usd || res.pax_fee_usd_display || 0;
-  let kesRate = fxRates['KES'] || 0;
-  let rateKes = kesRate > 0 ? Math.ceil(rate * kesRate / 1000) * 1000 : 0;
-  let paxKes = kesRate > 0 ? Math.ceil(pax * kesRate / 1000) * 1000 : 0;
-  let totalKes = kesRate > 0 ? Math.ceil((res.total_usd||0) * kesRate / 1000) * 1000 : 0;
-  return `
-  <div class="adjuster-panel">
-    <div class="adjuster-toggle" onclick="toggleAdjuster(${idx})">
-      <span>⚙ Adjust Variables</span>
-      <span id="adj-arrow-${idx}">▼</span>
-    </div>
-    <div class="adjuster-body" id="adj-body-${idx}">
-      <div style="background:#f0f4ff;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:0.78rem;color:#555" id="adj-original-${idx}">
-        <strong>Original:</strong> &nbsp; Rate: <strong id="adj-orig-rate-${idx}">$${rate}/hr</strong> &nbsp;·&nbsp; Speed: <strong>${speed} KTAS</strong> &nbsp;·&nbsp; Pax/Admin: <strong id="adj-orig-pax-${idx}">$${pax}</strong> &nbsp;·&nbsp; Total: <strong id="adj-orig-total-${idx}">USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</strong>
+  let overnight = res.overnight_usd || (res.mission==='return_both' ? res.option_a?.overnight_usd : 0) || 0;
+  let ovRate = res.overnight_rate_usd || 0;
+  let idle = res.waiting_usd || (res.mission==='return_both' ? res.option_a?.waiting_usd : 0) || 0;
+  let idleRate = res.idle_day_rate_usd || 0;
+  let nights = ovRate > 0 && overnight > 0 ? Math.round(overnight / ovRate) : 0;
+  let idleDays = idleRate > 0 && idle > 0 ? Math.round(idle / idleRate) : 0;
+  let hrs = getTotalHours(res);
+  let segs = res.segments || (res.mission==='return_both' ? res.option_a?.segments : []) || [];
+  let revSegs = segs.filter(s=>s.type==='revenue');
+  let routeSummary = revSegs.map(s=>`${s.origin} → ${s.destination}${s.date?' ('+s.date+')':''}`).join(' · ');
+
+  let summaryHtml = `
+    <div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:0.82rem;line-height:1.8;border-left:3px solid #0d47a1">
+      <div style="color:#555">${routeSummary || 'Route'}</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
+        <span style="color:#888">⏱ ${hrs} hrs total</span>
+        <span style="color:#888">💺 ${res.ac_label||''}</span>
+        <span style="font-weight:700;color:#0d47a1">Base total: USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:#555;cursor:pointer;background:#f0f4ff;padding:6px 12px;border-radius:20px;border:1px solid #c5cae9">
-          <input type="checkbox" id="adj-kes-mode-${idx}" onchange="toggleAdjKesMode(${idx})" style="width:14px;height:14px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-          🇰🇪 KES Mode
-        </label>
+    </div>`;
+
+  let ghostToggle = `
+    <div style="background:#1a1a1a;border-radius:8px;padding:12px 14px;margin-top:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="adj-ghost-${idx}" onchange="toggleGhostMode(${idx})" style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+        <div>
+          <label for="adj-ghost-${idx}" style="font-size:0.85rem;font-weight:700;color:#fff;cursor:pointer;margin:0">👻 Ghost Mode</label>
+          <div style="font-size:0.72rem;color:#888;margin-top:2px">Bundle charter cost into one price — no rate breakdown shown to client. You can still add uplift line items.</div>
+        </div>
       </div>
-      <div class="adjuster-grid">
+    </div>`;
+
+  let manualTab = `
+    <div id="adj-tab-manual-${idx}">
+      <div style="font-size:0.72rem;color:#888;margin-bottom:12px;line-height:1.5">Edit any field below. Total updates live. Tap Apply when ready.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div class="adjuster-field">
-          <label id="adj-rate-label-${idx}">Rate / hr (USD)</label>
+          <label>Base Rate (USD/hr)</label>
           <input type="number" id="adj-rate-${idx}" value="${rate}" oninput="recalcAdjuster(${idx})">
+          <div style="font-size:0.7rem;color:#888;margin-top:3px">${hrs} hrs · original $${rate}/hr</div>
         </div>
         <div class="adjuster-field">
           <label>Speed (KTAS)</label>
           <input type="number" id="adj-speed-${idx}" value="${speed}" oninput="recalcAdjuster(${idx})">
         </div>
-        <div class="adjuster-field" style="grid-column:span 2">
-          <label id="adj-pax-label-${idx}">Pax / Admin Fee</label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input type="text" id="adj-pax-name-${idx}" value="Passenger Taxes & Admin Fees" placeholder="Fee label e.g. Handling & Permits" style="flex:2;font-size:0.82rem" oninput="recalcAdjuster(${idx})">
-            <input type="number" id="adj-pax-${idx}" value="${pax}" oninput="recalcAdjuster(${idx})" style="flex:1;max-width:110px">
-            <span id="adj-pax-label-${idx}" style="font-size:0.75rem;color:#888;min-width:30px">USD</span>
-          </div>
+        ${nights > 0 ? `
+        <div class="adjuster-field">
+          <label>Overnight Rate ($/night)</label>
+          <input type="number" id="adj-ov-rate-${idx}" value="${ovRate}" oninput="recalcAdjuster(${idx})">
+          <div style="font-size:0.7rem;color:#888;margin-top:3px">${nights} night${nights!==1?'s':''} · original $${ovRate}/night</div>
+        </div>` : `<input type="hidden" id="adj-ov-rate-${idx}" value="${ovRate}">`}
+        ${idleDays > 0 ? `
+        <div class="adjuster-field">
+          <label>Idle Day Rate ($/day)</label>
+          <input type="number" id="adj-idle-rate-${idx}" value="${idleRate}" oninput="recalcAdjuster(${idx})">
+          <div style="font-size:0.7rem;color:#888;margin-top:3px">${idleDays} day${idleDays!==1?'s':''} · original $${idleRate}/day</div>
+        </div>` : `<input type="hidden" id="adj-idle-rate-${idx}" value="${idleRate}">`}
+      </div>
+      <div class="adjuster-field" style="margin-bottom:10px">
+        <label>Pax / Admin Fee</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="adj-pax-name-${idx}" value="Passenger Taxes & Admin Fees" style="flex:2;font-size:0.82rem" oninput="recalcAdjuster(${idx})">
+          <input type="number" id="adj-pax-${idx}" value="${pax}" oninput="recalcAdjuster(${idx})" style="flex:1;max-width:110px">
         </div>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-success" onclick="savePreset(${idx})">💾 Save as Preset</button>
+      <div id="adj-live-total-${idx}" style="background:#0d47a1;color:#fff;border-radius:8px;padding:12px 14px;font-size:1rem;font-weight:700;text-align:right;margin-bottom:10px">
+        USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}
       </div>
+      <div id="adj-summary-${idx}" style="margin-bottom:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:0.82rem;color:#155724;display:none"></div>
       <div class="preset-row" id="preset-chips-${idx}"></div>
-      <div id="adj-summary-${idx}" style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:0.82rem;color:#155724;display:none"></div>
-      <hr class="adjuster-divider">
-      <div class="adjuster-reverse">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div class="adjuster-reverse-title" style="margin:0">🔄 Reverse — Target Price</div>
-        </div>
-        <div class="adjuster-grid" style="grid-template-columns:1fr 1fr;gap:10px">
-          <div class="adjuster-field">
-            <label id="adj-target-label-${idx}">Target Total (USD)</label>
-            <input type="number" id="adj-target-${idx}" placeholder="e.g. 15000" oninput="calcReverse(${idx})">
-          </div>
-          <div class="adjuster-field">
-            <label id="adj-pax-rev-label-${idx}">Keep Pax/Admin (USD)</label>
-            <input type="number" id="adj-rev-pax-${idx}" value="${pax}" oninput="calcReverse(${idx})">
-          </div>
-        </div>
-        <div class="adjuster-result" id="adj-rev-result-${idx}"></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-success" onclick="confirmApply(${idx})">Apply →</button>
+        <button class="btn btn-outline btn-sm" onclick="savePreset(${idx})">💾 Preset</button>
       </div>
+      ${ghostToggle}
+    </div>`;
+
+  let reverseTab = `
+    <div id="adj-tab-reverse-${idx}" style="display:none">
+      <div style="font-size:0.72rem;color:#888;margin-bottom:12px;line-height:1.5">Enter your target price. The system will calculate the implied charter rate needed to hit it after deducting all fixed costs.</div>
+      <div class="adjuster-field" style="margin-bottom:14px">
+        <label id="adj-target-label-${idx}">Target Total Price (USD)</label>
+        <input type="number" id="adj-target-${idx}" placeholder="e.g. 4800" oninput="calcReverse(${idx})" style="font-size:1.1rem;font-weight:600">
+      </div>
+      ${nights > 0 ? `
+      <div class="adjuster-field" style="margin-bottom:10px">
+        <label>Overnight Rate ($/night × ${nights} night${nights!==1?'s':''})</label>
+        <input type="number" id="adj-ov-rate-rev-${idx}" value="${ovRate}" oninput="calcReverse(${idx})">
+      </div>` : ''}
+      ${idleDays > 0 ? `
+      <div class="adjuster-field" style="margin-bottom:10px">
+        <label>Idle Day Rate ($/day × ${idleDays} day${idleDays!==1?'s':''})</label>
+        <input type="number" id="adj-idle-rate-rev-${idx}" value="${idleRate}" oninput="calcReverse(${idx})">
+      </div>` : ''}
+      <div class="adjuster-field" style="margin-bottom:14px">
+        <label id="adj-pax-rev-label-${idx}">Pax / Admin Fee (USD)</label>
+        <input type="number" id="adj-rev-pax-${idx}" value="${pax}" oninput="calcReverse(${idx})">
+      </div>
+      <div class="adjuster-result" id="adj-rev-result-${idx}" style="min-height:40px"></div>
+      <div id="adj-rev-apply-${idx}" style="display:none;margin-top:10px">
+        <button class="btn btn-success" onclick="applyFromReverse(${idx})">Apply Implied Rate →</button>
+      </div>
+      ${ghostToggle.replace(`adj-ghost-${idx}`, `adj-ghost-rev-${idx}`).replace(`adj-ghost-${idx}`, `adj-ghost-rev-${idx}`).replace(`toggleGhostMode(${idx})`, `syncGhostMode(${idx})`)}
+    </div>`;
+
+  return `
+  <div class="adjuster-panel">
+    <div class="adjuster-toggle" onclick="toggleAdjuster(${idx})">
+      <span>⚙ Quote Modify Tool</span>
+      <span id="adj-arrow-${idx}">▼</span>
+    </div>
+    <div class="adjuster-body" id="adj-body-${idx}">
+      ${summaryHtml}
+      <div style="display:flex;gap:0;margin-bottom:14px;border:1.5px solid #ddd;border-radius:8px;overflow:hidden">
+        <button id="adj-tab-btn-manual-${idx}" onclick="switchAdjTab(${idx},'manual')" style="flex:1;padding:10px;border:none;background:#0d47a1;color:#fff;font-weight:600;font-size:0.8rem;cursor:pointer">✏️ Manual</button>
+        <button id="adj-tab-btn-reverse-${idx}" onclick="switchAdjTab(${idx},'reverse')" style="flex:1;padding:10px;border:none;background:#f5f5f5;color:#555;font-weight:600;font-size:0.8rem;cursor:pointer">🎯 Target Price</button>
+      </div>
+      ${manualTab}
+      ${reverseTab}
     </div>
   </div>`;
+}
+
+function switchAdjTab(idx, tab) {
+  let manualEl = document.getElementById('adj-tab-manual-'+idx);
+  let reverseEl = document.getElementById('adj-tab-reverse-'+idx);
+  let manualBtn = document.getElementById('adj-tab-btn-manual-'+idx);
+  let reverseBtn = document.getElementById('adj-tab-btn-reverse-'+idx);
+  if (tab === 'manual') {
+    manualEl.style.display = 'block';
+    reverseEl.style.display = 'none';
+    manualBtn.style.background = '#0d47a1'; manualBtn.style.color = '#fff';
+    reverseBtn.style.background = '#f5f5f5'; reverseBtn.style.color = '#555';
+  } else {
+    manualEl.style.display = 'none';
+    reverseEl.style.display = 'block';
+    manualBtn.style.background = '#f5f5f5'; manualBtn.style.color = '#555';
+    reverseBtn.style.background = '#0d47a1'; reverseBtn.style.color = '#fff';
+  }
+}
+
+function toggleGhostMode(idx) {
+  let checked = document.getElementById('adj-ghost-'+idx)?.checked;
+  lastResults[idx]._ghost_mode = checked;
+  syncGhostMode(idx);
+}
+
+function syncGhostMode(idx) {
+  let manualGhost = document.getElementById('adj-ghost-'+idx);
+  let reverseGhost = document.getElementById('adj-ghost-rev-'+idx);
+  let val = manualGhost?.checked || reverseGhost?.checked || false;
+  if (manualGhost) manualGhost.checked = val;
+  if (reverseGhost) reverseGhost.checked = val;
+  lastResults[idx]._ghost_mode = val;
+}
+
+function applyFromReverse(idx) {
+  let impliedRate = lastResults[idx]._implied_rate;
+  let pax = parseFloat(document.getElementById('adj-rev-pax-'+idx)?.value) || 0;
+  if (!impliedRate) return;
+  document.getElementById('adj-rate-'+idx).value = Math.round(impliedRate * 100) / 100;
+  document.getElementById('adj-pax-'+idx).value = pax;
+  switchAdjTab(idx, 'manual');
+  recalcAdjuster(idx);
+  confirmApply(idx);
 }
 
 function loadPresetChips() {
