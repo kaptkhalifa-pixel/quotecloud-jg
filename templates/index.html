@@ -3381,7 +3381,6 @@ function renderShareBar(p) {
       </div>
       <div id="${id}-msg" style="margin-top:8px"></div>
     </div>`;
-}
   let docLabel = p.docType === 'Invoice' ? 'Invoice' : p.docType === 'Receipt' ? 'Receipt' : 'Quotation';
   let bgColor = p.docType === 'Receipt' ? '#e8f5e9' : p.docType === 'Invoice' ? '#e8f0fe' : '#f0f4ff';
   let borderColor = p.docType === 'Receipt' ? '#a5d6a7' : p.docType === 'Invoice' ? '#c7d7ff' : '#c7d7ff';
