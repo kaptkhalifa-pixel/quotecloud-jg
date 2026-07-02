@@ -2152,6 +2152,7 @@ function adminAcSelect(el, inputId) {
   if (input) {
     input.value = el.dataset.main;
     placeIdMap[inputId] = el.dataset.placeid || '';
+    input.dispatchEvent(new Event('input'));
   }
   if (drop) drop.style.display = 'none';
 }
