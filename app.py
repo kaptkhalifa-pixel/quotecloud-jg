@@ -223,8 +223,7 @@ def login():
     if request.method == "POST":
         if (request.form.get("username") == get_admin_user() and
                 request.form.get("password") == get_admin_pass()):
-            remember = request.form.get("remember") == "on"
-            session.permanent = remember
+            session.permanent = True
             session["logged_in"] = True
             return redirect(url_for("index"))
         error = "Invalid credentials. Please try again."
