@@ -2152,7 +2152,12 @@ function adminAcSelect(el, inputId) {
   if (input) {
     input.value = el.dataset.main;
     placeIdMap[inputId] = el.dataset.placeid || '';
-    input.dispatchEvent(new Event('input'));
+    // Check if this is a safari leg field and trigger location check
+    let legMatch = inputId.match(/^leg-(origin|dest)-(\d+)/);
+    if (legMatch) {
+      let n = legMatch[2];
+      setTimeout(() => checkLegLocations(parseInt(n)), 50);
+    }
   }
   if (drop) drop.style.display = 'none';
 }
