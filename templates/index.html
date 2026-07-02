@@ -1592,10 +1592,10 @@ function confirmApply(idx) {
   let fmtKes = v => `KES ${(Math.ceil(v*kesRate/1000)*1000).toLocaleString()}`;
   let newTotalDisplay = isKes && kesRate > 0 ? fmtKes(total) : fmt(total);
   let oldTotalDisplay = isKes && kesRate > 0 ? fmtKes(origTotal) : fmt(origTotal);
-  let diff = total - origTotal;
-  let diffDisplay = diff === 0 ? '' : diff > 0
-    ? `<span style="color:#e65100">▲ ${fmt(Math.abs(diff))}</span>`
-    : `<span style="color:#1b5e20">▼ ${fmt(Math.abs(diff))}</span>`;
+      let diff = total - origTotal;
+      let diffDisplay = diff === 0 ? '' : diff > 0
+        ? `<span style="color:#dc3545;font-weight:700">▲ ${fmt(Math.abs(diff))}</span>`
+        : `<span style="color:#1b5e20;font-weight:700">▼ ${fmt(Math.abs(diff))}</span>`;
 
   let adjSummary = document.getElementById('adj-summary-'+idx);
   if (adjSummary) {
@@ -1808,7 +1808,15 @@ function renderAdjuster(res, idx) {
       <div id="adj-rev-apply-${idx}" style="display:none;margin-top:10px">
         <button class="btn btn-success" onclick="applyFromReverse(${idx})">Apply Implied Rate →</button>
       </div>
-      ${ghostToggle.replace(`adj-ghost-${idx}`, `adj-ghost-rev-${idx}`).replace(`adj-ghost-${idx}`, `adj-ghost-rev-${idx}`).replace(`toggleGhostMode(${idx})`, `syncGhostMode(${idx})`)}
+      <div style="background:#1a1a1a;border-radius:8px;padding:12px 14px;margin-top:14px">
+        <div style="font-size:0.72rem;color:#888;margin-bottom:8px;line-height:1.5">Bundle charter cost into one price. No rate breakdown shown to client.</div>
+        <div style="display:flex;gap:8px">
+          <button id="adj-ghost-btn-rev-${idx}" onclick="activateGhostMode(${idx})" class="btn btn-sm" style="background:#333;color:#fff;border:none;flex:1">👻 Activate Ghost Mode</button>
+          <button onclick="resetAdjuster(${idx})" class="btn btn-sm btn-outline" style="flex:1">↺ Reset</button>
+        </div>
+        <div id="adj-ghost-status-rev-${idx}" style="display:none;font-size:0.72rem;color:#25D366;margin-top:8px;font-weight:600">👻 Ghost Mode Active — Reset to undo</div>
+        <input type="hidden" id="adj-ghost-rev-${idx}" value="0">
+      </div>
     </div>`;
 
   return `
@@ -1870,11 +1878,18 @@ function switchAdjTab(idx, tab) {
 function activateGhostMode(idx) {
   if (!confirm('👻 Ghost Mode will bundle all charter costs into one price. No rate breakdown shown on PDF. Tap Reset to undo. Continue?')) return;
   lastResults[idx]._ghost_mode = true;
-  document.getElementById('adj-ghost-'+idx).value = '1';
-  let btn = document.getElementById('adj-ghost-btn-'+idx);
-  if (btn) { btn.textContent = '👻 Ghost Mode Active'; btn.style.background = '#25D366'; btn.disabled = true; }
-  let status = document.getElementById('adj-ghost-status-'+idx);
-  if (status) status.style.display = 'block';
+  ['adj-ghost-'+idx, 'adj-ghost-rev-'+idx].forEach(id => {
+    let el = document.getElementById(id);
+    if (el) el.value = '1';
+  });
+  ['adj-ghost-btn-'+idx, 'adj-ghost-btn-rev-'+idx].forEach(id => {
+    let btn = document.getElementById(id);
+    if (btn) { btn.textContent = '👻 Ghost Mode Active'; btn.style.background = '#25D366'; btn.disabled = true; }
+  });
+  ['adj-ghost-status-'+idx, 'adj-ghost-status-rev-'+idx].forEach(id => {
+    let el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+  });
 }
 
 function resetAdjuster(idx) {
@@ -1887,10 +1902,18 @@ function resetAdjuster(idx) {
   res._adj_total = undefined;
   res._implied_rate = undefined;
   document.getElementById('adj-ghost-'+idx).value = '0';
-  let btn = document.getElementById('adj-ghost-btn-'+idx);
-  if (btn) { btn.textContent = '👻 Activate Ghost Mode'; btn.style.background = '#333'; btn.disabled = false; }
-  let status = document.getElementById('adj-ghost-status-'+idx);
-  if (status) status.style.display = 'none';
+  ['adj-ghost-btn-'+idx, 'adj-ghost-btn-rev-'+idx].forEach(id => {
+    let btn = document.getElementById(id);
+    if (btn) { btn.textContent = '👻 Activate Ghost Mode'; btn.style.background = '#333'; btn.disabled = false; }
+  });
+  ['adj-ghost-status-'+idx, 'adj-ghost-status-rev-'+idx].forEach(id => {
+    let el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  ['adj-ghost-'+idx, 'adj-ghost-rev-'+idx].forEach(id => {
+    let el = document.getElementById(id);
+    if (el) el.value = '0';
+  });
   let adjSummary = document.getElementById('adj-summary-'+idx);
   if (adjSummary) { adjSummary.style.display = 'none'; adjSummary.innerHTML = ''; }
   let liveTotalEl = document.getElementById('adj-live-total-'+idx);
@@ -1964,11 +1987,12 @@ function applyFromReverse(idx) {
           <div style="font-size:1rem;font-weight:700;color:#1b5e20">USD $${targetRaw.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
         </div>
         <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:1px solid #ddd">
-          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;margin-bottom:4px">Was</div>
+          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;margin-bottom:4px">System Default</div>
           <div style="font-size:1rem;font-weight:700;color:#888">USD $${origTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
         </div>
       </div>
-      <div style="font-size:0.72rem;color:#555;margin-top:8px">✅ Ready — tap Generate PDF to proceed.</div>
+      <div style="margin-top:6px;font-size:0.82rem;font-weight:700">${targetRaw > origTotal ? `<span style="color:#dc3545">▲ USD $${(targetRaw-origTotal).toLocaleString(undefined,{minimumFractionDigits:2})} above default</span>` : targetRaw < origTotal ? `<span style="color:#1b5e20">▼ USD $${(origTotal-targetRaw).toLocaleString(undefined,{minimumFractionDigits:2})} below default</span>` : ''}</div>
+      <div style="font-size:0.72rem;color:#555;margin-top:6px">✅ Ready — tap Generate PDF to proceed.</div>
     </div>`;
 }
 
