@@ -251,13 +251,12 @@ def load_aircraft():
             "pax_fee": 100.0,
             "overnight_rate": 300.0,
             "idle_day_rate": 2200.0,
-            "active": True,
+            "active": False,
             "type": "helicopter",
             "home_airstrip": "Wilson Airport, Nairobi",
             "routing_mode": "standard"
         }
     }
-    save_aircraft(default)
     return default
 
 def save_aircraft(data):

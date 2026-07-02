@@ -2269,7 +2269,7 @@ function toggleAcActive(key) {
 
 function addAircraftRow() {
   let key = 'aircraft_' + Date.now();
-  aircraftData[key] = {label:'New Aircraft',seater:4,speed:120,rate:1500,pax_fee:100,overnight_rate:300,idle_day_rate:1500,active:true,type:'helicopter',home_airstrip:'Wilson Airport, Nairobi',routing_mode:'standard'};
+  aircraftData[key] = {label:'New Aircraft',seater:4,speed:120,rate:1500,pax_fee:100,overnight_rate:300,idle_day_rate:1500,active:false,type:'helicopter',home_airstrip:'Wilson Airport, Nairobi',routing_mode:'standard'};
   renderAircraft();
 }
 
