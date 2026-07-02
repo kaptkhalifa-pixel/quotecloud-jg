@@ -2011,75 +2011,126 @@ async function loadAircraft() {
 
 function renderAircraft() {
   let html = Object.entries(aircraftData).map(([key, ac]) => {
-    let isNew = key.startsWith('aircraft_');
-    return `<div class="ac-card" data-key="${key}" style="margin-bottom:16px">
-      <div class="form-row">
-        <div class="form-group"><label>Key</label><input class="ac-key" value="${key}"></div>
-        <div class="form-group"><label>Label</label><input class="ac-label" value="${ac.label}"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Type</label>
-          <select class="ac-type">
-            <option value="helicopter" ${ac.type==='helicopter'?'selected':''}>Helicopter</option>
-            <option value="fixed_wing" ${ac.type==='fixed_wing'?'selected':''}>Fixed Wing</option>
-          </select></div>
-        <div class="form-group"><label>Routing</label>
-          <select class="ac-routing">
-            <option value="standard" ${(ac.routing_mode||'standard')==='standard'?'selected':''}>Standard</option>
-            <option value="direct" ${ac.routing_mode==='direct'?'selected':''}>Direct</option>
-          </select></div>
-      </div>
-      <div class="form-group" style="margin-bottom:14px"><label>Home Airstrip (display name)</label><input class="ac-home" value="${ac.home_airstrip||'Wilson Airport, Nairobi'}"></div>
-      <div style="margin-bottom:14px">
-        <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Base Coordinates (for 4NM snap)</label>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input class="ac-base-input" placeholder="Paste Maps pin, coords or place name" style="flex:1;min-width:160px" value="${ac.base_lat && ac.base_lon ? ac.base_lat+','+ac.base_lon : ''}">
-          <button class="btn btn-outline btn-sm" onclick="resolveAcBase(this)">Resolve</button>
+    let statusColor = ac.active ? '#1b5e20' : '#888';
+    let statusBg = ac.active ? '#e8f5e9' : '#f5f5f5';
+    let statusLabel = ac.active ? 'Active' : 'Inactive';
+    let typeLabel = ac.type === 'fixed_wing' ? '✈ Fixed Wing' : '🚁 Helicopter';
+    let amenities = (ac.amenities || []).join(', ');
+    return `<div class="ac-card" data-key="${key}" style="margin-bottom:12px;padding:0;overflow:hidden">
+      <!-- COLLAPSED HEADER -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:0.95rem;color:#1a1a1a;margin-bottom:4px">${ac.label}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:0.72rem;color:#666">${typeLabel}</span>
+            <span style="font-size:0.72rem;color:#666">·</span>
+            <span style="font-size:0.72rem;color:#666">${ac.seater} seats</span>
+            <span style="font-size:0.72rem;color:#666">·</span>
+            <span style="font-size:0.72rem;color:#666">$${ac.rate}/hr</span>
+            <span style="background:${statusBg};color:${statusColor};font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:10px">${statusLabel}</span>
+          </div>
         </div>
-        <div class="ac-base-status" style="font-size:0.75rem;color:#888;margin-top:4px">${ac.base_lat && ac.base_lon ? '✅ Base set: '+ac.base_lat.toFixed(5)+', '+ac.base_lon.toFixed(5) : '⚠️ No base set — snap disabled'}</div>
-        <input type="hidden" class="ac-base-lat" value="${ac.base_lat||''}">
-        <input type="hidden" class="ac-base-lon" value="${ac.base_lon||''}">
-      </div>
-      <div class="toggle-row" style="margin-bottom:14px">
-        <input type="checkbox" class="ac-urban-hops" ${ac.allow_urban_hops?'checked':''} style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-        <label style="margin:0;font-size:0.88rem;font-weight:400;cursor:pointer">Allow urban hops (helicopter only — disables 4NM snap)</label>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Seats</label><input class="ac-seater" type="number" value="${ac.seater}"></div>
-        <div class="form-group"><label>Speed (KTAS)</label><input class="ac-speed" type="number" value="${ac.speed}"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Rate (USD/hr)</label><input class="ac-rate" type="number" value="${ac.rate}"></div>
-        <div class="form-group"><label>Pax Fee (USD)</label><input class="ac-pax" type="number" value="${ac.pax_fee}"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Overnight Rate (USD/night)</label><input class="ac-overnight" type="number" value="${ac.overnight_rate||300}"></div>
-        <div class="form-group"><label>Idle Day Rate (USD/day)</label><input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}"></div>
-      </div>
-      <div class="form-group" style="margin-bottom:14px"><label>Status</label>
-        <select class="ac-active">
-          <option value="true" ${ac.active?'selected':''}>Active</option>
-          <option value="false" ${!ac.active?'selected':''}>Inactive</option>
-        </select></div>
-      <div style="margin-top:12px">
-        <label style="margin-bottom:8px;display:block;font-size:0.78rem;font-weight:600;color:#555">Aircraft Images (up to 10)</label>
-        <div class="ac-images-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-          ${(ac.images||[]).map((url,i)=>`<div style="position:relative">
-            <img src="${url}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #ddd">
-            <button onclick="removeAcImage(this,'${url}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#dc3545;color:#fff;border:none;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
-          </div>`).join('')}
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-outline btn-sm" onclick="toggleAcEdit('${key}')">✏️ Edit</button>
+          <button class="btn btn-sm ${ac.active ? 'btn-amber' : 'btn-success'}" onclick="toggleAcActive('${key}')">${ac.active ? 'Deactivate' : 'Activate'}</button>
+          <button class="btn btn-danger btn-sm" onclick="removeAcRow(this)">🗑</button>
         </div>
-        <label class="btn btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
-          📷 Upload Image
-          <input type="file" accept="image/*" style="display:none" onchange="uploadAcImage(this)">
-        </label>
-        <span class="ac-upload-status" style="font-size:0.75rem;color:#888;margin-left:8px"></span>
       </div>
-      <button class="btn btn-danger btn-sm" style="margin-top:12px" onclick="removeAcRow(this)">Remove Aircraft</button>
+      <!-- EXPANDED EDIT FORM -->
+      <div id="ac-edit-${key}" style="display:none;border-top:1px solid #eee;padding:16px">
+        <div class="form-row">
+          <div class="form-group"><label>Key</label><input class="ac-key" value="${key}"></div>
+          <div class="form-group"><label>Label</label><input class="ac-label" value="${ac.label}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Type</label>
+            <select class="ac-type">
+              <option value="helicopter" ${ac.type==='helicopter'?'selected':''}>Helicopter</option>
+              <option value="fixed_wing" ${ac.type==='fixed_wing'?'selected':''}>Fixed Wing</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Routing</label>
+            <select class="ac-routing">
+              <option value="standard" ${(ac.routing_mode||'standard')==='standard'?'selected':''}>Standard</option>
+              <option value="direct" ${ac.routing_mode==='direct'?'selected':''}>Direct</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px"><label>Home Airstrip</label><input class="ac-home" value="${ac.home_airstrip||'Wilson Airport, Nairobi'}"></div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Base Coordinates</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input class="ac-base-input" placeholder="Paste Maps pin, coords or place name" style="flex:1;min-width:160px" value="${ac.base_lat && ac.base_lon ? ac.base_lat+','+ac.base_lon : ''}">
+            <button class="btn btn-outline btn-sm" onclick="resolveAcBase(this)">Resolve</button>
+          </div>
+          <div class="ac-base-status" style="font-size:0.75rem;color:#888;margin-top:4px">${ac.base_lat && ac.base_lon ? '✅ Base set: '+ac.base_lat.toFixed(5)+', '+ac.base_lon.toFixed(5) : '⚠️ No base set'}</div>
+          <input type="hidden" class="ac-base-lat" value="${ac.base_lat||''}">
+          <input type="hidden" class="ac-base-lon" value="${ac.base_lon||''}">
+        </div>
+        <div class="toggle-row" style="margin-bottom:14px">
+          <input type="checkbox" class="ac-urban-hops" ${ac.allow_urban_hops?'checked':''} style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label style="margin:0;font-size:0.88rem;font-weight:400;cursor:pointer">Allow urban hops</label>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Seats</label><input class="ac-seater" type="number" value="${ac.seater}"></div>
+          <div class="form-group"><label>Speed (KTAS)</label><input class="ac-speed" type="number" value="${ac.speed}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Rate (USD/hr)</label><input class="ac-rate" type="number" value="${ac.rate}"></div>
+          <div class="form-group"><label>Pax Fee (USD)</label><input class="ac-pax" type="number" value="${ac.pax_fee}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Overnight Rate (USD/night)</label><input class="ac-overnight" type="number" value="${ac.overnight_rate||300}"></div>
+          <div class="form-group"><label>Idle Day Rate (USD/day)</label><input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label>Amenities (comma separated)</label>
+          <input class="ac-amenities" value="${amenities}" placeholder="e.g. Leather interior, Air conditioning, USB charging">
+          <div style="font-size:0.72rem;color:#888;margin-top:4px">These will display on the client quote page when enabled.</div>
+        </div>
+        <div class="toggle-row" style="margin-bottom:14px">
+          <input type="checkbox" class="ac-show-amenities" ${ac.show_amenities?'checked':''} style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label style="margin:0;font-size:0.88rem;font-weight:400;cursor:pointer">Show amenities on client quote page</label>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label>Aircraft Description (optional)</label>
+          <textarea class="ac-description" rows="2" placeholder="e.g. Ideal for short hops and safari circuits...">${ac.description||''}</textarea>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="margin-bottom:8px;display:block;font-size:0.78rem;font-weight:600;color:#555">Aircraft Images (up to 10)</label>
+          <div class="ac-images-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            ${(ac.images||[]).map((url,i)=>`<div style="position:relative">
+              <img src="${url}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #ddd">
+              <button onclick="removeAcImage(this,'${url}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#dc3545;color:#fff;border:none;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+            </div>`).join('')}
+          </div>
+          <label class="btn btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+            📷 Upload Image
+            <input type="file" accept="image/*" style="display:none" onchange="uploadAcImage(this)">
+          </label>
+          <span class="ac-upload-status" style="font-size:0.75rem;color:#888;margin-left:8px"></span>
+        </div>
+        <input type="hidden" class="ac-active" value="${ac.active ? 'true' : 'false'}">
+        <div class="btn-row">
+          <button class="btn btn-success" onclick="saveAircraft()">💾 Save All</button>
+          <button class="btn btn-grey btn-sm" onclick="toggleAcEdit('${key}')">Cancel</button>
+        </div>
+      </div>
     </div>`;
-
   }).join('');
   document.getElementById('aircraft-list').innerHTML = html;
+}
+
+function toggleAcEdit(key) {
+  let el = document.getElementById('ac-edit-' + key);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleAcActive(key) {
+  if (aircraftData[key]) {
+    aircraftData[key].active = !aircraftData[key].active;
+    saveAircraft().then(() => renderAircraft());
+  }
 }
 
 function addAircraftRow() {
@@ -2174,6 +2225,9 @@ async function saveAircraft() {
       overnight_rate: parseFloat(card.querySelector('.ac-overnight').value),
       idle_day_rate: parseFloat(card.querySelector('.ac-idle').value),
       active: card.querySelector('.ac-active').value === 'true',
+      amenities: (card.querySelector('.ac-amenities')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
+      show_amenities: card.querySelector('.ac-show-amenities')?.checked || false,
+      description: card.querySelector('.ac-description')?.value.trim() || '',
       type: card.querySelector('.ac-type').value,
       home_airstrip: card.querySelector('.ac-home').value,
       routing_mode: card.querySelector('.ac-routing').value,
