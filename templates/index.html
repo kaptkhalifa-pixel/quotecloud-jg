@@ -1320,7 +1320,7 @@ function renderBilling(res, extraSegs) {
 function renderOneAc(res) {
   if (res.error) return `<div class="error-box">${res.error}</div>`;
   let typeBadge = res.ac_type==='fixed_wing'?`<span class="tag tag-fixed">Fixed Wing</span>`:`<span class="tag tag-heli">Helicopter</span>`;
-  let routeBadge = res.routing_mode==='direct'?`<span class="tag tag-direct">Direct</span>`:`<span class="tag tag-standard">Standard</span>`;
+  let routeBadge = '';
   let homeInfo = res.home_airstrip ? `<span style="color:#888;font-size:0.78rem">Base: ${res.home_airstrip}</span>` : '';
   let disclaimer = res.ac_type==='fixed_wing' ? `<div class="info-box">Fixed wing aircraft. Runway required for takeoff/landing. Confirm runway suitability before booking.</div>` : '';
   let content = '';
@@ -2049,12 +2049,6 @@ function renderAircraft() {
               <option value="fixed_wing" ${ac.type==='fixed_wing'?'selected':''}>Fixed Wing</option>
             </select>
           </div>
-          <div class="form-group"><label>Routing</label>
-            <select class="ac-routing">
-              <option value="standard" ${(ac.routing_mode||'standard')==='standard'?'selected':''}>Standard</option>
-              <option value="direct" ${ac.routing_mode==='direct'?'selected':''}>Direct</option>
-            </select>
-          </div>
         </div>
         <div class="form-group" style="margin-bottom:14px"><label>Home Airstrip</label><input class="ac-home" value="${ac.home_airstrip||'Wilson Airport, Nairobi'}"></div>
         <div style="margin-bottom:14px">
@@ -2230,7 +2224,7 @@ async function saveAircraft() {
       description: card.querySelector('.ac-description')?.value.trim() || '',
       type: card.querySelector('.ac-type').value,
       home_airstrip: card.querySelector('.ac-home').value,
-      routing_mode: card.querySelector('.ac-routing').value,
+      routing_mode: 'direct',
       images: aircraftData[card.dataset.key]?.images || [],
       base_lat: parseFloat(card.querySelector('.ac-base-lat').value) || null,
       base_lon: parseFloat(card.querySelector('.ac-base-lon').value) || null,
