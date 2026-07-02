@@ -1704,8 +1704,8 @@ function confirmApply(idx) {
   let oldTotalDisplay = isKes && kesRate > 0 ? fmtKes(origTotal) : fmt(origTotal);
       let diff = total - origTotal;
       let diffDisplay = diff === 0 ? '' : diff > 0
-        ? `<span style="color:#1b5e20;font-weight:700">🔺 ${fmt(Math.abs(diff))}</span>`
-        : `<span style="color:#dc3545;font-weight:700">🔻 ${fmt(Math.abs(diff))}</span>`;
+        ? `<span style="color:#1b5e20;font-weight:700">▲ ${fmt(Math.abs(diff))}</span>`
+        : `<span style="color:#dc3545;font-weight:700">▼ ${fmt(Math.abs(diff))}</span>`;
   let adjSummary = document.getElementById('adj-summary-'+idx);
   if (adjSummary) {
     adjSummary.style.display = 'block';
@@ -2100,7 +2100,7 @@ function applyFromReverse(idx) {
           <div style="font-size:1rem;font-weight:700;color:#888">USD $${origTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
         </div>
       </div>
-      <div style="margin-top:6px;font-size:0.82rem;font-weight:700">${targetRaw > origTotal ? `<span style="color:#1b5e20">🔺 USD $${(targetRaw-origTotal).toLocaleString(undefined,{minimumFractionDigits:2})} above default</span>` : targetRaw < origTotal ? `<span style="color:#dc3545">🔻 USD $${(origTotal-targetRaw).toLocaleString(undefined,{minimumFractionDigits:2})} below default</span>` : ''}</div>
+      <div style="margin-top:6px;font-size:0.82rem;font-weight:700">${targetRaw > origTotal ? `<span style="color:#1b5e20">▲ USD $${(targetRaw-origTotal).toLocaleString(undefined,{minimumFractionDigits:2})} above default</span>` : targetRaw < origTotal ? `<span style="color:#dc3545">▼ USD $${(origTotal-targetRaw).toLocaleString(undefined,{minimumFractionDigits:2})} below default</span>` : ''}</div>
       <div style="font-size:0.72rem;color:#555;margin-top:6px">✅ Ready — tap Generate PDF to proceed.</div>
     </div>`;
 }
