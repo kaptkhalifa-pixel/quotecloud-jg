@@ -3408,7 +3408,9 @@ function shareBarWa(id) {
     message = `Hello ${p.clientName||'Valued Client'},\n\nPlease find your ${p.docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n'+pdfLine : ''}\n\nRef: ${p.docNumber}\nAmount: USD $${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}\n\nFor queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
   }
   let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
-  location.href = waUrl;
+  let btn = document.querySelector(`#${id} .btn-success`);
+  if (btn) { btn.textContent = '✅ Opening...'; btn.style.background = '#1b5e20'; setTimeout(() => { btn.textContent = '💬 WhatsApp'; btn.style.background = ''; }, 3000); }
+  setTimeout(() => { location.href = waUrl; }, 200);
 }
 
 async function shareBarEmail(id) {
