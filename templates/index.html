@@ -1094,7 +1094,8 @@ function checkLegLocations(n) {
   if (origin && dest && origin.length > 2 && dest.length > 2) {
     if (dateRow) dateRow.style.display = 'block';
     let dateEl = document.getElementById('leg-date-'+n);
-    if (dateEl && !dateEl._flatpickr) {
+    if (dateEl) {
+      if (dateEl._flatpickr) dateEl._flatpickr.destroy();
       let prevDate = getPrevLegDate(n);
       flatpickr(dateEl, {
         dateFormat: 'd M Y',
@@ -3221,7 +3222,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let adminDepartPicker = flatpickr('#rt-depart', {dateFormat:'d M Y',minDate:'today',disableMobile:false,onChange:function(d){if(d[0])adminReturnPicker.set('minDate',d[0]);}});
   let adminReturnPicker = flatpickr('#rt-return', {dateFormat:'d M Y',minDate:'today',disableMobile:false});
   document.querySelectorAll('.leg-date').forEach(function(el){
-    flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:true,allowInput:true});
+    let n = el.id ? el.id.replace('leg-date-','') : '1';
+    flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:true,allowInput:true,onChange:function(){ checkLegDate(n); }});
   });
 });
 
