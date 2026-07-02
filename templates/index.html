@@ -1721,7 +1721,7 @@ function renderAdjuster(res, idx) {
   let ghostToggle = `
     <div style="background:#1a1a1a;border-radius:8px;padding:12px 14px;margin-top:14px">
       <div style="display:flex;align-items:center;gap:10px">
-        <input type="checkbox" id="adj-ghost-${idx}" onchange="toggleGhostMode(${idx})" style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+        <input type="checkbox" id="adj-ghost-${idx}" onchange="toggleGhostManual(${idx})" style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
         <div>
           <label for="adj-ghost-${idx}" style="font-size:0.85rem;font-weight:700;color:#fff;cursor:pointer;margin:0">👻 Ghost Mode</label>
           <div style="font-size:0.72rem;color:#888;margin-top:2px">Bundle charter cost into one price — no rate breakdown shown to client. You can still add uplift line items.</div>
@@ -1839,16 +1839,21 @@ function switchAdjTab(idx, tab) {
 }
 
 function toggleGhostMode(idx) {
-  let checked = document.getElementById('adj-ghost-'+idx)?.checked;
-  lastResults[idx]._ghost_mode = checked;
-  syncGhostMode(idx);
+  toggleGhostManual(idx);
 }
 
 function syncGhostMode(idx) {
-  let manualGhost = document.getElementById('adj-ghost-'+idx);
   let reverseGhost = document.getElementById('adj-ghost-rev-'+idx);
-  let val = manualGhost?.checked || reverseGhost?.checked || false;
+  let val = reverseGhost?.checked || false;
+  let manualGhost = document.getElementById('adj-ghost-'+idx);
   if (manualGhost) manualGhost.checked = val;
+  lastResults[idx]._ghost_mode = val;
+}
+
+function toggleGhostManual(idx) {
+  let manualGhost = document.getElementById('adj-ghost-'+idx);
+  let val = manualGhost?.checked || false;
+  let reverseGhost = document.getElementById('adj-ghost-rev-'+idx);
   if (reverseGhost) reverseGhost.checked = val;
   lastResults[idx]._ghost_mode = val;
 }
@@ -1864,7 +1869,7 @@ function applyFromReverse(idx) {
   lastResults[idx]._adj_total = targetRaw;
   document.getElementById('adj-rate-'+idx).value = Math.round(impliedRate * 100) / 100;
   document.getElementById('adj-pax-'+idx).value = pax;
-  switchAdjTab(idx, 'manual');
+  // Stay on reverse tab — don't auto-switch
   confirmApply(idx);
 }
 
