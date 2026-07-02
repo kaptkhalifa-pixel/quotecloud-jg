@@ -305,23 +305,30 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <div id="m-safari" style="display:none">
       <div id="safari-legs">
-        <div class="leg-row">
-          <span class="leg-num">1</span>
-          <div style="position:relative;flex:1;min-width:120px">
-            <input type="text" placeholder="From" class="leg-origin" id="leg-origin-1" autocomplete="off">
-            <div id="aac-leg-origin-1" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+        <div class="leg-card" id="leg-card-1" style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid #eee">
+          <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:#999;margin-bottom:10px">Leg 1</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <div style="position:relative;flex:1;min-width:120px">
+              <input type="text" placeholder="From — location or Maps link" class="leg-origin" id="leg-origin-1" autocomplete="off" oninput="checkLegLocations(1)">
+              <div id="aac-leg-origin-1" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+            </div>
+            <div style="position:relative;flex:1;min-width:120px">
+              <input type="text" placeholder="To — location or Maps link" class="leg-dest" id="leg-dest-1" autocomplete="off" oninput="checkLegLocations(1)">
+              <div id="aac-leg-dest-1" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+            </div>
           </div>
-          <div style="position:relative;flex:1;min-width:120px">
-            <input type="text" placeholder="To" class="leg-dest" id="leg-dest-1" autocomplete="off">
-            <div id="aac-leg-dest-1" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+          <div id="leg-date-row-1" style="display:none">
+            <label style="font-size:0.72rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Flight Date</label>
+            <input type="text" placeholder="Tap to pick date" class="leg-date" id="leg-date-1" style="max-width:180px" oninput="checkLegDate(1)">
+            <div id="leg-date-msg-1" style="font-size:0.72rem;color:#e65100;margin-top:4px"></div>
           </div>
-          <input type="text" placeholder="Date" class="leg-date" style="max-width:120px">
         </div>
       </div>
       <div class="btn-row" style="margin-top:10px">
-        <button class="btn btn-outline btn-sm" onclick="addLeg()">+ Add Leg</button>
+        <button class="btn btn-outline btn-sm" id="safari-add-leg-btn" onclick="addLeg()" style="opacity:0.4;pointer-events:none">+ Add Leg</button>
         <button class="btn btn-sm" onclick="submitQuote('safari')">Get Quote →</button>
       </div>
+      <div id="safari-guard-msg" style="font-size:0.78rem;color:#e65100;margin-top:8px"></div>
     </div>
   </div>
 
@@ -1080,30 +1087,115 @@ function parseSmartDate(s) {
   return s;
 }
 
+function checkLegLocations(n) {
+  let origin = document.getElementById('leg-origin-'+n)?.value.trim();
+  let dest = document.getElementById('leg-dest-'+n)?.value.trim();
+  let dateRow = document.getElementById('leg-date-row-'+n);
+  if (origin && dest && origin.length > 2 && dest.length > 2) {
+    if (dateRow) dateRow.style.display = 'block';
+    let dateEl = document.getElementById('leg-date-'+n);
+    if (dateEl && !dateEl._flatpickr) {
+      let prevDate = getPrevLegDate(n);
+      flatpickr(dateEl, {
+        dateFormat: 'd M Y',
+        minDate: prevDate || 'today',
+        disableMobile: true,
+        allowInput: true,
+        onChange: function() { checkLegDate(n); }
+      });
+    }
+  } else {
+    if (dateRow) dateRow.style.display = 'none';
+  }
+}
+
+function getPrevLegDate(n) {
+  if (n <= 1) return 'today';
+  let prevDate = document.getElementById('leg-date-'+(n-1))?.value;
+  if (!prevDate) return 'today';
+  let parsed = parseSmartDate(prevDate);
+  if (!parsed) return 'today';
+  let parts = parsed.split('/');
+  if (parts.length !== 3) return 'today';
+  let d = new Date(2000 + parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+  d.setDate(d.getDate() + 1);
+  return d;
+}
+
+function checkLegDate(n) {
+  let dateVal = document.getElementById('leg-date-'+n)?.value;
+  let msgEl = document.getElementById('leg-date-msg-'+n);
+  let addBtn = document.getElementById('safari-add-leg-btn');
+  if (!dateVal) {
+    if (msgEl) msgEl.textContent = '';
+    if (addBtn) { addBtn.style.opacity = '0.4'; addBtn.style.pointerEvents = 'none'; }
+    return;
+  }
+  let parsed = parseSmartDate(dateVal);
+  let maxIdle = (config?.quoting_rules?.max_idle_days_between_legs || operatorConfig?.quoting_rules?.max_idle_days_between_legs || 2);
+  if (n > 1) {
+    let prevParsed = parseSmartDate(document.getElementById('leg-date-'+(n-1))?.value || '');
+    if (prevParsed && parsed) {
+      let prev = prevParsed.split('/'); let curr = parsed.split('/');
+      let prevD = new Date(2000+parseInt(prev[2]), parseInt(prev[1])-1, parseInt(prev[0]));
+      let currD = new Date(2000+parseInt(curr[2]), parseInt(curr[1])-1, parseInt(curr[0]));
+      let diff = Math.round((currD - prevD) / (1000*60*60*24));
+      if (diff < 0) {
+        if (msgEl) msgEl.textContent = '⚠️ Date cannot be before previous leg date.';
+        if (addBtn) { addBtn.style.opacity = '0.4'; addBtn.style.pointerEvents = 'none'; }
+        return;
+      }
+      if (diff > maxIdle + 1) {
+        if (msgEl) msgEl.textContent = `⚠️ ${diff-1} idle day(s) between legs — exceeds maximum of ${maxIdle}.`;
+      } else {
+        if (msgEl) msgEl.textContent = '';
+      }
+    }
+  } else {
+    if (msgEl) msgEl.textContent = '';
+  }
+  if (addBtn) { addBtn.style.opacity = '1'; addBtn.style.pointerEvents = 'auto'; }
+}
+
 function addLeg() {
-  let n = document.querySelectorAll('#safari-legs .leg-row').length + 1;
-  let ts = Date.now();
-  let originId = `leg-origin-${n}-${ts}`;
-  let destId = `leg-dest-${n}-${ts+1}`;
+  let n = document.querySelectorAll('#safari-legs .leg-card').length + 1;
   let div = document.createElement('div');
-  div.className = 'leg-row';
-  div.innerHTML = `<span class="leg-num">${n}</span>
-    <div style="position:relative;flex:1;min-width:120px">
-      <input type="text" placeholder="From" class="leg-origin" id="${originId}" autocomplete="off">
-      <div id="aac-${originId}" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+  div.className = 'leg-card';
+  div.id = 'leg-card-'+n;
+  div.style.cssText = 'background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid #eee';
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:#999">Leg ${n}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeLeg(this,${n})">✕</button>
     </div>
-    <div style="position:relative;flex:1;min-width:120px">
-      <input type="text" placeholder="To" class="leg-dest" id="${destId}" autocomplete="off">
-      <div id="aac-${destId}" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <div style="position:relative;flex:1;min-width:120px">
+        <input type="text" placeholder="From — location or Maps link" class="leg-origin" id="leg-origin-${n}" autocomplete="off" oninput="checkLegLocations(${n})">
+        <div id="aac-leg-origin-${n}" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+      </div>
+      <div style="position:relative;flex:1;min-width:120px">
+        <input type="text" placeholder="To — location or Maps link" class="leg-dest" id="leg-dest-${n}" autocomplete="off" oninput="checkLegLocations(${n})">
+        <div id="aac-leg-dest-${n}" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+      </div>
     </div>
-    <input type="text" placeholder="Date" class="leg-date" style="max-width:120px">
-    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>`;
+    <div id="leg-date-row-${n}" style="display:none">
+      <label style="font-size:0.72rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Flight Date</label>
+      <input type="text" placeholder="Tap to pick date" class="leg-date" id="leg-date-${n}" style="max-width:180px" oninput="checkLegDate(${n})">
+      <div id="leg-date-msg-${n}" style="font-size:0.72rem;color:#e65100;margin-top:4px"></div>
+    </div>`;
   document.getElementById('safari-legs').appendChild(div);
-  initAdminAc(originId);
-  initAdminAc(destId);
-  div.querySelectorAll('.leg-date').forEach(function(el){
-    flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:true,allowInput:true});
-  });
+  initAdminAc('leg-origin-'+n);
+  initAdminAc('leg-dest-'+n);
+  let addBtn = document.getElementById('safari-add-leg-btn');
+  if (addBtn) { addBtn.style.opacity = '0.4'; addBtn.style.pointerEvents = 'none'; }
+  div.querySelector('.leg-origin').focus();
+}
+
+function removeLeg(btn, n) {
+  let card = document.getElementById('leg-card-'+n);
+  if (card) card.remove();
+  let addBtn = document.getElementById('safari-add-leg-btn');
+  if (addBtn) { addBtn.style.opacity = '1'; addBtn.style.pointerEvents = 'auto'; }
 }
 
 async function submitQuote(mission) {
@@ -1126,13 +1218,15 @@ async function submitQuote(mission) {
     body.return_date = parseSmartDate(document.getElementById('rt-return').value);
   } else {
     body.legs = [];
-    document.querySelectorAll('#safari-legs .leg-row').forEach(row => {
-      body.legs.push({
-        origin: row.querySelector('.leg-origin').value,
-        destination: row.querySelector('.leg-dest').value,
-        date: parseSmartDate(row.querySelector('.leg-date').value)
-      });
+    document.querySelectorAll('#safari-legs .leg-card').forEach(card => {
+      let origin = card.querySelector('.leg-origin')?.value.trim();
+      let dest = card.querySelector('.leg-dest')?.value.trim();
+      let date = parseSmartDate(card.querySelector('.leg-date')?.value || '');
+      if (origin && dest) body.legs.push({ origin, destination: dest, date: date || '' });
     });
+    if (!body.legs.length) { showMsg('quote-result', '<div class="error-box">Add at least one leg with From and To locations.</div>'); showLoading && showLoading(false); return; }
+    let missingDate = body.legs.findIndex(l => !l.date);
+    if (missingDate >= 0) { document.getElementById('quote-result').innerHTML = `<div class="error-box">Please set a date for Leg ${missingDate+1}.</div>`; return; }
   }
   document.getElementById('quote-result').innerHTML = '<p style="color:#888;padding:12px;text-align:center">Calculating...</p>';
   try {
@@ -3121,6 +3215,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   } catch(e) {}
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','leg-origin-1','leg-dest-1'].forEach(id => initAdminAc(id));
+  // Init leg 1 location check
+  document.getElementById('leg-origin-1')?.addEventListener('input', () => checkLegLocations(1));
+  document.getElementById('leg-dest-1')?.addEventListener('input', () => checkLegLocations(1));
   let adminDepartPicker = flatpickr('#rt-depart', {dateFormat:'d M Y',minDate:'today',disableMobile:false,onChange:function(d){if(d[0])adminReturnPicker.set('minDate',d[0]);}});
   let adminReturnPicker = flatpickr('#rt-return', {dateFormat:'d M Y',minDate:'today',disableMobile:false});
   document.querySelectorAll('.leg-date').forEach(function(el){
