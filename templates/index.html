@@ -3381,33 +3381,6 @@ function renderShareBar(p) {
       </div>
       <div id="${id}-msg" style="margin-top:8px"></div>
     </div>`;
-  let docLabel = p.docType === 'Invoice' ? 'Invoice' : p.docType === 'Receipt' ? 'Receipt' : 'Quotation';
-  let bgColor = p.docType === 'Receipt' ? '#e8f5e9' : p.docType === 'Invoice' ? '#e8f0fe' : '#f0f4ff';
-  let borderColor = p.docType === 'Receipt' ? '#a5d6a7' : p.docType === 'Invoice' ? '#c7d7ff' : '#c7d7ff';
-  let crmNote = p.docType === 'Quotation' ? `<div style="background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 12px;font-size:0.78rem;color:#1a3a6b;line-height:1.6;margin-bottom:12px">📋 Saved to CRM. To upgrade to Invoice, go to <strong>Enquiries</strong> and use the Invoice Builder.</div>` : '';
-  return `
-    <div id="${id}" style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:16px;margin-top:12px">
-      <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:6px">✅ ${docLabel} Generated</div>
-      <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${p.docNumber}</strong></div>
-      <div style="font-size:0.82rem;color:#555;margin-bottom:10px">Amount: USD $${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</div>
-      ${p.pdfUrl ? `<a href="${p.pdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:6px 10px;border-radius:6px;margin-bottom:12px">📄 View PDF</a>` : ''}
-      ${crmNote}
-      <div style="margin-bottom:10px">
-        <label style="font-size:0.72rem;font-weight:600;color:#555;display:block;margin-bottom:4px">WhatsApp</label>
-        <input type="tel" id="${id}-wa" value="${p.clientWa||''}" placeholder="+254 7XX XXX XXX" style="width:100%;margin-bottom:0">
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:0.72rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Email</label>
-        <input type="email" id="${id}-email" value="${p.clientEmail||''}" placeholder="client@email.com" style="width:100%">
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-success btn-sm" onclick="shareBarWa('${id}')">💬 WhatsApp</button>
-        <button class="btn btn-sm" style="background:#0a0a0a;color:#fff" onclick="shareBarEmail('${id}')">📧 Email</button>
-      </div>
-      <div id="${id}-msg" style="margin-top:8px"></div>
-    </div>`;
-}
-
 function shareBarWa(id) {
   let p = shareBarData[id] || {};
   let wa = document.getElementById(id+'-wa')?.value.trim().replace(/\D/g,'');
