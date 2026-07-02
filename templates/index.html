@@ -1839,11 +1839,19 @@ async function generatePDF(allAircraft) {
     } else {
       adjTotal = '';
     }
+    let clientWaVal = document.getElementById('pdf-phone')?.value.trim() || '';
+    let clientEmailVal = document.getElementById('pdf-email')?.value.trim() || '';
+    let clientNameVal = document.getElementById('pdf-name')?.value.trim() || '';
+    let totalVal = res2?._adj_total || res2?.total_usd || 0;
+    let routeVal = (res2?.segments||[]).filter(s=>s.type==='revenue').map(s=>`${s.origin} to ${s.destination}`).join(', ');
+    let shareBarHtml = renderShareBar({
+      docNumber, pdfUrl, docType: 'Quotation',
+      clientName: clientNameVal, clientWa: clientWaVal, clientEmail: clientEmailVal,
+      amount: totalVal, acLabel: acLabel, route: routeVal
+    });
     let msgLines = [`✅ <strong>PDF Generation Complete</strong>`];
     msgLines.push(`${docType} — ${acLabel}${wasAdj}${adjTotal}`);
-    msgLines.push(`Ref: <strong>${docNumber}</strong> · Saved to CRM`);
-    if (pdfUrl) msgLines.push(`<a href="${pdfUrl}" target="_blank" style="color:#1a56db;font-weight:600;text-decoration:underline">📄 View Permanent Link</a>`);
-    msgLines.push(`<div style="margin-top:8px;padding:10px 14px;background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;font-size:0.8rem;color:#1a3a6b">✅ Quotation successfully generated. To invoice this client, navigate to <strong>Enquiries</strong> and use Create Invoice.</div>`);
+    msgLines.push(shareBarHtml);
     let ind = document.getElementById('pdf-generating-indicator');
     if (ind) ind.remove();
     try { localStorage.setItem('qc_pending_msg', msgLines.join('<br>')); } catch(e) {}
@@ -2344,13 +2352,17 @@ async function confirmMarkPaid(generateReceipt) {
       let blob = await r.blob();
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a'); a.href = url; a.download = (docNumber||'receipt')+'.pdf'; a.click();
-      showMsg('paid-msg', `✅ Receipt <strong>${docNumber}</strong> generated successfully. Downloading now...`, 'success');
+      let recRec = allRecords.find(r => r.number === number) || {};
+      document.getElementById('paid-msg').innerHTML = renderShareBar({
+        docNumber, pdfUrl, docType: 'Receipt',
+        clientName: recRec.client_name || '',
+        clientWa: recRec.client_whatsapp || '',
+        clientEmail: recRec.client_email || '',
+        amount: paidAmount,
+        acLabel: recRec.ac_label || '',
+        route: recRec.route_summary || ''
+      }) + `<div style="margin-top:8px"><button class="btn btn-grey btn-sm" onclick="closePaidModal()">✕ Close</button></div>`;
       loadRecords();
-      if (pdfUrl) {
-        setTimeout(() => { closePaidModal(); openShareModal(docNumber, pdfUrl, number, 'Receipt'); }, 1500);
-      } else {
-        setTimeout(() => closePaidModal(), 1500);
-      }
     } else {
       let data = await r.json();
       if (data.success) { closePaidModal(); loadRecords(); }
@@ -2478,15 +2490,16 @@ async function createManualInvoice() {
     let a = document.createElement('a'); a.href = url; a.download = (docNumber||'quote')+'.pdf'; a.click();
     let btn = document.getElementById('mi-generate-btn');
     if (btn) { btn.disabled = false; btn.textContent = 'Generate Quote PDF'; }
-    document.getElementById('mi-msg').innerHTML = `
-      <div style="background:#e8f5e9;border-radius:8px;padding:14px;margin-top:12px">
-        <div style="font-weight:700;color:#1b5e20;margin-bottom:6px">✅ Quotation Generated</div>
-        <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${docNumber}</strong> · Saved to CRM</div>
-        ${pdfUrl ? `<a href="${pdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:6px 10px;border-radius:6px;margin-bottom:10px">📄 View Permanent Link</a>` : ''}
-        <div style="background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 12px;font-size:0.78rem;color:#1a3a6b;line-height:1.6">
-          📋 This quote is now in <strong>Enquiries</strong>. To upgrade it to an Invoice, navigate to Enquiries, find this ref, and use the Invoice Builder.
-        </div>
-      </div>`;
+    let miTotal = Array.from(document.querySelectorAll('#mi-items .line-item-row')).reduce((s,row) => {
+      return s + (parseFloat(row.querySelector('.mi-qty')?.value)||1) * (parseFloat(row.querySelector('.mi-unit')?.value)||0);
+    }, 0) - (parseFloat(document.getElementById('mi-discount')?.value)||0);
+    document.getElementById('mi-msg').innerHTML = renderShareBar({
+      docNumber, pdfUrl, docType: 'Quotation',
+      clientName: document.getElementById('mi-name')?.value.trim() || '',
+      clientWa: document.getElementById('mi-phone')?.value.trim() || '',
+      clientEmail: document.getElementById('mi-email')?.value.trim() || '',
+      amount: Math.max(miTotal, 0), acLabel: '', route: ''
+    });
     loadRecords();
     loadEnquiries();
   } catch(e) {
@@ -3238,22 +3251,15 @@ async function generateAndSendInvoice() {
       `Regards,`,
       `${operatorConfig.company_name||'Reservations Team'}`
     ].filter(l => l !== undefined).join('\n');
-    let waNum = clientWa.replace(/\D/g,'');
-    let waUrl = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waLines)}` : '';
-    let clientEmailForLink = document.getElementById('ib-email')?.value.trim() || '';
-    let emailUrl = clientEmailForLink && invoicePdfUrl ? `mailto:${clientEmailForLink}?subject=Invoice ${invoiceDocNumber}&body=${encodeURIComponent('Dear ' + clientName + ',\n\nPlease find your invoice attached.\n\nRef: ' + invoiceDocNumber + '\n\nView PDF: ' + invoicePdfUrl)}` : '';
-    let successHtml = `
-      <div style="background:#e8f5e9;border-radius:10px;padding:16px;margin-top:12px">
-        <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:8px">✅ Invoice Generated</div>
-        <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${invoiceDocNumber}</strong></div>
-        <div style="font-size:0.82rem;color:#333;margin-bottom:12px">Saved to Records & Enquiries</div>
-        ${invoicePdfUrl ? `<a href="${invoicePdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:8px 12px;border-radius:8px;margin-bottom:12px">📄 View PDF</a>` : ''}
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
-          ${waUrl ? `<a href="${waUrl}" target="_blank" class="btn btn-success btn-sm" style="text-decoration:none">💬 WhatsApp</a>` : ''}
-          ${emailUrl ? `<a href="${emailUrl}" class="btn btn-sm" style="text-decoration:none;background:#0a0a0a;color:#fff">📧 Email</a>` : ''}
-          <button class="btn btn-grey btn-sm" onclick="closeInvoiceBuilder()">✕ Close</button>
-        </div>
-      </div>`;
+    let successHtml = renderShareBar({
+      docNumber: invoiceDocNumber, pdfUrl: invoicePdfUrl, docType: 'Invoice',
+      clientName: clientName,
+      clientWa: clientWaRaw,
+      clientEmail: document.getElementById('ib-email')?.value.trim() || '',
+      amount: finalTotal,
+      acLabel: enq.ac_label || '',
+      route: enq.route_summary || ''
+    }) + `<div style="margin-top:8px"><button class="btn btn-grey btn-sm" onclick="closeInvoiceBuilder()">✕ Close</button></div>`;
     document.getElementById('ib-msg').innerHTML = successHtml;
   } catch(e) {
     showMsg('ib-msg','Error: '+e.message,'error');
@@ -3336,6 +3342,85 @@ async function sendShareEmail() {
     showMsg('share-msg', 'Network error.', 'error');
     if (btn) { btn.disabled = false; btn.textContent = '📧 Email'; }
   }
+}
+function renderShareBar(p) {
+  let id = 'sb-' + Math.random().toString(36).substr(2,6);
+  let docLabel = p.docType === 'Invoice' ? 'Invoice' : p.docType === 'Receipt' ? 'Receipt' : 'Quotation';
+  let bgColor = p.docType === 'Receipt' ? '#e8f5e9' : p.docType === 'Invoice' ? '#e8f0fe' : '#f0f4ff';
+  let borderColor = p.docType === 'Receipt' ? '#a5d6a7' : p.docType === 'Invoice' ? '#c7d7ff' : '#c7d7ff';
+  let crmNote = p.docType === 'Quotation' ? `<div style="background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 12px;font-size:0.78rem;color:#1a3a6b;line-height:1.6;margin-bottom:12px">📋 Saved to CRM. To upgrade to Invoice, go to <strong>Enquiries</strong> and use the Invoice Builder.</div>` : '';
+  return `
+    <div id="${id}" style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:16px;margin-top:12px">
+      <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:6px">✅ ${docLabel} Generated</div>
+      <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${p.docNumber}</strong></div>
+      <div style="font-size:0.82rem;color:#555;margin-bottom:10px">Amount: USD $${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+      ${p.pdfUrl ? `<a href="${p.pdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:6px 10px;border-radius:6px;margin-bottom:12px">📄 View PDF</a>` : ''}
+      ${crmNote}
+      <div style="margin-bottom:10px">
+        <label style="font-size:0.72rem;font-weight:600;color:#555;display:block;margin-bottom:4px">WhatsApp</label>
+        <input type="tel" id="${id}-wa" value="${p.clientWa||''}" placeholder="+254 7XX XXX XXX" style="width:100%;margin-bottom:0">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:0.72rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Email</label>
+        <input type="email" id="${id}-email" value="${p.clientEmail||''}" placeholder="client@email.com" style="width:100%">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-success btn-sm" onclick="shareBarWa('${id}',${JSON.stringify(p).replace(/'/g,"\\'")})">💬 WhatsApp</button>
+        <button class="btn btn-sm" style="background:#0a0a0a;color:#fff" onclick="shareBarEmail('${id}',${JSON.stringify(p).replace(/'/g,"\\'")})">📧 Email</button>
+      </div>
+      <div id="${id}-msg" style="margin-top:8px"></div>
+    </div>`;
+}
+
+function shareBarWa(id, p) {
+  let wa = document.getElementById(id+'-wa')?.value.trim().replace(/\D/g,'');
+  if (!wa) { showMsg(id+'-msg','Enter WhatsApp number.','error'); return; }
+  let templateKey = p.docType === 'Invoice' ? 'invoice' : p.docType === 'Receipt' ? 'receipt' : 'quote';
+  let template = msgTemplates[templateKey] || '';
+  let pdfLine = p.pdfUrl ? `📄 View ${p.docType}: ${p.pdfUrl}` : '';
+  let company = config.company_name || operatorConfig?.company_name || 'Jetman Global';
+  let phone = config.contact?.phone || operatorConfig?.contact?.phone || '+254 701 007 777';
+  let message;
+  if (template) {
+    message = template
+      .replace(/{client_name}/g, p.clientName || 'Valued Client')
+      .replace(/{company}/g, company)
+      .replace(/{phone}/g, phone)
+      .replace(/{ref}/g, p.docNumber)
+      .replace(/{amount}/g, parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2}))
+      .replace(/{pdf_url}/g, pdfLine)
+      .replace(/{ac_label}/g, p.acLabel || '')
+      .replace(/{route}/g, p.route || '');
+  } else {
+    message = `Hello ${p.clientName||'Valued Client'},\n\nPlease find your ${p.docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n'+pdfLine : ''}\n\nRef: ${p.docNumber}\nAmount: USD $${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}\n\nFor queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
+  }
+  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+async function shareBarEmail(id, p) {
+  let email = document.getElementById(id+'-email')?.value.trim();
+  if (!email) { showMsg(id+'-msg','Enter email address.','error'); return; }
+  let btn = document.querySelector(`#${id} button[onclick*="shareBarEmail"]`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+  try {
+    let r = await fetch('/share/email', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        to_email: email,
+        client_name: p.clientName || 'Valued Client',
+        doc_type: p.docType || 'Document',
+        doc_number: p.docNumber,
+        pdf_url: p.pdfUrl || '',
+        amount: parseFloat(p.amount || 0),
+        ac_label: p.acLabel || '',
+        route: p.route || ''
+      })
+    });
+    let data = await r.json();
+    if (data.success) showMsg(id+'-msg', `✅ Email sent to ${email}`, 'success');
+    else showMsg(id+'-msg', data.error || 'Failed.', 'error');
+  } catch(e) { showMsg(id+'-msg', 'Network error.', 'error'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '📧 Email'; } }
 }
 
 function closeShareModal() {
