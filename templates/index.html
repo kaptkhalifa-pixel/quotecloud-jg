@@ -1593,18 +1593,38 @@ function calcReverse(idx) {
   if (targetLabel) targetLabel.textContent = isKes ? 'Target Total (KES)' : 'Target Total (USD)';
   if (paxLabel) paxLabel.textContent = isKes ? 'Keep Pax/Admin (KES)' : 'Keep Pax/Admin (USD)';
   if (!targetRaw || !hrs) { el.textContent = ''; return; }
-  let impliedFlight = target - pax;
-  let impliedRate = isKes 
-    ? Math.round((impliedFlight / hrs) * 100) / 100
-    : Math.round((impliedFlight / hrs) * 100) / 100;
-  if (impliedRate < 0) { el.textContent = 'Target too low — increase target price.'; el.style.color='#dc3545'; return; }
+
+  // Strip ALL fixed costs from target before calculating implied rate
+  let overnight = res.overnight_usd || res.overnight_cost_usd || 0;
+  let idle = res.waiting_usd || res.idle_cost_usd || 0;
+  // For return_both use option_a
+  if (res.mission === 'return_both') {
+    overnight = res.option_a?.overnight_usd || 0;
+    idle = res.option_a?.waiting_usd || 0;
+  }
+  let fixedCosts = pax + overnight + idle;
+  let impliedFlight = target - fixedCosts;
+  let impliedRate = Math.round((impliedFlight / hrs) * 100) / 100;
+
+  if (impliedRate < 0) {
+    el.style.color = '#dc3545';
+    el.textContent = `Target too low — fixed costs alone (overnight $${overnight}, pax $${pax}, idle $${idle}) exceed target.`;
+    return;
+  }
   el.style.color = '#1a56db';
-  if (isKes) {
+
+  let fixedBreakdown = [];
+  if (pax > 0) fixedBreakdown.push(`Pax $${pax}`);
+  if (overnight > 0) fixedBreakdown.push(`Overnight $${overnight}`);
+  if (idle > 0) fixedBreakdown.push(`Idle $${idle}`);
+  let fixedLine = fixedBreakdown.length ? ` &nbsp;·&nbsp; Fixed: ${fixedBreakdown.join(' + ')}` : '';
+
+  if (isKes && kesRate > 0) {
     let impliedFlightKes = Math.ceil((impliedFlight * kesRate) / 1000) * 1000;
     let impliedRateKes = Math.round(impliedFlightKes / hrs);
-    el.innerHTML = `Implied Rate: <strong>KES ${impliedRateKes.toLocaleString()}/hr</strong> &nbsp;·&nbsp; Flight Cost: <strong>KES ${impliedFlightKes.toLocaleString()}</strong> &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
+    el.innerHTML = `Implied Rate: <strong>KES ${impliedRateKes.toLocaleString()}/hr</strong> &nbsp;·&nbsp; Flight: <strong>KES ${impliedFlightKes.toLocaleString()}</strong>${fixedLine} &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
   } else {
-    el.innerHTML = `Implied Rate: <strong>$${impliedRate.toLocaleString(undefined,{minimumFractionDigits:2})}/hr</strong> &nbsp;·&nbsp; Flight Cost: <strong>$${impliedFlight.toLocaleString(undefined,{minimumFractionDigits:2})}</strong> &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
+    el.innerHTML = `Implied Rate: <strong>$${impliedRate.toLocaleString(undefined,{minimumFractionDigits:2})}/hr</strong> &nbsp;·&nbsp; Flight: <strong>$${impliedFlight.toLocaleString(undefined,{minimumFractionDigits:2})}</strong>${fixedLine} &nbsp;·&nbsp; <a href="#" onclick="applyReverseRate(${idx},${impliedRate},${pax});return false" style="color:#28a745;font-weight:700">Apply →</a>`;
   }
 }
 
