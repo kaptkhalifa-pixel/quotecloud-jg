@@ -1821,6 +1821,27 @@ function renderAdjuster(res, idx) {
 }
 
 function switchAdjTab(idx, tab) {
+  let res = lastResults[idx];
+  if (res && res._locked) {
+    if (!confirm('A price is currently locked. Switching tabs will unlock the quote and reset to original values. Continue?')) return;
+    res._locked = false;
+    res._adj_rate = undefined;
+    res._adj_pax = undefined;
+    res._adj_total = undefined;
+    res._implied_rate = undefined;
+    let adjSummary = document.getElementById('adj-summary-'+idx);
+    if (adjSummary) { adjSummary.style.display = 'none'; adjSummary.innerHTML = ''; }
+    let liveTotalEl = document.getElementById('adj-live-total-'+idx);
+    if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`; }
+    let lockWarn = document.getElementById('adj-lock-warn-'+idx);
+    if (lockWarn) lockWarn.remove();
+    let applyBtn = document.getElementById('adj-rev-apply-'+idx);
+    if (applyBtn) applyBtn.style.display = 'none';
+    let revResult = document.getElementById('adj-rev-result-'+idx);
+    if (revResult) revResult.innerHTML = '';
+    let targetEl = document.getElementById('adj-target-'+idx);
+    if (targetEl) targetEl.value = '';
+  }
   let manualEl = document.getElementById('adj-tab-manual-'+idx);
   let reverseEl = document.getElementById('adj-tab-reverse-'+idx);
   let manualBtn = document.getElementById('adj-tab-btn-manual-'+idx);
