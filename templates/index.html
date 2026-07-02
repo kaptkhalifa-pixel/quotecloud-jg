@@ -1860,6 +1860,19 @@ function switchAdjTab(idx, tab) {
 }
 
 function toggleGhostMode(idx) {
+  let cb = document.getElementById('adj-ghost-'+idx);
+  if (!cb) return;
+  if (cb.checked) {
+    if (!confirm('👻 Ghost Mode will bundle all charter costs into one price. No rate breakdown shown on PDF. Cannot be undone without resetting the quote. Continue?')) {
+      cb.checked = false;
+      return;
+    }
+  } else {
+    if (!confirm('Turning off Ghost Mode will reset the quote to default values. Continue?')) {
+      cb.checked = true;
+      return;
+    }
+  }
   toggleGhostManual(idx);
 }
 
@@ -1884,14 +1897,30 @@ function applyFromReverse(idx) {
   let targetRaw = parseFloat(document.getElementById('adj-target-'+idx)?.value) || 0;
   let pax = parseFloat(document.getElementById('adj-rev-pax-'+idx)?.value) || 0;
   if (!impliedRate) return;
-  // Force exact total to target — no drift
-  lastResults[idx]._adj_rate = impliedRate;
-  lastResults[idx]._adj_pax = pax;
-  lastResults[idx]._adj_total = targetRaw;
-  document.getElementById('adj-rate-'+idx).value = Math.round(impliedRate * 100) / 100;
-  document.getElementById('adj-pax-'+idx).value = pax;
-  // Stay on reverse tab — don't auto-switch
-  confirmApply(idx);
+  let res = lastResults[idx];
+  let origTotal = res.total_usd || 0;
+  res._adj_rate = impliedRate;
+  res._adj_pax = pax;
+  res._adj_total = targetRaw;
+  res._locked = true;
+  let applyBtn = document.getElementById('adj-rev-apply-'+idx);
+  if (applyBtn) applyBtn.innerHTML = `
+    <div style="background:#e8f5e9;border-radius:8px;padding:12px 14px;margin-top:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span>🔒</span><strong style="color:#1b5e20">Price Locked</strong>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:2px solid #1b5e20">
+          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;margin-bottom:4px">Target Price</div>
+          <div style="font-size:1rem;font-weight:700;color:#1b5e20">USD $${targetRaw.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:1px solid #ddd">
+          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;margin-bottom:4px">Was</div>
+          <div style="font-size:1rem;font-weight:700;color:#888">USD $${origTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+        </div>
+      </div>
+      <div style="font-size:0.72rem;color:#555;margin-top:8px">✅ Ready — tap Generate PDF to proceed.</div>
+    </div>`;
 }
 
 function loadPresetChips() {
