@@ -825,7 +825,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div style="font-size:0.72rem;color:#888;margin-top:6px" id="share-email-hint">Send PDF link directly to client's inbox via Resend.</div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-grey btn-block" onclick="closeShareModal()">Close</button>
+      <button class="btn btn-grey btn-block" onclick="clearShareMsg();closeShareModal()">Close</button>
     </div>
     <div id="share-msg"></div>
   </div>
@@ -3341,10 +3341,12 @@ async function sendShareEmail() {
     });
     let data = await r.json();
     if (data.success) {
-      showMsg('share-msg', `✅ Email sent to ${email}`, 'success');
+      let msgEl = document.getElementById('share-msg');
+      if (msgEl) msgEl.innerHTML = `<div class="success-box" style="margin-top:10px">✅ Email sent to ${email}</div>`;
       if (btn) { btn.disabled = false; btn.textContent = '📧 Email'; }
     } else {
-      showMsg('share-msg', data.error || 'Failed to send.', 'error');
+      let msgEl = document.getElementById('share-msg');
+      if (msgEl) msgEl.innerHTML = `<div class="error-box" style="margin-top:10px">${data.error || 'Failed to send.'}</div>`;
       if (btn) { btn.disabled = false; btn.textContent = '📧 Email'; }
     }
   } catch(e) {
@@ -3439,6 +3441,9 @@ async function shareBarEmail(id) {
   } catch(e) { showMsg(id+'-msg', 'Network error.', 'error'); }
   finally { if (btn) { btn.disabled = false; btn.textContent = '📧 Email'; } }
 }
+function clearShareMsg() {
+  document.getElementById('share-msg').innerHTML = '';
+}
 
 function closeShareModal() {
   document.getElementById('share-modal').classList.remove('active');
@@ -3488,8 +3493,9 @@ function buildAndOpenWa() {
     message = `Hello ${clientName},\n\nPlease find herein your ${docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n' + pdfLine : ''}\n\nRef: ${extra.token || docNumber}\nAmount: USD $${amount}\n\nFor any queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
   }
   let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
-  window.open(waUrl, '_blank');
-  closeShareModal();
+  let waBtn = document.querySelector('#share-modal .btn-success');
+  if (waBtn) { waBtn.textContent = '✅ Opened'; waBtn.style.background = '#1b5e20'; setTimeout(() => { waBtn.textContent = '💬 WhatsApp'; waBtn.style.background = ''; }, 3000); }
+  location.href = waUrl;
 }
 
 function toggleSelectAll(cb) {
