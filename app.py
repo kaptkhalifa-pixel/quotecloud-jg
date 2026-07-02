@@ -929,7 +929,7 @@ def build_routing_lines(segments):
 
 def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
                                    client_phone, note, discount, extra_items,
-                                   currency="USD", kes_rate=0):
+                                   currency="USD", kes_rate=0, ghost_mode=False):
 
     items = []
     ac_label = result.get("ac_label", "Aircraft")
@@ -958,45 +958,49 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     routing_text = "Routing:\n" + "\n".join(routing_lines) if routing_lines else ""
     note_line = f"Note: {note}" if note else ""
 
-    if total_hrs > 0 and rate > 0:
+    if ghost_mode:
+        total_bundled = float(result.get("total_usd", 0))
         item_parts = [f"Equipment: {ac_label}"]
         if routing_text:
             item_parts.append(routing_text)
         if note_line:
             item_parts.append(note_line)
-        was_adjusted = result.get("_was_adjusted", False)
-        adj_total = float(result.get("total_usd", 0))
-        pax_preview = float(result.get("pax_fee_usd_display") if result.get("pax_fee_usd_display") is not None else (result.get("pax_fee_usd") or 0))
-        if was_adjusted and adj_total > 0:
-            items.append({
-                "name": "Aircraft Charter\n" + "\n".join(item_parts),
-                "quantity": str(round(total_hrs, 2)),
-                "unit_cost": str(rate)
-            })
-        else:
-            items.append({
-                "name": "Aircraft Charter\n" + "\n".join(item_parts),
-                "quantity": str(round(total_hrs, 2)),
-                "unit_cost": str(rate)
-            })
+        item_parts.append("Charter price — all inclusive.")
+        items.append({
+            "name": "Charter Package\n" + "\n".join(item_parts),
+            "quantity": "1",
+            "unit_cost": str(round(total_bundled, 2))
+        })
+    elif total_hrs > 0 and rate > 0:
+        item_parts = [f"Equipment: {ac_label}"]
+        if routing_text:
+            item_parts.append(routing_text)
+        if note_line:
+            item_parts.append(note_line)
+        items.append({
+            "name": "Aircraft Charter\n" + "\n".join(item_parts),
+            "quantity": str(round(total_hrs, 2)),
+            "unit_cost": str(rate)
+        })
 
     pax_fee = result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0
     pax_label = result.get("_adj_pax_label") or "Passenger Taxes & Admin Fees"
     was_adjusted_check = result.get("_was_adjusted", False)
-    if pax_fee > 0 and not was_adjusted_check:
-        items.append({
-            "name": pax_label,
-            "quantity": "1",
-            "unit_cost": str(pax_fee)
-        })
-    elif pax_fee > 0 and was_adjusted_check:
-        adj_pax = float(result.get("pax_fee_usd_display") or 0)
-        if adj_pax > 0:
+    if not ghost_mode:
+        if pax_fee > 0 and not was_adjusted_check:
             items.append({
                 "name": pax_label,
                 "quantity": "1",
-                "unit_cost": str(round(adj_pax, 2))
+                "unit_cost": str(pax_fee)
             })
+        elif pax_fee > 0 and was_adjusted_check:
+            adj_pax = float(result.get("pax_fee_usd_display") or 0)
+            if adj_pax > 0:
+                items.append({
+                    "name": pax_label,
+                    "quantity": "1",
+                    "unit_cost": str(round(adj_pax, 2))
+                })
 
     overnight_usd = result.get("overnight_usd") or result.get("overnight_cost_usd") or 0
     if overnight_usd > 0 and overnight_rate > 0:
@@ -1136,10 +1140,11 @@ def pdf():
 
         currency = data.get("currency", "USD")
         kes_rate = float(data.get("kes_rate", 0))
+        ghost_mode = data.get("ghost_mode", False)
         payload, doc_number = build_pdf_payload_from_result(
             doc_type, result, client_name, client_email,
             client_phone, note, discount, extra_items,
-            currency=currency, kes_rate=kes_rate)
+            currency=currency, kes_rate=kes_rate, ghost_mode=ghost_mode)
 
         out_path = f"/tmp/{doc_number}.pdf"
         hq.generate_pdf_weasy(payload, out_path)

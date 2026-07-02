@@ -1563,26 +1563,72 @@ function recalcAdjuster(idx) {
 }
 
 function confirmApply(idx) {
-
+  let res = lastResults[idx];
+  if (!res) return;
   let isKes = document.getElementById('adj-kes-mode-'+idx)?.checked;
   let kesRate = fxRates['KES'] || 0;
-  let rateUsd = lastResults[idx]._adj_rate || 0;
-  let paxUsd = lastResults[idx]._adj_pax || 0;
-  let total = lastResults[idx]._adj_total || 0;
+  let rateUsd = res._adj_rate || 0;
+  let paxUsd = res._adj_pax || 0;
+  let total = res._adj_total || 0;
+  let origTotal = res.total_usd || 0;
+
+  // Enforce exact total — no drift
+  res._adj_total = total;
+  res._locked = true;
+
+  let fmt = v => `USD $${v.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  let fmtKes = v => `KES ${(Math.ceil(v*kesRate/1000)*1000).toLocaleString()}`;
+  let newTotalDisplay = isKes && kesRate > 0 ? fmtKes(total) : fmt(total);
+  let oldTotalDisplay = isKes && kesRate > 0 ? fmtKes(origTotal) : fmt(origTotal);
+  let diff = total - origTotal;
+  let diffDisplay = diff === 0 ? '' : diff > 0
+    ? `<span style="color:#e65100">▲ ${fmt(Math.abs(diff))}</span>`
+    : `<span style="color:#1b5e20">▼ ${fmt(Math.abs(diff))}</span>`;
+
   let adjSummary = document.getElementById('adj-summary-'+idx);
-  let rateDisplay = isKes && kesRate > 0 
-    ? `KES ${(Math.ceil(rateUsd*kesRate/1000)*1000).toLocaleString()}/hr`
-    : `$${Math.round(rateUsd*100)/100}/hr`;
-  let paxDisplay = isKes && kesRate > 0
-    ? `KES ${(Math.ceil(paxUsd*kesRate/1000)*1000).toLocaleString()}`
-    : `$${Math.round(paxUsd*100)/100}`;
-  let totalDisplay = isKes && kesRate > 0
-    ? `KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}`
-    : `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
-  if (adjSummary) adjSummary.innerHTML = `✅ <strong>New values applied.</strong> Rate: ${rateDisplay} · Pax/Admin: ${paxDisplay} · Total: ${totalDisplay}. Proceed to Generate PDF below.`;
-  adjSummary.style.background = '#c8e6c9';
-  adjSummary.dataset.applied = 'true';
-  adjSummary.scrollIntoView({behavior:'smooth', block:'center'});
+  if (adjSummary) {
+    adjSummary.style.display = 'block';
+    adjSummary.style.background = '#e8f5e9';
+    adjSummary.dataset.applied = 'true';
+    adjSummary.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:1.1rem">🔒</span>
+        <strong style="color:#1b5e20">Price Locked</strong>
+        ${diffDisplay}
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:2px solid #1b5e20">
+          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">New Price</div>
+          <div style="font-size:1rem;font-weight:700;color:#1b5e20">${newTotalDisplay}</div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:1px solid #ddd">
+          <div style="font-size:0.65rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Was</div>
+          <div style="font-size:1rem;font-weight:700;color:#888">${oldTotalDisplay}</div>
+        </div>
+      </div>
+      <div style="font-size:0.72rem;color:#555;margin-top:8px">✅ Ready — tap Generate PDF to proceed. To unlock, switch to Target Price tab.</div>`;
+    adjSummary.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  // Update live total display
+  let liveTotalEl = document.getElementById('adj-live-total-'+idx);
+  if (liveTotalEl) {
+    liveTotalEl.style.background = '#1b5e20';
+    liveTotalEl.textContent = newTotalDisplay + ' 🔒';
+  }
+
+  // Show warning on reverse tab
+  let reverseEl = document.getElementById('adj-tab-reverse-'+idx);
+  if (reverseEl) {
+    let warn = document.getElementById('adj-lock-warn-'+idx);
+    if (!warn) {
+      warn = document.createElement('div');
+      warn.id = 'adj-lock-warn-'+idx;
+      warn.style.cssText = 'background:#fff3e0;border:1px solid #ffe082;border-radius:6px;padding:10px 12px;font-size:0.78rem;color:#7c5700;margin-bottom:12px;line-height:1.5';
+      warn.innerHTML = '⚠️ <strong>A price is currently locked.</strong> Setting a new target price will unlock the quote and recalculate all values.';
+      reverseEl.insertBefore(warn, reverseEl.firstChild);
+    }
+  }
 }
 
 function calcReverse(idx) {
@@ -1809,12 +1855,16 @@ function syncGhostMode(idx) {
 
 function applyFromReverse(idx) {
   let impliedRate = lastResults[idx]._implied_rate;
+  let targetRaw = parseFloat(document.getElementById('adj-target-'+idx)?.value) || 0;
   let pax = parseFloat(document.getElementById('adj-rev-pax-'+idx)?.value) || 0;
   if (!impliedRate) return;
+  // Force exact total to target — no drift
+  lastResults[idx]._adj_rate = impliedRate;
+  lastResults[idx]._adj_pax = pax;
+  lastResults[idx]._adj_total = targetRaw;
   document.getElementById('adj-rate-'+idx).value = Math.round(impliedRate * 100) / 100;
   document.getElementById('adj-pax-'+idx).value = pax;
   switchAdjTab(idx, 'manual');
-  recalcAdjuster(idx);
   confirmApply(idx);
 }
 
@@ -1950,7 +2000,8 @@ async function generatePDF(allAircraft) {
   try {
     let currency = document.getElementById('pdf-currency')?.value || 'USD';
     let kesRate = fxRates['KES'] || 0;
-    let body = { doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras, currency, kes_rate: kesRate };
+    let ghostMode = result._ghost_mode || lastResults[parseInt(document.getElementById('pdf-aircraft-select').value)||0]?._ghost_mode || false;
+    let body = { doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras, currency, kes_rate: kesRate, ghost_mode: ghostMode };
     let r = await fetch('/pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); let ind2=document.getElementById('pdf-generating-indicator'); if(ind2)ind2.remove(); showMsg('pdf-msg',e.error||'Failed','error'); return; }
     let pdfUrl = r.headers.get('X-PDF-URL') || '';
