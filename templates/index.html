@@ -3385,10 +3385,8 @@ function renderShareBar(p) {
 
 function shareBarWa(id) {
   let p = shareBarData[id] || {};
-  let waInput = document.getElementById(id+'-wa');
-  if (!waInput) { alert('WA input not found for id: ' + id); return; }
-  let wa = waInput.value.trim().replace(/\D/g,'');
-  if (!wa) { alert('Enter a WhatsApp number first'); return; }
+  let wa = (document.getElementById(id+'-wa')?.value||'').trim().replace(/\D/g,'');
+  if (!wa) { showMsg(id+'-msg','Enter WhatsApp number.','error'); return; }
 
   let templateKey = p.docType === 'Invoice' ? 'invoice' : p.docType === 'Receipt' ? 'receipt' : 'quote';
   let template = msgTemplates[templateKey] || '';
@@ -3409,7 +3407,8 @@ function shareBarWa(id) {
   } else {
     message = `Hello ${p.clientName||'Valued Client'},\n\nPlease find your ${p.docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n'+pdfLine : ''}\n\nRef: ${p.docNumber}\nAmount: USD $${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}\n\nFor queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
   }
-  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(message)}`, '_blank');
+  let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
+  location.href = waUrl;
 }
 
 async function shareBarEmail(id) {
