@@ -2569,9 +2569,14 @@ function renderAircraft() {
             </select>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:14px"><label>Home Airstrip</label><input class="ac-home" value="${ac.home_airstrip||'Wilson Airport, Nairobi'}"></div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label>Aircraft Base</label>
+          <input class="ac-home" value="${ac.home_airstrip||''}" placeholder="Your aircraft's home airstrip or helipad">
+          <div style="font-size:0.72rem;color:#888;margin-top:4px">Where this aircraft is based. The system calculates positioning legs from here to the client departure point automatically.</div>
+        </div>
         <div style="margin-bottom:14px">
           <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Base Coordinates</label>
+          <div style="font-size:0.72rem;color:#888;margin-bottom:6px">Paste a Google Maps pin or link — the system resolves coordinates with maximum accuracy. On Google Maps: right-click any location → Copy coordinates.</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input class="ac-base-input" placeholder="Paste Maps pin, coords or place name" style="flex:1;min-width:160px" value="${ac.base_lat && ac.base_lon ? ac.base_lat+','+ac.base_lon : ''}">
             <button class="btn btn-outline btn-sm" onclick="resolveAcBase(this)">Resolve</button>
@@ -2580,20 +2585,45 @@ function renderAircraft() {
           <input type="hidden" class="ac-base-lat" value="${ac.base_lat||''}">
           <input type="hidden" class="ac-base-lon" value="${ac.base_lon||''}">
         </div>
-        <div class="toggle-row" style="margin-bottom:14px">
+        <div class="toggle-row" style="margin-bottom:6px">
           <input type="checkbox" class="ac-urban-hops" ${ac.allow_urban_hops?'checked':''} style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-          <label style="margin:0;font-size:0.88rem;font-weight:400;cursor:pointer">Allow urban hops</label>
+          <label style="margin:0;font-size:0.88rem;font-weight:400;cursor:pointer">Allow Urban Hops</label>
         </div>
+        <div style="font-size:0.72rem;color:#888;margin-bottom:14px;padding:8px 10px;background:#f8f9fa;border-radius:6px">Urban hop mode allows this aircraft to quote short-distance missions within city limits that would normally be below minimum flight time. Enable for helicopter operators doing rooftop transfers, hospital runs or city-to-city hops.</div>
         <div class="form-row">
-          <div class="form-group"><label>Seats</label><input class="ac-seater" type="number" value="${ac.seater}"></div>
-          <div class="form-group"><label>Speed (KTAS)</label><input class="ac-speed" type="number" value="${ac.speed}"></div>
+          <div class="form-group">
+            <label>Seats</label>
+            <input class="ac-seater" type="number" value="${ac.seater}">
+            <div style="font-size:0.72rem;color:#888;margin-top:4px">Total passenger capacity — not including crew.</div>
+          </div>
+          <div class="form-group">
+            <label>Block Speed (kias)</label>
+            <input class="ac-speed" type="number" value="${ac.speed}">
+            <div style="font-size:0.72rem;color:#888;margin-top:4px">Average cruise speed in knots. Used to calculate flight time from distance. Use typical en-route speed, not maximum speed.</div>
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Rate (USD/hr)</label><input class="ac-rate" type="number" value="${ac.rate}"></div>
-          <div class="form-group"><label>Pax Fee (USD)</label><input class="ac-pax" type="number" value="${ac.pax_fee}"></div>
+          <div class="form-group">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <input type="checkbox" class="ac-pax-enabled" ${ac.pax_fee_enabled!==false?'checked':''} style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+              <label style="margin:0;font-size:0.88rem;font-weight:600">Mission Fixed Costs</label>
+            </div>
+            <input class="ac-pax-label" placeholder="Mission Fixed Costs" value="${ac.pax_label||'Mission Fixed Costs'}" style="margin-bottom:6px;font-size:0.82rem">
+            <input class="ac-pax" type="number" value="${ac.pax_fee}">
+            <div style="font-size:0.72rem;color:#888;margin-top:4px">Fixed costs charged once per mission regardless of distance — navigation fees, landing fees, departure taxes. Uncheck to exclude from all quotes.</div>
+          </div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Overnight Rate (USD/night)</label><input class="ac-overnight" type="number" value="${ac.overnight_rate||300}"></div>
+          <div class="form-group">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <input type="checkbox" class="ac-overnight-enabled" ${ac.overnight_enabled!==false?'checked':''} style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+              <label style="margin:0;font-size:0.88rem;font-weight:600">Crew Overnight / Per Diem</label>
+            </div>
+            <input class="ac-overnight-label" placeholder="Crew Overnight" value="${ac.overnight_label||'Crew Overnight'}" style="margin-bottom:6px;font-size:0.82rem">
+            <input class="ac-overnight" type="number" value="${ac.overnight_rate||300}">
+            <div style="font-size:0.72rem;color:#888;margin-top:4px">Charged when the aircraft and crew sleep outside home base. Covers crew accommodation and per diem. Uncheck to exclude overnight charges from all quotes.</div>
+          </div>
           <div class="form-group"><label>Idle Day Rate (USD/day)</label><input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}"></div>
         </div>
         <div class="form-group" style="margin-bottom:14px">
