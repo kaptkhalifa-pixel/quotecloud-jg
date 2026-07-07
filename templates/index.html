@@ -2159,6 +2159,12 @@ function savePrimaryCurrency() {
   let val = document.getElementById('s-primary-currency').value;
   if (!operatorConfig.fx) operatorConfig.fx = {};
   operatorConfig.fx.primary_currency = val;
+  // Sync PDF currency dropdown
+  let pdfCur = document.getElementById('pdf-currency');
+  if (pdfCur) {
+    pdfCur.value = val;
+    updateCurrencyDisplay();
+  }
   saveSettings();
 }
 
@@ -2166,6 +2172,10 @@ function saveSecondaryCurrency() {
   let val = document.getElementById('s-secondary-currency').value;
   if (!operatorConfig.fx) operatorConfig.fx = {};
   operatorConfig.fx.secondary_currency = val;
+  // Auto-enable secondary currency display
+  let showKes = document.getElementById('s-fx-show-kes');
+  if (showKes) showKes.checked = val !== '';
+  operatorConfig.fx.show_kes = val !== '';
   saveSettings();
 }
 function loadPresetChips() {
@@ -3122,7 +3132,11 @@ async function loadSettings() {
   document.getElementById('s-fx-show-kes').checked = fx.show_kes !== false;
 let primaryCur = document.getElementById('s-primary-currency');
   let secondaryCur = document.getElementById('s-secondary-currency');
-  if (primaryCur && fx.primary_currency) primaryCur.value = fx.primary_currency;
+if (primaryCur && fx.primary_currency) {
+    primaryCur.value = fx.primary_currency;
+    let pdfCur = document.getElementById('pdf-currency');
+    if (pdfCur) pdfCur.value = fx.primary_currency;
+  }
   if (secondaryCur) secondaryCur.value = fx.secondary_currency || '';
   let fxr = fx.rates || {};
   document.getElementById('s-fx-kes').value = fxr.KES || '';
