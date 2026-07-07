@@ -984,7 +984,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         })
 
     pax_fee = result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0
-    pax_label = result.get("_adj_pax_label") or "Passenger Taxes & Admin Fees"
+    pax_label = result.get("_adj_pax_label") or "Mission Costs"
     was_adjusted_check = result.get("_was_adjusted", False)
     if not ghost_mode:
         if pax_fee > 0 and not was_adjusted_check:
