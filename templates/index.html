@@ -745,9 +745,50 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <button class="btn btn-block" onclick="saveBank()">Save Bank Details</button>
     <div id="bank-msg"></div>
   </div>
-  <div class="card">
-    <h3>FX Rate Manager</h3>
-    <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px;border-left:3px solid {{ operator.branding.primary_color }}">Control the exchange rates used across the platform for KES quoting and PDF generation. Auto mode fetches live rates. Manual mode lets you set your own fixed rates.</p>
+<div class="card">
+    <h3>Currency Settings</h3>
+    <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px;border-left:3px solid {{ operator.branding.primary_color }}">Set your primary quoting currency and an optional secondary currency for reference. All quotes, invoices and receipts will use your primary currency. The secondary currency shows as a conversion reference.</p>
+    <div class="form-row" style="margin-bottom:16px">
+      <div class="form-group">
+        <label>Primary Currency</label>
+        <select id="s-primary-currency" onchange="savePrimaryCurrency()">
+          <option value="USD">USD — US Dollar</option>
+          <option value="KES">KES — Kenya Shilling</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="AUD">AUD — Australian Dollar</option>
+          <option value="ZAR">ZAR — South African Rand</option>
+          <option value="TZS">TZS — Tanzania Shilling</option>
+          <option value="UGX">UGX — Uganda Shilling</option>
+          <option value="BWP">BWP — Botswana Pula</option>
+          <option value="NAD">NAD — Namibian Dollar</option>
+          <option value="BRL">BRL — Brazilian Real</option>
+          <option value="CAD">CAD — Canadian Dollar</option>
+        </select>
+        <div style="font-size:0.72rem;color:#888;margin-top:4px">All quotes and documents generated in this currency.</div>
+      </div>
+      <div class="form-group">
+        <label>Secondary Currency (optional)</label>
+        <select id="s-secondary-currency" onchange="saveSecondaryCurrency()">
+          <option value="">None</option>
+          <option value="USD">USD — US Dollar</option>
+          <option value="KES">KES — Kenya Shilling</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="AUD">AUD — Australian Dollar</option>
+          <option value="ZAR">ZAR — South African Rand</option>
+          <option value="TZS">TZS — Tanzania Shilling</option>
+          <option value="UGX">UGX — Uganda Shilling</option>
+          <option value="BWP">BWP — Botswana Pula</option>
+          <option value="NAD">NAD — Namibian Dollar</option>
+          <option value="BRL">BRL — Brazilian Real</option>
+          <option value="CAD">CAD — Canadian Dollar</option>
+        </select>
+        <div style="font-size:0.72rem;color:#888;margin-top:4px">Shown as a reference conversion alongside primary.</div>
+      </div>
+    </div>
+    <h3 style="margin-bottom:12px">FX Rate Manager</h3>
+    <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px;border-left:3px solid {{ operator.branding.primary_color }}">Control the exchange rates used for currency conversion. Auto mode fetches live rates from open.er-api.com. Manual mode lets you set fixed rates.</p>
     <div class="settings-section">
       <div class="toggle-row" style="margin-bottom:16px">
         <input type="checkbox" id="s-fx-manual" onchange="toggleFxMode()" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
@@ -2114,7 +2155,19 @@ function applyFromReverse(idx) {
       <div style="font-size:0.72rem;color:#555;margin-top:6px">✅ Ready — tap Generate PDF to proceed.</div>
     </div>`;
 }
+function savePrimaryCurrency() {
+  let val = document.getElementById('s-primary-currency').value;
+  if (!operatorConfig.fx) operatorConfig.fx = {};
+  operatorConfig.fx.primary_currency = val;
+  saveSettings();
+}
 
+function saveSecondaryCurrency() {
+  let val = document.getElementById('s-secondary-currency').value;
+  if (!operatorConfig.fx) operatorConfig.fx = {};
+  operatorConfig.fx.secondary_currency = val;
+  saveSettings();
+}
 function loadPresetChips() {
   let presets = operatorConfig.rate_presets || [];
   document.querySelectorAll('[id^="preset-chips-"]').forEach(el => {
@@ -3067,6 +3120,10 @@ async function loadSettings() {
   let isManual = fx.mode === 'manual';
   document.getElementById('s-fx-manual').checked = isManual;
   document.getElementById('s-fx-show-kes').checked = fx.show_kes !== false;
+let primaryCur = document.getElementById('s-primary-currency');
+  let secondaryCur = document.getElementById('s-secondary-currency');
+  if (primaryCur && fx.primary_currency) primaryCur.value = fx.primary_currency;
+  if (secondaryCur) secondaryCur.value = fx.secondary_currency || '';
   let fxr = fx.rates || {};
   document.getElementById('s-fx-kes').value = fxr.KES || '';
   document.getElementById('s-fx-eur').value = fxr.EUR || '';
