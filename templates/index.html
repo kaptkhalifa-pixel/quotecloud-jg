@@ -284,10 +284,19 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 <!-- QUOTE TAB -->
 <div class="tab-content active" id="nav-quote">
   <div class="card">
-    <div class="mission-tabs">
+<div class="mission-tabs">
       <div class="mtab active" onclick="showMission('one_way',this)">One Way</div>
       <div class="mtab" onclick="showMission('return',this)">Return</div>
       <div class="mtab" onclick="showMission('safari',this)">Safari</div>
+    </div>
+    <div id="mission-desc-one_way" style="font-size:0.78rem;color:#666;line-height:1.6;margin-bottom:14px;padding:10px 12px;background:#f8f9fa;border-radius:6px;border-left:3px solid #0a0a0a">
+      <strong>One Way</strong> — Point to point charter. The system automatically adds a positioning leg from your base to the client departure point, and a depositioning leg back to base after drop-off. All legs are billed at your hourly rate.
+    </div>
+    <div id="mission-desc-return" style="font-size:0.78rem;color:#666;line-height:1.6;margin-bottom:14px;padding:10px 12px;background:#f8f9fa;border-radius:6px;border-left:3px solid #0a0a0a;display:none">
+      <strong>Return</strong> — Client departs and returns to the same location. If the aircraft waits, overnight and idle day rates apply. If the wait exceeds your threshold, the system automatically quotes a pick and drop instead — two separate one-way legs.
+    </div>
+    <div id="mission-desc-safari" style="font-size:0.78rem;color:#666;line-height:1.6;margin-bottom:14px;padding:10px 12px;background:#f8f9fa;border-radius:6px;border-left:3px solid #0a0a0a;display:none">
+      <strong>Safari / Multi-Leg</strong> — Multi-stop mission across multiple days. The aircraft follows the client between locations, accumulating overnight charges for every night out of base and idle day charges between legs. Used for safari circuits, expedition support, film shoots and multi-day campaigns.
     </div>
     <div id="m-one_way">
       <div class="form-group" style="margin-bottom:14px"><label>From</label><input type="text" id="ow-pickup" placeholder="Location, airstrip or Google Maps link"></div>
@@ -1110,6 +1119,8 @@ function showMission(m, el) {
   el.classList.add('active');
   ['one_way','return','safari'].forEach(id => {
     document.getElementById('m-' + id).style.display = id === m ? 'block' : 'none';
+    var desc = document.getElementById('mission-desc-' + id);
+    if (desc) desc.style.display = id === m ? 'block' : 'none';
   });
 }
 
