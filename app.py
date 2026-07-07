@@ -715,7 +715,8 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         "base_key": base_key,
         "base_label": ac_cfg.get("home_airstrip", "Wilson Airport, Nairobi"),
     }
-    hq.PAX_ADMIN_FEE_USD = float(ac_cfg["pax_fee"])
+    pax_enabled = ac_cfg.get("pax_fee_enabled", True)
+    hq.PAX_ADMIN_FEE_USD = float(ac_cfg["pax_fee"]) if pax_enabled else 0.0
     hq.MIN_CHARGEABLE_HR = float(rules.get("min_flight_hours", 1.0))
 
     try:
@@ -772,9 +773,14 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         result["ac_type"] = ac_cfg.get("type", "helicopter")
         result["home_airstrip"] = ac_cfg.get("home_airstrip", "")
         result["rate_usd"] = rate
-        result["overnight_rate_usd"] = overnight_rate
+        overnight_enabled = ac_cfg.get("overnight_enabled", True)
+        result["overnight_rate_usd"] = overnight_rate if overnight_enabled else 0.0
         result["idle_day_rate_usd"] = idle_day_rate
-        result["pax_fee_usd_display"] = float(ac_cfg["pax_fee"])
+        result["pax_fee_usd_display"] = float(ac_cfg["pax_fee"]) if pax_enabled else 0.0
+        result["pax_label"] = ac_cfg.get("pax_label", "Mission Fixed Costs")
+        result["overnight_label"] = ac_cfg.get("overnight_label", "Crew Overnight")
+        result["pax_fee_enabled"] = pax_enabled
+        result["overnight_enabled"] = overnight_enabled
         result["routing_mode"] = routing_mode
         min_hrs = float(rules.get("min_flight_hours", 1.0))
         result["min_chargeable_hrs"] = min_hrs
@@ -984,7 +990,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         })
 
     pax_fee = result.get("pax_fee_usd") or result.get("pax_fee_usd_display") or 0
-    pax_label = result.get("_adj_pax_label") or "Mission Costs"
+    pax_label = result.get("_adj_pax_label") or result.get("pax_label") or "Mission Costs"
+    overnight_label = result.get("overnight_label") or "Crew Overnight"
     was_adjusted_check = result.get("_was_adjusted", False)
     if not ghost_mode:
         if pax_fee > 0 and not was_adjusted_check:
