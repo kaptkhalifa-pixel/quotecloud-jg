@@ -3251,7 +3251,18 @@ if (primaryCur && fx.primary_currency) {
   document.getElementById('s-fx-ugx').value = fxr.UGX || '';
   toggleFxMode();
   let liveDiv = document.getElementById('fx-live-rates');
-  if (liveDiv && fxRates['KES']) liveDiv.textContent = `Current live rate: USD 1 = KES ${fxRates['KES']?.toFixed(2)}`;
+  if (liveDiv) {
+    let primaryCur = (operatorConfig.fx && operatorConfig.fx.primary_currency) || 'USD';
+    let secondaryCur = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || 'KES';
+    let secRate = fxRates[secondaryCur];
+    let priRate = fxRates[primaryCur];
+    if (secRate && primaryCur !== secondaryCur) {
+      let rate = primaryCur === 'USD' ? secRate : (secRate / (priRate || 1));
+      liveDiv.textContent = 'Current live rate: ' + primaryCur + ' 1 = ' + secondaryCur + ' ' + rate.toFixed(2);
+    } else if (fxRates['KES']) {
+      liveDiv.textContent = 'Current live rate: USD 1 = KES ' + fxRates['KES'].toFixed(2);
+    }
+  }
   await loadMessageTemplates();
 }
 async function uploadLogo(input) {
@@ -4305,7 +4316,8 @@ async function saveFxRates() {
     if (data.success) {
       showMsg('fx-msg', 'FX settings saved. Reloading rates...', 'success');
       await loadFX();
-      showMsg('fx-msg', `FX saved. Live KES rate: ${fxRates['KES']?.toFixed(2) || 'N/A'}`, 'success');
+      let secondaryCur2 = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || 'KES';
+      showMsg('fx-msg', 'FX saved. Live ' + secondaryCur2 + ' rate: ' + (fxRates[secondaryCur2]?.toFixed(2) || 'N/A'), 'success');
     } else {
       showMsg('fx-msg', data.error || 'Error', 'error');
     }
