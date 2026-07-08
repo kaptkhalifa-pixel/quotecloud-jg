@@ -301,7 +301,16 @@ def save_bookings(bookings):
         batch.commit()
     except Exception as e:
         print(f"Firestore save_bookings error: {e}")
-
+def write_audit_log(action, details={}):
+    try:
+        tenant_collection("audit").add({
+            "action": action,
+            "details": details,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "date": datetime.date.today().isoformat()
+        })
+    except Exception as e:
+        print(f"Audit log error: {e}")
 def generate_token(doc_type="Q"):
     import random, string
     prefix = OPERATOR.get("invoice", {}).get("prefix", "JG")
@@ -321,10 +330,13 @@ def inherit_token(token, new_type):
         return "-".join(parts)
     return generate_token(new_type)
 
-def load_records():
+def load_records(include_deleted=False):
     try:
         docs = tenant_collection("records").order_by("timestamp").stream()
-        return [doc.to_dict() for doc in docs]
+        records = [doc.to_dict() for doc in docs]
+        if not include_deleted:
+            records = [r for r in records if not r.get("deleted")]
+        return records
     except Exception as e:
         print(f"Firestore load_records error: {e}")
         return []
@@ -1565,7 +1577,16 @@ def delete_record_route():
     if rec and (rec.get("paid") or float(rec.get("paid_amount", 0)) > 0):
         if password != get_admin_pass():
             return jsonify({"error": "Password required to delete a paid record."}), 403
-    records = [r for r in records if r.get("number") != number]
+    for r in records:
+        if r.get("number") == number:
+            r["deleted"] = True
+            r["deleted_at"] = datetime.datetime.now().isoformat()
+            write_audit_log("record_deleted", {
+                "number": number,
+                "doc_type": r.get("doc_type", ""),
+                "client_name": r.get("client_name", ""),
+                "total_usd": r.get("total_usd", 0)
+            })
     save_records(records)
     return jsonify({"success": True})
 
@@ -2473,6 +2494,11 @@ def delete_bookings():
             bookings[token]["deleted"] = True
             bookings[token]["deleted_at"] = datetime.datetime.now().isoformat()
             deleted += 1
+            write_audit_log("booking_deleted", {
+                "token": token,
+                "client_name": bookings[token].get("client_name", ""),
+                "total_usd": bookings[token].get("total_usd", 0)
+            })
     save_bookings(bookings)
     return jsonify({"success": True, "deleted": deleted})
 @app.route("/debug/pdf_test", methods=["GET"])
