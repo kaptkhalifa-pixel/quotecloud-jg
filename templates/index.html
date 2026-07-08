@@ -250,7 +250,11 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
 <header>
   <div class="header-left">
-    <img src="{{ operator.logo_url }}" alt="{{ operator.company_name }}">
+    {% if operator.logo_url %}
+    <img src="{{ operator.logo_url }}" alt="{{ operator.company_name }}" style="height:36px;border-radius:4px;object-fit:contain">
+    {% else %}
+    <div style="width:36px;height:36px;background:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:0.6rem;font-weight:700;color:{{ operator.branding.primary_color or '#0a0a0a' }}">{{ operator.company_name[:2].upper() }}</div>
+    {% endif %}
     <div>
       <h1>{{ operator.company_name }}</h1>
       <span>Quotecloud Admin</span>
