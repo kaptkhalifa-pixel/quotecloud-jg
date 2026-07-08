@@ -4250,9 +4250,12 @@ async function loadMessageTemplates() {
   try {
     let r = await fetch('/settings/message_templates');
     let data = await r.json();
-    msgTemplates.quote = data.quote || '';
-    msgTemplates.invoice = data.invoice || '';
-    msgTemplates.receipt = data.receipt || '';
+    var defaultQuote = "Dear {client_name},\n\nPlease find attached your quotation Ref {ref} from {company_name}.\n\nTotal: {amount}\n\nThis quote is valid for 48 hours. To confirm your booking, please reply to this message or call us directly.\n\nKind regards,\n{company_name}";
+    var defaultInvoice = "Dear {client_name},\n\nPlease find attached your invoice Ref {ref} from {company_name}.\n\nAmount Due: {amount}\n\nKindly make payment as per the bank details on the invoice. Please share proof of payment once done.\n\nKind regards,\n{company_name}";
+    var defaultReceipt = "Dear {client_name},\n\nThank you for your payment. Please find attached your receipt Ref {ref} from {company_name}.\n\nAmount Received: {amount}\n\nWe look forward to flying with you. Safe travels!\n\nKind regards,\n{company_name}";
+    msgTemplates.quote = data.quote || defaultQuote;
+    msgTemplates.invoice = data.invoice || defaultInvoice;
+    msgTemplates.receipt = data.receipt || defaultReceipt;
     if (document.getElementById('s-msg-quote')) document.getElementById('s-msg-quote').value = msgTemplates.quote;
     if (document.getElementById('s-msg-invoice')) document.getElementById('s-msg-invoice').value = msgTemplates.invoice;
     if (document.getElementById('s-msg-receipt')) document.getElementById('s-msg-receipt').value = msgTemplates.receipt;
