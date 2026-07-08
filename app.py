@@ -2157,15 +2157,19 @@ def autocomplete():
     try:
         import requests as req
         geo = get_geo_lock()
-        center_lat = geo.get("center_lat", -0.023)
-        center_lon = geo.get("center_lon", 37.906)
-        radius_km = geo.get("radius_km", 1500)
-        radius_m = int(float(radius_km) * 1000)
+        geo_enabled = geo.get("enabled", False)
+        params = {"input": query, "key": GOOGLE_API_KEY, "language": "en"}
+        if geo_enabled and geo.get("center_lat") and geo.get("center_lon"):
+            center_lat = geo.get("center_lat")
+            center_lon = geo.get("center_lon")
+            radius_km = geo.get("radius_km", 500)
+            radius_m = int(float(radius_km) * 1000)
+            params["location"] = f"{center_lat},{center_lon}"
+            params["radius"] = radius_m
+            params["strictbounds"] = False
         r = req.get(
             "https://maps.googleapis.com/maps/api/place/autocomplete/json",
-            params={"input": query, "key": GOOGLE_API_KEY, "language": "en",
-                    "location": f"{center_lat},{center_lon}",
-                    "radius": radius_m, "strictbounds": False},
+            params=params,
             timeout=5
         )
         gdata = r.json()
