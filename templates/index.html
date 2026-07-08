@@ -758,20 +758,41 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
   <div class="card">
     <h3>Bank Details</h3>
-    <div class="form-row">
-      <div class="form-group"><label>Account Name</label><input type="text" id="s-bank-name"></div>
-      <div class="form-group"><label>Bank Name</label><input type="text" id="s-bank-bank"></div>
+    <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:14px 16px;background:#f8f9fa;border-radius:8px;border-left:3px solid #0a0a0a">
+      Your bank details appear on every invoice and quotation PDF. Add all accounts your clients can pay into — local currency, USD, or any other. These details are never shared with other operators on the platform.
     </div>
     <div class="form-row">
-      <div class="form-group"><label>KES Account</label><input type="text" id="s-bank-kes"></div>
-      <div class="form-group"><label>USD Account</label><input type="text" id="s-bank-usd"></div>
+      <div class="form-group"><label>Account Holder Name</label><input type="text" id="s-bank-name" placeholder="e.g. Savannah Air Charter Ltd"></div>
+      <div class="form-group"><label>Bank Name</label><input type="text" id="s-bank-bank" placeholder="e.g. Family Bank, Chase, Barclays"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>SWIFT</label><input type="text" id="s-bank-swift"></div>
-      <div class="form-group"><label>Branch</label><input type="text" id="s-bank-branch"></div>
+      <div class="form-group"><label>Primary Account Number</label><input type="text" id="s-bank-kes" placeholder="e.g. 0123456789"></div>
+      <div class="form-group"><label>Primary Account Currency</label><input type="text" id="s-bank-kes-currency" placeholder="e.g. KES, USD, EUR"></div>
     </div>
-    <div class="form-group" style="margin-bottom:14px"><label>Invoice Prefix (e.g. HF)</label><input type="text" id="s-invoice-prefix"></div>
-    <div class="form-group-full"><label>Default Terms & Conditions</label><textarea id="s-invoice-terms" rows="8"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Secondary Account Number (optional)</label><input type="text" id="s-bank-usd" placeholder="e.g. 0123456790"></div>
+      <div class="form-group"><label>Secondary Account Currency</label><input type="text" id="s-bank-usd-currency" placeholder="e.g. USD, GBP, EUR"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>SWIFT / BIC Code</label><input type="text" id="s-bank-swift" placeholder="e.g. FABLKENA"></div>
+      <div class="form-group"><label>Branch / Sort Code</label><input type="text" id="s-bank-branch" placeholder="e.g. Kenyatta Ave (012)"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Mobile Money / PayBill (optional)</label>
+      <input type="text" id="s-bank-paybill" placeholder="e.g. M-Pesa Paybill 123456 or Venmo @company">
+      <div style="font-size:0.72rem;color:#888;margin-top:4px">Any mobile payment reference your clients can use — M-Pesa, Venmo, PayPal, Zelle etc.</div>
+    </div>
+    <div class="divider" style="height:1px;background:#eee;margin:20px 0"></div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Invoice Prefix</label>
+      <input type="text" id="s-invoice-prefix" placeholder="e.g. HF, SAC, JG">
+      <div style="font-size:0.72rem;color:#888;margin-top:4px">Used to generate document reference numbers e.g. HF-Q-060726-ABC123</div>
+    </div>
+    <div class="form-group-full">
+      <label>Default Terms & Conditions</label>
+      <textarea id="s-invoice-terms" rows="8"></textarea>
+      <div style="font-size:0.72rem;color:#888;margin-top:4px">These terms appear on every quotation and invoice PDF. Edit them to reflect your company policy.</div>
+    </div>
     <button class="btn btn-block" onclick="saveBank()">Save Bank Details</button>
     <div id="bank-msg"></div>
   </div>
