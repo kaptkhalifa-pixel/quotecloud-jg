@@ -802,7 +802,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <div class="divider" style="height:1px;background:#eee;margin:20px 0"></div>
     <div class="form-group" style="margin-bottom:14px">
-      <label>Invoice Prefix</label>
+      <label>PDF Prefix</label>
       <input type="text" id="s-invoice-prefix" placeholder="e.g. HF, SAC, JG">
       <div style="font-size:0.72rem;color:#888;margin-top:4px">Used to generate document reference numbers e.g. HF-Q-060726-ABC123</div>
     </div>
@@ -3226,7 +3226,10 @@ async function loadSettings() {
   document.getElementById('s-bank-name').value = bk.account_name || '';
   document.getElementById('s-bank-bank').value = bk.bank_name || '';
   document.getElementById('s-bank-kes').value = bk.kes_account || '';
+  if (document.getElementById('s-bank-kes-currency')) document.getElementById('s-bank-kes-currency').value = bk.kes_currency || 'KES';
   document.getElementById('s-bank-usd').value = bk.usd_account || '';
+  if (document.getElementById('s-bank-usd-currency')) document.getElementById('s-bank-usd-currency').value = bk.usd_currency || 'USD';
+  if (document.getElementById('s-bank-paybill')) document.getElementById('s-bank-paybill').value = bk.paybill || '';
   document.getElementById('s-bank-swift').value = bk.swift || '';
   document.getElementById('s-bank-branch').value = bk.branch || '';
   document.getElementById('s-invoice-prefix').value = inv.prefix || '';
@@ -3518,9 +3521,12 @@ async function saveBank() {
   operatorConfig.bank.account_name = document.getElementById('s-bank-name').value;
   operatorConfig.bank.bank_name = document.getElementById('s-bank-bank').value;
   operatorConfig.bank.kes_account = document.getElementById('s-bank-kes').value;
+  operatorConfig.bank.kes_currency = document.getElementById('s-bank-kes-currency').value || 'KES';
   operatorConfig.bank.usd_account = document.getElementById('s-bank-usd').value;
+  operatorConfig.bank.usd_currency = document.getElementById('s-bank-usd-currency').value || 'USD';
   operatorConfig.bank.swift = document.getElementById('s-bank-swift').value;
   operatorConfig.bank.branch = document.getElementById('s-bank-branch').value;
+  operatorConfig.bank.paybill = document.getElementById('s-bank-paybill') ? document.getElementById('s-bank-paybill').value : '';
   operatorConfig.invoice = operatorConfig.invoice || {};
   operatorConfig.invoice.prefix = document.getElementById('s-invoice-prefix').value;
   operatorConfig.invoice.terms = document.getElementById('s-invoice-terms').value;

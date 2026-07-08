@@ -192,18 +192,21 @@ def get_bank_details_block():
     lines = []
     if bank.get("account_name"):
         lines.append(bank["account_name"].upper())
-    if bank.get("bank_name") and bank.get("branch"):
-        lines.append(f"{bank['bank_name'].upper()} | BANK CODE: {bank.get('branch','').split(',')[-1].strip()} | SWIFT: {bank.get('swift','')}")
-    elif bank.get("bank_name"):
-        lines.append(bank["bank_name"].upper())
-    if bank.get("usd_account"):
-        lines.append(f"USD A/C: {bank['usd_account']}")
+    if bank.get("bank_name"):
+        bank_line = bank["bank_name"].upper()
+        if bank.get("swift"):
+            bank_line += f" | SWIFT: {bank['swift']}"
+        if bank.get("branch"):
+            bank_line += f" | {bank['branch'].upper()}"
+        lines.append(bank_line)
     if bank.get("kes_account"):
-        lines.append(f"KES A/C: {bank['kes_account']}")
-    if bank.get("branch"):
-        lines.append(f"{bank['branch'].upper()}")
+        kes_cur = bank.get("kes_currency", "KES")
+        lines.append(f"{kes_cur} A/C: {bank['kes_account']}")
+    if bank.get("usd_account"):
+        usd_cur = bank.get("usd_currency", "USD")
+        lines.append(f"{usd_cur} A/C: {bank['usd_account']}")
     if bank.get("paybill"):
-        lines.append(f"PAYBILL: {bank['paybill']}")
+        lines.append(f"MOBILE: {bank['paybill']}")
     return "\n".join(lines)
 
 hq.set_firestore_collection_fn(tenant_collection)
