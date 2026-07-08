@@ -282,6 +282,23 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 </div>
 
 <!-- QUOTE TAB -->
+{% if not operator.aircraft_configured %}
+<div id="onboarding-banner" style="background:#0a0a0a;color:#fff;padding:16px 20px;margin-bottom:0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <div>
+    <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.15em;color:#aaa;margin-bottom:6px">Getting Started</div>
+    <div style="font-size:0.88rem;line-height:1.7;color:#eee">
+      Welcome to QC Aero. To start quoting, complete these three steps:
+      <strong style="color:#fff;display:block;margin-top:8px">1. Add your aircraft</strong>
+      <span style="color:#aaa;font-size:0.82rem">Go to the Aircraft tab → Add Aircraft. Set your hourly rate, speed and base airport.</span>
+      <strong style="color:#fff;display:block;margin-top:6px">2. Configure your settings</strong>
+      <span style="color:#aaa;font-size:0.82rem">Go to Settings → add your company details, bank details and default terms.</span>
+      <strong style="color:#fff;display:block;margin-top:6px">3. Run your first quote</strong>
+      <span style="color:#aaa;font-size:0.82rem">Come back to the Quote tab, enter a route and get your first price in seconds.</span>
+    </div>
+  </div>
+  <button onclick="document.getElementById('onboarding-banner').style.display='none'" style="background:transparent;border:1px solid #444;color:#aaa;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:0.72rem;white-space:nowrap;font-family:'Space Mono',monospace">Dismiss</button>
+</div>
+{% endif %}
 <div class="tab-content active" id="nav-quote">
   <div class="card">
 <div class="mission-tabs">
