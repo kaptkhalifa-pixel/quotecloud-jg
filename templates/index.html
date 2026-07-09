@@ -1227,6 +1227,27 @@ function toggleSettingsCard(h3) {
   card.classList.toggle('collapsed');
 }
 
+
+// Prevent accidental select/input changes while scrolling on mobile
+(function() {
+  let scrolling = false;
+  let scrollTimer;
+  window.addEventListener('scroll', function() {
+    scrolling = true;
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(function() { scrolling = false; }, 150);
+  }, true);
+  document.addEventListener('touchstart', function() { scrolling = false; }, true);
+  document.addEventListener('touchmove', function() { scrolling = true; }, true);
+  document.addEventListener('touchend', function(e) {
+    if (scrolling && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setTimeout(function() { scrolling = false; }, 100);
+  }, true);
+})();
+
 function saveStateToStorage() {
   try { localStorage.setItem('qc_last_results', JSON.stringify(lastResults)); } catch(e) {}
 }
