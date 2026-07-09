@@ -1168,6 +1168,7 @@ def pdf():
             doc_type, result, client_name, client_email,
             client_phone, note, discount, extra_items,
             currency=currency, kes_rate=kes_rate, ghost_mode=ghost_mode)
+        payload["powered_by"] = "Quotecloud JG"
 
         out_path = f"/tmp/{doc_number}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
