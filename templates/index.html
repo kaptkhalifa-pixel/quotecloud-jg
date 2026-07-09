@@ -192,6 +192,12 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .settings-section h4::after { content: '▾'; font-size: 0.7rem; color: #999; transition: transform 0.2s; }
 .settings-section.collapsed h4::after { transform: rotate(-90deg); }
 .settings-section.collapsed > *:not(h4) { display: none; }
+.settings-card-collapsible { }
+.settings-card-collapsible .card-body { }
+.settings-card-collapsible.collapsed .card-body { display: none; }
+.settings-card-collapsible h3 { cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.settings-card-collapsible h3::after { content: '▾'; font-size: 0.75rem; color: #999; transition: transform 0.2s; margin-left: 8px; }
+.settings-card-collapsible.collapsed h3::after { transform: rotate(-90deg); }
 
 .logo-preview { max-height: 60px; margin-top: 10px; border-radius: 6px; display: block; }
 .trust-bar-editor { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
@@ -614,8 +620,9 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <!-- ═══════════════════════════════════════════ -->
   <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:4px">01 · Identity & Branding</div>
 
-  <div class="card">
-    <h3>Branding & Identity</h3>
+  <div class="card settings-card-collapsible collapsed">
+    <div class="card-body">
+    <h3 onclick="toggleSettingsCard(this)">Branding & Identity</h3>
     <div class="settings-section">
       <h4 onclick="toggleSettingsSection(this)">Logo & Company</h4>
       <div class="form-row">
@@ -682,10 +689,12 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <button class="btn btn-block" onclick="saveBranding()">Save Branding</button>
     <div id="branding-msg"></div>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>Company & Contact</h3>
+  <div class="card settings-card-collapsible collapsed">
+    <div class="card-body">
+    <h3 onclick="toggleSettingsCard(this)">Company & Contact</h3>
     <div class="form-row">
       <div class="form-group"><label>Phone</label><input type="tel" id="s-phone"></div>
       <div class="form-group"><label>WhatsApp (digits only)</label><input type="tel" id="s-whatsapp"></div>
@@ -698,6 +707,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="form-group-full"><label>Address</label><input type="text" id="s-address"></div>
     <button class="btn btn-block" onclick="saveCompany()">Save Company Details</button>
     <div id="company-msg"></div>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
@@ -705,8 +715,9 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <!-- ═══════════════════════════════════════════ -->
   <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:20px">02 · Operations</div>
 
-  <div class="card">
-<h3>Geographic Coverage</h3>
+  <div class="card settings-card-collapsible collapsed">
+<div class="card-body">
+<h3 onclick="toggleSettingsCard(this)">Geographic Coverage</h3>
     <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:14px 16px;background:#f8f9fa;border-radius:8px;border-left:3px solid #0a0a0a">
       This setting defines your operational boundary. When enabled, the quote engine will only accept locations that fall within a circular area calculated from a central point you set, measured in nautical miles radius. Think of it as your aircraft range map — quotes outside this area are automatically rejected. Useful for operators who only cover a specific region or country and want to prevent out-of-scope enquiries. Leave disabled for global operations.
     </div>
@@ -736,10 +747,12 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <button class="btn btn-block" onclick="saveGeoLock()">Save Geographic Settings</button>
     <div id="geo-msg"></div>
+    </div>
   </div>
 
-  <div class="card">
- <h3>Quoting Rules</h3>
+  <div class="card settings-card-collapsible collapsed">
+ <div class="card-body">
+ <h3 onclick="toggleSettingsCard(this)">Quoting Rules</h3>
     <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:14px 16px;background:#f8f9fa;border-radius:8px;border-left:3px solid #0a0a0a">
       These rules govern how the quote engine calculates prices. They apply to all aircraft and all mission types unless overridden per aircraft.
     </div>
@@ -776,6 +789,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <button class="btn btn-block" onclick="saveQuotingRules()">Save Quoting Rules</button>
     <div id="rules-msg"></div>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
@@ -783,8 +797,9 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <!-- ═══════════════════════════════════════════ -->
   <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:20px">03 · Finance & Documents</div>
 
-  <div class="card">
-    <h3>Bank Details</h3>
+  <div class="card settings-card-collapsible collapsed">
+    <div class="card-body">
+    <h3 onclick="toggleSettingsCard(this)">Bank Details</h3>
     <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:14px 16px;background:#f8f9fa;border-radius:8px;border-left:3px solid #0a0a0a">
       Your bank details appear on every invoice and quotation PDF. Add all accounts your clients can pay into — local currency, USD, or any other. These details are never shared with other operators on the platform.
     </div>
@@ -822,9 +837,11 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <button class="btn btn-block" onclick="saveBank()">Save Bank Details</button>
     <div id="bank-msg"></div>
+    </div>
   </div>
-<div class="card">
-    <h3>Currency Settings</h3>
+<div class="card settings-card-collapsible collapsed">
+    <div class="card-body">
+    <h3 onclick="toggleSettingsCard(this)">Currency Settings</h3>
     <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px;border-left:3px solid {{ operator.branding.primary_color }}">Set your primary quoting currency and an optional secondary currency for reference. All quotes, invoices and receipts will use your primary currency. The secondary currency shows as a conversion reference.</p>
     <div class="form-row" style="margin-bottom:16px">
       <div class="form-group">
@@ -894,10 +911,12 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <button class="btn btn-block" onclick="saveFxRates()">Save FX Settings</button>
     <div id="fx-msg"></div>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>Message Templates</h3>
+  <div class="card settings-card-collapsible collapsed">
+    <div class="card-body">
+    <h3 onclick="toggleSettingsCard(this)">Message Templates</h3>
     <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px">Customise the WhatsApp and email message body for each document type. Use {client_name}, {ref}, {amount}, {pdf_url}, {phone} as placeholders.</p>
     <div class="settings-section">
       <h4 onclick="toggleSettingsSection(this)">Quotation Message</h4>
@@ -913,6 +932,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <button class="btn btn-block" onclick="saveMessageTemplates()">Save Message Templates</button>
     <div id="msg-templates-msg"></div>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
@@ -1128,6 +1148,11 @@ const GEO_PRESETS = {
 function toggleSettingsSection(h4) {
   let section = h4.closest('.settings-section');
   section.classList.toggle('collapsed');
+}
+
+function toggleSettingsCard(h3) {
+  let card = h3.closest('.settings-card-collapsible');
+  card.classList.toggle('collapsed');
 }
 
 function saveStateToStorage() {
