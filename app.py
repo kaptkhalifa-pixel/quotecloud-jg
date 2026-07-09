@@ -1906,6 +1906,141 @@ def save_settings():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# ─── PER-SECTION SETTINGS SAVES ───
+
+@app.route("/settings/save/branding", methods=["POST"])
+@login_required
+def save_branding():
+    global OPERATOR
+    data = request.get_json()
+    try:
+        fields = ["company_name", "tagline", "logo_url", "footer_tagline", "branding", "trust_bar", "social", "contact"]
+        update = {k: data[k] for k in fields if k in data}
+        OPERATOR.update(update)
+        save_operator_config(OPERATOR)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settings/save/aircraft_mode", methods=["POST"])
+@login_required
+def save_aircraft_mode():
+    global OPERATOR
+    data = request.get_json()
+    try:
+        if "aircraft_mode" in data: OPERATOR["aircraft_mode"] = data["aircraft_mode"]
+        if "landing_field_disclaimer" in data: OPERATOR["landing_field_disclaimer"] = data["landing_field_disclaimer"]
+        if "airport_suitability_message" in data: OPERATOR["airport_suitability_message"] = data["airport_suitability_message"]
+        save_operator_config(OPERATOR)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settings/save/geo_lock", methods=["POST"])
+@login_required
+def save_geo_lock():
+    global OPERATOR
+    data = request.get_json()
+    try:
+        OPERATOR["geo_lock"] = data.get("geo_lock", {})
+        save_operator_config(OPERATOR)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settings/save/quoting_rules", methods=["POST"])
+@login_required
+def save_quoting_rules():
+    global OPERATOR
+    data = request.get_json()
+    try:
+        OPERATOR["quoting_rules"] = data.get("quoting_rules", {})
+        save_operator_config(OPERATOR)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settings/save/extra_time", methods=["POST"])
+@login_required
+def save_extra_time():
+    global OPERATOR
+    data = request.get_json()
+    try:
+        if "quoting_rules" not in OPERATOR:
+            OPERATOR["quoting_rules"] = {}
+        OPERATOR["quoting_rules"]["ground_time_buffer_enabled"] = data.get("enabled", False)
+        OPERATOR["quoting_rules"]["ground_time_buffer_minutes"] = data.get("minutes", 0)
+        save_operator_config(OPERATOR)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settings/save/client_display", methods=["POST"])
+@login_required
+def save_client_display():
+    global OPERATOR
+    data = request.get_json()
+    try:
+        if "quoting_rules" not in OPERATOR:
+            OPERATOR["quoting_rules"] = {}
+        OPERATOR["quoting_rules"]["show_distance_to_client"] = data.get("show_distance_to_client", False)
+        OPERATOR["quoting_rules"]["quote_validity_hours"] = data.get("quote_validity_hours", 48)
+        save_operator_config(OPERATOR)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settings/save/bank", methods=["POST"])
+@login_required
+def save_bank():
+    global OPERATOR
+    data = request.get_json()
+    try:
+        OPERATOR["bank"] = data.get("bank", {})
+        if "invoice" not in OPERATOR: OPERATOR["invoice"] = {}
+        if "terms" in data: OPERATOR["invoice"]["terms"] = data["terms"]
+        if "prefix" in data: OPERATOR["invoice"]["prefix"] = data["prefix"]
+        save_operator_config(OPERATOR)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settings/save/currency", methods=["POST"])
+@login_required
+def save_currency():
+    global OPERATOR
+    data = request.get_json()
+    try:
+        if "quoting_rules" not in OPERATOR: OPERATOR["quoting_rules"] = {}
+        OPERATOR["quoting_rules"]["currency"] = data.get("currency", "USD")
+        OPERATOR["quoting_rules"]["currency_symbol"] = data.get("currency_symbol", "$")
+        OPERATOR["secondary_currency"] = data.get("secondary_currency", "")
+        save_operator_config(OPERATOR)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settings/save/change_email", methods=["POST"])
+@login_required
+def save_change_email():
+    global OPERATOR
+    data = request.get_json()
+    password = data.get("password", "")
+    new_email = data.get("new_email", "").strip().lower()
+    if not new_email:
+        return jsonify({"error": "Email required"}), 400
+    if password != get_admin_pass():
+        return jsonify({"error": "Incorrect password"}), 400
+    try:
+        if "contact" not in OPERATOR: OPERATOR["contact"] = {}
+        OPERATOR["contact"]["email"] = new_email
+        save_operator_config(OPERATOR)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ============================================================
 # PASSWORD RESET FLOW — Powered by Resend
 # ============================================================
