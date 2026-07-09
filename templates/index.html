@@ -1361,7 +1361,8 @@ function toggleSettingsCard(h3) {
   document.addEventListener('touchend', function(e) {
     if (touchMoved) {
       let tag = e.target.tagName;
-      if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') {
+      let isNav = e.target.classList.contains('nav-tab') || e.target.classList.contains('mobile-nav-tab') || e.target.classList.contains('mtab') || e.target.classList.contains('btn') || tag === 'BUTTON' || tag === 'A';
+      if (!isNav && (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA')) {
         e.target.blur();
         e.preventDefault();
       }
