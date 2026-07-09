@@ -189,12 +189,27 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .settings-section:last-child { border-bottom: none; }
 .settings-section h4 { font-size: 0.85rem; font-weight: 700; color: #333; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-.settings-group-label { font-family:'Space Mono',monospace; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.15em; color:#0a0a0a; font-weight:700; margin-bottom:10px; margin-top:28px; padding-bottom:6px; border-bottom:2px solid #0a0a0a; }
-.settings-badge-frontend { font-family:'Space Mono',monospace; font-size:0.55rem; background:#f0f4ff; color:#1a56db; padding:2px 6px; border-radius:4px; letter-spacing:0.05em; font-weight:600; margin-left:6px; text-transform:uppercase; vertical-align:middle; }
-.section-save-row { display:flex; align-items:center; gap:10px; margin-top:14px; justify-content:flex-end; }
-.btn-save-section { background:#0a0a0a; color:#fff; border:none; padding:6px 16px; border-radius:4px; font-size:0.75rem; font-weight:600; cursor:pointer; letter-spacing:0.05em; transition:background 0.15s; font-family:'Space Mono',monospace; }
-.btn-save-section:hover { background:#333; }
-.section-save-msg { font-size:0.72rem; color:#888; }
+.settings-group-label { font-family:'Space Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.22em; color:#0a0a0a; font-weight:700; margin-bottom:14px; margin-top:36px; padding-left:12px; border-left:3px solid #0a0a0a; line-height:1.4; }
+.settings-badge-frontend { font-family:'Space Mono',monospace; font-size:0.52rem; background:#f0f4ff; color:#1a56db; padding:2px 7px; border-radius:3px; letter-spacing:0.08em; font-weight:700; margin-left:8px; text-transform:uppercase; vertical-align:middle; }
+.settings-card-collapsible > h3 { font-size:0.95rem; font-weight:700; color:#0a0a0a; letter-spacing:-0.01em; padding:18px 20px; margin:0; cursor:pointer; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid transparent; transition:border-color 0.2s; }
+.settings-card-collapsible > h3::after { content:'▼'; font-size:0.6rem; color:#0a0a0a; transition:transform 0.25s; font-weight:900; }
+.settings-card-collapsible.collapsed > h3::after { content:'▶'; transform:none; }
+.settings-card-collapsible > h3:hover { color:#1a56db; }
+.settings-card-collapsible .card-body { padding:0 20px 20px; }
+.settings-card-collapsible.collapsed > h3 { border-bottom-color:transparent; }
+.settings-card-collapsible:not(.collapsed) > h3 { border-bottom:1px solid #eee; }
+.settings-section { padding:14px 0; border-bottom:1px solid #f0f0f0; }
+.settings-section:last-child { border-bottom:none; }
+.settings-section h4 { font-size:0.72rem; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:4px 0; transition:color 0.15s; }
+.settings-section h4::after { content:'▶'; font-size:0.55rem; color:#ccc; font-weight:900; transition:all 0.2s; }
+.settings-section:not(.collapsed) h4 { color:#0a0a0a; margin-bottom:14px; }
+.settings-section:not(.collapsed) h4::after { content:'▼'; color:#0a0a0a; }
+.settings-section.collapsed > *:not(h4) { display:none; }
+.section-save-row { display:flex; align-items:center; gap:12px; margin-top:18px; padding-top:14px; border-top:1px solid #f0f0f0; justify-content:flex-end; }
+.btn-save-section { background:#0a0a0a; color:#fff; border:none; padding:8px 20px; border-radius:3px; font-size:0.62rem; font-weight:700; cursor:pointer; letter-spacing:0.12em; text-transform:uppercase; transition:background 0.15s; font-family:'Space Mono',monospace; }
+.btn-save-section:hover { background:#1a56db; }
+.btn-save-section:active { transform:scale(0.97); }
+.section-save-msg { font-size:0.7rem; color:#888; font-family:'Space Mono',monospace; }
 .section-save-msg.ok { color:#1b5e20; }
 .section-save-msg.err { color:#c62828; }
 
