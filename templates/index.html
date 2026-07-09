@@ -1374,7 +1374,14 @@ async function submitQuote(mission) {
   try {
     let r = await fetch('/admin/quote', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     let data = await r.json();
-    if (!r.ok) { document.getElementById('quote-result').innerHTML = `<div class="error-box">${data.error||'Error'}</div>`; return; }
+    if (!r.ok) {
+      let errMsg = data.error || 'Error';
+      if (errMsg.toLowerCase().includes('no aircraft')) {
+        errMsg = '✈ No active aircraft found. Go to the <strong>Aircraft tab</strong>, add your aircraft details and tap <strong>Activate</strong> to start quoting.';
+      }
+      document.getElementById('quote-result').innerHTML = `<div class="error-box">${errMsg}</div>`;
+      return;
+    }
     lastResults = data.results || [];
     saveStateToStorage();
     renderResults(lastResults);
