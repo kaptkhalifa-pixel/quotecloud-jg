@@ -1345,31 +1345,7 @@ function toggleSettingsCard(h3) {
 }
 
 
-// Prevent accidental focus on inputs/selects while scrolling on mobile
-(function() {
-  let touchStartY = 0;
-  let touchMoved = false;
-  document.addEventListener('touchstart', function(e) {
-    touchStartY = e.touches[0].clientY;
-    touchMoved = false;
-  }, true);
-  document.addEventListener('touchmove', function(e) {
-    if (Math.abs(e.touches[0].clientY - touchStartY) > 8) {
-      touchMoved = true;
-    }
-  }, true);
-  document.addEventListener('touchend', function(e) {
-    if (touchMoved) {
-      let tag = e.target.tagName;
-      let isNav = e.target.classList.contains('nav-tab') || e.target.classList.contains('mobile-nav-tab') || e.target.classList.contains('mtab') || e.target.classList.contains('btn') || tag === 'BUTTON' || tag === 'A';
-      if (!isNav && (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA')) {
-        e.target.blur();
-        e.preventDefault();
-      }
-    }
-    touchMoved = false;
-  }, {capture: true, passive: false});
-})();
+// Touch scroll fix removed - was interfering with nav tabs
 
 function saveStateToStorage() {
   try { localStorage.setItem('qc_last_results', JSON.stringify(lastResults)); } catch(e) {}
