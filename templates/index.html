@@ -2633,19 +2633,19 @@ function renderAircraft() {
             </select>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:14px">
-          <label>Aircraft Base</label>
-          <input class="ac-home" value="${ac.home_airstrip||''}" placeholder="Your aircraft's home airstrip or helipad">
-          <div style="font-size:0.72rem;color:#888;margin-top:4px">Where this aircraft is based. The system calculates positioning legs from here to the client departure point automatically.</div>
-        </div>
-        <div style="margin-bottom:14px">
-          <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Base Coordinates</label>
-          <div style="font-size:0.72rem;color:#888;margin-bottom:6px">Paste a Google Maps pin or link — the system resolves coordinates with maximum accuracy. On Google Maps: right-click any location → Copy coordinates.</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input class="ac-base-input" placeholder="Paste Maps pin, coords or place name" style="flex:1;min-width:160px" value="${ac.base_lat && ac.base_lon ? ac.base_lat+','+ac.base_lon : ''}">
-            <button class="btn btn-outline btn-sm" onclick="resolveAcBase(this)">Resolve</button>
+ <div style="margin-bottom:14px">
+          <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Aircraft Base</label>
+          <div style="font-size:0.72rem;color:#888;margin-bottom:8px">Search for your home airstrip, helipad or landing zone. The system resolves coordinates automatically. The display name is editable.</div>
+          <div style="position:relative;margin-bottom:8px">
+            <input class="ac-base-search" placeholder="Search airstrip, helipad or paste a Maps pin..." style="width:100%;padding-right:80px" oninput="acBaseSearch(this)" value="${ac.home_airstrip||''}">
+            <button class="btn btn-outline btn-sm" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:4px 10px" onclick="resolveAcBase(this)">Resolve</button>
+            <div class="ac-base-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #ddd;border-radius:8px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
           </div>
-          <div class="ac-base-status" style="font-size:0.75rem;color:#888;margin-top:4px">${ac.base_lat && ac.base_lon ? '✅ Base set: '+ac.base_lat.toFixed(5)+', '+ac.base_lon.toFixed(5) : '⚠️ No base set'}</div>
+          <div style="margin-bottom:8px">
+            <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:4px">Display Name (editable)</label>
+            <input class="ac-home" value="${ac.home_airstrip||''}" placeholder="e.g. Angama Mara, Wilson Airport" style="width:100%">
+          </div>
+          <div class="ac-base-status" style="font-size:0.75rem;color:#888;margin-top:4px">${ac.base_lat && ac.base_lon ? '✅ Base set: '+ac.base_lat.toFixed(5)+', '+ac.base_lon.toFixed(5) : '⚠️ No base coordinates set — search above or paste a Maps pin'}</div>
           <input type="hidden" class="ac-base-lat" value="${ac.base_lat||''}">
           <input type="hidden" class="ac-base-lon" value="${ac.base_lon||''}">
         </div>
@@ -2788,29 +2788,68 @@ function removeAcImage(btn, url) {
   }
   btn.parentElement.remove();
 }
-async function resolveAcBase(btn) {
-  let card = btn.closest('.ac-card');
-  let input = card.querySelector('.ac-base-input');
+async function acBaseSearch(input) {
+  let card = input.closest('.ac-card');
+  let suggestions = card.querySelector('.ac-base-suggestions');
+  let query = input.value.trim();
+  if (query.length < 3) { suggestions.style.display = 'none'; return; }
+  try {
+    let r = await fetch('/autocomplete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({query}) });
+    let data = await r.json();
+    let preds = data.predictions || [];
+    if (!preds.length) { suggestions.style.display = 'none'; return; }
+    suggestions.innerHTML = preds.map(p => `<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:0.85rem" onmousedown="selectAcBase(this,'${(p.place_id||'').replace(/'/g,"\\'")}','${(p.description||'').replace(/'/g,"\\'")}','${(p.local_key||'').replace(/'/g,"\\'")}')"><strong>${p.main||p.description}</strong><br><span style="font-size:0.72rem;color:#888">${p.secondary||''}</span></div>`).join('');
+    suggestions.style.display = 'block';
+  } catch(e) {}
+}
+
+async function selectAcBase(el, placeId, description, localKey) {
+  let card = el.closest('.ac-card');
+  let suggestions = card.querySelector('.ac-base-suggestions');
+  let searchInput = card.querySelector('.ac-base-search');
+  let homeInput = card.querySelector('.ac-home');
   let status = card.querySelector('.ac-base-status');
   let latField = card.querySelector('.ac-base-lat');
   let lonField = card.querySelector('.ac-base-lon');
-  let location = input.value.trim();
-  if (!location) { status.textContent = '⚠️ Enter a location first.'; return; }
+  suggestions.style.display = 'none';
+  searchInput.value = description;
+  homeInput.value = description;
   status.textContent = 'Resolving...';
   try {
-    let r = await fetch('/aircraft/resolve_base', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ location })
-    });
+    let r = await fetch('/resolve_place', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({place_id: placeId, label: description, local_key: localKey}) });
     let data = await r.json();
     if (data.found) {
       latField.value = data.lat;
       lonField.value = data.lon;
-      input.value = data.lat.toFixed(5) + ',' + data.lon.toFixed(5);
-      status.textContent = '✅ Base set: ' + data.lat.toFixed(5) + ', ' + data.lon.toFixed(5) + ' (' + data.display + ')';
+      status.textContent = '✅ Base set: ' + parseFloat(data.lat).toFixed(5) + ', ' + parseFloat(data.lon).toFixed(5);
       status.style.color = '#1b5e20';
+      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: description, lat: data.lat, lon: data.lon, aliases: []}) });
+    }
+  } catch(e) { status.textContent = '❌ Error resolving location'; }
+}
+
+async function resolveAcBase(btn) {
+  let card = btn.closest('.ac-card');
+  let input = card.querySelector('.ac-base-search');
+  let status = card.querySelector('.ac-base-status');
+  let latField = card.querySelector('.ac-base-lat');
+  let lonField = card.querySelector('.ac-base-lon');
+  let homeInput = card.querySelector('.ac-home');
+  let location = input.value.trim();
+  if (!location) { status.textContent = '⚠️ Search for your base first.'; return; }
+  status.textContent = 'Resolving...';
+  try {
+    let r = await fetch('/aircraft/resolve_base', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({location}) });
+    let data = await r.json();
+    if (data.found) {
+      latField.value = data.lat;
+      lonField.value = data.lon;
+      if (!homeInput.value) homeInput.value = data.display;
+      status.textContent = '✅ Base set: ' + data.lat.toFixed(5) + ', ' + data.lon.toFixed(5);
+      status.style.color = '#1b5e20';
+      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || data.display, lat: data.lat, lon: data.lon, aliases: []}) });
     } else {
-      status.textContent = '❌ Could not resolve. Try coords or a Maps pin.';
+      status.textContent = '❌ Could not resolve. Try a Maps pin.';
       status.style.color = '#c00';
     }
   } catch(e) {
