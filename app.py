@@ -430,8 +430,9 @@ def get_base_key_for_aircraft(ac_cfg):
                 pass
     return base_name
 
-def snap_to_base_coords(lat, lon, base_lat, base_lon):
-    return _nm_distance(lat, lon, base_lat, base_lon) <= BASE_SNAP_NM
+def snap_to_base_coords(lat, lon, base_lat, base_lon, snap_nm=None):
+    radius = float(snap_nm) if snap_nm else BASE_SNAP_NM
+    return _nm_distance(lat, lon, base_lat, base_lon) <= radius
 
 def geo_lock_error(location_name):
     wa = get_whatsapp()
@@ -705,7 +706,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
             if len(parts) == 2:
                 lat, lon = float(parts[0]), float(parts[1])
                 if base_lat_cfg and base_lon_cfg:
-                    if snap_to_base_coords(lat, lon, float(base_lat_cfg), float(base_lon_cfg)):
+                    if snap_to_base_coords(lat, lon, float(base_lat_cfg), float(base_lon_cfg), snap_nm=ac_cfg.get("snap_radius_nm")):
                         return base_key
         except Exception:
             pass

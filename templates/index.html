@@ -2793,6 +2793,11 @@ function renderAircraft() {
           <input type="hidden" class="ac-base-lat" value="${ac.base_lat||''}">
           <input type="hidden" class="ac-base-lon" value="${ac.base_lon||''}">
         </div>
+<div class="form-group" style="margin-bottom:14px">
+          <label>Base Snap Radius (NM)</label>
+          <input type="number" class="ac-snap-radius" value="${ac.snap_radius_nm||4}" min="1" max="500" step="1" style="width:100%">
+          <div style="font-size:0.72rem;color:#888;margin-top:4px;line-height:1.6">If a pickup or dropoff is within this distance of the aircraft base, the system treats it as the base location and skips the positioning leg. Set higher for large aircraft operating in dense airspace to avoid uneconomical short sectors. Default: 4 NM.</div>
+        </div>
         <div class="toggle-row" style="margin-bottom:6px">
           <input type="checkbox" class="ac-urban-hops" ${ac.allow_urban_hops?'checked':''} style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
           <label style="margin:0;font-size:0.88rem;font-weight:400;cursor:pointer">Allow Urban Hops</label>
@@ -3019,6 +3024,7 @@ pax_fee: parseFloat(card.querySelector('.ac-pax').value),
       overnight_enabled: card.querySelector('.ac-overnight-enabled')?.checked !== false,
       idle_day_rate: parseFloat(card.querySelector('.ac-idle').value),
       active: card.querySelector('.ac-active').value === 'true',
+      snap_radius_nm: parseFloat(card.querySelector('.ac-snap-radius')?.value || 4),
       amenities: (card.querySelector('.ac-amenities')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
       show_amenities: card.querySelector('.ac-show-amenities')?.checked || false,
       description: card.querySelector('.ac-description')?.value.trim() || '',
