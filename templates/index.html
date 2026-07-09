@@ -188,6 +188,16 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .settings-section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
 .settings-section:last-child { border-bottom: none; }
 .settings-section h4 { font-size: 0.85rem; font-weight: 700; color: #333; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.settings-group-label { font-family:'Space Mono',monospace; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.15em; color:#0a0a0a; font-weight:700; margin-bottom:10px; margin-top:28px; padding-bottom:6px; border-bottom:2px solid #0a0a0a; }
+.settings-badge-frontend { font-family:'Space Mono',monospace; font-size:0.55rem; background:#f0f4ff; color:#1a56db; padding:2px 6px; border-radius:4px; letter-spacing:0.05em; font-weight:600; margin-left:6px; text-transform:uppercase; vertical-align:middle; }
+.section-save-row { display:flex; align-items:center; gap:10px; margin-top:14px; justify-content:flex-end; }
+.btn-save-section { background:#0a0a0a; color:#fff; border:none; padding:6px 16px; border-radius:4px; font-size:0.75rem; font-weight:600; cursor:pointer; letter-spacing:0.05em; transition:background 0.15s; font-family:'Space Mono',monospace; }
+.btn-save-section:hover { background:#333; }
+.section-save-msg { font-size:0.72rem; color:#888; }
+.section-save-msg.ok { color:#1b5e20; }
+.section-save-msg.err { color:#c62828; }
+
 .settings-section h4 { cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; }
 .settings-section h4::after { content: '▾'; font-size: 0.7rem; color: #999; transition: transform 0.2s; }
 .settings-section.collapsed h4::after { transform: rotate(-90deg); }
@@ -615,325 +625,372 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     Settings marked <span style="background:#333;color:#aaa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:2px 6px;border-radius:4px">Pro — Client Page</span> control your client-facing quote page. The client page is available on the Pro plan — coming soon.
   </div>
 
+
   <!-- ═══════════════════════════════════════════ -->
-  <!-- GROUP 1: IDENTITY & BRANDING -->
+  <!-- GROUP 1: COMPANY IDENTITY & BRANDING -->
   <!-- ═══════════════════════════════════════════ -->
-  <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:4px">01 · Identity & Branding</div>
+  <div class="settings-group-label">Company Identity &amp; Branding</div>
 
   <div class="card settings-card-collapsible collapsed">
-    <h3 onclick="toggleSettingsCard(this)">Branding & Identity</h3>
+    <h3 onclick="toggleSettingsCard(this)">Company Details</h3>
     <div class="card-body">
-    <div class="settings-section">
-      <h4 onclick="toggleSettingsSection(this)">Logo & Company</h4>
-      <div class="form-row">
-        <div class="form-group"><label>Company Name</label><input type="text" id="s-company-name"></div>
-        <div class="form-group"><label>Tagline</label><input type="text" id="s-tagline"></div>
-      </div>
-      <div class="form-group-full"><label>Company Logo</label>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input type="text" id="s-logo-url" oninput="previewLogo()" style="flex:1">
-          <label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap">
-            📷 Upload Logo
-            <input type="file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
-          </label>
-        </div>
-        <div id="logo-upload-status" style="font-size:0.75rem;color:#888;margin-top:4px"></div>
-        <img id="logo-preview" class="logo-preview" src="" style="display:none">
-      </div>
-      <div class="form-group-full"><label>Footer Tagline</label><input type="text" id="s-footer-tagline"></div>
-    </div>
-    <div class="settings-section">
-      <h4 onclick="toggleSettingsSection(this)">Colors</h4>
-      <div class="form-row">
-        <div class="form-group"><label>Primary Color</label>
-          <div class="color-row">
-            <input type="color" id="s-primary-color">
-            <input type="text" id="s-primary-color-hex" placeholder="#0D47A1" oninput="syncColor('primary')">
-          </div>
-        </div>
-        <div class="form-group"><label>Accent Color</label>
-          <div class="color-row">
-            <input type="color" id="s-accent-color">
-            <input type="text" id="s-accent-color-hex" placeholder="#e8a020" oninput="syncColor('accent')">
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="settings-section">
-      <h4 onclick="toggleSettingsSection(this)">Trust Bar</h4>
-      <div class="trust-bar-editor" id="trust-bar-editor"></div>
-    </div>
-    <div class="settings-section">
-      <h4 onclick="toggleSettingsSection(this)">Social Links</h4>
-      <div class="form-row">
-        <div class="form-group"><label>Website</label><input type="text" id="s-website"></div>
-        <div class="form-group"><label>Instagram</label><input type="text" id="s-instagram"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Facebook</label><input type="text" id="s-facebook"></div>
-        <div class="form-group"><label>Twitter / X</label><input type="text" id="s-twitter"></div>
-      </div>
-    </div>
-    <div class="settings-section">
-      <h4 onclick="toggleSettingsSection(this)">Aircraft Mode</h4>
-      <div class="form-group"><label>Mode</label>
-        <select id="s-aircraft-mode" onchange="toggleDisclaimer()">
-          <option value="helicopter">Helicopter Only</option>
-          <option value="fixed_wing">Fixed Wing Only</option>
-          <option value="both">Both</option>
-        </select>
-      </div>
-      <div id="disclaimer-field">
-        <div class="form-group-full"><label>Fixed Wing Landing Field Disclaimer</label><textarea id="s-disclaimer" rows="3"></textarea></div>
-      </div>
-    </div>
-    <button class="btn btn-block" onclick="saveBranding()">Save Branding</button>
-    <div id="branding-msg"></div>
-    </div>
-  </div>
-
-  <div class="card settings-card-collapsible collapsed">
-    <h3 onclick="toggleSettingsCard(this)">Company & Contact</h3>
-    <div class="card-body">
-    <div class="form-row">
-      <div class="form-group"><label>Phone</label><input type="tel" id="s-phone"></div>
-      <div class="form-group"><label>WhatsApp (digits only)</label><input type="tel" id="s-whatsapp"></div>
-    </div>
-    <div class="form-group-full"><label>WhatsApp Greeting</label><input type="text" id="s-whatsapp-greeting"></div>
-    <div class="form-row">
-      <div class="form-group"><label>Email</label><input type="email" id="s-email"></div>
-      <div class="form-group"><label>Base Airport Key</label><input type="text" id="s-base-airport"></div>
-    </div>
-    <div class="form-group-full"><label>Address</label><input type="text" id="s-address"></div>
-    <button class="btn btn-block" onclick="saveCompany()">Save Company Details</button>
-    <div id="company-msg"></div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════ -->
-  <!-- GROUP 2: OPERATIONS -->
-  <!-- ═══════════════════════════════════════════ -->
-  <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:20px">02 · Operations</div>
-
-  <div class="card settings-card-collapsible collapsed">
-<h3 onclick="toggleSettingsCard(this)">Geographic Coverage</h3>
-<div class="card-body">
-    <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:14px 16px;background:#f8f9fa;border-radius:8px;border-left:3px solid #0a0a0a">
-      This setting defines your operational boundary. When enabled, the quote engine will only accept locations that fall within a circular area calculated from a central point you set, measured in nautical miles radius. Think of it as your aircraft range map — quotes outside this area are automatically rejected. Useful for operators who only cover a specific region or country and want to prevent out-of-scope enquiries. Leave disabled for global operations.
-    </div>
-    <div class="settings-section">
-      <h4 onclick="toggleSettingsSection(this)">Operating Region</h4>
-      <div class="form-row">
-        <div class="form-group"><label>Region Display Name</label><input type="text" id="s-geo-region-name" placeholder="Kenya"></div>
-      </div>
-      <div class="toggle-row">
-        <input type="checkbox" id="s-geo-enabled">
-        <label for="s-geo-enabled">Enable geographic lock</label>
-      </div>
-      <div style="margin-top:12px">
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Name &amp; Tagline</h4>
         <div class="form-row">
-          <div class="form-group"><label>Center Latitude</label><input type="number" id="s-geo-center-lat" step="0.0001" placeholder="-0.023"></div>
-          <div class="form-group"><label>Center Longitude</label><input type="number" id="s-geo-center-lon" step="0.0001" placeholder="37.906"></div>
+          <div class="form-group"><label>Company Name</label><input type="text" id="s-company-name"></div>
+          <div class="form-group"><label>Front Page Tagline</label><input type="text" id="s-tagline"></div>
         </div>
-        <div class="form-group" style="margin-bottom:14px"><label>Radius (km)</label><input type="number" id="s-geo-radius-km" step="10" placeholder="500"></div>
-        <div class="form-group" style="margin-bottom:8px"><label>Or paste Google Maps pin to set center</label>
-          <div style="display:flex;gap:8px">
-            <input type="text" id="s-geo-maps-pin" placeholder="https://maps.app.goo.gl/...">
-            <button class="btn btn-outline btn-sm" onclick="resolveGeoCenter()">Resolve</button>
+        <div class="form-group-full"><label>Footer Tagline</label><input type="text" id="s-footer-tagline"></div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-name-tagline"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Company Logo</h4>
+        <div class="form-group-full">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="text" id="s-logo-url" oninput="previewLogo()" placeholder="Paste URL or upload" style="flex:1">
+            <label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap">
+              📷 Upload Logo
+              <input type="file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
+            </label>
+          </div>
+          <div id="logo-upload-status" style="font-size:0.75rem;color:#888;margin-top:4px"></div>
+          <img id="logo-preview" class="logo-preview" src="" style="display:none">
+        </div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-logo"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Brand Colors <span class="settings-badge-frontend">Front End</span></h4>
+        <div class="form-row">
+          <div class="form-group"><label>Primary Color</label>
+            <div class="color-row"><input type="color" id="s-primary-color"><input type="text" id="s-primary-color-hex" placeholder="#0D47A1" oninput="syncColor('primary')"></div>
+          </div>
+          <div class="form-group"><label>Accent Color</label>
+            <div class="color-row"><input type="color" id="s-accent-color"><input type="text" id="s-accent-color-hex" placeholder="#e8a020" oninput="syncColor('accent')"></div>
           </div>
         </div>
-        <div id="s-geo-status" style="font-size:0.75rem;color:#888;margin-top:4px"></div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-colors"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Trust Bar <span class="settings-badge-frontend">Front End</span></h4>
+        <div style="font-size:0.72rem;color:#888;margin-bottom:10px">Displayed at the bottom of your client quote page. Add short trust signals.</div>
+        <div class="trust-bar-editor" id="trust-bar-editor"></div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-trust-bar"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Social Links <span class="settings-badge-frontend">Front End</span></h4>
+        <div class="form-row">
+          <div class="form-group"><label>Website</label><input type="text" id="s-website"></div>
+          <div class="form-group"><label>Instagram</label><input type="text" id="s-instagram"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Facebook</label><input type="text" id="s-facebook"></div>
+          <div class="form-group"><label>Twitter / X</label><input type="text" id="s-twitter"></div>
+        </div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-social"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Contact &amp; Address</h4>
+        <div class="form-row">
+          <div class="form-group"><label>Phone</label><input type="tel" id="s-phone"></div>
+          <div class="form-group"><label>WhatsApp (digits only)</label><input type="tel" id="s-whatsapp"></div>
+        </div>
+        <div class="form-group-full"><label>WhatsApp Greeting</label><input type="text" id="s-whatsapp-greeting"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Email</label><input type="email" id="s-email"></div>
+          <div class="form-group"><label>Base Airport Key</label><input type="text" id="s-base-airport"></div>
+        </div>
+        <div class="form-group-full"><label>Address</label><input type="text" id="s-address"></div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionCompany()">Save ✓</button><span class="section-save-msg" id="msg-contact"></span></div>
       </div>
     </div>
-    <button class="btn btn-block" onclick="saveGeoLock()">Save Geographic Settings</button>
-    <div id="geo-msg"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- GROUP 2: OPERATIONS & QUOTE SETTINGS -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="settings-group-label">Operations &amp; Quote Settings</div>
+
+  <div class="card settings-card-collapsible collapsed">
+    <h3 onclick="toggleSettingsCard(this)">Aircraft &amp; Fleet</h3>
+    <div class="card-body">
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Aircraft Mode</h4>
+        <div class="form-group"><label>Fleet Type</label>
+          <select id="s-aircraft-mode" onchange="toggleDisclaimer()">
+            <option value="helicopter">Helicopter Only</option>
+            <option value="fixed_wing">Fixed Wing Only</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div id="disclaimer-field">
+          <div class="form-group-full"><label>Fixed Wing Landing Field Disclaimer</label><textarea id="s-disclaimer" rows="3"></textarea></div>
+        </div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionAircraftMode()">Save ✓</button><span class="section-save-msg" id="msg-aircraft-mode"></span></div>
+      </div>
     </div>
   </div>
 
   <div class="card settings-card-collapsible collapsed">
- <h3 onclick="toggleSettingsCard(this)">Quoting Rules</h3>
- <div class="card-body">
-    <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:14px 16px;background:#f8f9fa;border-radius:8px;border-left:3px solid #0a0a0a">
-      These rules govern how the quote engine calculates prices. They apply to all aircraft and all mission types unless overridden per aircraft.
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Min Flight Hours</label><input type="number" id="s-min-hours" step="0.5" min="0.5"><div style="font-size:0.72rem;color:#888;margin-top:4px">Minimum billable hours per flight. Protects against undercharging on short hops.</div></div>
-      <div class="form-group"><label>Max Nights Before Pick & Drop</label><input type="number" id="s-max-nights" min="1" max="10"><div style="font-size:0.72rem;color:#888;margin-top:4px">If return wait exceeds this, system auto-converts to pick and drop.</div></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Max Flight Hours/Day</label><input type="number" id="s-max-hours-day" step="0.5" min="1"><div style="font-size:0.72rem;color:#888;margin-top:4px">Max hours an aircraft can fly per day. Used to validate safari scheduling.</div></div>
-      <div class="form-group"><label>Max Idle Days Between Legs</label><input type="number" id="s-max-idle-days" min="0" max="7"><div style="font-size:0.72rem;color:#888;margin-top:4px">Max idle days allowed between safari legs before mission is flagged invalid.</div></div>
-    </div>
-    <div class="form-group" style="margin-bottom:14px"><label>Quote Validity (hours)</label><input type="number" id="s-quote-validity" min="1"><div style="font-size:0.72rem;color:#888;margin-top:4px">How long a quote remains valid. Shown on every PDF. Standard is 48 hours.</div></div>
-    <div class="settings-section" style="margin-top:16px;padding-top:16px">
-      <h4 onclick="toggleSettingsSection(this)">Ground Time Buffer</h4>
-      <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:12px;padding:10px 12px;background:#f8f9fa;border-radius:6px">Adds a fixed number of minutes to every revenue leg to account for ground procedures — taxi time, engine start, pre-departure checks and arrival formalities. Ensures your quoted flight time reflects real block time rather than pure airborne time.</div>
-      <div class="toggle-row">
-        <input type="checkbox" id="s-buffer-enabled" onchange="toggleBuffer()">
-        <label for="s-buffer-enabled">Add ground time buffer to revenue legs</label>
-      </div>
-      <div id="buffer-minutes-field" style="display:none;margin-top:10px">
-        <div class="form-group"><label>Buffer Minutes</label><input type="number" id="s-buffer-minutes" min="0" max="60" placeholder="e.g. 10"></div>
+    <h3 onclick="toggleSettingsCard(this)">Geographic Coverage</h3>
+    <div class="card-body">
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Operating Region</h4>
+        <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:12px 14px;background:#f8f9fa;border-radius:8px">
+          Set the geographic boundary for your operations. When enabled, the quote engine will reject pickup or dropoff points outside this region. Disable to allow quotes between any two points on earth.
+        </div>
+        <div class="form-group"><label>Region Display Name</label><input type="text" id="s-geo-region-name" placeholder="e.g. Colombia"></div>
+        <div class="toggle-row" style="margin-bottom:12px">
+          <input type="checkbox" id="s-geo-enabled" onchange="toggleGeoFields()" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-geo-enabled" style="font-weight:600">Enable Geographic Lock</label>
+        </div>
+        <div id="geo-fields" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>Center Latitude</label><input type="number" id="s-geo-center-lat" step="0.0001" placeholder="-0.023"></div>
+            <div class="form-group"><label>Center Longitude</label><input type="number" id="s-geo-center-lon" step="0.0001" placeholder="37.906"></div>
+          </div>
+          <div class="form-group"><label>Radius (km)</label><input type="number" id="s-geo-radius" placeholder="500"></div>
+        </div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionGeoLock()">Save ✓</button><span class="section-save-msg" id="msg-geo"></span></div>
       </div>
     </div>
-    <div class="settings-section" style="padding-top:16px">
-      <h4 onclick="toggleSettingsSection(this)">Client Display</h4>
-            <div class="toggle-row">
-        <input type="checkbox" id="s-show-nm">
-        <label for="s-show-nm">Show distance in Nautical Miles on client page <span style="font-size:0.68rem;font-family:'Space Mono',monospace;background:#f0f0f0;padding:2px 6px;border-radius:4px;color:#888;font-weight:400">Pro — Client Page</span></label>
+  </div>
+
+  <div class="card settings-card-collapsible collapsed">
+    <h3 onclick="toggleSettingsCard(this)">Quoting Rules</h3>
+    <div class="card-body">
+      <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:12px 14px;background:#f8f9fa;border-radius:8px;border-left:3px solid #0a0a0a">
+        These rules govern how the quote engine calculates prices. They apply to all aircraft and all mission types.
       </div>
-      <div class="toggle-row">
-        <input type="checkbox" id="s-show-rate-breakdown">
-        <label for="s-show-rate-breakdown">Show rate breakdown in billing (hrs @ USD/hr)</label>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Core Rules</h4>
+        <div class="form-row">
+          <div class="form-group"><label>Minimum Flight Hours</label><input type="number" id="s-min-hours" step="0.5" placeholder="1.0"></div>
+          <div class="form-group"><label>Max Flight Hours Per Day</label><input type="number" id="s-max-hours-day" step="0.5" placeholder="10"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Max Nights Before Pickup/Drop</label><input type="number" id="s-max-nights" step="1" placeholder="3"></div>
+          <div class="form-group"><label>Max Idle Days Between Legs</label><input type="number" id="s-max-idle-days" step="1" placeholder="1"></div>
+        </div>
+        <div class="form-group"><label>Quote Validity (hours)</label><input type="number" id="s-quote-validity" step="1" placeholder="48"></div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionQuotingRules()">Save ✓</button><span class="section-save-msg" id="msg-quoting-rules"></span></div>
       </div>
-    </div>
-    <button class="btn btn-block" onclick="saveQuotingRules()">Save Quoting Rules</button>
-    <div id="rules-msg"></div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Extra Time per Sector</h4>
+        <div style="font-size:0.72rem;color:#888;margin-bottom:12px;line-height:1.6">
+          Adds buffer time to every sector including positioning and repositioning legs. Accounts for ATC routing, STARs, ground handling and terminal transfers.
+        </div>
+        <div class="toggle-row" style="margin-bottom:12px">
+          <input type="checkbox" id="s-buffer-enabled" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-buffer-enabled" style="font-weight:600">Enable Extra Time</label>
+        </div>
+        <div class="form-group"><label>Extra Time (minutes per sector)</label><input type="number" id="s-buffer-minutes" step="5" placeholder="0"></div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionExtraTime()">Save ✓</button><span class="section-save-msg" id="msg-extra-time"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Client Display <span class="settings-badge-frontend">Front End</span></h4>
+        <div class="toggle-row" style="margin-bottom:12px">
+          <input type="checkbox" id="s-show-distance" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-show-distance" style="font-weight:600">Show flight distance to client</label>
+        </div>
+        <div class="toggle-row" style="margin-bottom:12px">
+          <input type="checkbox" id="s-show-rate-breakdown">
+          <label for="s-show-rate-breakdown">Show rate breakdown in billing (hrs @ USD/hr)</label>
+        </div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionClientDisplay()">Save ✓</button><span class="section-save-msg" id="msg-client-display"></span></div>
+      </div>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
   <!-- GROUP 3: FINANCE & DOCUMENTS -->
   <!-- ═══════════════════════════════════════════ -->
-  <div style="font-family:'Space Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.2em;color:#999;margin-bottom:10px;margin-top:20px">03 · Finance & Documents</div>
+  <div class="settings-group-label">Finance &amp; Documents</div>
 
   <div class="card settings-card-collapsible collapsed">
     <h3 onclick="toggleSettingsCard(this)">Bank Details</h3>
     <div class="card-body">
-    <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:14px 16px;background:#f8f9fa;border-radius:8px;border-left:3px solid #0a0a0a">
-      Your bank details appear on every invoice and quotation PDF. Add all accounts your clients can pay into — local currency, USD, or any other. These details are never shared with other operators on the platform.
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Account Holder Name</label><input type="text" id="s-bank-name" placeholder="e.g. Savannah Air Charter Ltd"></div>
-      <div class="form-group"><label>Bank Name</label><input type="text" id="s-bank-bank" placeholder="e.g. Family Bank, Chase, Barclays"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Primary Account Number</label><input type="text" id="s-bank-kes" placeholder="e.g. 0123456789"></div>
-      <div class="form-group"><label>Primary Account Currency</label><input type="text" id="s-bank-kes-currency" placeholder="e.g. KES, USD, EUR"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Secondary Account Number (optional)</label><input type="text" id="s-bank-usd" placeholder="e.g. 0123456790"></div>
-      <div class="form-group"><label>Secondary Account Currency</label><input type="text" id="s-bank-usd-currency" placeholder="e.g. USD, GBP, EUR"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>SWIFT / BIC Code</label><input type="text" id="s-bank-swift" placeholder="e.g. FABLKENA"></div>
-      <div class="form-group"><label>Branch / Sort Code</label><input type="text" id="s-bank-branch" placeholder="e.g. Kenyatta Ave (012)"></div>
-    </div>
-    <div class="form-group" style="margin-bottom:14px">
-      <label>Mobile Money / PayBill (optional)</label>
-      <input type="text" id="s-bank-paybill" placeholder="e.g. M-Pesa Paybill 123456 or Venmo @company">
-      <div style="font-size:0.72rem;color:#888;margin-top:4px">Any mobile payment reference your clients can use — M-Pesa, Venmo, PayPal, Zelle etc.</div>
-    </div>
-    <div class="divider" style="height:1px;background:#eee;margin:20px 0"></div>
-    <div class="form-group" style="margin-bottom:14px">
-      <label>PDF Prefix</label>
-      <input type="text" id="s-invoice-prefix" placeholder="e.g. HF, SAC, JG">
-      <div style="font-size:0.72rem;color:#888;margin-top:4px">Used to generate document reference numbers e.g. HF-Q-060726-ABC123</div>
-    </div>
-    <div class="form-group-full">
-      <label>Default Terms & Conditions</label>
-      <textarea id="s-invoice-terms" rows="8"></textarea>
-      <div style="font-size:0.72rem;color:#888;margin-top:4px">These terms appear on every quotation and invoice PDF. Edit them to reflect your company policy.</div>
-    </div>
-    <button class="btn btn-block" onclick="saveBank()">Save Bank Details</button>
-    <div id="bank-msg"></div>
-    </div>
-  </div>
-<div class="card settings-card-collapsible collapsed">
-    <h3 onclick="toggleSettingsCard(this)">Currency Settings</h3>
-    <div class="card-body">
-    <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px;border-left:3px solid {{ operator.branding.primary_color }}">Set your primary quoting currency and an optional secondary currency for reference. All quotes, invoices and receipts will use your primary currency. The secondary currency shows as a conversion reference.</p>
-    <div class="form-row" style="margin-bottom:16px">
-      <div class="form-group">
-        <label>Primary Currency</label>
-        <select id="s-primary-currency" onchange="savePrimaryCurrency()">
-          <option value="USD">USD — US Dollar</option>
-          <option value="KES">KES — Kenya Shilling</option>
-          <option value="EUR">EUR — Euro</option>
-          <option value="GBP">GBP — British Pound</option>
-          <option value="AUD">AUD — Australian Dollar</option>
-          <option value="ZAR">ZAR — South African Rand</option>
-          <option value="TZS">TZS — Tanzania Shilling</option>
-          <option value="UGX">UGX — Uganda Shilling</option>
-          <option value="BWP">BWP — Botswana Pula</option>
-          <option value="NAD">NAD — Namibian Dollar</option>
-          <option value="BRL">BRL — Brazilian Real</option>
-          <option value="CAD">CAD — Canadian Dollar</option>
-        </select>
-        <div style="font-size:0.72rem;color:#888;margin-top:4px">All quotes and documents generated in this currency.</div>
-      </div>
-      <div class="form-group">
-        <label>Secondary Currency (optional)</label>
-        <select id="s-secondary-currency" onchange="saveSecondaryCurrency()">
-          <option value="">None</option>
-          <option value="USD">USD — US Dollar</option>
-          <option value="KES">KES — Kenya Shilling</option>
-          <option value="EUR">EUR — Euro</option>
-          <option value="GBP">GBP — British Pound</option>
-          <option value="AUD">AUD — Australian Dollar</option>
-          <option value="ZAR">ZAR — South African Rand</option>
-          <option value="TZS">TZS — Tanzania Shilling</option>
-          <option value="UGX">UGX — Uganda Shilling</option>
-          <option value="BWP">BWP — Botswana Pula</option>
-          <option value="NAD">NAD — Namibian Dollar</option>
-          <option value="BRL">BRL — Brazilian Real</option>
-          <option value="CAD">CAD — Canadian Dollar</option>
-        </select>
-        <div style="font-size:0.72rem;color:#888;margin-top:4px">Shown as a reference conversion alongside primary.</div>
-      </div>
-    </div>
-    <h3 style="margin-bottom:12px">FX Rate Manager</h3>
-    <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px;border-left:3px solid {{ operator.branding.primary_color }}">Control the exchange rates used for currency conversion. Auto mode fetches live rates from open.er-api.com. Manual mode lets you set fixed rates.</p>
-    <div class="settings-section">
-      <div class="toggle-row" style="margin-bottom:16px">
-        <input type="checkbox" id="s-fx-manual" onchange="toggleFxMode()" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-        <label for="s-fx-manual" style="font-weight:600">Use Manual Rates (override live FX)</label>
-      </div>
-      <div class="toggle-row" style="margin-bottom:16px">
-        <input type="checkbox" id="s-fx-show-kes" checked style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-        <label for="s-fx-show-kes" style="font-weight:600">Show secondary currency conversion on client page <span style="font-size:0.68rem;font-family:'Space Mono',monospace;background:#f0f0f0;padding:2px 6px;border-radius:4px;color:#888;font-weight:400">Pro — Client Page</span></label>
-      </div>
-      <div id="fx-auto-status" style="font-size:0.82rem;color:#1b5e20;background:#e8f5e9;padding:10px 14px;border-radius:8px;margin-bottom:16px">
-        ✅ Auto mode — rates fetched live from open.er-api.com
-      </div>
-      <div id="fx-manual-fields" style="display:none">
+      <div style="font-size:0.72rem;color:#888;margin-bottom:14px;line-height:1.6">Bank details appear on invoices only — not on quotes or receipts.</div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Account Details</h4>
         <div class="form-row">
-          <div class="form-group"><label>USD 1 = KES</label><input type="number" id="s-fx-kes" placeholder="e.g. 129" step="0.01"></div>
-          <div class="form-group"><label>USD 1 = EUR</label><input type="number" id="s-fx-eur" placeholder="e.g. 0.92" step="0.001"></div>
+          <div class="form-group"><label>Account Name</label><input type="text" id="s-bank-account-name"></div>
+          <div class="form-group"><label>Bank Name</label><input type="text" id="s-bank-name"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>USD 1 = GBP</label><input type="number" id="s-fx-gbp" placeholder="e.g. 0.79" step="0.001"></div>
-          <div class="form-group"><label>USD 1 = TZS</label><input type="number" id="s-fx-tzs" placeholder="e.g. 2650" step="1"></div>
+          <div class="form-group"><label>SWIFT / BIC</label><input type="text" id="s-bank-swift"></div>
+          <div class="form-group"><label>Branch</label><input type="text" id="s-bank-branch"></div>
         </div>
-        <div class="form-group" style="margin-bottom:14px"><label>USD 1 = UGX</label><input type="number" id="s-fx-ugx" placeholder="e.g. 3750" step="1"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Primary A/C Number</label><input type="text" id="s-bank-kes-account"></div>
+          <div class="form-group"><label>Primary Currency</label><input type="text" id="s-bank-kes-currency" placeholder="KES"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Secondary A/C Number</label><input type="text" id="s-bank-usd-account"></div>
+          <div class="form-group"><label>Secondary Currency</label><input type="text" id="s-bank-usd-currency" placeholder="USD"></div>
+        </div>
+        <div class="form-group"><label>Mobile Money / Paybill</label><input type="text" id="s-bank-paybill"></div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBank()">Save ✓</button><span class="section-save-msg" id="msg-bank"></span></div>
       </div>
-      <div id="fx-live-rates" style="font-size:0.82rem;color:#555;margin-bottom:12px"></div>
-    </div>
-    <button class="btn btn-block" onclick="saveFxRates()">Save FX Settings</button>
-    <div id="fx-msg"></div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Invoice Settings</h4>
+        <div class="form-row">
+          <div class="form-group"><label>PDF Prefix</label><input type="text" id="s-invoice-prefix" placeholder="e.g. SAV" maxlength="5"></div>
+          <div class="form-group"><label>Payment Terms</label><input type="text" id="s-invoice-terms" placeholder="Payment due before departure."></div>
+        </div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBank()">Save ✓</button><span class="section-save-msg" id="msg-invoice"></span></div>
+      </div>
     </div>
   </div>
 
   <div class="card settings-card-collapsible collapsed">
-    <h3 onclick="toggleSettingsCard(this)">Message Templates</h3>
+    <h3 onclick="toggleSettingsCard(this)">Currency &amp; Exchange Rates</h3>
     <div class="card-body">
-    <p style="font-size:0.82rem;color:#666;line-height:1.6;margin-bottom:16px;background:#f8f9fa;padding:12px 14px;border-radius:8px">Customise the WhatsApp and email message body for each document type. Use {client_name}, {ref}, {amount}, {pdf_url}, {phone} as placeholders.</p>
-    <div class="settings-section">
-      <h4 onclick="toggleSettingsSection(this)">Quotation Message</h4>
-      <textarea id="s-msg-quote" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
-    </div>
-    <div class="settings-section">
-      <h4 onclick="toggleSettingsSection(this)">Invoice Message</h4>
-      <textarea id="s-msg-invoice" rows="7" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
-    </div>
-    <div class="settings-section">
-      <h4 onclick="toggleSettingsSection(this)">Receipt Message</h4>
-      <textarea id="s-msg-receipt" rows="8" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
-    </div>
-    <button class="btn btn-block" onclick="saveMessageTemplates()">Save Message Templates</button>
-    <div id="msg-templates-msg"></div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Primary &amp; Secondary Currency</h4>
+        <div class="form-row">
+          <div class="form-group"><label>Primary Currency</label>
+            <select id="s-primary-currency">
+              <option value="USD">USD — US Dollar</option>
+              <option value="KES">KES — Kenya Shilling</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+              <option value="AUD">AUD — Australian Dollar</option>
+              <option value="ZAR">ZAR — South African Rand</option>
+              <option value="TZS">TZS — Tanzania Shilling</option>
+              <option value="UGX">UGX — Uganda Shilling</option>
+              <option value="NGN">NGN — Nigerian Naira</option>
+              <option value="GHS">GHS — Ghana Cedi</option>
+              <option value="COP">COP — Colombian Peso</option>
+              <option value="BRL">BRL — Brazilian Real</option>
+              <option value="MXN">MXN — Mexican Peso</option>
+              <option value="ARS">ARS — Argentine Peso</option>
+              <option value="PEN">PEN — Peruvian Sol</option>
+              <option value="CLP">CLP — Chilean Peso</option>
+              <option value="INR">INR — Indian Rupee</option>
+              <option value="PKR">PKR — Pakistani Rupee</option>
+              <option value="LKR">LKR — Sri Lankan Rupee</option>
+              <option value="THB">THB — Thai Baht</option>
+              <option value="PHP">PHP — Philippine Peso</option>
+              <option value="MYR">MYR — Malaysian Ringgit</option>
+              <option value="IDR">IDR — Indonesian Rupiah</option>
+              <option value="SGD">SGD — Singapore Dollar</option>
+              <option value="CNY">CNY — Chinese Yuan</option>
+              <option value="JPY">JPY — Japanese Yen</option>
+              <option value="AED">AED — UAE Dirham</option>
+              <option value="SAR">SAR — Saudi Riyal</option>
+              <option value="QAR">QAR — Qatari Riyal</option>
+              <option value="KWD">KWD — Kuwaiti Dinar</option>
+              <option value="OMR">OMR — Omani Rial</option>
+              <option value="EGP">EGP — Egyptian Pound</option>
+              <option value="MAD">MAD — Moroccan Dirham</option>
+              <option value="ETB">ETB — Ethiopian Birr</option>
+              <option value="RWF">RWF — Rwandan Franc</option>
+              <option value="BWP">BWP — Botswana Pula</option>
+              <option value="NAD">NAD — Namibian Dollar</option>
+              <option value="NOK">NOK — Norwegian Krone</option>
+              <option value="SEK">SEK — Swedish Krona</option>
+              <option value="CHF">CHF — Swiss Franc</option>
+              <option value="CAD">CAD — Canadian Dollar</option>
+              <option value="NZD">NZD — New Zealand Dollar</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Secondary Currency</label>
+            <select id="s-secondary-currency">
+              <option value="">None</option>
+              <option value="USD">USD — US Dollar</option>
+              <option value="KES">KES — Kenya Shilling</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+              <option value="AUD">AUD — Australian Dollar</option>
+              <option value="ZAR">ZAR — South African Rand</option>
+              <option value="TZS">TZS — Tanzania Shilling</option>
+              <option value="UGX">UGX — Uganda Shilling</option>
+              <option value="NGN">NGN — Nigerian Naira</option>
+              <option value="GHS">GHS — Ghana Cedi</option>
+              <option value="COP">COP — Colombian Peso</option>
+              <option value="BRL">BRL — Brazilian Real</option>
+              <option value="MXN">MXN — Mexican Peso</option>
+              <option value="ARS">ARS — Argentine Peso</option>
+              <option value="INR">INR — Indian Rupee</option>
+              <option value="PKR">PKR — Pakistani Rupee</option>
+              <option value="LKR">LKR — Sri Lankan Rupee</option>
+              <option value="THB">THB — Thai Baht</option>
+              <option value="PHP">PHP — Philippine Peso</option>
+              <option value="MYR">MYR — Malaysian Ringgit</option>
+              <option value="IDR">IDR — Indonesian Rupiah</option>
+              <option value="SGD">SGD — Singapore Dollar</option>
+              <option value="AED">AED — UAE Dirham</option>
+              <option value="SAR">SAR — Saudi Riyal</option>
+              <option value="QAR">QAR — Qatari Riyal</option>
+              <option value="EGP">EGP — Egyptian Pound</option>
+              <option value="MAD">MAD — Moroccan Dirham</option>
+              <option value="ETB">ETB — Ethiopian Birr</option>
+              <option value="NOK">NOK — Norwegian Krone</option>
+              <option value="SEK">SEK — Swedish Krona</option>
+              <option value="CHF">CHF — Swiss Franc</option>
+              <option value="CAD">CAD — Canadian Dollar</option>
+              <option value="NZD">NZD — New Zealand Dollar</option>
+            </select>
+          </div>
+        </div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionCurrency()">Save ✓</button><span class="section-save-msg" id="msg-currency"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Exchange Rate</h4>
+        <div style="font-size:0.72rem;color:#888;margin-bottom:12px;line-height:1.6">
+          The exchange rate controls currency conversion on quotes and PDFs. Auto mode fetches live rates — if your currency is not supported by the live feed, set a manual rate below.
+        </div>
+        <div class="toggle-row" style="margin-bottom:16px">
+          <input type="checkbox" id="s-fx-manual" onchange="toggleFxMode()" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-fx-manual" style="font-weight:600">Use Manual Rate (override live FX)</label>
+        </div>
+        <div class="toggle-row" style="margin-bottom:16px">
+          <input type="checkbox" id="s-fx-show-kes" checked style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-fx-show-kes" style="font-weight:600">Show secondary currency conversion on client page</label>
+        </div>
+        <div id="fx-auto-status" style="font-size:0.82rem;color:#1b5e20;background:#e8f5e9;padding:10px 14px;border-radius:6px;margin-bottom:12px">
+          ✅ Auto mode — rates fetched live from open.er-api.com
+        </div>
+        <div id="fx-manual-fields" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label id="fx-label-1">USD 1 = KES</label><input type="number" id="s-fx-kes" placeholder="e.g. 129" step="0.01"></div>
+            <div class="form-group"><label>USD 1 = EUR</label><input type="number" id="s-fx-eur" placeholder="e.g. 0.92" step="0.0001"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>USD 1 = GBP</label><input type="number" id="s-fx-gbp" placeholder="e.g. 0.79" step="0.0001"></div>
+            <div class="form-group"><label>USD 1 = TZS</label><input type="number" id="s-fx-tzs" placeholder="e.g. 2650" step="1"></div>
+          </div>
+          <div class="form-group"><label>USD 1 = UGX</label><input type="number" id="s-fx-ugx" placeholder="e.g. 3700" step="1"></div>
+        </div>
+        <div id="fx-live-rates" style="font-size:0.82rem;color:#555;margin-bottom:12px"></div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveFxRates()">Save ✓</button><span class="section-save-msg" id="fx-msg"></span></div>
+      </div>
     </div>
   </div>
+
+  <div class="card settings-card-collapsible collapsed">
+    <h3 onclick="toggleSettingsCard(this)">Delivery Messages</h3>
+    <div class="card-body">
+      <div style="font-size:0.72rem;color:#888;margin-bottom:14px;line-height:1.6">These messages are sent via WhatsApp when you share a quote, invoice or receipt with a client.</div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Quote Message</h4>
+        <textarea id="s-msg-quote" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveMessageTemplates()">Save ✓</button><span class="section-save-msg" id="msg-quote-tpl"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Invoice Message</h4>
+        <textarea id="s-msg-invoice" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveMessageTemplates()">Save ✓</button><span class="section-save-msg" id="msg-invoice-tpl"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Receipt Message</h4>
+        <textarea id="s-msg-receipt" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveMessageTemplates()">Save ✓</button><span class="section-save-msg" id="msg-receipt-tpl"></span></div>
+      </div>
+      <div id="msg-templates-msg"></div>
+    </div>
+  </div>
+
 
   <!-- ═══════════════════════════════════════════ -->
   <!-- GROUP 4: SECURITY -->
@@ -3293,11 +3350,11 @@ async function loadSettings() {
   document.getElementById('s-email').value = c.email || '';
   document.getElementById('s-address').value = c.address || '';
   document.getElementById('s-base-airport').value = operatorConfig.base_airport || '';
-  document.getElementById('s-geo-region-name').value = geo.region_name || 'Kenya';
-  document.getElementById('s-geo-enabled').checked = geo.enabled !== false;
-  document.getElementById('s-geo-center-lat').value = geo.center_lat || -0.023;
-  document.getElementById('s-geo-center-lon').value = geo.center_lon || 37.906;
-  document.getElementById('s-geo-radius-km').value = geo.radius_km || 500;
+  document.getElementById('s-geo-region-name').value = geo.region_name || '';
+  if(document.getElementById('s-geo-enabled')) { document.getElementById('s-geo-enabled').checked = geo.enabled === true; toggleGeoFields(); }
+  document.getElementById('s-geo-center-lat').value = geo.center_lat || '';
+  document.getElementById('s-geo-center-lon').value = geo.center_lon || '';
+  if(document.getElementById('s-geo-radius')) document.getElementById('s-geo-radius').value = geo.radius_km || 500;
   document.getElementById('s-min-hours').value = qr.min_flight_hours || 1.0;
   document.getElementById('s-max-nights').value = qr.max_nights_before_pickup_drop || 3;
   document.getElementById('s-max-hours-day').value = qr.max_flight_hours_per_day || 10;
@@ -3305,14 +3362,14 @@ async function loadSettings() {
   document.getElementById('s-quote-validity').value = qr.quote_validity_hours || 48;
   document.getElementById('s-buffer-enabled').checked = qr.ground_time_buffer_enabled || false;
   document.getElementById('s-buffer-minutes').value = qr.ground_time_buffer_minutes || 0;
-  document.getElementById('s-show-nm').checked = qr.show_distance_to_client || false;
+  if(document.getElementById('s-show-distance')) document.getElementById('s-show-distance').checked = qr.show_distance_to_client || false;
   document.getElementById('s-show-rate-breakdown').checked = qr.show_rate_breakdown || false;
   toggleBuffer();
-  document.getElementById('s-bank-name').value = bk.account_name || '';
-  document.getElementById('s-bank-bank').value = bk.bank_name || '';
-  document.getElementById('s-bank-kes').value = bk.kes_account || '';
+  if(document.getElementById('s-bank-account-name')) document.getElementById('s-bank-account-name').value = bk.account_name || '';
+  if(document.getElementById('s-bank-name')) document.getElementById('s-bank-name').value = bk.bank_name || '';
+  if(document.getElementById('s-bank-kes-account')) document.getElementById('s-bank-kes-account').value = bk.kes_account || '';
   if (document.getElementById('s-bank-kes-currency')) document.getElementById('s-bank-kes-currency').value = bk.kes_currency || 'KES';
-  document.getElementById('s-bank-usd').value = bk.usd_account || '';
+  if(document.getElementById('s-bank-usd-account')) document.getElementById('s-bank-usd-account').value = bk.usd_account || '';
   if (document.getElementById('s-bank-usd-currency')) document.getElementById('s-bank-usd-currency').value = bk.usd_currency || 'USD';
   if (document.getElementById('s-bank-paybill')) document.getElementById('s-bank-paybill').value = bk.paybill || '';
   document.getElementById('s-bank-swift').value = bk.swift || '';
@@ -3323,14 +3380,14 @@ async function loadSettings() {
   let isManual = fx.mode === 'manual';
   document.getElementById('s-fx-manual').checked = isManual;
   document.getElementById('s-fx-show-kes').checked = fx.show_kes !== false;
-let primaryCur = document.getElementById('s-primary-currency');
+let primaryCurEl = document.getElementById('s-primary-currency');
   let secondaryCur = document.getElementById('s-secondary-currency');
-if (primaryCur && fx.primary_currency) {
-    primaryCur.value = fx.primary_currency;
+if (primaryCurEl && (fx.primary_currency || operatorConfig.quoting_rules?.currency)) {
+    primaryCurEl.value = fx.primary_currency || operatorConfig.quoting_rules?.currency || 'USD';
     let pdfCur = document.getElementById('pdf-currency');
     if (pdfCur) pdfCur.value = fx.primary_currency;
   }
-  if (secondaryCur) secondaryCur.value = fx.secondary_currency || '';
+  if (secondaryCur) secondaryCur.value = fx.secondary_currency || operatorConfig.secondary_currency || '';
   let fxr = fx.rates || {};
   document.getElementById('s-fx-kes').value = fxr.KES || '';
   document.getElementById('s-fx-eur').value = fxr.EUR || '';
@@ -3387,6 +3444,13 @@ function previewLogo() {
 function syncColor(type) {
   let hex = document.getElementById(`s-${type}-color-hex`).value.trim();
   if (/^#[0-9A-Fa-f]{6}$/.test(hex)) document.getElementById(`s-${type}-color`).value = hex;
+}
+
+
+function toggleGeoFields() {
+  let enabled = document.getElementById('s-geo-enabled')?.checked;
+  let fields = document.getElementById('geo-fields');
+  if (fields) fields.style.display = enabled ? 'block' : 'none';
 }
 
 function toggleBuffer() {
@@ -3532,7 +3596,189 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+
+function showSectionMsg(id, msg, type) {
+  let el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'section-save-msg ' + (type || '');
+  setTimeout(() => { el.textContent = ''; el.className = 'section-save-msg'; }, 3000);
+}
+
+async function saveSectionBranding() {
+  let data = {
+    company_name: document.getElementById('s-company-name')?.value || '',
+    tagline: document.getElementById('s-tagline')?.value || '',
+    logo_url: document.getElementById('s-logo-url')?.value || '',
+    footer_tagline: document.getElementById('s-footer-tagline')?.value || '',
+    branding: {
+      primary_color: document.getElementById('s-primary-color-hex')?.value || '#0a0a0a',
+      accent_color: document.getElementById('s-accent-color-hex')?.value || '#1a56db'
+    },
+    trust_bar: operatorConfig.trust_bar || [],
+    social: {
+      website: document.getElementById('s-website')?.value || '',
+      instagram: document.getElementById('s-instagram')?.value || '',
+      facebook: document.getElementById('s-facebook')?.value || '',
+      twitter: document.getElementById('s-twitter')?.value || ''
+    }
+  };
+  try {
+    let r = await fetch('/settings/save/branding', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let d = await r.json();
+    if (d.success) { showSectionMsg('branding-msg','✓ Saved','ok'); operatorConfig = {...operatorConfig, ...data}; }
+    else showSectionMsg('branding-msg', d.error || 'Error', 'err');
+  } catch(e) { showSectionMsg('branding-msg','Network error','err'); }
+}
+
+async function saveSectionCompany() {
+  let data = {
+    contact: {
+      phone: document.getElementById('s-phone')?.value || '',
+      whatsapp: document.getElementById('s-whatsapp')?.value || '',
+      email: document.getElementById('s-email')?.value || '',
+      address: document.getElementById('s-address')?.value || '',
+      whatsapp_greeting: document.getElementById('s-whatsapp-greeting')?.value || ''
+    }
+  };
+  try {
+    let r = await fetch('/settings/save/branding', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let d = await r.json();
+    if (d.success) showSectionMsg('msg-contact','✓ Saved','ok');
+    else showSectionMsg('msg-contact', d.error || 'Error', 'err');
+  } catch(e) { showSectionMsg('msg-contact','Network error','err'); }
+}
+
+async function saveSectionAircraftMode() {
+  let data = {
+    aircraft_mode: document.getElementById('s-aircraft-mode')?.value || 'helicopter',
+    landing_field_disclaimer: document.getElementById('s-disclaimer')?.value || ''
+  };
+  try {
+    let r = await fetch('/settings/save/aircraft_mode', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let d = await r.json();
+    if (d.success) showSectionMsg('msg-aircraft-mode','✓ Saved','ok');
+    else showSectionMsg('msg-aircraft-mode', d.error || 'Error', 'err');
+  } catch(e) { showSectionMsg('msg-aircraft-mode','Network error','err'); }
+}
+
+async function saveSectionGeoLock() {
+  let enabled = document.getElementById('s-geo-enabled')?.checked || false;
+  let data = {
+    geo_lock: {
+      enabled: enabled,
+      region_name: document.getElementById('s-geo-region-name')?.value || '',
+      center_lat: parseFloat(document.getElementById('s-geo-center-lat')?.value || 0),
+      center_lon: parseFloat(document.getElementById('s-geo-center-lon')?.value || 0),
+      radius_km: parseFloat(document.getElementById('s-geo-radius')?.value || 500),
+      mode: 'radius'
+    }
+  };
+  try {
+    let r = await fetch('/settings/save/geo_lock', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let d = await r.json();
+    if (d.success) showSectionMsg('msg-geo','✓ Saved','ok');
+    else showSectionMsg('msg-geo', d.error || 'Error', 'err');
+  } catch(e) { showSectionMsg('msg-geo','Network error','err'); }
+}
+
+async function saveSectionQuotingRules() {
+  let data = {
+    quoting_rules: {
+      min_flight_hours: parseFloat(document.getElementById('s-min-hours')?.value || 1),
+      max_flight_hours_per_day: parseFloat(document.getElementById('s-max-hours-day')?.value || 10),
+      max_nights_before_pickup_drop: parseInt(document.getElementById('s-max-nights')?.value || 3),
+      max_idle_days_between_legs: parseInt(document.getElementById('s-max-idle-days')?.value || 1),
+      quote_validity_hours: parseInt(document.getElementById('s-quote-validity')?.value || 48),
+      show_distance_to_client: document.getElementById('s-show-distance')?.checked || false,
+      ground_time_buffer_enabled: document.getElementById('s-buffer-enabled')?.checked || false,
+      ground_time_buffer_minutes: parseFloat(document.getElementById('s-buffer-minutes')?.value || 0),
+      currency: operatorConfig?.quoting_rules?.currency || 'USD',
+      currency_symbol: operatorConfig?.quoting_rules?.currency_symbol || '$'
+    }
+  };
+  try {
+    let r = await fetch('/settings/save/quoting_rules', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let d = await r.json();
+    if (d.success) showSectionMsg('msg-quoting-rules','✓ Saved','ok');
+    else showSectionMsg('msg-quoting-rules', d.error || 'Error', 'err');
+  } catch(e) { showSectionMsg('msg-quoting-rules','Network error','err'); }
+}
+
+async function saveSectionExtraTime() {
+  let data = {
+    enabled: document.getElementById('s-buffer-enabled')?.checked || false,
+    minutes: parseFloat(document.getElementById('s-buffer-minutes')?.value || 0)
+  };
+  try {
+    let r = await fetch('/settings/save/extra_time', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let d = await r.json();
+    if (d.success) showSectionMsg('msg-extra-time','✓ Saved','ok');
+    else showSectionMsg('msg-extra-time', d.error || 'Error', 'err');
+  } catch(e) { showSectionMsg('msg-extra-time','Network error','err'); }
+}
+
+async function saveSectionClientDisplay() {
+  let data = {
+    show_distance_to_client: document.getElementById('s-show-distance')?.checked || false,
+    quote_validity_hours: parseInt(document.getElementById('s-quote-validity')?.value || 48)
+  };
+  try {
+    let r = await fetch('/settings/save/client_display', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let d = await r.json();
+    if (d.success) showSectionMsg('msg-client-display','✓ Saved','ok');
+    else showSectionMsg('msg-client-display', d.error || 'Error', 'err');
+  } catch(e) { showSectionMsg('msg-client-display','Network error','err'); }
+}
+
+async function saveSectionBank() {
+  let data = {
+    bank: {
+      account_name: document.getElementById('s-bank-account-name')?.value || '',
+      bank_name: document.getElementById('s-bank-name')?.value || '',
+      swift: document.getElementById('s-bank-swift')?.value || '',
+      branch: document.getElementById('s-bank-branch')?.value || '',
+      kes_account: document.getElementById('s-bank-kes-account')?.value || '',
+      kes_currency: document.getElementById('s-bank-kes-currency')?.value || 'KES',
+      usd_account: document.getElementById('s-bank-usd-account')?.value || '',
+      usd_currency: document.getElementById('s-bank-usd-currency')?.value || 'USD',
+      paybill: document.getElementById('s-bank-paybill')?.value || ''
+    },
+    prefix: document.getElementById('s-invoice-prefix')?.value || '',
+    terms: document.getElementById('s-invoice-terms')?.value || ''
+  };
+  try {
+    let r = await fetch('/settings/save/bank', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let d = await r.json();
+    if (d.success) { showSectionMsg('msg-bank','✓ Saved','ok'); showSectionMsg('msg-invoice','✓ Saved','ok'); }
+    else { showSectionMsg('msg-bank', d.error || 'Error', 'err'); }
+  } catch(e) { showSectionMsg('msg-bank','Network error','err'); }
+}
+
+async function saveSectionCurrency() {
+  let primary = document.getElementById('s-primary-currency')?.value || 'USD';
+  let symbols = {'USD':'$','KES':'KES','EUR':'€','GBP':'£','AUD':'A$','ZAR':'R','TZS':'TZS','UGX':'UGX','NGN':'₦','GHS':'GH₵','COP':'COP','BRL':'R$','MXN':'MX$','ARS':'AR$','INR':'₹','PKR':'₨','LKR':'Rs','THB':'฿','PHP':'₱','MYR':'RM','IDR':'Rp','SGD':'S$','AED':'AED','SAR':'SAR','QAR':'QAR','EGP':'E£','MAD':'MAD','ETB':'Br','NOK':'kr','SEK':'kr','CHF':'CHF','CAD':'CA$','NZD':'NZ$'};
+  let data = {
+    currency: primary,
+    currency_symbol: symbols[primary] || primary,
+    secondary_currency: document.getElementById('s-secondary-currency')?.value || ''
+  };
+  try {
+    let r = await fetch('/settings/save/currency', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let d = await r.json();
+    if (d.success) showSectionMsg('msg-currency','✓ Saved','ok');
+    else showSectionMsg('msg-currency', d.error || 'Error', 'err');
+  } catch(e) { showSectionMsg('msg-currency','Network error','err'); }
+}
+
+async function saveBranding() { await saveSectionBranding(); }
+async function saveCompany() { await saveSectionCompany(); }
+async function saveGeoLock() { await saveSectionGeoLock(); }
+async function saveQuotingRules() { await saveSectionQuotingRules(); }
+async function saveBank() { await saveSectionBank(); }
+
 async function saveBranding() {
+
   operatorConfig.company_name = document.getElementById('s-company-name').value;
   operatorConfig.tagline = document.getElementById('s-tagline').value;
   operatorConfig.logo_url = document.getElementById('s-logo-url').value;
