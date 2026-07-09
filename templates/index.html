@@ -2850,7 +2850,6 @@ pax_fee: parseFloat(card.querySelector('.ac-pax').value),
 
   });
   let activeCount = Object.values(data).filter(v => v.active).length;
-  if (activeCount < 1) { showMsg('ac-msg', '⚠️ No aircraft is active. Activate at least one aircraft to start quoting.', 'warning'); }
   let r = await fetch('/aircraft/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
   let res = await r.json();
   showMsg('ac-msg', res.success?'Aircraft saved.':(res.error||'Error'), res.success?'success':'error');
