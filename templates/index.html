@@ -2344,9 +2344,10 @@ function initAdminAc(inputId) {
   }
   input.addEventListener('input', () => {
     clearTimeout(adminAcTimers[inputId]);
+    placeIdMap[inputId] = '';
     let val = input.value.trim();
-    if (val.length < 3 || val.startsWith('http') || val.includes(',')) { drop.style.display='none'; return; }
-    adminAcTimers[inputId] = setTimeout(() => adminAcFetch(val, drop, input), 300);
+    if (val.length < 3 || val.startsWith('http')) { drop.style.display='none'; return; }
+    adminAcTimers[inputId] = setTimeout(() => adminAcFetch(val, drop, input), 150);
   });
   input.addEventListener('keydown', e => { if (e.key==='Escape') drop.style.display='none'; });
   document.addEventListener('click', e => { if (!input.contains(e.target) && !drop.contains(e.target)) drop.style.display='none'; });
