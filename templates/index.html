@@ -2961,8 +2961,8 @@ async function selectAcBase(el, placeId, description, localKey) {
   let latField = card.querySelector('.ac-base-lat');
   let lonField = card.querySelector('.ac-base-lon');
   suggestions.style.display = 'none';
-  searchInput.value = description;
-  homeInput.value = description;
+  searchInput.value = '';
+  if (!homeInput.value) homeInput.value = description;
   status.textContent = 'Resolving...';
   try {
     let r = await fetch('/resolve_place', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({place_id: placeId, label: description, local_key: localKey}) });
@@ -2972,7 +2972,8 @@ async function selectAcBase(el, placeId, description, localKey) {
       lonField.value = data.lon;
       status.textContent = '✅ Base set: ' + parseFloat(data.lat).toFixed(5) + ', ' + parseFloat(data.lon).toFixed(5);
       status.style.color = '#1b5e20';
-      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: description, lat: data.lat, lon: data.lon, aliases: []}) });
+      let displayName = homeInput.value || description;
+      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: displayName, lat: data.lat, lon: data.lon, aliases: [description.toLowerCase()]}) });
     }
   } catch(e) { status.textContent = '❌ Error resolving location'; }
 }
