@@ -665,7 +665,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <h4 onclick="toggleSettingsSection(this)">Company Logo</h4>
         <div class="form-group-full">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="text" id="s-logo-url" oninput="previewLogo()" placeholder="Paste URL or upload" style="flex:1">
+            <div style="font-size:0.7rem;color:#888;margin-top:6px;line-height:1.5">For best results upload a PNG with a transparent background. JPG logos with white backgrounds will have white areas removed automatically.</div>
             <label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap">
               📷 Upload Logo
               <input type="file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
