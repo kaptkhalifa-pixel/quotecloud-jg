@@ -835,7 +835,11 @@ def run_quote_engine(data):
     mission = data.get("mission")
     rules = get_quoting_rules()
     ac_type_filter = data.get("ac_type_filter", "all")
-    active = get_active_aircraft(ac_type_filter)
+    force_ac = data.pop("_force_aircraft", None)
+    if force_ac:
+        active = force_ac
+    else:
+        active = get_active_aircraft(ac_type_filter)
     if not active:
         return {"error": "No aircraft available for the selected type."}, 400
 
@@ -1139,10 +1143,97 @@ def admin_quote():
 def quote_page():
     return render_template("quote.html", operator=OPERATOR)
 
+
+@app.route("/quote/brand-pdf", methods=["POST"])
+def quote_brand_pdf():
+    import io, os, datetime, uuid
+    data = request.get_json()
+    result = data.get("result")
+    if not result:
+        return jsonify({"error": "No result provided"}), 400
+    company_name = data.get("company_name", "My Company")
+    address = data.get("address", "")
+    phone = data.get("phone", "")
+    client_name = data.get("client_name", "Valued Client")
+    logo_url = data.get("logo_url", "")
+    try:
+        from_block = company_name
+        if address: from_block += f"\n{address}"
+        if phone: from_block += f"\n{phone}"
+        payload, doc_number = build_pdf_payload_from_result(
+            "Quotation", result, client_name, "", phone, "", "0", [],
+            currency="USD", kes_rate=0, ghost_mode=False)
+        payload["from"] = from_block
+        payload["logo"] = logo_url
+        payload["powered_by"] = "Powered by QC Aero · qcaero.app"
+        out_path = f"/tmp/{doc_number}.pdf"
+        hq.generate_pdf_weasy(payload, out_path)
+        with open(out_path, "rb") as f:
+            pdf_bytes = f.read()
+        # Upload to Firebase with 5min auto-delete flag
+        try:
+            from firebase_admin import storage as fb_storage
+            bucket = fb_storage.bucket()
+            blob_path = f"demo/brand-pdfs/{doc_number}.pdf"
+            blob = bucket.blob(blob_path)
+            blob.upload_from_filename(out_path, content_type="application/pdf")
+            blob.make_public()
+            pdf_url = blob.public_url
+            # Schedule delete after 5 mins via metadata
+            blob.metadata = {"delete_after": (datetime.datetime.utcnow() + datetime.timedelta(minutes=5)).isoformat()}
+            blob.patch()
+        except Exception:
+            pdf_url = ""
+        try:
+            os.remove(out_path)
+        except Exception:
+            pass
+        response = __import__('flask').send_file(
+            io.BytesIO(pdf_bytes), as_attachment=True,
+            download_name=f"{company_name.replace(' ','-')}-Quote.pdf",
+            mimetype="application/pdf")
+        response.headers["X-PDF-URL"] = pdf_url
+        response.headers["X-DOC-NUMBER"] = doc_number
+        return response
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/quote/calculate", methods=["POST"])
 def quote_calculate():
     data = request.get_json()
-    result, status = run_quote_engine(data)
+    # Handle custom aircraft injection
+    custom_ac = data.pop("custom_aircraft", None)
+    if custom_ac:
+        ac_key = "custom_aircraft"
+        custom_ac["active"] = True
+        # Temporarily inject into engine
+        orig = hq.AIRCRAFT.copy()
+        hq.AIRCRAFT[ac_key] = {
+            "label": f"{custom_ac.get('label','Custom')} ({custom_ac.get('seater',1)} seater)",
+            "speed": float(custom_ac.get("speed", 150)),
+            "rate": float(custom_ac.get("rate", 0)),
+            "overnight": float(custom_ac.get("overnight_rate", 0)),
+            "idle_day": float(custom_ac.get("idle_day_rate", custom_ac.get("rate", 0))),
+            "base_key": "custom_base",
+            "base_label": custom_ac.get("home_airstrip", ""),
+        }
+        if custom_ac.get("base_lat") and custom_ac.get("base_lon"):
+            hq.USER_AIRPORTS["custom_base"] = {
+                "lat": float(custom_ac["base_lat"]),
+                "lon": float(custom_ac["base_lon"]),
+                "aliases": [],
+                "name": custom_ac.get("home_airstrip", "Base")
+            }
+        hq.PAX_ADMIN_FEE_USD = float(custom_ac.get("pax_fee", 0)) if custom_ac.get("pax_fee_enabled") else 0.0
+        # Force only custom aircraft
+        data["_force_aircraft"] = {ac_key: custom_ac}
+        result, status = run_quote_engine(data)
+        hq.AIRCRAFT = orig
+    else:
+        result, status = run_quote_engine(data)
     return jsonify(result), status
 
 @app.route("/pdf", methods=["POST"])
