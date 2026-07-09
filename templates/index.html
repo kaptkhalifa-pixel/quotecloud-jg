@@ -1228,24 +1228,29 @@ function toggleSettingsCard(h3) {
 }
 
 
-// Prevent accidental select/input changes while scrolling on mobile
+// Prevent accidental focus on inputs/selects while scrolling on mobile
 (function() {
-  let scrolling = false;
-  let scrollTimer;
-  window.addEventListener('scroll', function() {
-    scrolling = true;
-    clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(function() { scrolling = false; }, 150);
+  let touchStartY = 0;
+  let touchMoved = false;
+  document.addEventListener('touchstart', function(e) {
+    touchStartY = e.touches[0].clientY;
+    touchMoved = false;
   }, true);
-  document.addEventListener('touchstart', function() { scrolling = false; }, true);
-  document.addEventListener('touchmove', function() { scrolling = true; }, true);
-  document.addEventListener('touchend', function(e) {
-    if (scrolling && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-      e.preventDefault();
-      e.stopPropagation();
+  document.addEventListener('touchmove', function(e) {
+    if (Math.abs(e.touches[0].clientY - touchStartY) > 8) {
+      touchMoved = true;
     }
-    setTimeout(function() { scrolling = false; }, 100);
   }, true);
+  document.addEventListener('touchend', function(e) {
+    if (touchMoved) {
+      let tag = e.target.tagName;
+      if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') {
+        e.target.blur();
+        e.preventDefault();
+      }
+    }
+    touchMoved = false;
+  }, {capture: true, passive: false});
 })();
 
 function saveStateToStorage() {
