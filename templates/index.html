@@ -914,7 +914,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           </div>
           <div class="form-group"><label>Secondary Currency</label>
             <select id="s-secondary-currency">
-              {% set sec_cur = operator.get('fx', {}).get('secondary_currency') or operator.get('secondary_currency', '') %}
+              {% set fx_block = operator.get('fx') or {} %}{% set sec_cur = fx_block.get('secondary_currency') or operator.get('secondary_currency') or '' %}
               <option value="" {% if sec_cur == '' %}selected{% endif %}>None</option>
               <option value="USD" {% if sec_cur == 'USD' %}selected{% endif %}>USD — US Dollar</option>
               <option value="KES" {% if sec_cur == 'KES' %}selected{% endif %}>KES — Kenya Shilling</option>
