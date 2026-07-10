@@ -2143,20 +2143,20 @@ function renderAdjuster(res, idx) {
       <div style="font-size:0.72rem;color:#888;margin-bottom:12px;line-height:1.5">Edit any field below. Total updates live. Tap Apply when ready.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div class="adjuster-field">
-          <label>Base Rate (USD/hr)</label>
+          <label>Base Rate (<span class="pri-cur-label">USD</span>/hr)</label>
           <input type="number" id="adj-rate-${idx}" value="${rate}" oninput="recalcAdjuster(${idx})">
           <div style="font-size:0.7rem;color:#888;margin-top:3px">${fmtHours(hrs)} · original ${priCurrencySymbol}${rate}/hr</div>
         </div>
         <input type="hidden" id="adj-speed-${idx}" value="${speed}">
         ${nights > 0 ? `
         <div class="adjuster-field">
-          <label>Overnight Rate ($/night)</label>
+          <label>Overnight Rate (<span class="pri-sym-label">$</span>/night)</label>
           <input type="number" id="adj-ov-rate-${idx}" value="${ovRate}" oninput="recalcAdjuster(${idx})">
           <div style="font-size:0.7rem;color:#888;margin-top:3px">${nights} night${nights!==1?'s':''} · original $${ovRate}/night</div>
         </div>` : `<input type="hidden" id="adj-ov-rate-${idx}" value="${ovRate}">`}
         ${idleDays > 0 ? `
         <div class="adjuster-field">
-          <label>Idle Day Rate ($/day)</label>
+          <label>Idle Day Rate (<span class="pri-sym-label">$</span>/day)</label>
           <input type="number" id="adj-idle-rate-${idx}" value="${idleRate}" oninput="recalcAdjuster(${idx})">
           <div style="font-size:0.7rem;color:#888;margin-top:3px">${idleDays} day${idleDays!==1?'s':''} · original ${priCurrencySymbol}${idleRate}/day</div>
         </div>` : `<input type="hidden" id="adj-idle-rate-${idx}" value="${idleRate}">`}
@@ -4072,6 +4072,9 @@ async function loadFX() {
       secCurrency = data.secondary_currency || '';
       priCurrency = data.primary_currency || 'USD';
       priCurrencySymbol = CURRENCY_SYMBOLS[priCurrency] || priCurrency;
+      // Update currency labels throughout UI
+      document.querySelectorAll('.pri-cur-label').forEach(el => el.textContent = priCurrency);
+      document.querySelectorAll('.pri-sym-label').forEach(el => el.textContent = priCurrencySymbol);
       // Update pdf-currency dropdown
       let pdfCurSel = document.getElementById('pdf-currency');
       if (pdfCurSel) {
