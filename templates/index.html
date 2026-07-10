@@ -2707,7 +2707,7 @@ async function resolveMapPin() {
   let url = document.getElementById('loc-maps').value.trim();
   if (!url) return;
   showMsg('loc-msg','Resolving pin...','success');
-  let r = await fetch('/op/'+SLUG+'/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url}) });
+  let r = await fetch('/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url}) });
   let data = await r.json();
   if (!data.found) { showMsg('loc-msg','Could not resolve pin.','error'); return; }
   document.getElementById('loc-name').value = data.display;
@@ -3985,7 +3985,7 @@ async function resolveGeoCenter() {
   if (!pin) { status.textContent = 'Enter a Maps pin first.'; return; }
   status.textContent = 'Resolving...';
   try {
-    let r = await fetch('/op/'+SLUG+'/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url:pin}) });
+    let r = await fetch('/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url:pin}) });
     let data = await r.json();
     if (data.found) {
       document.getElementById('s-geo-center-lat').value = data.lat;
