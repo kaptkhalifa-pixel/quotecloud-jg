@@ -2356,16 +2356,23 @@ def fx_save():
     global OPERATOR
     data = request.get_json()
     try:
+        existing_fx = OPERATOR.get("fx", {})
+        rates = {
+            "KES": float(data.get("KES", 0)),
+            "EUR": float(data.get("EUR", 0)),
+            "GBP": float(data.get("GBP", 0)),
+            "TZS": float(data.get("TZS", 0)),
+            "UGX": float(data.get("UGX", 0))
+        }
+        # Preserve secondary currency rate if provided
+        sec_cur = existing_fx.get("secondary_currency", "")
+        if sec_cur and data.get(sec_cur):
+            rates[sec_cur] = float(data.get(sec_cur, 0))
         OPERATOR["fx"] = {
             "mode": data.get("mode", "auto"),
             "show_kes": data.get("show_kes", True),
-            "rates": {
-                "KES": float(data.get("KES", 0)),
-                "EUR": float(data.get("EUR", 0)),
-                "GBP": float(data.get("GBP", 0)),
-                "TZS": float(data.get("TZS", 0)),
-                "UGX": float(data.get("UGX", 0))
-            }
+            "secondary_currency": sec_cur,
+            "rates": rates
         }
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
