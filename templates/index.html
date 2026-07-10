@@ -1804,18 +1804,53 @@ function quickWA(idx) {
   if (res.mission === 'return_both') total = res._adj_total || res.option_a?.total_usd || 0;
   let segs = res.segments || res.option_a?.segments || [];
   let route = segs.filter(s=>s.type==='revenue').map(s=>s.origin+' → '+s.destination+(s.date?' on '+s.date:'')).join(', ');
+  // Build full legs breakdown
+  let allSegs2 = [];
+  if (res.mission === 'pick_and_drop') {
+    allSegs2 = [...(res.drop?.segments||[]), ...(res.pick?.segments||[])];
+  } else if (res.mission === 'return_both') {
+    allSegs2 = [...(res.option_a?.segments||[]), ...(res.option_b?.segments||[])];
+  } else {
+    allSegs2 = res.segments || [];
+  }
+  let revSegs2 = allSegs2.filter(s => s.type === 'revenue');
+  let totalHrs2 = allSegs2.reduce((sum, s) => sum + parseFloat(s.hours||0), 0);
+  let legLines2 = revSegs2.map((s, i) => {
+    let hrs = parseFloat(s.hours||0).toFixed(1);
+    let dist = s.distance_nm ? ' ' + Math.round(s.distance_nm) + ' nm' : '';
+    let dt = s.date ? ' ' + s.date : '';
+    return '  ' + (i+1) + '. ' + s.origin + ' to ' + s.destination + ' (' + hrs + ' hrs' + dist + dt + ')';
+  });
+  let rate2 = res._adj_rate || res.rate_usd || 0;
+  let pax2 = res.pax_fee_usd || res.pax_fee_usd_display || 0;
+  let paxLabel2 = res.pax_label || 'Mission Fixed Costs';
+  let nights2 = res.nights || 0;
+  let ovRate2 = res.overnight_rate_usd || 0;
+  let company2 = operatorConfig.company_name || 'us';
+  let phone2 = operatorConfig.contact?.phone || '';
+  let validity2 = (operatorConfig.quoting_rules?.quote_validity_hours || 48);
+  let priceLines2 = [];
+  priceLines2.push('  Flight (' + fmtHours(totalHrs2) + ' @ ' + priCurrencySymbol + fmtAmt(rate2) + '/hr)');
+  if (pax2 > 0) priceLines2.push('  ' + paxLabel2 + ': ' + priCurrency + ' ' + fmtAmt(pax2));
+  if (nights2 > 0 && ovRate2 > 0) priceLines2.push('  Overnight x' + nights2 + ': ' + priCurrency + ' ' + fmtAmt(ovRate2 * nights2));
   let lines = [
-    `Dear Client,`,
-    ``,
-    `Please find below a charter quote from ${operatorConfig.company_name||'us'}:`,
-    ``,
-    `Aircraft: ${res.ac_label||''}`,
-    `Route: ${route}`,
-    `Total: ${priCurrency} ${fmtAmt(total)}`,
-    ``,
-    `Quote valid 48 hours · Subject to availability.`,
-    `Please confirm to proceed.`
-  ];
+    '*Charter Quote — ' + company2 + '*',
+    '',
+    'Aircraft: ' + (res.ac_label||''),
+    '',
+    'Routing:',
+    ...legLines2,
+    '',
+    'Price Breakdown:',
+    ...priceLines2,
+    '',
+    'TOTAL: ' + priCurrency + ' ' + fmtAmt(total),
+    '',
+    'Valid ' + validity2 + ' hrs | Subject to availability',
+    phone2 ? 'Queries: ' + phone2 : '',
+    '',
+    'Please confirm to proceed.'
+  ].filter(l => l !== null);
   let url = 'https://wa.me/'+wa.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(lines.join('\n'));
   window.open(url, '_blank');
 }
