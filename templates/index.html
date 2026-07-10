@@ -3443,10 +3443,10 @@ if (primaryCurEl && (fx.primary_currency || (operatorConfig.quoting_rules && ope
   }
   if (secondaryCur) {
     let secVal = fx.secondary_currency || operatorConfig.secondary_currency || '';
-    secondaryCur.value = secVal;
-    console.log('Setting secondary currency to:', secVal, '| fx.secondary_currency:', fx.secondary_currency, '| root:', operatorConfig.secondary_currency);
-    console.log('Dropdown options count:', secondaryCur.options.length);
-    console.log('Dropdown current value after set:', secondaryCur.value);
+    // Force select value using options loop - works even when element is hidden
+    for (let i = 0; i < secondaryCur.options.length; i++) {
+      secondaryCur.options[i].selected = (secondaryCur.options[i].value === secVal);
+    }
   }
   let fxr = fx.rates || {};
   document.getElementById('s-fx-kes').value = fxr.KES || '';
