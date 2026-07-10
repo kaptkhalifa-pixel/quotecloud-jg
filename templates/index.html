@@ -1226,6 +1226,11 @@ let fxRates = {};
 let secCurrency = '';
 let priCurrency = 'USD';
 let priCurrencySymbol = '$';
+const WHOLE_NUMBER_CURRENCIES = new Set(['KES','COP','TZS','UGX','NGN','GHS','RWF','ETB','IDR','JPY','KRW','VND','CLP','PYG','XOF','XAF']);
+function fmtAmt(amount) {
+  let decimals = WHOLE_NUMBER_CURRENCIES.has(priCurrency) ? 0 : 2;
+  return parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+}
 const CURRENCY_SYMBOLS = {'USD':'$','EUR':'€','GBP':'£','KES':'KES','COP':'COP','BRL':'R$','AED':'AED','INR':'₹','LKR':'Rs','IDR':'Rp','MYR':'RM','SGD':'S$','AUD':'A$','CAD':'CA$','NZD':'NZ$','ZAR':'R','NGN':'₦','GHS':'GH₵','TZS':'TZS','UGX':'UGX','SAR':'SAR','QAR':'QAR','EGP':'E£','NOK':'kr','SEK':'kr','CHF':'CHF','THB':'฿','PHP':'₱','JPY':'¥','CNY':'¥','KWD':'KWD','OMR':'OMR','MXN':'MX$','ARS':'AR$','CLP':'CLP','PEN':'PEN'};
 let placeIdMap = {};
 let allLocations = [];
@@ -1695,26 +1700,26 @@ function renderBilling(res, extraSegs) {
     let fc = Math.round(totalHrs * rate * 100) / 100;
         let minHrs = res.min_chargeable_hrs || 0;
     let minMsg = (minHrs > 0 && res.min_applied) ? `<div style="font-size:0.75rem;color:#e65100;background:#fff3e0;border-radius:6px;padding:5px 10px;margin-bottom:6px">Minimum charge of ${minHrs.toFixed(1)} flight hours applies. Quote reflects minimum billable hours.</div>` : '';
-    rows += `${minMsg}<div class="billing-row"><span>Aircraft Rental (${fmtHours(totalHrs)} @ ${priCurrencySymbol}${rate.toLocaleString()}/hr)</span><span>${priCurrency} ${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    rows += `${minMsg}<div class="billing-row"><span>Aircraft Rental (${fmtHours(totalHrs)} @ ${priCurrencySymbol}${rate.toLocaleString()}/hr)</span><span>${priCurrency} ${fmtAmt(fc)}</span></div>`;
   }
   let fee = res.pax_fee_usd || res.pax_fee_usd_display || 0;
-  if (fee > 0) rows += `<div class="billing-row"><span>${res.pax_label || res._adj_pax_label || 'Mission Fixed Costs'}</span><span>${priCurrency} ${parseFloat(fee).toLocaleString()}</span></div>`;
+  if (fee > 0) rows += `<div class="billing-row"><span>${res.pax_label || res._adj_pax_label || 'Mission Fixed Costs'}</span><span>${priCurrency} ${fmtAmt(fee)}</span></div>`;
   let overnightUsd = res.overnight_usd || res.overnight_cost_usd || 0;
   let oRate = res.overnight_rate_usd || 0;
   if (overnightUsd > 0 && oRate > 0) {
     let nights = Math.round(overnightUsd / oRate);
-    rows += `<div class="billing-row"><span>Overnight Per Diem (${nights} night${nights!==1?'s':''} @ ${priCurrencySymbol}${oRate}/night)</span><span>${priCurrency} ${parseFloat(overnightUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    rows += `<div class="billing-row"><span>Overnight Per Diem (${nights} night${nights!==1?'s':''} @ ${priCurrencySymbol}${oRate}/night)</span><span>${priCurrency} ${fmtAmt(overnightUsd)}</span></div>`;
   }
   let waitingUsd = res.waiting_usd || res.idle_cost_usd || 0;
   let idleRate = res.idle_day_rate_usd || 0;
   if (waitingUsd > 0) {
     let idleDays = idleRate > 0 ? Math.round(waitingUsd / idleRate) : 1;
-    rows += `<div class="billing-row"><span>Idle Day Charge (${idleDays} day${idleDays!==1?'s':''} @ ${priCurrencySymbol}${idleRate.toLocaleString()}/day)</span><span>${priCurrency} ${parseFloat(waitingUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    rows += `<div class="billing-row"><span>Idle Day Charge (${idleDays} day${idleDays!==1?'s':''} @ ${priCurrencySymbol}${idleRate.toLocaleString()}/day)</span><span>${priCurrency} ${fmtAmt(waitingUsd)}</span></div>`;
   }
   let secRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
   let kesFx = (secRate > 0 && secCurrency) ? `<div style="font-size:0.72rem;color:#888;text-align:right;margin-top:4px">≈ ${secCurrency} ${Math.round((res.total_usd||0)*secRate).toLocaleString()}</div>` : '';
    let displayTotal = res.total_usd || 0;
-  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>${priCurrency} ${displayTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>${kesFx}</div>`;
+  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>${priCurrency} ${fmtAmt(displayTotal)}</span></div>${kesFx}</div>`;
 }
 
 function renderOneAc(res) {
@@ -1805,7 +1810,7 @@ function quickWA(idx) {
     ``,
     `Aircraft: ${res.ac_label||''}`,
     `Route: ${route}`,
-    `Total: ${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}`,
+    `Total: ${priCurrency} ${fmtAmt(total)}`,
     ``,
     `Quote valid 48 hours · Subject to availability.`,
     `Please confirm to proceed.`
@@ -1866,7 +1871,7 @@ function toggleAdjKesMode(idx) {
     let origTotalVal = res.total_usd || 0;
     if (origRate) origRate.textContent = `${priCurrencySymbol}${origRateVal}/hr`;
     if (origPax) origPax.textContent = `${priCurrencySymbol}${origPaxVal}`;
-    if (origTotal) origTotal.textContent = `${priCurrency} ${origTotalVal.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    if (origTotal) origTotal.textContent = `${priCurrency} ${fmtAmt(origTotalVal)}`;
     let revPax = document.getElementById('adj-rev-pax-'+idx);
     if (revPax) revPax.value = Math.round(parseFloat(revPax.value||0) / kesRate * 100) / 100;
   }
@@ -1950,7 +1955,7 @@ function recalcAdjuster(idx) {
     if (isKes && kesRate > 0) {
       liveTotalEl.textContent = `KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}`;
     } else {
-      liveTotalEl.textContent = `${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+      liveTotalEl.textContent = `${priCurrency} ${fmtAmt(total)}`;
     }
   }
   let paxNameEl = document.getElementById('adj-pax-name-'+idx);
@@ -1960,7 +1965,7 @@ function recalcAdjuster(idx) {
   let kesFx = kesRate > 0 ? ` &nbsp;·&nbsp; KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}` : '';
   let adjSummary = document.getElementById('adj-summary-'+idx);
   let rateDisplay = `${priCurrencySymbol}${rateUsd}/hr`;
-  let totalDisplay = `${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  let totalDisplay = `${priCurrency} ${fmtAmt(total)}`;
   let paxDisplay = `${priCurrencySymbol}${Math.round(pax*100)/100}`;
   if (adjSummary) {
     let wasApplied = adjSummary.dataset.applied === 'true';
@@ -2123,7 +2128,7 @@ function renderAdjuster(res, idx) {
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
         <span style="color:#888">⏱ ${hrs} hrs total</span>
         <span style="color:#888">💺 ${res.ac_label||''}</span>
-        <span style="font-weight:700;color:#0d47a1">Base total: ${priCurrency} ${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span>
+        <span style="font-weight:700;color:#0d47a1">Base total: ${priCurrency} ${fmtAmt(res.total_usd||0)}</span>
       </div>
     </div>`;
 
@@ -2169,7 +2174,7 @@ function renderAdjuster(res, idx) {
         </div>
       </div>
       <div id="adj-live-total-${idx}" style="background:#0d47a1;color:#fff;border-radius:8px;padding:12px 14px;font-size:1rem;font-weight:700;text-align:right;margin-bottom:10px">
-        ${priCurrency} ${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}
+        ${priCurrency} ${fmtAmt(res.total_usd||0)}
       </div>
       <div id="adj-summary-${idx}" style="margin-bottom:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:0.82rem;color:#155724;display:none"></div>
       <div class="preset-row" id="preset-chips-${idx}"></div>
@@ -2246,7 +2251,7 @@ function switchAdjTab(idx, tab) {
     let adjSummary = document.getElementById('adj-summary-'+idx);
     if (adjSummary) { adjSummary.style.display = 'none'; adjSummary.innerHTML = ''; }
     let liveTotalEl = document.getElementById('adj-live-total-'+idx);
-    if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`; }
+    if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${fmtAmt(res.total_usd||0)}`; }
     let lockWarn = document.getElementById('adj-lock-warn-'+idx);
     if (lockWarn) lockWarn.remove();
     let applyBtn = document.getElementById('adj-rev-apply-'+idx);
@@ -2314,7 +2319,7 @@ function resetAdjuster(idx) {
   let adjSummary = document.getElementById('adj-summary-'+idx);
   if (adjSummary) { adjSummary.style.display = 'none'; adjSummary.innerHTML = ''; }
   let liveTotalEl = document.getElementById('adj-live-total-'+idx);
-  if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`; }
+  if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${fmtAmt(res.total_usd||0)}`; }
   let applyBtn = document.getElementById('adj-rev-apply-'+idx);
   if (applyBtn) { applyBtn.style.display = 'none'; applyBtn.innerHTML = `<button class="btn btn-success" onclick="applyFromReverse(${idx})">Apply Implied Rate →</button>`; }
   let revResult = document.getElementById('adj-rev-result-'+idx);
@@ -2381,14 +2386,14 @@ function applyFromReverse(idx) {
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:2px solid #1b5e20">
           <div style="font-size:0.65rem;color:#888;text-transform:uppercase;margin-bottom:4px">Target Price</div>
-          <div style="font-size:1rem;font-weight:700;color:#1b5e20">${priCurrency} ${targetRaw.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+          <div style="font-size:1rem;font-weight:700;color:#1b5e20">${priCurrency} ${fmtAmt(targetRaw)}</div>
         </div>
         <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:1px solid #ddd">
           <div style="font-size:0.65rem;color:#888;text-transform:uppercase;margin-bottom:4px">System Default</div>
-          <div style="font-size:1rem;font-weight:700;color:#888">${priCurrency} ${origTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+          <div style="font-size:1rem;font-weight:700;color:#888">${priCurrency} ${fmtAmt(origTotal)}</div>
         </div>
       </div>
-      <div style="margin-top:6px;font-size:0.82rem;font-weight:700">${targetRaw > origTotal ? `<span style="color:#1b5e20">▲ ${priCurrency} ${(targetRaw-origTotal).toLocaleString(undefined,{minimumFractionDigits:2})} above default</span>` : targetRaw < origTotal ? `<span style="color:#dc3545">▼ ${priCurrency} ${(origTotal-targetRaw).toLocaleString(undefined,{minimumFractionDigits:2})} below default</span>` : ''}</div>
+      <div style="margin-top:6px;font-size:0.82rem;font-weight:700">${targetRaw > origTotal ? `<span style="color:#1b5e20">▲ ${priCurrency} ${fmtAmt(targetRaw-origTotal)} above default</span>` : targetRaw < origTotal ? `<span style="color:#dc3545">▼ ${priCurrency} ${fmtAmt(origTotal-targetRaw)} below default</span>` : ''}</div>
       <div style="font-size:0.72rem;color:#555;margin-top:6px">✅ Ready — tap Generate PDF to proceed.</div>
     </div>`;
 }
@@ -2584,7 +2589,7 @@ async function generatePDF(allAircraft) {
     if (res2._adj_total !== undefined) {
       adjTotal = msgIsKes && msgKesRate > 0
         ? ` · Total: ${secCurrency} ${(Math.ceil(res2._adj_total*msgKesRate/1000)*1000).toLocaleString()}`
-        : ` · Total: ${priCurrency} ${res2._adj_total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+        : ` · Total: ${priCurrency} ${res2._adj_fmtAmt(total)}`;
     } else {
       adjTotal = '';
     }
@@ -3198,7 +3203,7 @@ async function openPaidModal(number) {
   let remaining = Math.max(total - prevPaid, 0);
   let isFullyPaid = prevPaid >= total && total > 0;
   document.getElementById('paid-record-number').value = number;
-  document.getElementById('bs-total').textContent = `${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('bs-total').textContent = `${priCurrency} ${fmtAmt(total)}`;
   document.getElementById('bs-remaining').textContent = `${priCurrency} ${remaining.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   let prevRow = document.getElementById('bs-prev-row');
   if (prevPaid > 0) {
@@ -3271,7 +3276,7 @@ async function openLogModal(number) {
   let rec = await r.json();
   if (rec.error) { alert(rec.error); return; }
   document.getElementById('log-record-info').textContent =
-    `${rec.number} — ${rec.client_name} — Total: ${priCurrency} ${parseFloat(rec.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    `${rec.number} — ${rec.client_name} — Total: ${priCurrency} ${fmtAmt(rec.amount||0)}`;
   let log = rec.payment_log || [];
   if (!log.length) {
     document.getElementById('log-content').innerHTML = '<p style="color:#aaa;padding:12px 0">No payment history yet.</p>';
@@ -3600,7 +3605,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ``,
         `Ref: ${d.docNumber}`,
         `Route: ${d.route}`,
-        `Invoice Total: ${priCurrency} ${parseFloat(d.finalTotal).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        `Invoice Total: ${priCurrency} ${fmtAmt(d.finalTotal)}`,
         d.pdfUrl ? `\nView Invoice: ${d.pdfUrl}` : '',
         ``,
         `To confirm, please proceed with payment as per bank details on the invoice.`,
@@ -3649,7 +3654,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ``,
         `Ref: ${d.docNumber}`,
         `Route: ${d.route}`,
-        `Invoice Total: ${priCurrency} ${parseFloat(d.finalTotal).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        `Invoice Total: ${priCurrency} ${fmtAmt(d.finalTotal)}`,
         d.pdfUrl ? `\nView Invoice: ${d.pdfUrl}` : '',
         ``,
         `To confirm, please proceed with payment as per bank details on the invoice.`,
@@ -4255,8 +4260,8 @@ function openInvoiceBuilder(enq) {
     if (ibGenBtn) { ibGenBtn.disabled = false; ibGenBtn.style.opacity = ''; ibGenBtn.style.cursor = ''; }
   }
   document.getElementById('ib-base-line').textContent =
-    `${enq.ac_label||'Aircraft Charter'} — ${enq.route_summary||''} — ${priCurrency} ${base.toLocaleString(undefined,{minimumFractionDigits:2})}`;
-  document.getElementById('ib-total-base').textContent = `$${base.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    `${enq.ac_label||'Aircraft Charter'} — ${enq.route_summary||''} — ${priCurrency} ${fmtAmt(base)}`;
+  document.getElementById('ib-total-base').textContent = `$${fmtAmt(base)}`;
   recalcInvoiceTotal();
   document.getElementById('invoice-builder-modal').classList.add('active');
 }
@@ -4333,7 +4338,7 @@ async function openBreakdownModal(token) {
       ${pax>0?`<div class="billing-row"><span>Pax / Admin Fee</span><span>$${parseFloat(pax).toLocaleString()}</span></div>`:''}
       ${overnight>0?`<div class="billing-row"><span>Overnight (@ $${ovRate}/night)</span><span>$${overnight.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`:''}
       ${waiting>0?`<div class="billing-row"><span>Idle Day (@ $${idleRate}/day)</span><span>$${waiting.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`:''}
-      <div class="billing-total"><span>TOTAL</span><span>${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>
+      <div class="billing-total"><span>TOTAL</span><span>${priCurrency} ${fmtAmt(total)}</span></div>
     </div>`;
   document.getElementById('breakdown-content').innerHTML = html;
   document.getElementById('breakdown-modal').classList.add('active');
@@ -4424,7 +4429,7 @@ function recalcInvoiceTotal() {
   let total = Math.max(base + uplift - discount, 0);
   document.getElementById('ib-total-uplift').textContent = `$${uplift.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   document.getElementById('ib-total-discount').textContent = `-$${discount.toLocaleString(undefined,{minimumFractionDigits:2})}`;
-  document.getElementById('ib-total-final').textContent = `$${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('ib-total-final').textContent = `$${fmtAmt(total)}`;
 }
 
 async function generateAndSendInvoice() {
@@ -4473,7 +4478,7 @@ async function generateAndSendInvoice() {
       ``,
       `Ref: ${invoiceDocNumber}`,
       `Route: ${enq.route_summary||''}`,
-      `Invoice Total: ${priCurrency} ${finalTotal.toLocaleString(undefined,{minimumFractionDigits:2})}`,
+      `Invoice Total: ${priCurrency} ${fmtAmt(finalTotal)}`,
       invoicePdfUrl ? `\nView Invoice: ${invoicePdfUrl}` : '',
       ``,
       `To confirm, please proceed with payment as per bank details on the invoice.`,
@@ -4596,7 +4601,7 @@ function renderShareBar(p) {
     <div id="${id}" style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:16px;margin-top:12px">
       <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:6px">✅ ${docLabel} Generated</div>
       <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${p.docNumber}</strong></div>
-      <div style="font-size:0.82rem;color:#555;margin-bottom:10px">Amount: ${priCurrency} ${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+      <div style="font-size:0.82rem;color:#555;margin-bottom:10px">Amount: ${priCurrency} ${fmtAmt(p.amount||0)}</div>
       ${p.pdfUrl ? `<a href="${p.pdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:6px 10px;border-radius:6px;margin-bottom:12px">📄 View PDF</a>` : ''}
       ${crmNote}
       <div style="margin-bottom:10px">
@@ -4632,12 +4637,12 @@ function shareBarWa(id) {
       .replace(/{company}/g, company)
       .replace(/{phone}/g, phone)
       .replace(/{ref}/g, p.docNumber)
-      .replace(/{amount}/g, parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2}))
+      .replace(/{amount}/g, fmtAmt(p.amount||0))
       .replace(/{pdf_url}/g, pdfLine)
       .replace(/{ac_label}/g, p.acLabel || '')
       .replace(/{route}/g, p.route || '');
   } else {
-    message = `Hello ${p.clientName||'Valued Client'},\n\nPlease find your ${p.docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n'+pdfLine : ''}\n\nRef: ${p.docNumber}\nAmount: ${priCurrency} ${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}\n\nFor queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
+    message = `Hello ${p.clientName||'Valued Client'},\n\nPlease find your ${p.docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n'+pdfLine : ''}\n\nRef: ${p.docNumber}\nAmount: ${priCurrency} ${fmtAmt(p.amount||0)}\n\nFor queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
   }
   let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
   let btn = document.querySelector(`#${id} .btn-success`);
@@ -4795,9 +4800,9 @@ function updateCurrencyDisplay() {
       totalEl.textContent = 'KES ' + kes.toLocaleString();
     } else if (currency === 'BOTH' && kesRate > 0) {
       let kes = Math.ceil((total * kesRate) / 1000) * 1000;
-      totalEl.innerHTML = `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})} <span style="font-size:0.75rem;color:#888;display:block">≈ KES ${kes.toLocaleString()}</span>`;
+      totalEl.innerHTML = `USD $${fmtAmt(total)} <span style="font-size:0.75rem;color:#888;display:block">≈ KES ${kes.toLocaleString()}</span>`;
     } else {
-      totalEl.textContent = 'USD $' + total.toLocaleString(undefined,{minimumFractionDigits:2});
+      totalEl.textContent = 'USD $' + fmtAmt(total);
     }
   });
 }
