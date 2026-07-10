@@ -1,4 +1,4 @@
-F<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -420,13 +420,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           <option value="option_b">Option B — Pick & Drop</option>
         </select>
       </div>
-      <div class="form-group"><label>Currency</label>
-        <select id="pdf-currency" onchange="updateCurrencyDisplay()">
-          <option value="USD">USD — US Dollar</option>
-          <option value="KES">KES — Kenya Shilling</option>
-          <option value="BOTH">BOTH — Show USD & KES</option>
-        </select>
-      </div>
+      <input type="hidden" id="pdf-currency" value="USD">
     </div>
     <div class="form-row">
       <div class="form-group"><label>Client Name</label><input type="text" id="pdf-name" placeholder="Full name"></div>
@@ -869,48 +863,50 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <div class="form-group">
           <label>Primary Currency <span style="font-size:0.68rem;color:#aaa;font-weight:400">— what you charge in</span></label>
           <select id="s-primary-currency">
-              <option value="USD">USD — US Dollar</option>
-              <option value="KES">KES — Kenya Shilling</option>
-              <option value="EUR">EUR — Euro</option>
-              <option value="GBP">GBP — British Pound</option>
-              <option value="AUD">AUD — Australian Dollar</option>
-              <option value="ZAR">ZAR — South African Rand</option>
-              <option value="TZS">TZS — Tanzania Shilling</option>
-              <option value="UGX">UGX — Uganda Shilling</option>
-              <option value="NGN">NGN — Nigerian Naira</option>
-              <option value="GHS">GHS — Ghana Cedi</option>
-              <option value="COP">COP — Colombian Peso</option>
-              <option value="BRL">BRL — Brazilian Real</option>
-              <option value="MXN">MXN — Mexican Peso</option>
-              <option value="ARS">ARS — Argentine Peso</option>
-              <option value="PEN">PEN — Peruvian Sol</option>
-              <option value="CLP">CLP — Chilean Peso</option>
-              <option value="INR">INR — Indian Rupee</option>
-              <option value="PKR">PKR — Pakistani Rupee</option>
-              <option value="LKR">LKR — Sri Lankan Rupee</option>
-              <option value="THB">THB — Thai Baht</option>
-              <option value="PHP">PHP — Philippine Peso</option>
-              <option value="MYR">MYR — Malaysian Ringgit</option>
-              <option value="IDR">IDR — Indonesian Rupiah</option>
-              <option value="SGD">SGD — Singapore Dollar</option>
-              <option value="CNY">CNY — Chinese Yuan</option>
-              <option value="JPY">JPY — Japanese Yen</option>
-              <option value="AED">AED — UAE Dirham</option>
-              <option value="SAR">SAR — Saudi Riyal</option>
-              <option value="QAR">QAR — Qatari Riyal</option>
-              <option value="KWD">KWD — Kuwaiti Dinar</option>
-              <option value="OMR">OMR — Omani Rial</option>
-              <option value="EGP">EGP — Egyptian Pound</option>
-              <option value="MAD">MAD — Moroccan Dirham</option>
-              <option value="ETB">ETB — Ethiopian Birr</option>
-              <option value="RWF">RWF — Rwandan Franc</option>
-              <option value="BWP">BWP — Botswana Pula</option>
-              <option value="NAD">NAD — Namibian Dollar</option>
-              <option value="NOK">NOK — Norwegian Krone</option>
-              <option value="SEK">SEK — Swedish Krona</option>
-              <option value="CHF">CHF — Swiss Franc</option>
-              <option value="CAD">CAD — Canadian Dollar</option>
-              <option value="NZD">NZD — New Zealand Dollar</option>
+              {%- set fx_b = operator.get('fx') or {} %}
+              {%- set pri_cur = fx_b.get('primary_currency') or (operator.get('quoting_rules') or {}).get('currency') or 'USD' %}
+              <option value="USD" {% if pri_cur == 'USD' %}selected{% endif %}>USD — US Dollar</option>
+              <option value="KES" {% if pri_cur == 'KES' %}selected{% endif %}>KES — Kenya Shilling</option>
+              <option value="EUR" {% if pri_cur == 'EUR' %}selected{% endif %}>EUR — Euro</option>
+              <option value="GBP" {% if pri_cur == 'GBP' %}selected{% endif %}>GBP — British Pound</option>
+              <option value="AUD" {% if pri_cur == 'AUD' %}selected{% endif %}>AUD — Australian Dollar</option>
+              <option value="ZAR" {% if pri_cur == 'ZAR' %}selected{% endif %}>ZAR — South African Rand</option>
+              <option value="TZS" {% if pri_cur == 'TZS' %}selected{% endif %}>TZS — Tanzania Shilling</option>
+              <option value="UGX" {% if pri_cur == 'UGX' %}selected{% endif %}>UGX — Uganda Shilling</option>
+              <option value="NGN" {% if pri_cur == 'NGN' %}selected{% endif %}>NGN — Nigerian Naira</option>
+              <option value="GHS" {% if pri_cur == 'GHS' %}selected{% endif %}>GHS — Ghana Cedi</option>
+              <option value="COP" {% if pri_cur == 'COP' %}selected{% endif %}>COP — Colombian Peso</option>
+              <option value="BRL" {% if pri_cur == 'BRL' %}selected{% endif %}>BRL — Brazilian Real</option>
+              <option value="MXN" {% if pri_cur == 'MXN' %}selected{% endif %}>MXN — Mexican Peso</option>
+              <option value="ARS" {% if pri_cur == 'ARS' %}selected{% endif %}>ARS — Argentine Peso</option>
+              <option value="PEN" {% if pri_cur == 'PEN' %}selected{% endif %}>PEN — Peruvian Sol</option>
+              <option value="CLP" {% if pri_cur == 'CLP' %}selected{% endif %}>CLP — Chilean Peso</option>
+              <option value="INR" {% if pri_cur == 'INR' %}selected{% endif %}>INR — Indian Rupee</option>
+              <option value="PKR" {% if pri_cur == 'PKR' %}selected{% endif %}>PKR — Pakistani Rupee</option>
+              <option value="LKR" {% if pri_cur == 'LKR' %}selected{% endif %}>LKR — Sri Lankan Rupee</option>
+              <option value="THB" {% if pri_cur == 'THB' %}selected{% endif %}>THB — Thai Baht</option>
+              <option value="PHP" {% if pri_cur == 'PHP' %}selected{% endif %}>PHP — Philippine Peso</option>
+              <option value="MYR" {% if pri_cur == 'MYR' %}selected{% endif %}>MYR — Malaysian Ringgit</option>
+              <option value="IDR" {% if pri_cur == 'IDR' %}selected{% endif %}>IDR — Indonesian Rupiah</option>
+              <option value="SGD" {% if pri_cur == 'SGD' %}selected{% endif %}>SGD — Singapore Dollar</option>
+              <option value="CNY" {% if pri_cur == 'CNY' %}selected{% endif %}>CNY — Chinese Yuan</option>
+              <option value="JPY" {% if pri_cur == 'JPY' %}selected{% endif %}>JPY — Japanese Yen</option>
+              <option value="AED" {% if pri_cur == 'AED' %}selected{% endif %}>AED — UAE Dirham</option>
+              <option value="SAR" {% if pri_cur == 'SAR' %}selected{% endif %}>SAR — Saudi Riyal</option>
+              <option value="QAR" {% if pri_cur == 'QAR' %}selected{% endif %}>QAR — Qatari Riyal</option>
+              <option value="KWD" {% if pri_cur == 'KWD' %}selected{% endif %}>KWD — Kuwaiti Dinar</option>
+              <option value="OMR" {% if pri_cur == 'OMR' %}selected{% endif %}>OMR — Omani Rial</option>
+              <option value="EGP" {% if pri_cur == 'EGP' %}selected{% endif %}>EGP — Egyptian Pound</option>
+              <option value="MAD" {% if pri_cur == 'MAD' %}selected{% endif %}>MAD — Moroccan Dirham</option>
+              <option value="ETB" {% if pri_cur == 'ETB' %}selected{% endif %}>ETB — Ethiopian Birr</option>
+              <option value="RWF" {% if pri_cur == 'RWF' %}selected{% endif %}>RWF — Rwandan Franc</option>
+              <option value="BWP" {% if pri_cur == 'BWP' %}selected{% endif %}>BWP — Botswana Pula</option>
+              <option value="NAD" {% if pri_cur == 'NAD' %}selected{% endif %}>NAD — Namibian Dollar</option>
+              <option value="NOK" {% if pri_cur == 'NOK' %}selected{% endif %}>NOK — Norwegian Krone</option>
+              <option value="SEK" {% if pri_cur == 'SEK' %}selected{% endif %}>SEK — Swedish Krona</option>
+              <option value="CHF" {% if pri_cur == 'CHF' %}selected{% endif %}>CHF — Swiss Franc</option>
+              <option value="CAD" {% if pri_cur == 'CAD' %}selected{% endif %}>CAD — Canadian Dollar</option>
+              <option value="NZD" {% if pri_cur == 'NZD' %}selected{% endif %}>NZD — New Zealand Dollar</option>
           </select>
         </div>
         <div class="form-group">
@@ -1223,9 +1219,14 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
 </div>
 
 <script>
+
 // Quotecloud Admin v2.6.1 - Mobile optimized
 let lastResults = [];
 let fxRates = {};
+let secCurrency = '';
+let priCurrency = 'USD';
+let priCurrencySymbol = '$';
+const CURRENCY_SYMBOLS = {'USD':'$','EUR':'€','GBP':'£','KES':'KES','COP':'COP','BRL':'R$','AED':'AED','INR':'₹','LKR':'Rs','IDR':'Rp','MYR':'RM','SGD':'S$','AUD':'A$','CAD':'CA$','NZD':'NZ$','ZAR':'R','NGN':'₦','GHS':'GH₵','TZS':'TZS','UGX':'UGX','SAR':'SAR','QAR':'QAR','EGP':'E£','NOK':'kr','SEK':'kr','CHF':'CHF','THB':'฿','PHP':'₱','JPY':'¥','CNY':'¥','KWD':'KWD','OMR':'OMR','MXN':'MX$','ARS':'AR$','CLP':'CLP','PEN':'PEN'};
 let placeIdMap = {};
 let allLocations = [];
 let aircraftData = {};
@@ -1646,7 +1647,7 @@ function renderSegments(segs) {
     if (isNote) {
       let isIdle = s.note.toLowerCase().includes('idle');
       let label = isIdle ? 'idle day' : 'overnight';
-      let cost = s.cost ? `$${parseFloat(s.cost).toLocaleString(undefined,{minimumFractionDigits:2})}` : '-';
+      let cost = s.cost ? `${priCurrencySymbol}${parseFloat(s.cost).toLocaleString(undefined,{minimumFractionDigits:2})}` : '-';
       return `<tr style="background:#fafafa">
         <td><span class="tag ${tagClass(null, s.note)}">${label}</span></td>
         <td colspan="2" style="color:#666;font-size:0.8rem">${s.note}</td>
@@ -1694,26 +1695,26 @@ function renderBilling(res, extraSegs) {
     let fc = Math.round(totalHrs * rate * 100) / 100;
         let minHrs = res.min_chargeable_hrs || 0;
     let minMsg = (minHrs > 0 && res.min_applied) ? `<div style="font-size:0.75rem;color:#e65100;background:#fff3e0;border-radius:6px;padding:5px 10px;margin-bottom:6px">Minimum charge of ${minHrs.toFixed(1)} flight hours applies. Quote reflects minimum billable hours.</div>` : '';
-    rows += `${minMsg}<div class="billing-row"><span>Aircraft Rental (${totalHrs} hrs @ $${rate.toLocaleString()}/hr)</span><span>USD $${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    rows += `${minMsg}<div class="billing-row"><span>Aircraft Rental (${fmtHours(totalHrs)} @ ${priCurrencySymbol}${rate.toLocaleString()}/hr)</span><span>${priCurrency} ${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
   let fee = res.pax_fee_usd || res.pax_fee_usd_display || 0;
-  if (fee > 0) rows += `<div class="billing-row"><span>Fees & Taxes</span><span>USD $${parseFloat(fee).toLocaleString()}</span></div>`;
+  if (fee > 0) rows += `<div class="billing-row"><span>${res.pax_label || res._adj_pax_label || 'Mission Fixed Costs'}</span><span>${priCurrency} ${parseFloat(fee).toLocaleString()}</span></div>`;
   let overnightUsd = res.overnight_usd || res.overnight_cost_usd || 0;
   let oRate = res.overnight_rate_usd || 0;
   if (overnightUsd > 0 && oRate > 0) {
     let nights = Math.round(overnightUsd / oRate);
-    rows += `<div class="billing-row"><span>Overnight Per Diem (${nights} night${nights!==1?'s':''} @ $${oRate}/night)</span><span>USD $${parseFloat(overnightUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    rows += `<div class="billing-row"><span>Overnight Per Diem (${nights} night${nights!==1?'s':''} @ ${priCurrencySymbol}${oRate}/night)</span><span>${priCurrency} ${parseFloat(overnightUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
   let waitingUsd = res.waiting_usd || res.idle_cost_usd || 0;
   let idleRate = res.idle_day_rate_usd || 0;
   if (waitingUsd > 0) {
     let idleDays = idleRate > 0 ? Math.round(waitingUsd / idleRate) : 1;
-    rows += `<div class="billing-row"><span>Idle Day Charge (${idleDays} day${idleDays!==1?'s':''} @ $${idleRate.toLocaleString()}/day)</span><span>USD $${parseFloat(waitingUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    rows += `<div class="billing-row"><span>Idle Day Charge (${idleDays} day${idleDays!==1?'s':''} @ ${priCurrencySymbol}${idleRate.toLocaleString()}/day)</span><span>${priCurrency} ${parseFloat(waitingUsd).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
-  let kesRate = fxRates['KES'] || 0;
-  let kesFx = kesRate > 0 ? `<div style="font-size:0.72rem;color:#888;text-align:right;margin-top:4px">≈ KES ${Math.round((res.total_usd||0)*kesRate).toLocaleString()}</div>` : '';
+  let secRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
+  let kesFx = (secRate > 0 && secCurrency) ? `<div style="font-size:0.72rem;color:#888;text-align:right;margin-top:4px">≈ ${secCurrency} ${Math.round((res.total_usd||0)*secRate).toLocaleString()}</div>` : '';
    let displayTotal = res.total_usd || 0;
-  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>USD $${displayTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>${kesFx}</div>`;
+  return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>${priCurrency} ${displayTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>${kesFx}</div>`;
 }
 
 function renderOneAc(res) {
@@ -1804,7 +1805,7 @@ function quickWA(idx) {
     ``,
     `Aircraft: ${res.ac_label||''}`,
     `Route: ${route}`,
-    `Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`,
+    `Total: ${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}`,
     ``,
     `Quote valid 48 hours · Subject to availability.`,
     `Please confirm to proceed.`
@@ -1846,8 +1847,8 @@ function toggleAdjKesMode(idx) {
     let origRateVal = res.rate_usd || 0;
     let origPaxVal = res.pax_fee_usd || res.pax_fee_usd_display || 0;
     let origTotalVal = res.total_usd || 0;
-    if (origRate) origRate.textContent = `KES ${(Math.ceil(origRateVal*kesRate/1000)*1000).toLocaleString()}/hr`;
-    if (origPax) origPax.textContent = `KES ${(Math.ceil(origPaxVal*kesRate/1000)*1000).toLocaleString()}`;
+    if (origRate) origRate.textContent = `${priCurrencySymbol}${origRateVal}/hr`;
+    if (origPax) origPax.textContent = `${priCurrencySymbol}${origPaxVal}`;
     if (origTotal) origTotal.textContent = `KES ${(Math.ceil(origTotalVal*kesRate/1000)*1000).toLocaleString()}`;
     let revPax = document.getElementById('adj-rev-pax-'+idx);
     if (revPax) revPax.value = Math.ceil(parseFloat(revPax.value||paxUsd) * kesRate / 1000) * 1000;
@@ -1863,9 +1864,9 @@ function toggleAdjKesMode(idx) {
     let origRateVal = res.rate_usd || 0;
     let origPaxVal = res.pax_fee_usd || res.pax_fee_usd_display || 0;
     let origTotalVal = res.total_usd || 0;
-    if (origRate) origRate.textContent = `$${origRateVal}/hr`;
-    if (origPax) origPax.textContent = `$${origPaxVal}`;
-    if (origTotal) origTotal.textContent = `USD $${origTotalVal.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    if (origRate) origRate.textContent = `${priCurrencySymbol}${origRateVal}/hr`;
+    if (origPax) origPax.textContent = `${priCurrencySymbol}${origPaxVal}`;
+    if (origTotal) origTotal.textContent = `${priCurrency} ${origTotalVal.toLocaleString(undefined,{minimumFractionDigits:2})}`;
     let revPax = document.getElementById('adj-rev-pax-'+idx);
     if (revPax) revPax.value = Math.round(parseFloat(revPax.value||0) / kesRate * 100) / 100;
   }
@@ -1949,7 +1950,7 @@ function recalcAdjuster(idx) {
     if (isKes && kesRate > 0) {
       liveTotalEl.textContent = `KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}`;
     } else {
-      liveTotalEl.textContent = `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+      liveTotalEl.textContent = `${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
     }
   }
   let paxNameEl = document.getElementById('adj-pax-name-'+idx);
@@ -1958,9 +1959,9 @@ function recalcAdjuster(idx) {
   }
   let kesFx = kesRate > 0 ? ` &nbsp;·&nbsp; KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}` : '';
   let adjSummary = document.getElementById('adj-summary-'+idx);
-  let rateDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(rateUsd*kesRate/1000)*1000).toLocaleString()}/hr` : `$${rateUsd}/hr`;
-  let totalDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(total*kesRate/1000)*1000).toLocaleString()}` : `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
-  let paxDisplay = isKes && kesRate > 0 ? `KES ${(Math.ceil(pax*kesRate/1000)*1000).toLocaleString()}` : `$${Math.round(pax*100)/100}`;
+  let rateDisplay = `${priCurrencySymbol}${rateUsd}/hr`;
+  let totalDisplay = `${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  let paxDisplay = `${priCurrencySymbol}${Math.round(pax*100)/100}`;
   if (adjSummary) {
     let wasApplied = adjSummary.dataset.applied === 'true';
     adjSummary.dataset.applied = 'false';
@@ -1985,7 +1986,7 @@ function confirmApply(idx) {
   res._adj_total = total;
   res._locked = true;
 
-  let fmt = v => `USD $${v.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  let fmt = v => `${priCurrency} ${v.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   let fmtKes = v => `KES ${(Math.ceil(v*kesRate/1000)*1000).toLocaleString()}`;
   let newTotalDisplay = isKes && kesRate > 0 ? fmtKes(total) : fmt(total);
   let oldTotalDisplay = isKes && kesRate > 0 ? fmtKes(origTotal) : fmt(origTotal);
@@ -2078,15 +2079,15 @@ function calcReverse(idx) {
 
   if (impliedRate < 0) {
     el.style.color = '#dc3545';
-    el.textContent = `Target too low — fixed costs alone (overnight $${overnight}, pax $${pax}, idle $${idle}) exceed target.`;
+    el.textContent = `Target too low — fixed costs alone (overnight ${priCurrencySymbol}${overnight}, pax ${priCurrencySymbol}${pax}, idle ${priCurrencySymbol}${idle}) exceed target.`;
     return;
   }
   el.style.color = '#1a56db';
 
   let fixedBreakdown = [];
-  if (pax > 0) fixedBreakdown.push(`Pax $${pax}`);
+  if (pax > 0) fixedBreakdown.push(`Pax ${priCurrencySymbol}${pax}`);
   if (overnight > 0) fixedBreakdown.push(`Overnight $${overnight}`);
-  if (idle > 0) fixedBreakdown.push(`Idle $${idle}`);
+  if (idle > 0) fixedBreakdown.push(`Idle ${priCurrencySymbol}${idle}`);
   let fixedLine = fixedBreakdown.length ? ` &nbsp;·&nbsp; Fixed: ${fixedBreakdown.join(' + ')}` : '';
 
   lastResults[idx]._implied_rate = impliedRate;
@@ -2122,7 +2123,7 @@ function renderAdjuster(res, idx) {
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
         <span style="color:#888">⏱ ${hrs} hrs total</span>
         <span style="color:#888">💺 ${res.ac_label||''}</span>
-        <span style="font-weight:700;color:#0d47a1">Base total: USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span>
+        <span style="font-weight:700;color:#0d47a1">Base total: ${priCurrency} ${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span>
       </div>
     </div>`;
 
@@ -2144,7 +2145,7 @@ function renderAdjuster(res, idx) {
         <div class="adjuster-field">
           <label>Base Rate (USD/hr)</label>
           <input type="number" id="adj-rate-${idx}" value="${rate}" oninput="recalcAdjuster(${idx})">
-          <div style="font-size:0.7rem;color:#888;margin-top:3px">${hrs} hrs · original $${rate}/hr</div>
+          <div style="font-size:0.7rem;color:#888;margin-top:3px">${fmtHours(hrs)} · original ${priCurrencySymbol}${rate}/hr</div>
         </div>
         <input type="hidden" id="adj-speed-${idx}" value="${speed}">
         ${nights > 0 ? `
@@ -2157,7 +2158,7 @@ function renderAdjuster(res, idx) {
         <div class="adjuster-field">
           <label>Idle Day Rate ($/day)</label>
           <input type="number" id="adj-idle-rate-${idx}" value="${idleRate}" oninput="recalcAdjuster(${idx})">
-          <div style="font-size:0.7rem;color:#888;margin-top:3px">${idleDays} day${idleDays!==1?'s':''} · original $${idleRate}/day</div>
+          <div style="font-size:0.7rem;color:#888;margin-top:3px">${idleDays} day${idleDays!==1?'s':''} · original ${priCurrencySymbol}${idleRate}/day</div>
         </div>` : `<input type="hidden" id="adj-idle-rate-${idx}" value="${idleRate}">`}
       </div>
       <div class="adjuster-field" style="margin-bottom:10px">
@@ -2168,7 +2169,7 @@ function renderAdjuster(res, idx) {
         </div>
       </div>
       <div id="adj-live-total-${idx}" style="background:#0d47a1;color:#fff;border-radius:8px;padding:12px 14px;font-size:1rem;font-weight:700;text-align:right;margin-bottom:10px">
-        USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}
+        ${priCurrency} ${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}
       </div>
       <div id="adj-summary-${idx}" style="margin-bottom:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:0.82rem;color:#155724;display:none"></div>
       <div class="preset-row" id="preset-chips-${idx}"></div>
@@ -2183,21 +2184,21 @@ function renderAdjuster(res, idx) {
     <div id="adj-tab-reverse-${idx}" style="display:none">
       <div style="font-size:0.72rem;color:#888;margin-bottom:12px;line-height:1.5">Enter your target price. The system will calculate the implied charter rate needed to hit it after deducting all fixed costs.</div>
       <div class="adjuster-field" style="margin-bottom:14px">
-        <label id="adj-target-label-${idx}">Target Total Price (USD)</label>
+        <label id="adj-target-label-${idx}">Target Total Price (${priCurrency})</label>
         <input type="number" id="adj-target-${idx}" placeholder="e.g. 4800" oninput="calcReverse(${idx})" style="font-size:1.1rem;font-weight:600">
       </div>
       ${nights > 0 ? `
       <div class="adjuster-field" style="margin-bottom:10px">
-        <label>Overnight Rate ($/night × ${nights} night${nights!==1?'s':''})</label>
+        <label>Overnight Rate (${priCurrencySymbol}/night × ${nights} night${nights!==1?'s':''})</label>
         <input type="number" id="adj-ov-rate-rev-${idx}" value="${ovRate}" oninput="calcReverse(${idx})">
       </div>` : ''}
       ${idleDays > 0 ? `
       <div class="adjuster-field" style="margin-bottom:10px">
-        <label>Idle Day Rate ($/day × ${idleDays} day${idleDays!==1?'s':''})</label>
+        <label>Idle Day Rate (${priCurrencySymbol}/day × ${idleDays} day${idleDays!==1?'s':''})</label>
         <input type="number" id="adj-idle-rate-rev-${idx}" value="${idleRate}" oninput="calcReverse(${idx})">
       </div>` : ''}
       <div class="adjuster-field" style="margin-bottom:14px">
-        <label id="adj-pax-rev-label-${idx}">Pax / Admin Fee (USD)</label>
+        <label id="adj-pax-rev-label-${idx}">Mission Fixed Costs (${priCurrency})</label>
         <input type="number" id="adj-rev-pax-${idx}" value="${pax}" oninput="calcReverse(${idx})">
       </div>
       <div class="adjuster-result" id="adj-rev-result-${idx}" style="min-height:40px"></div>
@@ -2245,7 +2246,7 @@ function switchAdjTab(idx, tab) {
     let adjSummary = document.getElementById('adj-summary-'+idx);
     if (adjSummary) { adjSummary.style.display = 'none'; adjSummary.innerHTML = ''; }
     let liveTotalEl = document.getElementById('adj-live-total-'+idx);
-    if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`; }
+    if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`; }
     let lockWarn = document.getElementById('adj-lock-warn-'+idx);
     if (lockWarn) lockWarn.remove();
     let applyBtn = document.getElementById('adj-rev-apply-'+idx);
@@ -2313,7 +2314,7 @@ function resetAdjuster(idx) {
   let adjSummary = document.getElementById('adj-summary-'+idx);
   if (adjSummary) { adjSummary.style.display = 'none'; adjSummary.innerHTML = ''; }
   let liveTotalEl = document.getElementById('adj-live-total-'+idx);
-  if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`; }
+  if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`; }
   let applyBtn = document.getElementById('adj-rev-apply-'+idx);
   if (applyBtn) { applyBtn.style.display = 'none'; applyBtn.innerHTML = `<button class="btn btn-success" onclick="applyFromReverse(${idx})">Apply Implied Rate →</button>`; }
   let revResult = document.getElementById('adj-rev-result-'+idx);
@@ -2380,14 +2381,14 @@ function applyFromReverse(idx) {
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:2px solid #1b5e20">
           <div style="font-size:0.65rem;color:#888;text-transform:uppercase;margin-bottom:4px">Target Price</div>
-          <div style="font-size:1rem;font-weight:700;color:#1b5e20">USD $${targetRaw.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+          <div style="font-size:1rem;font-weight:700;color:#1b5e20">${priCurrency} ${targetRaw.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
         </div>
         <div style="background:#fff;border-radius:6px;padding:8px 12px;flex:1;text-align:center;border:1px solid #ddd">
           <div style="font-size:0.65rem;color:#888;text-transform:uppercase;margin-bottom:4px">System Default</div>
-          <div style="font-size:1rem;font-weight:700;color:#888">USD $${origTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+          <div style="font-size:1rem;font-weight:700;color:#888">${priCurrency} ${origTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
         </div>
       </div>
-      <div style="margin-top:6px;font-size:0.82rem;font-weight:700">${targetRaw > origTotal ? `<span style="color:#1b5e20">▲ USD $${(targetRaw-origTotal).toLocaleString(undefined,{minimumFractionDigits:2})} above default</span>` : targetRaw < origTotal ? `<span style="color:#dc3545">▼ USD $${(origTotal-targetRaw).toLocaleString(undefined,{minimumFractionDigits:2})} below default</span>` : ''}</div>
+      <div style="margin-top:6px;font-size:0.82rem;font-weight:700">${targetRaw > origTotal ? `<span style="color:#1b5e20">▲ ${priCurrency} ${(targetRaw-origTotal).toLocaleString(undefined,{minimumFractionDigits:2})} above default</span>` : targetRaw < origTotal ? `<span style="color:#dc3545">▼ ${priCurrency} ${(origTotal-targetRaw).toLocaleString(undefined,{minimumFractionDigits:2})} below default</span>` : ''}</div>
       <div style="font-size:0.72rem;color:#555;margin-top:6px">✅ Ready — tap Generate PDF to proceed.</div>
     </div>`;
 }
@@ -2551,8 +2552,8 @@ async function generatePDF(allAircraft) {
   genDiv.textContent = 'Generating...';
   document.getElementById('pdf-msg').appendChild(genDiv);
   try {
-    let currency = document.getElementById('pdf-currency')?.value || 'USD';
-    let kesRate = fxRates['KES'] || 0;
+    let currency = document.getElementById('pdf-currency')?.value || priCurrency || 'USD';
+    let kesRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
     let acIdx = parseInt(document.getElementById('pdf-aircraft-select').value)||0;
     let ghostMode = lastResults[acIdx]?._ghost_mode || document.getElementById('adj-ghost-'+acIdx)?.value === '1' || false;
     let body = { doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras, currency, kes_rate: kesRate, ghost_mode: ghostMode };
@@ -2569,21 +2570,21 @@ async function generatePDF(allAircraft) {
     let acLabel = res2.ac_label || '';
     let msgIdx = parseInt(document.getElementById('pdf-aircraft-select').value)||0;
     let msgIsKes = document.getElementById('adj-kes-mode-'+msgIdx)?.checked;
-    let msgKesRate = fxRates['KES'] || 0;
+    let msgKesRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
     let wasAdj;
     if (res2._adj_rate !== undefined) {
       let rateUsdClean = Math.round(res2._adj_rate * 100) / 100;
       wasAdj = msgIsKes && msgKesRate > 0
-        ? ` · Adjusted Rate: KES ${(Math.ceil(rateUsdClean*msgKesRate/1000)*1000).toLocaleString()}/hr`
-        : ` · Adjusted Rate: $${rateUsdClean}/hr`;
+        ? ` · Adjusted Rate: ${secCurrency} ${(Math.ceil(rateUsdClean*msgKesRate/1000)*1000).toLocaleString()}/hr`
+        : ` · Adjusted Rate: ${priCurrencySymbol}${rateUsdClean}/hr`;
     } else {
       wasAdj = ` · Rate: $${res2.rate_usd||''}/hr`;
     }
     let adjTotal;
     if (res2._adj_total !== undefined) {
       adjTotal = msgIsKes && msgKesRate > 0
-        ? ` · Total: KES ${(Math.ceil(res2._adj_total*msgKesRate/1000)*1000).toLocaleString()}`
-        : ` · Total: USD $${res2._adj_total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+        ? ` · Total: ${secCurrency} ${(Math.ceil(res2._adj_total*msgKesRate/1000)*1000).toLocaleString()}`
+        : ` · Total: ${priCurrency} ${res2._adj_total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
     } else {
       adjTotal = '';
     }
@@ -2681,7 +2682,7 @@ async function saveLocationEdit() {
   if (!name||!lat||!lon) return showMsg('loc-msg','Name, lat and lon required.','error');
   document.getElementById('loc-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Saving changes...</div>';
   try {
-    let r = await fetch('/edit_airport', { method:'POST', headers:{'Content-Type':'application/json'},
+    let r = await fetch('/op/'+SLUG+'/edit_airport', { method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         name: editingLocationKey,
         new_name: name,
@@ -2706,7 +2707,7 @@ async function resolveMapPin() {
   let url = document.getElementById('loc-maps').value.trim();
   if (!url) return;
   showMsg('loc-msg','Resolving pin...','success');
-  let r = await fetch('/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url}) });
+  let r = await fetch('/op/'+SLUG+'/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url}) });
   let data = await r.json();
   if (!data.found) { showMsg('loc-msg','Could not resolve pin.','error'); return; }
   document.getElementById('loc-name').value = data.display;
@@ -2723,7 +2724,7 @@ async function addLocation() {
   if (!name||!lat||!lon) return showMsg('loc-msg','Name, lat and lon required.','error');
   document.getElementById('loc-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Adding location...</div>';
   try {
-    let r = await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'},
+    let r = await fetch('/op/'+SLUG+'/add_airport', { method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name, lat:parseFloat(lat), lon:parseFloat(lon), aliases:alias?[alias]:[]}) });
     let data = await r.json();
     if (data.success) {
@@ -2744,7 +2745,7 @@ async function addLocation() {
 
 async function deleteLocation(name) {
   if (!confirm(`Delete ${name}?`)) return;
-  let r = await fetch('/delete_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
+  let r = await fetch('/op/'+SLUG+'/delete_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
   let data = await r.json();
   if (data.success) loadLocations();
   else alert(data.error||'Error');
@@ -2834,7 +2835,24 @@ function renderAircraft() {
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Rate (USD/hr)</label><input class="ac-rate" type="number" value="${ac.rate}"></div>
+          <div class="form-group">
+            <label>Hourly Rate</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input class="ac-rate" type="number" value="${ac.rate}" style="flex:1">
+              <select class="ac-rate-currency" style="width:80px;font-size:0.82rem">
+                <option value="USD" ${(ac.rate_currency||'USD')==='USD'?'selected':''}>USD</option>
+                <option value="EUR" ${ac.rate_currency==='EUR'?'selected':''}>EUR</option>
+                <option value="GBP" ${ac.rate_currency==='GBP'?'selected':''}>GBP</option>
+                <option value="KES" ${ac.rate_currency==='KES'?'selected':''}>KES</option>
+                <option value="COP" ${ac.rate_currency==='COP'?'selected':''}>COP</option>
+                <option value="LKR" ${ac.rate_currency==='LKR'?'selected':''}>LKR</option>
+                <option value="ZAR" ${ac.rate_currency==='ZAR'?'selected':''}>ZAR</option>
+                <option value="AED" ${ac.rate_currency==='AED'?'selected':''}>AED</option>
+                <option value="NGN" ${ac.rate_currency==='NGN'?'selected':''}>NGN</option>
+              </select>
+            </div>
+            <div style="font-size:0.72rem;color:#888;margin-top:4px">Currency your rates are stored in. System converts to primary currency for quotes.</div>
+          </div>
           <div class="form-group">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
               <input type="checkbox" class="ac-pax-enabled" ${ac.pax_fee_enabled!==false?'checked':''} style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
@@ -2855,7 +2873,7 @@ function renderAircraft() {
             <input class="ac-overnight" type="number" value="${ac.overnight_rate||300}">
             <div style="font-size:0.72rem;color:#888;margin-top:4px">Charged when the aircraft and crew sleep outside home base. Covers crew accommodation and per diem. Uncheck to exclude overnight charges from all quotes.</div>
           </div>
-          <div class="form-group"><label>Idle Day Rate (USD/day)</label><input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}"></div>
+          <div class="form-group"><label>Idle Day Rate (same currency as hourly rate)</label><input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}"></div>
         </div>
         <div class="form-group" style="margin-bottom:14px">
           <label>Amenities (comma separated)</label>
@@ -2983,14 +3001,14 @@ async function selectAcBase(el, placeId, description, localKey) {
   homeInput.value = description;
   status.textContent = 'Resolving...';
   try {
-    let r = await fetch('/resolve_place', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({place_id: placeId, label: description, local_key: localKey}) });
+    let r = await fetch('/op/'+SLUG+'/resolve_place', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({place_id: placeId, label: description, local_key: localKey}) });
     let data = await r.json();
     if (data.found) {
       latField.value = data.lat;
       lonField.value = data.lon;
       status.textContent = '✅ Base set: ' + parseFloat(data.lat).toFixed(5) + ', ' + parseFloat(data.lon).toFixed(5);
       status.style.color = '#1b5e20';
-      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: description, lat: data.lat, lon: data.lon, aliases: []}) });
+      await fetch('/op/'+SLUG+'/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: description, lat: data.lat, lon: data.lon, aliases: []}) });
     }
   } catch(e) { status.textContent = '❌ Error resolving location'; }
 }
@@ -3014,7 +3032,7 @@ async function resolveAcBase(btn) {
       if (!homeInput.value) homeInput.value = data.display;
       status.textContent = '✅ Base set: ' + data.lat.toFixed(5) + ', ' + data.lon.toFixed(5);
       status.style.color = '#1b5e20';
-      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || data.display, lat: data.lat, lon: data.lon, aliases: []}) });
+      await fetch('/op/'+SLUG+'/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || data.display, lat: data.lat, lon: data.lon, aliases: []}) });
     } else {
       status.textContent = '❌ Could not resolve. Try a Maps pin.';
       status.style.color = '#c00';
@@ -3034,6 +3052,7 @@ async function saveAircraft() {
       seater: parseInt(card.querySelector('.ac-seater').value),
       speed: parseFloat(card.querySelector('.ac-speed').value),
       rate: parseFloat(card.querySelector('.ac-rate').value),
+      rate_currency: card.querySelector('.ac-rate-currency')?.value || 'USD',
 pax_fee: parseFloat(card.querySelector('.ac-pax').value),
       pax_label: card.querySelector('.ac-pax-label')?.value.trim() || 'Mission Fixed Costs',
       pax_fee_enabled: card.querySelector('.ac-pax-enabled')?.checked !== false,
@@ -3175,12 +3194,12 @@ async function openPaidModal(number) {
   let remaining = Math.max(total - prevPaid, 0);
   let isFullyPaid = prevPaid >= total && total > 0;
   document.getElementById('paid-record-number').value = number;
-  document.getElementById('bs-total').textContent = `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
-  document.getElementById('bs-remaining').textContent = `USD $${remaining.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('bs-total').textContent = `${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('bs-remaining').textContent = `${priCurrency} ${remaining.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   let prevRow = document.getElementById('bs-prev-row');
   if (prevPaid > 0) {
     prevRow.style.display = 'flex';
-    document.getElementById('bs-prev').textContent = `USD $${prevPaid.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    document.getElementById('bs-prev').textContent = `${priCurrency} ${prevPaid.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   } else {
     prevRow.style.display = 'none';
   }
@@ -3211,7 +3230,7 @@ async function confirmMarkPaid(generateReceipt) {
   let paymentMode = document.getElementById('paid-mode').value;
   let paymentRef = document.getElementById('paid-ref').value;
   if (!paidAmount) { showMsg('paid-msg','Enter amount paid.','error'); return; }
-  let endpoint = generateReceipt ? '/records/generate_receipt' : '/records/mark_paid';
+  let endpoint = generateReceipt ? '/op/'+SLUG+'/records/generate_receipt' : '/op/'+SLUG+'/records/mark_paid';
   showMsg('paid-msg', generateReceipt ? 'Generating receipt...' : 'Saving...', 'success');
   try {
     let r = await fetch(endpoint, {
@@ -3248,7 +3267,7 @@ async function openLogModal(number) {
   let rec = await r.json();
   if (rec.error) { alert(rec.error); return; }
   document.getElementById('log-record-info').textContent =
-    `${rec.number} — ${rec.client_name} — Total: USD $${parseFloat(rec.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    `${rec.number} — ${rec.client_name} — Total: ${priCurrency} ${parseFloat(rec.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}`;
   let log = rec.payment_log || [];
   if (!log.length) {
     document.getElementById('log-content').innerHTML = '<p style="color:#aaa;padding:12px 0">No payment history yet.</p>';
@@ -3353,7 +3372,7 @@ async function createManualInvoice() {
   if (miBtn) { miBtn.disabled = true; miBtn.textContent = 'Generating...'; }
   document.getElementById('mi-msg').innerHTML = '';
   try {
-    let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    let r = await fetch('/op/'+SLUG+'/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('mi-msg',e.error||'Failed','error'); return; }
     let pdfUrl = r.headers.get('X-PDF-URL') || '';
     let docNumber = r.headers.get('X-DOC-NUMBER') || '';
@@ -3577,7 +3596,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ``,
         `Ref: ${d.docNumber}`,
         `Route: ${d.route}`,
-        `Invoice Total: USD $${parseFloat(d.finalTotal).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        `Invoice Total: ${priCurrency} ${parseFloat(d.finalTotal).toLocaleString(undefined,{minimumFractionDigits:2})}`,
         d.pdfUrl ? `\nView Invoice: ${d.pdfUrl}` : '',
         ``,
         `To confirm, please proceed with payment as per bank details on the invoice.`,
@@ -3626,7 +3645,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ``,
         `Ref: ${d.docNumber}`,
         `Route: ${d.route}`,
-        `Invoice Total: USD $${parseFloat(d.finalTotal).toLocaleString(undefined,{minimumFractionDigits:2})}`,
+        `Invoice Total: ${priCurrency} ${parseFloat(d.finalTotal).toLocaleString(undefined,{minimumFractionDigits:2})}`,
         d.pdfUrl ? `\nView Invoice: ${d.pdfUrl}` : '',
         ``,
         `To confirm, please proceed with payment as per bank details on the invoice.`,
@@ -3966,7 +3985,7 @@ async function resolveGeoCenter() {
   if (!pin) { status.textContent = 'Enter a Maps pin first.'; return; }
   status.textContent = 'Resolving...';
   try {
-    let r = await fetch('/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url:pin}) });
+    let r = await fetch('/op/'+SLUG+'/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url:pin}) });
     let data = await r.json();
     if (data.found) {
       document.getElementById('s-geo-center-lat').value = data.lat;
@@ -4048,7 +4067,31 @@ async function loadFX() {
   try {
     let r = await fetch('/fx/rates');
     let data = await r.json();
-    if (data.success) fxRates = data.rates;
+    if (data.success) {
+      fxRates = data.rates;
+      secCurrency = data.secondary_currency || '';
+      priCurrency = data.primary_currency || 'USD';
+      priCurrencySymbol = CURRENCY_SYMBOLS[priCurrency] || priCurrency;
+      // Update pdf-currency dropdown
+      let pdfCurSel = document.getElementById('pdf-currency');
+      if (pdfCurSel) {
+        let currentVal = pdfCurSel.value;
+        pdfCurSel.innerHTML = '';
+        let priOpt = document.createElement('option');
+        priOpt.value = priCurrency;
+        priOpt.textContent = priCurrency + ' — Primary';
+        pdfCurSel.appendChild(priOpt);
+        if (secCurrency) {
+          let secOpt = document.createElement('option');
+          secOpt.value = secCurrency;
+          secOpt.textContent = secCurrency + ' — Secondary';
+          pdfCurSel.appendChild(secOpt);
+        }
+        if (currentVal && Array.from(pdfCurSel.options).some(o => o.value === currentVal)) {
+          pdfCurSel.value = currentVal;
+        }
+      }
+    }
   } catch(e) {}
 }
 
@@ -4205,7 +4248,7 @@ function openInvoiceBuilder(enq) {
     if (ibGenBtn) { ibGenBtn.disabled = false; ibGenBtn.style.opacity = ''; ibGenBtn.style.cursor = ''; }
   }
   document.getElementById('ib-base-line').textContent =
-    `${enq.ac_label||'Aircraft Charter'} — ${enq.route_summary||''} — USD $${base.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    `${enq.ac_label||'Aircraft Charter'} — ${enq.route_summary||''} — ${priCurrency} ${base.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   document.getElementById('ib-total-base').textContent = `$${base.toLocaleString(undefined,{minimumFractionDigits:2})}`;
   recalcInvoiceTotal();
   document.getElementById('invoice-builder-modal').classList.add('active');
@@ -4259,7 +4302,7 @@ async function openBreakdownModal(token) {
         <span style="color:#555">Aircraft</span><strong>${snap.ac_label||'-'}</strong>
       </div>
       <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-        <span style="color:#555">Rate</span><strong>USD $${rate.toLocaleString()}/hr</strong>
+        <span style="color:#555">Rate</span><strong>${priCurrencySymbol}${rate.toLocaleString()}/hr</strong>
       </div>
       <div style="display:flex;justify-content:space-between;margin-bottom:4px">
         <span style="color:#555">Billed Hours</span><strong>${billed} hrs</strong>
@@ -4283,7 +4326,7 @@ async function openBreakdownModal(token) {
       ${pax>0?`<div class="billing-row"><span>Pax / Admin Fee</span><span>$${parseFloat(pax).toLocaleString()}</span></div>`:''}
       ${overnight>0?`<div class="billing-row"><span>Overnight (@ $${ovRate}/night)</span><span>$${overnight.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`:''}
       ${waiting>0?`<div class="billing-row"><span>Idle Day (@ $${idleRate}/day)</span><span>$${waiting.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`:''}
-      <div class="billing-total"><span>TOTAL</span><span>USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>
+      <div class="billing-total"><span>TOTAL</span><span>${priCurrency} ${total.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>
     </div>`;
   document.getElementById('breakdown-content').innerHTML = html;
   document.getElementById('breakdown-modal').classList.add('active');
@@ -4405,7 +4448,7 @@ async function generateAndSendInvoice() {
       discount, note: notes, uplift_items: upliftItems,
       source_token: enq.token
     };
-    let r = await fetch('/booking/invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    let r = await fetch('/op/'+SLUG+'/booking/invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('ib-msg', e.error||'Failed','error'); return; }
     let invoicePdfUrl = r.headers.get('X-PDF-URL') || '';
     let invoiceDocNumber = r.headers.get('X-DOC-NUMBER') || enq.token;
@@ -4423,7 +4466,7 @@ async function generateAndSendInvoice() {
       ``,
       `Ref: ${invoiceDocNumber}`,
       `Route: ${enq.route_summary||''}`,
-      `Invoice Total: USD $${finalTotal.toLocaleString(undefined,{minimumFractionDigits:2})}`,
+      `Invoice Total: ${priCurrency} ${finalTotal.toLocaleString(undefined,{minimumFractionDigits:2})}`,
       invoicePdfUrl ? `\nView Invoice: ${invoicePdfUrl}` : '',
       ``,
       `To confirm, please proceed with payment as per bank details on the invoice.`,
@@ -4546,7 +4589,7 @@ function renderShareBar(p) {
     <div id="${id}" style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:16px;margin-top:12px">
       <div style="font-size:0.95rem;font-weight:700;color:#1b5e20;margin-bottom:6px">✅ ${docLabel} Generated</div>
       <div style="font-size:0.82rem;color:#333;margin-bottom:4px">Ref: <strong>${p.docNumber}</strong></div>
-      <div style="font-size:0.82rem;color:#555;margin-bottom:10px">Amount: USD $${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+      <div style="font-size:0.82rem;color:#555;margin-bottom:10px">Amount: ${priCurrency} ${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</div>
       ${p.pdfUrl ? `<a href="${p.pdfUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#0d47a1;font-size:0.82rem;text-decoration:none;background:#e3f2fd;padding:6px 10px;border-radius:6px;margin-bottom:12px">📄 View PDF</a>` : ''}
       ${crmNote}
       <div style="margin-bottom:10px">
@@ -4587,7 +4630,7 @@ function shareBarWa(id) {
       .replace(/{ac_label}/g, p.acLabel || '')
       .replace(/{route}/g, p.route || '');
   } else {
-    message = `Hello ${p.clientName||'Valued Client'},\n\nPlease find your ${p.docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n'+pdfLine : ''}\n\nRef: ${p.docNumber}\nAmount: USD $${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}\n\nFor queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
+    message = `Hello ${p.clientName||'Valued Client'},\n\nPlease find your ${p.docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n'+pdfLine : ''}\n\nRef: ${p.docNumber}\nAmount: ${priCurrency} ${parseFloat(p.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}\n\nFor queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
   }
   let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
   let btn = document.querySelector(`#${id} .btn-success`);
@@ -4700,7 +4743,7 @@ async function deleteSelectedEnquiries() {
   if (!password) return;
   document.getElementById('enq-delete-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Deleting...</div>';
   try {
-    let r = await fetch('/bookings/delete', {
+    let r = await fetch('/op/'+SLUG+'/bookings/delete', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ tokens: checked, password })
     });
