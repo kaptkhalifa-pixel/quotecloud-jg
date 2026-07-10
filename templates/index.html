@@ -2711,16 +2711,21 @@ async function resolveMapPin() {
   let data = await r.json();
   if (!data.found) { showMsg('loc-msg','Could not resolve pin.','error'); return; }
   // Clean display name - remove 'Pin, ' prefix if present
-  let displayName = data.display.replace(/^Pin,\s*/i, '').trim();
+  let displayName = (data.display || '').replace(/^Pin,\s*/i, '').trim();
+  showMsg('loc-msg', `✅ Got: "${data.display}" → cleaned: "${displayName}"`, 'success');
   document.getElementById('loc-name').value = displayName;
   document.getElementById('loc-lat').value = data.lat;
   document.getElementById('loc-lon').value = data.lon;
   document.getElementById('loc-maps').value = '';
-  // Focus name field so user can edit
-  let nameField = document.getElementById('loc-name');
-  nameField.focus();
-  nameField.select();
-  showMsg('loc-msg', `✅ Resolved: ${displayName} — edit the name above then click Add Location`, 'success');
+  setTimeout(function() {
+    let nameField = document.getElementById('loc-name');
+    if (nameField) {
+      nameField.value = displayName;
+      nameField.focus();
+      nameField.select();
+    }
+    showMsg('loc-msg', displayName ? '✅ Name filled — edit then click Add Location' : '⚠️ No name returned', displayName ? 'success' : 'error');
+  }, 200);
 }
 
 async function addLocation() {
