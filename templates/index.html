@@ -1833,24 +1833,57 @@ function quickWA(idx) {
   priceLines2.push('  Flight (' + fmtHours(totalHrs2) + ' @ ' + priCurrencySymbol + fmtAmt(rate2) + '/hr)');
   if (pax2 > 0) priceLines2.push('  ' + paxLabel2 + ': ' + priCurrency + ' ' + fmtAmt(pax2));
   if (nights2 > 0 && ovRate2 > 0) priceLines2.push('  Overnight x' + nights2 + ': ' + priCurrency + ' ' + fmtAmt(ovRate2 * nights2));
+  // Build leg lines by type
+  let posLines = allSegs2.filter(s => s.type === 'positioning').map(s => {
+    let hrs = parseFloat(s.hours||0).toFixed(1);
+    let dist = s.distance_nm ? ' · ' + Math.round(s.distance_nm) + ' nm' : '';
+    return 'Positioning:     ' + s.origin + ' → ' + s.destination + ' (' + hrs + ' hrs' + dist + ')';
+  });
+  let revLines = allSegs2.filter(s => s.type === 'revenue').map((s, i) => {
+    let hrs = parseFloat(s.hours||0).toFixed(1);
+    let dist = s.distance_nm ? ' · ' + Math.round(s.distance_nm) + ' nm' : '';
+    let dt = s.date ? ' · ' + s.date : '';
+    let label = revSegs2.filter(x => x.type==='revenue').length > 1 ? 'Leg ' + (i+1) + ':          ' : 'Your Mission:    ';
+    return label + s.origin + ' → ' + s.destination + ' (' + hrs + ' hrs' + dist + dt + ')';
+  });
+  let depLines = allSegs2.filter(s => s.type === 'depositioning').map(s => {
+    let hrs = parseFloat(s.hours||0).toFixed(1);
+    let dist = s.distance_nm ? ' · ' + Math.round(s.distance_nm) + ' nm' : '';
+    return 'Depositioning:   ' + s.origin + ' → ' + s.destination + ' (' + hrs + ' hrs' + dist + ')';
+  });
+  let allLegLines = [...posLines, ...revLines, ...depLines];
+
+  // Cost lines - only show if non-zero
+  let costLines = [];
+  costLines.push('Mission Fixed Costs:   ' + (pax2 > 0 ? priCurrency + ' ' + fmtAmt(pax2) : '—'));
+  if (nights2 > 0 && ovRate2 > 0) costLines.push('Overnight Per Diem:    ' + priCurrency + ' ' + fmtAmt(ovRate2 * nights2));
+  let idleDays2 = res.idle_days || 0;
+  let idleRate2 = res.idle_day_rate_usd || 0;
+  if (idleDays2 > 0 && idleRate2 > 0) costLines.push('Idle Day Charge:       ' + priCurrency + ' ' + fmtAmt(idleRate2 * idleDays2));
+
   let lines = [
-    '*Charter Quote — ' + company2 + '*',
+    'Hello,',
     '',
-    'Aircraft: ' + (res.ac_label||''),
+    'Here is your charter quotation from ' + company2 + '.',
     '',
-    'Routing:',
-    ...legLines2,
+    'FLIGHT PLAN',
+    ...allLegLines,
     '',
-    'Price Breakdown:',
-    ...priceLines2,
+    'Equipment: ' + (res.ac_label||''),
+    'Total Billed Flight Time: ' + fmtHours(totalHrs2),
+    '',
+    'COST BREAKDOWN',
+    ...costLines,
     '',
     'TOTAL: ' + priCurrency + ' ' + fmtAmt(total),
     '',
-    'Valid ' + validity2 + ' hrs | Subject to availability',
-    phone2 ? 'Queries: ' + phone2 : '',
+    'Offer valid ' + validity2 + ' hours, subject to availability.',
+    'Reply to receive a PDF copy of this quotation.',
+    phone2 ? 'For enquiries call ' + phone2 + '.' : '',
     '',
-    'Please confirm to proceed.'
-  ].filter(l => l !== null);
+    'Regards,',
+    company2 + ' Reservations'
+  ].filter(l => l !== null && l !== undefined);
   let url = 'https://wa.me/'+wa.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(lines.join('\n'));
   window.open(url, '_blank');
 }
