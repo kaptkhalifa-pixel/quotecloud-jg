@@ -651,7 +651,7 @@ def apply_ground_time_buffer(result, buffer_hours):
     if not result or buffer_hours <= 0:
         return result
     for s in (result.get("segments") or []):
-        if s.get("type") == "revenue":
+        if s.get("type") in ("revenue", "positioning", "depositioning"):
             s["hours"] = round(float(s.get("hours", 0)) + buffer_hours, 2)
     for key in ("drop", "pick", "option_a", "option_b"):
         if result.get(key):
