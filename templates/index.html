@@ -2717,15 +2717,7 @@ async function resolveMapPin() {
   document.getElementById('loc-lat').value = data.lat;
   document.getElementById('loc-lon').value = data.lon;
   document.getElementById('loc-maps').value = '';
-  setTimeout(function() {
-    let nameField = document.getElementById('loc-name');
-    if (nameField) {
-      nameField.value = displayName;
-      nameField.focus();
-      nameField.select();
-    }
-    showMsg('loc-msg', displayName ? '✅ Name filled — edit then click Add Location' : '⚠️ No name returned', displayName ? 'success' : 'error');
-  }, 200);
+  showMsg('loc-msg', displayName ? '✅ ' + displayName + ' — edit name if needed then Add Location' : '⚠️ No name returned from resolve', displayName ? 'success' : 'error');
 }
 
 async function addLocation() {
