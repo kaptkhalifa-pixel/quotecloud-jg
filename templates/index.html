@@ -831,19 +831,19 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div class="settings-section collapsed">
         <h4 onclick="toggleSettingsSection(this)">Account Details</h4>
         <div class="form-row">
-          <div class="form-group"><label>Account Name</label><input type="text" id="s-bank-account-name"></div>
-          <div class="form-group"><label>Bank Name</label><input type="text" id="s-bank-name"></div>
+          <div class="form-group"><label>Account Name</label><input type="text" id="s-bank-account-name" value="{{ operator.get('bank', {}).get('account_name', '') }}"></div>
+          <div class="form-group"><label>Bank Name</label><input type="text" id="s-bank-name" value="{{ operator.get('bank', {}).get('bank_name', '') }}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>SWIFT / BIC</label><input type="text" id="s-bank-swift"></div>
-          <div class="form-group"><label>Branch</label><input type="text" id="s-bank-branch"></div>
+          <div class="form-group"><label>SWIFT / BIC</label><input type="text" id="s-bank-swift" value="{{ operator.get('bank', {}).get('swift', '') }}"></div>
+          <div class="form-group"><label>Branch</label><input type="text" id="s-bank-branch" value="{{ operator.get('bank', {}).get('branch', '') }}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Primary A/C Number</label><input type="text" id="s-bank-kes-account"></div>
+          <div class="form-group"><label>Primary A/C Number</label><input type="text" id="s-bank-kes-account" value="{{ operator.get('bank', {}).get('kes_account', '') }}"></div>
           <div class="form-group"><label>Primary Currency</label><input type="text" id="s-bank-kes-currency" placeholder="KES"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Secondary A/C Number</label><input type="text" id="s-bank-usd-account"></div>
+          <div class="form-group"><label>Secondary A/C Number</label><input type="text" id="s-bank-usd-account" value="{{ operator.get('bank', {}).get('usd_account', '') }}"></div>
           <div class="form-group"><label>Secondary Currency</label><input type="text" id="s-bank-usd-currency" placeholder="USD"></div>
         </div>
         <div class="form-group"><label>Mobile Money / Paybill</label><input type="text" id="s-bank-paybill"></div>
