@@ -2109,6 +2109,8 @@ def save_currency():
         OPERATOR["quoting_rules"]["currency"] = data.get("currency", "USD")
         OPERATOR["quoting_rules"]["currency_symbol"] = data.get("currency_symbol", "$")
         OPERATOR["secondary_currency"] = data.get("secondary_currency", "")
+        if "fx" not in OPERATOR: OPERATOR["fx"] = {}
+        OPERATOR["fx"]["secondary_currency"] = data.get("secondary_currency", "")
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:
