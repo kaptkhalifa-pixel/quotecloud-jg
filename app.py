@@ -687,6 +687,29 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
     max_nights = int(rules.get("max_nights_before_pickup_drop", 3))
     speed = float(ac_cfg["speed"])
     rate = float(ac_cfg["rate"])
+    # Convert all aircraft costs to primary currency if rate_currency differs
+    rate_currency = ac_cfg.get("rate_currency", "USD")
+    _cf = 1.0
+    fx_cfg = OPERATOR.get("fx", {})
+    pri_cur = fx_cfg.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+    if rate_currency != pri_cur and rate > 0:
+        try:
+            if fx_cfg.get("mode") == "manual":
+                fx_rates = fx_cfg.get("rates", {})
+                rate_to_usd = 1.0 / fx_rates[rate_currency] if fx_rates.get(rate_currency) else 1.0
+                usd_to_pri = fx_rates.get(pri_cur, 1.0)
+                _cf = rate_to_usd * usd_to_pri
+            else:
+                import requests as req
+                r = req.get(f"https://open.er-api.com/v6/latest/{rate_currency}", timeout=5)
+                rdata = r.json()
+                if rdata.get("result") == "success":
+                    _cf = float(rdata.get("rates", {}).get(pri_cur, 1.0))
+            rate = rate * _cf
+            overnight_rate = overnight_rate * _cf
+            idle_day_rate = idle_day_rate * _cf
+        except Exception:
+            _cf = 1.0
     routing_mode = ac_cfg.get("routing_mode", "standard")
     wa = get_whatsapp()
     buffer_enabled = rules.get("ground_time_buffer_enabled", False)
@@ -732,7 +755,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         "base_label": ac_cfg.get("home_airstrip", "Wilson Airport, Nairobi"),
     }
     pax_enabled = ac_cfg.get("pax_fee_enabled", True)
-    hq.PAX_ADMIN_FEE_USD = float(ac_cfg["pax_fee"]) if pax_enabled else 0.0
+    hq.PAX_ADMIN_FEE_USD = float(ac_cfg["pax_fee"]) * _cf if pax_enabled else 0.0
     hq.MIN_CHARGEABLE_HR = float(rules.get("min_flight_hours", 1.0))
 
     try:
@@ -792,7 +815,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         overnight_enabled = ac_cfg.get("overnight_enabled", True)
         result["overnight_rate_usd"] = overnight_rate if overnight_enabled else 0.0
         result["idle_day_rate_usd"] = idle_day_rate
-        result["pax_fee_usd_display"] = float(ac_cfg["pax_fee"]) if pax_enabled else 0.0
+        result["pax_fee_usd_display"] = float(ac_cfg["pax_fee"]) * _cf if pax_enabled else 0.0
         result["pax_label"] = ac_cfg.get("pax_label", "Mission Fixed Costs")
         result["overnight_label"] = ac_cfg.get("overnight_label", "Crew Overnight")
         result["pax_fee_enabled"] = pax_enabled
@@ -2117,6 +2140,7 @@ def save_currency():
         OPERATOR["secondary_currency"] = data.get("secondary_currency", "")
         if "fx" not in OPERATOR: OPERATOR["fx"] = {}
         OPERATOR["fx"]["secondary_currency"] = data.get("secondary_currency", "")
+        OPERATOR["fx"]["primary_currency"] = data.get("currency", "USD")
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:
@@ -2316,50 +2340,40 @@ def expand_maps_url():
 def fx_rates():
     fx_config = OPERATOR.get("fx", {})
     show_kes = fx_config.get("show_kes", True)
+    pri_cur = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+    sec_cur = fx_config.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
     if fx_config.get("mode") == "manual":
         manual_rates = fx_config.get("rates", {})
-        sec_cur = fx_config.get("secondary_currency", "")
-        manual_base = {
-            "KES": float(manual_rates.get("KES", 0)),
-            "EUR": float(manual_rates.get("EUR", 0)),
-            "GBP": float(manual_rates.get("GBP", 0)),
-            "TZS": float(manual_rates.get("TZS", 0)),
-            "UGX": float(manual_rates.get("UGX", 0))
-        }
-        if sec_cur and sec_cur not in manual_base:
-            manual_base[sec_cur] = float(manual_rates.get(sec_cur, 0))
+        rates_out = {}
+        if sec_cur:
+            rates_out[sec_cur] = float(manual_rates.get(sec_cur, 0))
         return jsonify({
             "success": True,
             "show_kes": show_kes,
-            "rates": manual_base,
+            "primary_currency": pri_cur,
+            "secondary_currency": sec_cur,
+            "rates": rates_out,
             "updated": "Manual rate set by operator",
             "mode": "manual"
         })
-
     try:
         import requests as req
-        r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
+        r = req.get(f"https://open.er-api.com/v6/latest/{pri_cur}", timeout=5)
         data = r.json()
         if data.get("result") == "success":
             rates = data.get("rates", {})
-            sec_cur = fx_config.get("secondary_currency", "")
-            base_rates = {
-                "KES": rates.get("KES", 0),
-                "EUR": rates.get("EUR", 0),
-                "GBP": rates.get("GBP", 0),
-                "TZS": rates.get("TZS", 0),
-                "UGX": rates.get("UGX", 0)
-            }
-            if sec_cur and sec_cur not in base_rates:
-                base_rates[sec_cur] = rates.get(sec_cur, 0)
+            rates_out = {}
+            if sec_cur:
+                rates_out[sec_cur] = rates.get(sec_cur, 0)
             return jsonify({
                 "success": True,
                 "show_kes": show_kes,
-                "rates": base_rates,
+                "primary_currency": pri_cur,
+                "secondary_currency": sec_cur,
+                "rates": rates_out,
                 "updated": data.get("time_last_update_utc", ""),
                 "mode": "auto"
             })
-
     except Exception:
         pass
     return jsonify({"success": False, "rates": {}, "mode": "auto"})
@@ -2371,20 +2385,15 @@ def fx_save():
     data = request.get_json()
     try:
         existing_fx = OPERATOR.get("fx", {})
-        rates = {
-            "KES": float(data.get("KES", 0)),
-            "EUR": float(data.get("EUR", 0)),
-            "GBP": float(data.get("GBP", 0)),
-            "TZS": float(data.get("TZS", 0)),
-            "UGX": float(data.get("UGX", 0))
-        }
-        # Preserve secondary currency rate if provided
-        sec_cur = existing_fx.get("secondary_currency", "")
+        pri_cur = existing_fx.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+        sec_cur = existing_fx.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
+        rates = {}
         if sec_cur and data.get(sec_cur):
             rates[sec_cur] = float(data.get(sec_cur, 0))
         OPERATOR["fx"] = {
             "mode": data.get("mode", "auto"),
             "show_kes": data.get("show_kes", True),
+            "primary_currency": pri_cur,
             "secondary_currency": sec_cur,
             "rates": rates
         }
