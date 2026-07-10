@@ -981,10 +981,18 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       </div>
 
       <div style="border-top:1px solid #f0f0f0;padding-top:14px;margin-bottom:16px">
-        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#888;margin-bottom:10px">Display Options</div>
+        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#888;margin-bottom:12px">Display Options</div>
         <div class="toggle-row" style="margin-bottom:10px">
-          <input type="checkbox" id="s-fx-show-kes" checked style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-          <label for="s-fx-show-kes" style="cursor:pointer">Show secondary currency on quotes &amp; documents</label>
+          <input type="checkbox" id="s-fx-show-docs" checked style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-fx-show-docs" style="cursor:pointer">Show secondary currency on quotes, invoices &amp; receipts</label>
+        </div>
+        <div class="toggle-row" style="margin-bottom:10px">
+          <input type="checkbox" id="s-fx-show-kes" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-fx-show-kes" style="cursor:pointer">Show secondary currency on client-facing page <span style="font-family:'Space Mono',monospace;font-size:0.52rem;background:#f0f4ff;color:#1a56db;padding:2px 5px;border-radius:3px;margin-left:4px">Pro</span></label>
+        </div>
+        <div class="toggle-row" style="margin-bottom:10px">
+          <input type="checkbox" id="s-fx-disabled" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-fx-disabled" style="cursor:pointer;color:#c00">Disable secondary currency entirely</label>
         </div>
       </div>
 
@@ -4783,8 +4791,8 @@ function toggleFxMode() {
   document.getElementById('fx-manual-fields').style.display = isManual ? 'block' : 'none';
   document.getElementById('fx-auto-status').style.display = isManual ? 'none' : 'block';
   // Update currency labels from current config
-  var secCurT = ((operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '').toUpperCase();
-  var priCurT = ((operatorConfig.fx && operatorConfig.fx.primary_currency) || (operatorConfig.quoting_rules && operatorConfig.quoting_rules.currency) || 'USD').toUpperCase();
+  var secCurT = (document.getElementById('s-secondary-currency').value || '').toUpperCase();
+  var priCurT = (document.getElementById('s-primary-currency').value || 'USD').toUpperCase();
   var sl = document.getElementById('fx-secondary-cur-label2');
   var pl = document.getElementById('fx-primary-cur-label');
   if (sl) sl.textContent = secCurT || '—';
@@ -4792,14 +4800,15 @@ function toggleFxMode() {
   if (!isManual) {
     let liveDiv = document.getElementById('fx-live-rates');
     if (liveDiv) liveDiv.innerHTML = '<div style="background:#f8f9fa;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#888">⏳ Switching to live API rate...</div>';
-    let secCur = ((operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '').toUpperCase();
-    let priCur = ((operatorConfig.fx && operatorConfig.fx.primary_currency) || (operatorConfig.quoting_rules && operatorConfig.quoting_rules.currency) || 'USD').toUpperCase();
+    let secCur = (document.getElementById('s-secondary-currency').value || '').toUpperCase();
+    let priCur = (document.getElementById('s-primary-currency').value || 'USD').toUpperCase();
     if (secCur) {
       fetch('https://open.er-api.com/v6/latest/' + priCur).then(r=>r.json()).then(data=>{
         if (liveDiv && data.result === 'success') {
           let rate = data.rates[secCur];
           if (rate) {
-            liveDiv.innerHTML = '<div style="background:#e8f5e9;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#1b5e20">✅ Live rate: ' + priCur + ' 1 = ' + rate.toFixed(4) + ' ' + secCur + '</div>';
+            liveDiv.innerHTML = '<div style="background:#e8f5e9;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#1b5e20">✅ Auto mode — ' + priCur + ' 1 = ' + rate.toFixed(4) + ' ' + secCur + '</div>';
+            document.getElementById('fx-auto-status').style.display = 'none';
           } else {
             // Auto-fallback to manual mode
             liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ ' + secCur + ' is not available from the live API. Switched to manual mode — enter your rate below.</div>';
