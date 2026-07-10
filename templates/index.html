@@ -863,11 +863,12 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
   <div class="card settings-card-collapsible collapsed">
     <h3 onclick="toggleSettingsCard(this)">Currency &amp; Exchange Rates</h3>
     <div class="card-body">
-      <div class="settings-section collapsed">
-        <h4 onclick="toggleSettingsSection(this)">Primary &amp; Secondary Currency</h4>
-        <div class="form-row">
-          <div class="form-group"><label>Primary Currency</label>
-            <select id="s-primary-currency">
+      <div style="font-size:0.72rem;color:#888;margin-bottom:18px;line-height:1.6">Set your billing currency, choose a secondary display currency for client-facing documents, and configure your exchange rate policy.</div>
+
+      <div class="form-row" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>Primary Currency <span style="font-size:0.68rem;color:#aaa;font-weight:400">— what you charge in</span></label>
+          <select id="s-primary-currency">
               <option value="USD">USD — US Dollar</option>
               <option value="KES">KES — Kenya Shilling</option>
               <option value="EUR">EUR — Euro</option>
@@ -910,10 +911,11 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
               <option value="CHF">CHF — Swiss Franc</option>
               <option value="CAD">CAD — Canadian Dollar</option>
               <option value="NZD">NZD — New Zealand Dollar</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Secondary Currency</label>
-            <select id="s-secondary-currency">
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Secondary Currency <span style="font-size:0.68rem;color:#aaa;font-weight:400">— shown alongside primary</span></label>
+          <select id="s-secondary-currency" onchange="onSecondaryChange()">
               {% set fx_block = operator.get('fx') or {} %}{% set sec_cur = fx_block.get('secondary_currency') or operator.get('secondary_currency') or '' %}
               <option value="" {% if sec_cur == '' %}selected{% endif %}>None</option>
               <option value="USD" {% if sec_cur == 'USD' %}selected{% endif %}>USD — US Dollar</option>
@@ -949,42 +951,47 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
               <option value="CHF" {% if sec_cur == 'CHF' %}selected{% endif %}>CHF — Swiss Franc</option>
               <option value="CAD" {% if sec_cur == 'CAD' %}selected{% endif %}>CAD — Canadian Dollar</option>
               <option value="NZD" {% if sec_cur == 'NZD' %}selected{% endif %}>NZD — New Zealand Dollar</option>
-            </select>
-          </div>
+          </select>
         </div>
-        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionCurrency()">Save ✓</button><span class="section-save-msg" id="msg-currency"></span></div>
       </div>
-      <div class="settings-section collapsed">
-        <h4 onclick="toggleSettingsSection(this)">Exchange Rate</h4>
-        <div style="font-size:0.72rem;color:#888;margin-bottom:12px;line-height:1.6">
-          The exchange rate controls currency conversion on quotes and PDFs. Auto mode fetches live rates — if your currency is not supported by the live feed, set a manual rate below.
+
+      <div id="fx-rate-section" style="margin-bottom:16px">
+        <div id="fx-auto-status" style="font-size:0.82rem;color:#1b5e20;background:#e8f5e9;padding:10px 14px;border-radius:6px;margin-bottom:12px">
+          ✅ Auto mode — rate will be fetched live from open.er-api.com
         </div>
+        <div id="fx-live-rates" style="font-size:0.82rem;color:#555;margin-bottom:12px"></div>
         <div class="toggle-row" style="margin-bottom:16px">
           <input type="checkbox" id="s-fx-manual" onchange="toggleFxMode()" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-          <label for="s-fx-manual" style="font-weight:600">Use Manual Rate (override live FX)</label>
-        </div>
-        <div class="toggle-row" style="margin-bottom:16px">
-          <input type="checkbox" id="s-fx-show-kes" checked style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-          <label for="s-fx-show-kes" style="font-weight:600">Show secondary currency conversion on client page</label>
-        </div>
-        <div id="fx-auto-status" style="font-size:0.82rem;color:#1b5e20;background:#e8f5e9;padding:10px 14px;border-radius:6px;margin-bottom:12px">
-          ✅ Auto mode — rates fetched live from open.er-api.com
+          <label for="s-fx-manual" style="font-weight:600;cursor:pointer">Override with manual rate</label>
         </div>
         <div id="fx-manual-fields" style="display:none;background:#f8f9fa;padding:14px;border-radius:8px;margin-bottom:12px">
-          <div style="font-size:0.78rem;font-weight:600;margin-bottom:12px">
-            <span id="fx-primary-cur-label">—</span> 1 = 
-            <input type="number" id="s-fx-secondary" placeholder="Enter rate" step="0.0001" style="width:140px;display:inline-block;margin:0 6px">
-            <span id="fx-secondary-cur-label2">—</span>
+          <div style="font-size:0.78rem;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+            <span id="fx-primary-cur-label" style="font-size:0.9rem">—</span>
+            <span style="color:#888">1 =</span>
+            <input type="number" id="s-fx-secondary" placeholder="0.0000" step="0.0001" style="width:120px">
+            <span id="fx-secondary-cur-label2" style="font-size:0.9rem">—</span>
           </div>
-          <div style="font-size:0.68rem;color:#aaa;margin-bottom:8px">Enter the exchange rate manually. This overrides the live rate.</div>
+          <div style="font-size:0.68rem;color:#aaa">Enter how many units of secondary currency equal 1 unit of primary currency.</div>
           <input type="hidden" id="s-fx-kes" value="0">
           <input type="hidden" id="s-fx-eur" value="0">
           <input type="hidden" id="s-fx-gbp" value="0">
           <input type="hidden" id="s-fx-tzs" value="0">
           <input type="hidden" id="s-fx-ugx" value="0">
         </div>
-        <div id="fx-live-rates" style="font-size:0.82rem;color:#555;margin-bottom:12px"></div>
-        <div class="section-save-row"><button class="btn-save-section" onclick="saveFxRates()">Save ✓</button><span class="section-save-msg" id="fx-msg"></span></div>
+      </div>
+
+      <div style="border-top:1px solid #f0f0f0;padding-top:14px;margin-bottom:16px">
+        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#888;margin-bottom:10px">Display Options</div>
+        <div class="toggle-row" style="margin-bottom:10px">
+          <input type="checkbox" id="s-fx-show-kes" checked style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-fx-show-kes" style="cursor:pointer">Show secondary currency on quotes &amp; documents</label>
+        </div>
+      </div>
+
+      <div class="section-save-row">
+        <button class="btn-save-section" onclick="saveAllCurrencySettings()">Save ✓</button>
+        <span class="section-save-msg" id="msg-currency"></span>
+        <span class="section-save-msg" id="fx-msg"></span>
       </div>
     </div>
   </div>
@@ -3826,6 +3833,74 @@ async function saveSectionBank() {
     if (d.success) { showSectionMsg('msg-bank','✓ Saved','ok'); showSectionMsg('msg-invoice','✓ Saved','ok'); }
     else { showSectionMsg('msg-bank', d.error || 'Error', 'err'); }
   } catch(e) { showSectionMsg('msg-bank','Network error','err'); }
+}
+
+
+async function onSecondaryChange() {
+  let secCur = document.getElementById('s-secondary-currency').value.toUpperCase();
+  let priCur = (document.getElementById('s-primary-currency').value || 'USD').toUpperCase();
+  let liveDiv = document.getElementById('fx-live-rates');
+  let rateSection = document.getElementById('fx-rate-section');
+  if (!secCur) {
+    if (rateSection) rateSection.style.display = 'none';
+    return;
+  }
+  if (rateSection) rateSection.style.display = 'block';
+  if (liveDiv) liveDiv.innerHTML = '<div style="background:#f8f9fa;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#888">⏳ Checking live rate for ' + secCur + '...</div>';
+  try {
+    let r = await fetch('https://open.er-api.com/v6/latest/' + priCur);
+    let data = await r.json();
+    if (data.result === 'success' && data.rates[secCur]) {
+      let rate = data.rates[secCur];
+      if (liveDiv) liveDiv.innerHTML = '<div style="background:#e8f5e9;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#1b5e20">✅ Live rate: ' + priCur + ' 1 = ' + rate.toFixed(4) + ' ' + secCur + '</div>';
+      document.getElementById('s-fx-manual').checked = false;
+      document.getElementById('fx-manual-fields').style.display = 'none';
+      document.getElementById('fx-auto-status').style.display = 'block';
+    } else {
+      if (liveDiv) liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ ' + secCur + ' not in live API — enter rate manually below.</div>';
+      document.getElementById('s-fx-manual').checked = true;
+      document.getElementById('fx-manual-fields').style.display = 'block';
+      document.getElementById('fx-auto-status').style.display = 'none';
+      let sl = document.getElementById('fx-secondary-cur-label2');
+      let pl = document.getElementById('fx-primary-cur-label');
+      if (sl) sl.textContent = secCur;
+      if (pl) pl.textContent = priCur;
+    }
+  } catch(e) {
+    if (liveDiv) liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ Could not reach live API. Enter rate manually.</div>';
+    document.getElementById('s-fx-manual').checked = true;
+    document.getElementById('fx-manual-fields').style.display = 'block';
+    document.getElementById('fx-auto-status').style.display = 'none';
+  }
+}
+
+async function saveAllCurrencySettings() {
+  let primary = document.getElementById('s-primary-currency').value || 'USD';
+  let secondary = document.getElementById('s-secondary-currency').value || '';
+  let isManual = document.getElementById('s-fx-manual').checked;
+  let showSec = document.getElementById('s-fx-show-kes').checked;
+  let symbols = {'USD':'$','KES':'KES','EUR':'€','GBP':'£','AUD':'A$','ZAR':'R','TZS':'TZS','UGX':'UGX','NGN':'₦','GHS':'GH₵','COP':'COP','BRL':'R$','MXN':'MX$','ARS':'AR$','INR':'₹','PKR':'₨','LKR':'Rs','THB':'฿','PHP':'₱','MYR':'RM','IDR':'Rp','SGD':'S$','AED':'AED','SAR':'SAR','QAR':'QAR','EGP':'E£','MAD':'MAD','ETB':'Br','NOK':'kr','SEK':'kr','CHF':'CHF','CAD':'CA$','NZD':'NZ$','CLP':'CLP','PEN':'PEN','CNY':'¥','JPY':'¥','KWD':'KWD','OMR':'OMR','RWF':'RWF','BWP':'BWP','NAD':'NAD'};
+  let manualRate = parseFloat(document.getElementById('s-fx-secondary').value) || 0;
+  try {
+    // Save currency
+    let r1 = await fetch('/settings/save/currency', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({currency: primary, currency_symbol: symbols[primary] || primary, secondary_currency: secondary})});
+    // Save FX settings
+    let fxBody = {mode: isManual ? 'manual' : 'auto', show_kes: showSec};
+    if (isManual && secondary && manualRate) fxBody[secondary] = manualRate;
+    let r2 = await fetch('/fx/save', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(fxBody)});
+    let d1 = await r1.json();
+    let d2 = await r2.json();
+    if (d1.success && d2.success) {
+      showSectionMsg('msg-currency', '✓ Saved', 'ok');
+      operatorConfig.secondary_currency = secondary;
+      if (!operatorConfig.fx) operatorConfig.fx = {};
+      operatorConfig.fx.secondary_currency = secondary;
+      operatorConfig.fx.primary_currency = primary;
+    } else {
+      showSectionMsg('msg-currency', 'Error saving', 'err');
+    }
+  } catch(e) { showSectionMsg('msg-currency', 'Network error', 'err'); }
 }
 
 async function saveSectionCurrency() {
