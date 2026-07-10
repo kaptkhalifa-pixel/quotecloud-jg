@@ -3443,10 +3443,16 @@ if (primaryCurEl && (fx.primary_currency || (operatorConfig.quoting_rules && ope
   }
   if (secondaryCur) {
     let secVal = fx.secondary_currency || operatorConfig.secondary_currency || '';
+    console.log('[CURRENCY DEBUG] secVal:', secVal, 'fx.secondary_currency:', fx.secondary_currency, 'root:', operatorConfig.secondary_currency);
+    console.log('[CURRENCY DEBUG] options count:', secondaryCur.options.length);
     // Force select value using options loop - works even when element is hidden
+    let matched = false;
     for (let i = 0; i < secondaryCur.options.length; i++) {
-      secondaryCur.options[i].selected = (secondaryCur.options[i].value === secVal);
+      let isMatch = (secondaryCur.options[i].value === secVal);
+      secondaryCur.options[i].selected = isMatch;
+      if (isMatch) matched = true;
     }
+    console.log('[CURRENCY DEBUG] matched option:', matched, '| final value:', secondaryCur.value);
   }
   let fxr = fx.rates || {};
   document.getElementById('s-fx-kes').value = fxr.KES || '';
