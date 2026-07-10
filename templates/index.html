@@ -970,20 +970,18 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <div id="fx-auto-status" style="font-size:0.82rem;color:#1b5e20;background:#e8f5e9;padding:10px 14px;border-radius:6px;margin-bottom:12px">
           ✅ Auto mode — rates fetched live from open.er-api.com
         </div>
-        <div id="fx-manual-fields" style="display:none">
-          <div id="fx-secondary-field" style="display:none;margin-bottom:12px;background:#f8f9fa;padding:12px;border-radius:6px">
-            <div class="form-group" style="margin-bottom:4px"><label>USD 1 = <span id="fx-secondary-cur-label">—</span> (Your Secondary Currency)</label><input type="number" id="s-fx-secondary" placeholder="Enter rate manually" step="0.0001"></div>
-            <div style="font-size:0.68rem;color:#aaa">Enter manually if the live API cannot fetch this currency.</div>
+        <div id="fx-manual-fields" style="display:none;background:#f8f9fa;padding:14px;border-radius:8px;margin-bottom:12px">
+          <div style="font-size:0.78rem;font-weight:600;margin-bottom:12px">
+            <span id="fx-primary-cur-label">USD</span> 1 = 
+            <input type="number" id="s-fx-secondary" placeholder="Enter rate" step="0.0001" style="width:140px;display:inline-block;margin:0 6px">
+            <span id="fx-secondary-cur-label2">—</span>
           </div>
-          <div class="form-row">
-            <div class="form-group"><label id="fx-label-1">USD 1 = KES</label><input type="number" id="s-fx-kes" placeholder="e.g. 129" step="0.01"></div>
-            <div class="form-group"><label>USD 1 = EUR</label><input type="number" id="s-fx-eur" placeholder="e.g. 0.92" step="0.0001"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>USD 1 = GBP</label><input type="number" id="s-fx-gbp" placeholder="e.g. 0.79" step="0.0001"></div>
-            <div class="form-group"><label>USD 1 = TZS</label><input type="number" id="s-fx-tzs" placeholder="e.g. 2650" step="1"></div>
-          </div>
-          <div class="form-group"><label>USD 1 = UGX</label><input type="number" id="s-fx-ugx" placeholder="e.g. 3700" step="1"></div>
+          <div style="font-size:0.68rem;color:#aaa;margin-bottom:8px">Enter the exchange rate manually. This overrides the live rate.</div>
+          <input type="hidden" id="s-fx-kes" value="0">
+          <input type="hidden" id="s-fx-eur" value="0">
+          <input type="hidden" id="s-fx-gbp" value="0">
+          <input type="hidden" id="s-fx-tzs" value="0">
+          <input type="hidden" id="s-fx-ugx" value="0">
         </div>
         <div id="fx-live-rates" style="font-size:0.82rem;color:#555;margin-bottom:12px"></div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveFxRates()">Save ✓</button><span class="section-save-msg" id="fx-msg"></span></div>
@@ -3458,17 +3456,13 @@ if (primaryCurEl && (fx.primary_currency || (operatorConfig.quoting_rules && ope
   let fxr = fx.rates || {};
   document.getElementById('s-fx-kes').value = fxr.KES || '';
   var secCur = ((fx && fx.secondary_currency) || operatorConfig.secondary_currency || '').toUpperCase();
-  var secField = document.getElementById('fx-secondary-field');
-  var secLabel = document.getElementById('fx-secondary-cur-label');
+  var priCur = (fx && fx.primary_currency) || (operatorConfig.quoting_rules && operatorConfig.quoting_rules.currency) || 'USD';
+  var secLabel2 = document.getElementById('fx-secondary-cur-label2');
+  var priLabel = document.getElementById('fx-primary-cur-label');
   var secInput = document.getElementById('s-fx-secondary');
-  var commonCurs = ['KES','EUR','GBP','TZS','UGX'];
-  if (secCur && commonCurs.indexOf(secCur) === -1) {
-    if (secField) secField.style.display = 'block';
-    if (secLabel) secLabel.textContent = secCur;
-    if (secInput) secInput.value = fxr[secCur] || '';
-  } else {
-    if (secField) secField.style.display = 'none';
-  }
+  if (secLabel2) secLabel2.textContent = secCur || '—';
+  if (priLabel) priLabel.textContent = priCur;
+  if (secInput && secCur) secInput.value = fxr[secCur] || '';
   document.getElementById('s-fx-eur').value = fxr.EUR || '';
   document.getElementById('s-fx-gbp').value = fxr.GBP || '';
   document.getElementById('s-fx-tzs').value = fxr.TZS || '';
@@ -4713,22 +4707,32 @@ function toggleFxMode() {
   let isManual = document.getElementById('s-fx-manual').checked;
   document.getElementById('fx-manual-fields').style.display = isManual ? 'block' : 'none';
   document.getElementById('fx-auto-status').style.display = isManual ? 'none' : 'block';
+  if (!isManual) {
+    // Auto mode - fetch live rates and show current rate
+    fetch('/fx/rates').then(r=>r.json()).then(data=>{
+      let liveDiv = document.getElementById('fx-live-rates');
+      if (liveDiv && data.success) {
+        let secCur = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '';
+        let priCur = (operatorConfig.fx && operatorConfig.fx.primary_currency) || (operatorConfig.quoting_rules && operatorConfig.quoting_rules.currency) || 'USD';
+        let rate = secCur && data.rates[secCur] ? data.rates[secCur] : null;
+        if (rate) {
+          liveDiv.innerHTML = '<div style="background:#e8f5e9;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#1b5e20">✅ Live rate: ' + priCur + ' 1 = ' + rate.toFixed(4) + ' ' + secCur + '</div>';
+        } else {
+          liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ ' + (secCur||'Secondary currency') + ' not available from live API. Switch to manual mode to set a rate.</div>';
+        }
+      }
+    }).catch(()=>{});
+  }
 }
 
 async function saveFxRates() {
   let isManual = document.getElementById('s-fx-manual').checked;
+  var secCurSave = ((operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '').toUpperCase();
+  var secRateSave = parseFloat(document.getElementById('s-fx-secondary').value) || 0;
   let body = {
     mode: isManual ? 'manual' : 'auto',
-    show_kes: document.getElementById('s-fx-show-kes').checked,
-    KES: parseFloat(document.getElementById('s-fx-kes').value) || 0,
-    EUR: parseFloat(document.getElementById('s-fx-eur').value) || 0,
-    GBP: parseFloat(document.getElementById('s-fx-gbp').value) || 0,
-    TZS: parseFloat(document.getElementById('s-fx-tzs').value) || 0,
-    UGX: parseFloat(document.getElementById('s-fx-ugx').value) || 0
+    show_kes: document.getElementById('s-fx-show-kes').checked
   };
-  var secCurSave = ((operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '').toUpperCase();
-  var secInputEl = document.getElementById('s-fx-secondary');
-  var secRateSave = secInputEl ? parseFloat(secInputEl.value) || 0 : 0;
   if (secCurSave && secRateSave) body[secCurSave] = secRateSave;
   try {
     let r = await fetch('/fx/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
