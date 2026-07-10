@@ -1086,44 +1086,27 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     doc_number = next_record_number(doc_type, token_override)
     disc = float(discount) if discount else 0
 
-    import math
-    def to_kes(usd_amount):
-        if kes_rate <= 0: return usd_amount
-        raw = float(usd_amount) * kes_rate
-        return math.ceil(raw / 1000) * 1000
+    # Determine primary currency from operator config
+    fx_cfg = OPERATOR.get("fx", {})
+    pdf_currency = fx_cfg.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
 
-    if currency == "KES" and kes_rate > 0:
-        kes_items = []
-        for item in items:
-            qty = float(item["quantity"])
-            unit = float(item["unit_cost"])
-            line_total_usd = qty * unit
-            line_total_kes = to_kes(line_total_usd)
-            unit_kes = round(line_total_kes / qty) if qty > 0 else line_total_kes
-            kes_items.append({
-                "name": item["name"],
-                "quantity": item["quantity"],
-                "unit_cost": str(int(unit_kes))
-            })
-        items = kes_items
-
-        disc = int(to_kes(disc)) if disc > 0 else 0
-        pdf_currency = "KES"
-    elif currency == "BOTH" and kes_rate > 0:
-        both_items = []
-        for item in items:
-            qty = float(item["quantity"])
-            line_total = float(item["unit_cost"]) * qty
-            kes_total = to_kes(line_total)
-            both_items.append({
-                "name": item["name"] + f"\n  ≈ KES {int(kes_total):,}",
-                "quantity": item["quantity"],
-                "unit_cost": item["unit_cost"]
-            })
-        items = both_items
-        pdf_currency = "USD"
-    else:
-        pdf_currency = "USD"
+    # Fetch secondary currency reference rate
+    sec_currency = ""
+    sec_rate = 0.0
+    show_secondary = fx_cfg.get("show_kes", True)
+    sec_currency = fx_cfg.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
+    if show_secondary and sec_currency:
+        try:
+            if fx_cfg.get("mode") == "manual":
+                sec_rate = float(fx_cfg.get("rates", {}).get(sec_currency, 0))
+            else:
+                import requests as req
+                r = req.get(f"https://open.er-api.com/v6/latest/{pdf_currency}", timeout=5)
+                rdata = r.json()
+                if rdata.get("result") == "success":
+                    sec_rate = float(rdata.get("rates", {}).get(sec_currency, 0))
+        except Exception:
+            sec_rate = 0.0
 
     payload = {
 
@@ -1143,6 +1126,14 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         "currency": pdf_currency,
         "header": doc_type
     }
+
+    # Add secondary currency reference line
+    if sec_currency and sec_rate > 0:
+        import datetime as _dt
+        today_str = _dt.date.today().strftime("%d %b %Y")
+        total_usd = float(result.get("total_usd", 0))
+        sec_total = round(total_usd * sec_rate)
+        payload["kes_note"] = f"≈ {sec_currency} {sec_total:,}  (1 {pdf_currency} = {sec_rate:.2f} {sec_currency})"
 
     return payload, doc_number
 
