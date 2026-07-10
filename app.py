@@ -1130,7 +1130,13 @@ def root():
 @app.route("/admin")
 @login_required
 def index():
-    return render_template("index.html", operator=OPERATOR)
+    templates = OPERATOR.get("message_templates", {})
+    msg_templates = {
+        "quote": templates.get("quote", DEFAULT_MSG_TEMPLATES["quote"]),
+        "invoice": templates.get("invoice", DEFAULT_MSG_TEMPLATES["invoice"]),
+        "receipt": templates.get("receipt", DEFAULT_MSG_TEMPLATES["receipt"])
+    }
+    return render_template("index.html", operator=OPERATOR, msg_templates=msg_templates)
 
 @app.route("/admin/quote", methods=["POST"])
 @login_required

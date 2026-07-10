@@ -997,17 +997,17 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div style="font-size:0.72rem;color:#888;margin-bottom:14px;line-height:1.6">These messages are sent via WhatsApp when you share a quote, invoice or receipt with a client.</div>
       <div class="settings-section collapsed">
         <h4 onclick="toggleSettingsSection(this)">Quote Message</h4>
-        <textarea id="s-msg-quote" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
+        <textarea id="s-msg-quote" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6">{{ msg_templates.quote | e }}</textarea>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveMessageTemplates()">Save ✓</button><span class="section-save-msg" id="msg-quote-tpl"></span></div>
       </div>
       <div class="settings-section collapsed">
         <h4 onclick="toggleSettingsSection(this)">Invoice Message</h4>
-        <textarea id="s-msg-invoice" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
+        <textarea id="s-msg-invoice" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6">{{ msg_templates.invoice | e }}</textarea>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveMessageTemplates()">Save ✓</button><span class="section-save-msg" id="msg-invoice-tpl"></span></div>
       </div>
       <div class="settings-section collapsed">
         <h4 onclick="toggleSettingsSection(this)">Receipt Message</h4>
-        <textarea id="s-msg-receipt" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
+        <textarea id="s-msg-receipt" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6">{{ msg_templates.receipt | e }}</textarea>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveMessageTemplates()">Save ✓</button><span class="section-save-msg" id="msg-receipt-tpl"></span></div>
       </div>
       <div id="msg-templates-msg"></div>
