@@ -4708,20 +4708,24 @@ function toggleFxMode() {
   document.getElementById('fx-manual-fields').style.display = isManual ? 'block' : 'none';
   document.getElementById('fx-auto-status').style.display = isManual ? 'none' : 'block';
   if (!isManual) {
-    // Auto mode - fetch live rates and show current rate
-    fetch('/fx/rates').then(r=>r.json()).then(data=>{
-      let liveDiv = document.getElementById('fx-live-rates');
-      if (liveDiv && data.success) {
-        let secCur = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '';
-        let priCur = (operatorConfig.fx && operatorConfig.fx.primary_currency) || (operatorConfig.quoting_rules && operatorConfig.quoting_rules.currency) || 'USD';
-        let rate = secCur && data.rates[secCur] ? data.rates[secCur] : null;
-        if (rate) {
-          liveDiv.innerHTML = '<div style="background:#e8f5e9;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#1b5e20">✅ Live rate: ' + priCur + ' 1 = ' + rate.toFixed(4) + ' ' + secCur + '</div>';
-        } else {
-          liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ ' + (secCur||'Secondary currency') + ' not available from live API. Switch to manual mode to set a rate.</div>';
+    let liveDiv = document.getElementById('fx-live-rates');
+    if (liveDiv) liveDiv.innerHTML = '<div style="background:#f8f9fa;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#888">⏳ Switching to live API rate...</div>';
+    let secCur = ((operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '').toUpperCase();
+    let priCur = ((operatorConfig.fx && operatorConfig.fx.primary_currency) || (operatorConfig.quoting_rules && operatorConfig.quoting_rules.currency) || 'USD').toUpperCase();
+    if (secCur) {
+      fetch('https://open.er-api.com/v6/latest/' + priCur).then(r=>r.json()).then(data=>{
+        if (liveDiv && data.result === 'success') {
+          let rate = data.rates[secCur];
+          if (rate) {
+            liveDiv.innerHTML = '<div style="background:#e8f5e9;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#1b5e20">✅ Live rate updated: ' + priCur + ' 1 = ' + rate.toFixed(4) + ' ' + secCur + '</div>';
+          } else {
+            liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ ' + secCur + ' not available from live API. Use manual mode to set a rate.</div>';
+          }
         }
-      }
-    }).catch(()=>{});
+      }).catch(()=>{
+        if (liveDiv) liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ Could not reach live rate API. Check connection.</div>';
+      });
+    }
   }
 }
 
