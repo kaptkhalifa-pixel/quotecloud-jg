@@ -533,7 +533,8 @@ def resolve_location(s, user_label=None):
                         loc = gdata["results"][0]["geometry"]["location"]
                         lat, lon = float(loc["lat"]), float(loc["lng"])
                         if check_geo_lock(lat, lon):
-                            return original_input.strip().title(), f"{lat},{lon}"
+                            display = reverse_geocode(lat, lon) or f"Pin, {lat:.5f}, {lon:.5f}"
+                            return display, f"{lat},{lon}"
                 except Exception:
                     pass
             s = expanded
@@ -590,6 +591,10 @@ def resolve_location(s, user_label=None):
             loc = data["results"][0]["geometry"]["location"]
             lat, lon = float(loc["lat"]), float(loc["lng"])
             if check_geo_lock(lat, lon):
+                # Never return a URL as display name - reverse geocode instead
+                if "http" in original_input.lower() or "goo.gl" in original_input.lower() or "maps.app" in original_input.lower():
+                    display = reverse_geocode(lat, lon) or f"Pin, {lat:.5f}, {lon:.5f}"
+                    return display, f"{lat},{lon}"
                 return original_input.strip().title(), f"{lat},{lon}"
     except Exception:
         pass
