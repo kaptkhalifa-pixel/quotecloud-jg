@@ -3436,12 +3436,12 @@ async function loadSettings() {
   document.getElementById('s-fx-show-kes').checked = fx.show_kes !== false;
 let primaryCurEl = document.getElementById('s-primary-currency');
   let secondaryCur = document.getElementById('s-secondary-currency');
-if (primaryCurEl && (fx.primary_currency || operatorConfig.quoting_rules?.currency)) {
-    primaryCurEl.value = fx.primary_currency || operatorConfig.quoting_rules?.currency || 'USD';
+if (primaryCurEl && (fx.primary_currency || operatorConfig.quoting_rules operatorConfig.quoting_rules?.currencyoperatorConfig.quoting_rules?.currency operatorConfig.quoting_rules.currency)) {
+    primaryCurEl.value = fx.primary_currency || operatorConfig.quoting_rules operatorConfig.quoting_rules?.currencyoperatorConfig.quoting_rules?.currency operatorConfig.quoting_rules.currency || 'USD';
     let pdfCur = document.getElementById('pdf-currency');
     if (pdfCur) pdfCur.value = fx.primary_currency;
   }
-  if (secondaryCur) secondaryCur.value = fx.secondary_currency || operatorConfig.secondary_currency || '';
+  if (secondaryCur) { secondaryCur.value = fx.secondary_currency || operatorConfig.secondary_currency || ''; setTimeout(function(){ if(secondaryCur.value === '' && (fx.secondary_currency || operatorConfig.secondary_currency)) { secondaryCur.value = fx.secondary_currency || operatorConfig.secondary_currency || ''; }}, 300); }
   let fxr = fx.rates || {};
   document.getElementById('s-fx-kes').value = fxr.KES || '';
   var secCur = ((fx && fx.secondary_currency) || operatorConfig.secondary_currency || '').toUpperCase();
