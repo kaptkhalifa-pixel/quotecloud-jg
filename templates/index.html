@@ -1813,7 +1813,7 @@ function quickWA(idx) {
   } else {
     allSegs2 = res.segments || [];
   }
-  let revSegs2 = allSegs2.filter(s => s.type === 'revenue');
+  let revSegs2 = allSegs2.filter(s => ['revenue','positioning','depositioning'].includes(s.type));
   let totalHrs2 = allSegs2.reduce((sum, s) => sum + parseFloat(s.hours||0), 0);
   let legLines2 = revSegs2.map((s, i) => {
     let hrs = parseFloat(s.hours||0).toFixed(1);
@@ -1826,7 +1826,7 @@ function quickWA(idx) {
   let paxLabel2 = res.pax_label || 'Mission Fixed Costs';
   let nights2 = res.nights || 0;
   let ovRate2 = res.overnight_rate_usd || 0;
-  let company2 = operatorConfig.company_name || 'us';
+  let company2 = operatorConfig?.company_name || operatorConfig?.company || 'us';
   let phone2 = operatorConfig.contact?.phone || '';
   let validity2 = (operatorConfig.quoting_rules?.quote_validity_hours || 48);
   let priceLines2 = [];
