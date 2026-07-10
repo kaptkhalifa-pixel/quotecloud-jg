@@ -2682,7 +2682,7 @@ async function saveLocationEdit() {
   if (!name||!lat||!lon) return showMsg('loc-msg','Name, lat and lon required.','error');
   document.getElementById('loc-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Saving changes...</div>';
   try {
-    let r = await fetch('/op/'+SLUG+'/edit_airport', { method:'POST', headers:{'Content-Type':'application/json'},
+    let r = await fetch('/edit_airport', { method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         name: editingLocationKey,
         new_name: name,
@@ -2724,7 +2724,7 @@ async function addLocation() {
   if (!name||!lat||!lon) return showMsg('loc-msg','Name, lat and lon required.','error');
   document.getElementById('loc-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Adding location...</div>';
   try {
-    let r = await fetch('/op/'+SLUG+'/add_airport', { method:'POST', headers:{'Content-Type':'application/json'},
+    let r = await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name, lat:parseFloat(lat), lon:parseFloat(lon), aliases:alias?[alias]:[]}) });
     let data = await r.json();
     if (data.success) {
@@ -2745,7 +2745,7 @@ async function addLocation() {
 
 async function deleteLocation(name) {
   if (!confirm(`Delete ${name}?`)) return;
-  let r = await fetch('/op/'+SLUG+'/delete_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
+  let r = await fetch('/delete_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
   let data = await r.json();
   if (data.success) loadLocations();
   else alert(data.error||'Error');
@@ -3001,14 +3001,14 @@ async function selectAcBase(el, placeId, description, localKey) {
   homeInput.value = description;
   status.textContent = 'Resolving...';
   try {
-    let r = await fetch('/op/'+SLUG+'/resolve_place', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({place_id: placeId, label: description, local_key: localKey}) });
+    let r = await fetch('/resolve_place', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({place_id: placeId, label: description, local_key: localKey}) });
     let data = await r.json();
     if (data.found) {
       latField.value = data.lat;
       lonField.value = data.lon;
       status.textContent = '✅ Base set: ' + parseFloat(data.lat).toFixed(5) + ', ' + parseFloat(data.lon).toFixed(5);
       status.style.color = '#1b5e20';
-      await fetch('/op/'+SLUG+'/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: description, lat: data.lat, lon: data.lon, aliases: []}) });
+      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: description, lat: data.lat, lon: data.lon, aliases: []}) });
     }
   } catch(e) { status.textContent = '❌ Error resolving location'; }
 }
@@ -3032,7 +3032,7 @@ async function resolveAcBase(btn) {
       if (!homeInput.value) homeInput.value = data.display;
       status.textContent = '✅ Base set: ' + data.lat.toFixed(5) + ', ' + data.lon.toFixed(5);
       status.style.color = '#1b5e20';
-      await fetch('/op/'+SLUG+'/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || data.display, lat: data.lat, lon: data.lon, aliases: []}) });
+      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || data.display, lat: data.lat, lon: data.lon, aliases: []}) });
     } else {
       status.textContent = '❌ Could not resolve. Try a Maps pin.';
       status.style.color = '#c00';
@@ -3230,7 +3230,7 @@ async function confirmMarkPaid(generateReceipt) {
   let paymentMode = document.getElementById('paid-mode').value;
   let paymentRef = document.getElementById('paid-ref').value;
   if (!paidAmount) { showMsg('paid-msg','Enter amount paid.','error'); return; }
-  let endpoint = generateReceipt ? '/op/'+SLUG+'/records/generate_receipt' : '/op/'+SLUG+'/records/mark_paid';
+  let endpoint = generateReceipt ? '/records/generate_receipt' : '/records/mark_paid';
   showMsg('paid-msg', generateReceipt ? 'Generating receipt...' : 'Saving...', 'success');
   try {
     let r = await fetch(endpoint, {
@@ -3372,7 +3372,7 @@ async function createManualInvoice() {
   if (miBtn) { miBtn.disabled = true; miBtn.textContent = 'Generating...'; }
   document.getElementById('mi-msg').innerHTML = '';
   try {
-    let r = await fetch('/op/'+SLUG+'/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('mi-msg',e.error||'Failed','error'); return; }
     let pdfUrl = r.headers.get('X-PDF-URL') || '';
     let docNumber = r.headers.get('X-DOC-NUMBER') || '';
@@ -4451,7 +4451,7 @@ async function generateAndSendInvoice() {
       discount, note: notes, uplift_items: upliftItems,
       source_token: enq.token
     };
-    let r = await fetch('/op/'+SLUG+'/booking/invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    let r = await fetch('/booking/invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('ib-msg', e.error||'Failed','error'); return; }
     let invoicePdfUrl = r.headers.get('X-PDF-URL') || '';
     let invoiceDocNumber = r.headers.get('X-DOC-NUMBER') || enq.token;
@@ -4746,7 +4746,7 @@ async function deleteSelectedEnquiries() {
   if (!password) return;
   document.getElementById('enq-delete-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Deleting...</div>';
   try {
-    let r = await fetch('/op/'+SLUG+'/bookings/delete', {
+    let r = await fetch('/bookings/delete', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ tokens: checked, password })
     });
