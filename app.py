@@ -2318,16 +2318,20 @@ def fx_rates():
     show_kes = fx_config.get("show_kes", True)
     if fx_config.get("mode") == "manual":
         manual_rates = fx_config.get("rates", {})
+        sec_cur = fx_config.get("secondary_currency", "")
+        manual_base = {
+            "KES": float(manual_rates.get("KES", 0)),
+            "EUR": float(manual_rates.get("EUR", 0)),
+            "GBP": float(manual_rates.get("GBP", 0)),
+            "TZS": float(manual_rates.get("TZS", 0)),
+            "UGX": float(manual_rates.get("UGX", 0))
+        }
+        if sec_cur and sec_cur not in manual_base:
+            manual_base[sec_cur] = float(manual_rates.get(sec_cur, 0))
         return jsonify({
             "success": True,
             "show_kes": show_kes,
-            "rates": {
-                "KES": float(manual_rates.get("KES", 0)),
-                "EUR": float(manual_rates.get("EUR", 0)),
-                "GBP": float(manual_rates.get("GBP", 0)),
-                "TZS": float(manual_rates.get("TZS", 0)),
-                "UGX": float(manual_rates.get("UGX", 0))
-            },
+            "rates": manual_base,
             "updated": "Manual rate set by operator",
             "mode": "manual"
         })
@@ -2338,16 +2342,20 @@ def fx_rates():
         data = r.json()
         if data.get("result") == "success":
             rates = data.get("rates", {})
+            sec_cur = fx_config.get("secondary_currency", "")
+            base_rates = {
+                "KES": rates.get("KES", 0),
+                "EUR": rates.get("EUR", 0),
+                "GBP": rates.get("GBP", 0),
+                "TZS": rates.get("TZS", 0),
+                "UGX": rates.get("UGX", 0)
+            }
+            if sec_cur and sec_cur not in base_rates:
+                base_rates[sec_cur] = rates.get(sec_cur, 0)
             return jsonify({
                 "success": True,
                 "show_kes": show_kes,
-                "rates": {
-                    "KES": rates.get("KES", 0),
-                    "EUR": rates.get("EUR", 0),
-                    "GBP": rates.get("GBP", 0),
-                    "TZS": rates.get("TZS", 0),
-                    "UGX": rates.get("UGX", 0)
-                },
+                "rates": base_rates,
                 "updated": data.get("time_last_update_utc", ""),
                 "mode": "auto"
             })
