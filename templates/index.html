@@ -3441,7 +3441,7 @@ if (primaryCurEl && (fx.primary_currency || operatorConfig.quoting_rules operato
     let pdfCur = document.getElementById('pdf-currency');
     if (pdfCur) pdfCur.value = fx.primary_currency;
   }
-  if (secondaryCur) { secondaryCur.value = fx.secondary_currency || operatorConfig.secondary_currency || ''; setTimeout(function(){ if(secondaryCur.value === '' && (fx.secondary_currency || operatorConfig.secondary_currency)) { secondaryCur.value = fx.secondary_currency || operatorConfig.secondary_currency || ''; }}, 300); }
+  if (secondaryCur) secondaryCur.value = fx.secondary_currency || operatorConfig.secondary_currency || '';
   let fxr = fx.rates || {};
   document.getElementById('s-fx-kes').value = fxr.KES || '';
   var secCur = ((fx && fx.secondary_currency) || operatorConfig.secondary_currency || '').toUpperCase();
