@@ -655,17 +655,17 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div class="settings-section collapsed">
         <h4 onclick="toggleSettingsSection(this)">Name &amp; Tagline</h4>
         <div class="form-row">
-          <div class="form-group"><label>Company Name</label><input type="text" id="s-company-name" value="{{ operator.get('company_name', '') }}"></div>
-          <div class="form-group"><label>Front Page Tagline</label><input type="text" id="s-tagline" value="{{ operator.get('tagline', '') }}"></div>
+          <div class="form-group"><label>Company Name</label><input type="text" id="s-company-name"></div>
+          <div class="form-group"><label>Front Page Tagline</label><input type="text" id="s-tagline"></div>
         </div>
-        <div class="form-group-full"><label>Footer Tagline</label><input type="text" id="s-footer-tagline" value="{{ operator.get('footer_tagline', '') }}"></div>
+        <div class="form-group-full"><label>Footer Tagline</label><input type="text" id="s-footer-tagline"></div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-name-tagline"></span></div>
       </div>
       <div class="settings-section collapsed">
         <h4 onclick="toggleSettingsSection(this)">Company Logo</h4>
         <div class="form-group-full">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="text" id="s-logo-url" oninput="previewLogo()" placeholder="Paste URL or upload" style="flex:1" value="{{ operator.get('logo_url', '') }}">
+            <input type="text" id="s-logo-url" oninput="previewLogo()" placeholder="Paste URL or upload" style="flex:1">
             <label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap">
               📷 Upload Logo
               <input type="file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
@@ -697,27 +697,27 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div class="settings-section collapsed">
         <h4 onclick="toggleSettingsSection(this)">Social Links <span class="settings-badge-frontend">Front End</span></h4>
         <div class="form-row">
-          <div class="form-group"><label>Website</label><input type="text" id="s-website" value="{{ operator.get('social', {}).get('website', '') }}"></div>
-          <div class="form-group"><label>Instagram</label><input type="text" id="s-instagram" value="{{ operator.get('social', {}).get('instagram', '') }}"></div>
+          <div class="form-group"><label>Website</label><input type="text" id="s-website"></div>
+          <div class="form-group"><label>Instagram</label><input type="text" id="s-instagram"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Facebook</label><input type="text" id="s-facebook" value="{{ operator.get('social', {}).get('facebook', '') }}"></div>
-          <div class="form-group"><label>Twitter / X</label><input type="text" id="s-twitter" value="{{ operator.get('social', {}).get('twitter', '') }}"></div>
+          <div class="form-group"><label>Facebook</label><input type="text" id="s-facebook"></div>
+          <div class="form-group"><label>Twitter / X</label><input type="text" id="s-twitter"></div>
         </div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-social"></span></div>
       </div>
       <div class="settings-section collapsed">
         <h4 onclick="toggleSettingsSection(this)">Contact &amp; Address</h4>
         <div class="form-row">
-          <div class="form-group"><label>Phone</label><input type="tel" id="s-phone" value="{{ operator.get('contact', {}).get('phone', '') }}"></div>
-          <div class="form-group"><label>WhatsApp (digits only)</label><input type="tel" id="s-whatsapp" value="{{ operator.get('contact', {}).get('whatsapp', '') }}"></div>
+          <div class="form-group"><label>Phone</label><input type="tel" id="s-phone"></div>
+          <div class="form-group"><label>WhatsApp (digits only)</label><input type="tel" id="s-whatsapp"></div>
         </div>
-        <div class="form-group-full"><label>WhatsApp Greeting</label><input type="text" id="s-whatsapp-greeting" value="{{ operator.get('contact', {}).get('whatsapp_greeting', '') }}"></div>
+        <div class="form-group-full"><label>WhatsApp Greeting</label><input type="text" id="s-whatsapp-greeting"></div>
         <div class="form-row">
-          <div class="form-group"><label>Email</label><input type="email" id="s-email" value="{{ operator.get('contact', {}).get('email', '') }}"></div>
-          <div class="form-group"><label>Base Airport Key</label><input type="text" id="s-base-airport" value="{{ operator.get('base_airport', '') }}"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="s-email"></div>
+          <div class="form-group"><label>Base Airport Key</label><input type="text" id="s-base-airport"></div>
         </div>
-        <div class="form-group-full"><label>Address</label><input type="text" id="s-address" value="{{ operator.get('contact', {}).get('address', '') }}"></div>
+        <div class="form-group-full"><label>Address</label><input type="text" id="s-address"></div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionCompany()">Save ✓</button><span class="section-save-msg" id="msg-contact"></span></div>
       </div>
     </div>
@@ -741,7 +741,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           </select>
         </div>
         <div id="disclaimer-field">
-          <div class="form-group-full"><label>Fixed Wing Landing Field Disclaimer</label><textarea id="s-disclaimer" rows="3">{{ operator.get('landing_field_disclaimer', '') }}</textarea></div>
+          <div class="form-group-full"><label>Fixed Wing Landing Field Disclaimer</label><textarea id="s-disclaimer" rows="3"></textarea></div>
         </div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionAircraftMode()">Save ✓</button><span class="section-save-msg" id="msg-aircraft-mode"></span></div>
       </div>
@@ -756,17 +756,17 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <div style="font-size:0.82rem;color:#555;line-height:1.7;margin-bottom:16px;padding:12px 14px;background:#f8f9fa;border-radius:8px">
           Set the geographic boundary for your operations. When enabled, the quote engine will reject pickup or dropoff points outside this region. Disable to allow quotes between any two points on earth.
         </div>
-        <div class="form-group"><label>Region Display Name</label><input type="text" id="s-geo-region-name" placeholder="e.g. Colombia" value="{{ operator.get('geo_lock', {}).get('region_name', '') }}"></div>
+        <div class="form-group"><label>Region Display Name</label><input type="text" id="s-geo-region-name" placeholder="e.g. Colombia"></div>
         <div class="toggle-row" style="margin-bottom:12px">
           <input type="checkbox" id="s-geo-enabled" onchange="toggleGeoFields()" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
           <label for="s-geo-enabled" style="font-weight:600">Enable Geographic Lock</label>
         </div>
         <div id="geo-fields" style="display:none">
           <div class="form-row">
-            <div class="form-group"><label>Center Latitude</label><input type="number" id="s-geo-center-lat" step="0.0001" placeholder="-0.023" value="{{ operator.get('geo_lock', {}).get('center_lat', '') }}"></div>
-            <div class="form-group"><label>Center Longitude</label><input type="number" id="s-geo-center-lon" step="0.0001" placeholder="37.906" value="{{ operator.get('geo_lock', {}).get('center_lon', '') }}"></div>
+            <div class="form-group"><label>Center Latitude</label><input type="number" id="s-geo-center-lat" step="0.0001" placeholder="-0.023"></div>
+            <div class="form-group"><label>Center Longitude</label><input type="number" id="s-geo-center-lon" step="0.0001" placeholder="37.906"></div>
           </div>
-          <div class="form-group"><label>Radius (km)</label><input type="number" id="s-geo-radius" placeholder="500" value="{{ operator.get('geo_lock', {}).get('radius_km', '') }}"></div>
+          <div class="form-group"><label>Radius (km)</label><input type="number" id="s-geo-radius" placeholder="500"></div>
         </div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionGeoLock()">Save ✓</button><span class="section-save-msg" id="msg-geo"></span></div>
       </div>
@@ -782,14 +782,14 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div class="settings-section collapsed">
         <h4 onclick="toggleSettingsSection(this)">Core Rules</h4>
         <div class="form-row">
-          <div class="form-group"><label>Minimum Flight Hours</label><input type="number" id="s-min-hours" step="0.5" placeholder="1.0" value="{{ operator.get('quoting_rules', {}).get('min_flight_hours', 1.0) }}"></div>
-          <div class="form-group"><label>Max Flight Hours Per Day</label><input type="number" id="s-max-hours-day" step="0.5" placeholder="10" value="{{ operator.get('quoting_rules', {}).get('max_flight_hours_per_day', 10) }}"></div>
+          <div class="form-group"><label>Minimum Flight Hours</label><input type="number" id="s-min-hours" step="0.5" placeholder="1.0"></div>
+          <div class="form-group"><label>Max Flight Hours Per Day</label><input type="number" id="s-max-hours-day" step="0.5" placeholder="10"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Max Nights Before Pickup/Drop</label><input type="number" id="s-max-nights" step="1" placeholder="3" value="{{ operator.get('quoting_rules', {}).get('max_nights_before_pickup_drop', 3) }}"></div>
-          <div class="form-group"><label>Max Idle Days Between Legs</label><input type="number" id="s-max-idle-days" step="1" placeholder="1" value="{{ operator.get('quoting_rules', {}).get('max_idle_days_between_legs', 1) }}"></div>
+          <div class="form-group"><label>Max Nights Before Pickup/Drop</label><input type="number" id="s-max-nights" step="1" placeholder="3"></div>
+          <div class="form-group"><label>Max Idle Days Between Legs</label><input type="number" id="s-max-idle-days" step="1" placeholder="1"></div>
         </div>
-        <div class="form-group"><label>Quote Validity (hours)</label><input type="number" id="s-quote-validity" step="1" placeholder="48" value="{{ operator.get('quoting_rules', {}).get('quote_validity_hours', 48) }}"></div>
+        <div class="form-group"><label>Quote Validity (hours)</label><input type="number" id="s-quote-validity" step="1" placeholder="48"></div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionQuotingRules()">Save ✓</button><span class="section-save-msg" id="msg-quoting-rules"></span></div>
       </div>
       <div class="settings-section collapsed">
@@ -801,7 +801,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           <input type="checkbox" id="s-buffer-enabled" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
           <label for="s-buffer-enabled" style="font-weight:600">Enable Extra Time</label>
         </div>
-        <div class="form-group"><label>Extra Time (minutes per sector)</label><input type="number" id="s-buffer-minutes" step="5" placeholder="0" value="{{ operator.get('quoting_rules', {}).get('ground_time_buffer_minutes', 0) }}"></div>
+        <div class="form-group"><label>Extra Time (minutes per sector)</label><input type="number" id="s-buffer-minutes" step="5" placeholder="0"></div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionExtraTime()">Save ✓</button><span class="section-save-msg" id="msg-extra-time"></span></div>
       </div>
       <div class="settings-section collapsed">
@@ -853,7 +853,151 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <h4 onclick="toggleSettingsSection(this)">Invoice Settings</h4>
         <div class="form-row">
           <div class="form-group"><label>PDF Prefix</label><input type="text" id="s-invoice-prefix" placeholder="e.g. SAV" maxlength="5"></div>
-          <div class="form-group"><label>Payment Terms</label><input type="text" id="s-invoice-terms">{{ operator.get('invoice', {}).get('terms', '') }}</textarea>
+          <div class="form-group"><label>Payment Terms</label><input type="text" id="s-invoice-terms" placeholder="Payment due before departure."></div>
+        </div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBank()">Save ✓</button><span class="section-save-msg" id="msg-invoice"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card settings-card-collapsible collapsed">
+    <h3 onclick="toggleSettingsCard(this)">Currency &amp; Exchange Rates</h3>
+    <div class="card-body">
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Primary &amp; Secondary Currency</h4>
+        <div class="form-row">
+          <div class="form-group"><label>Primary Currency</label>
+            <select id="s-primary-currency">
+              <option value="USD">USD — US Dollar</option>
+              <option value="KES">KES — Kenya Shilling</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+              <option value="AUD">AUD — Australian Dollar</option>
+              <option value="ZAR">ZAR — South African Rand</option>
+              <option value="TZS">TZS — Tanzania Shilling</option>
+              <option value="UGX">UGX — Uganda Shilling</option>
+              <option value="NGN">NGN — Nigerian Naira</option>
+              <option value="GHS">GHS — Ghana Cedi</option>
+              <option value="COP">COP — Colombian Peso</option>
+              <option value="BRL">BRL — Brazilian Real</option>
+              <option value="MXN">MXN — Mexican Peso</option>
+              <option value="ARS">ARS — Argentine Peso</option>
+              <option value="PEN">PEN — Peruvian Sol</option>
+              <option value="CLP">CLP — Chilean Peso</option>
+              <option value="INR">INR — Indian Rupee</option>
+              <option value="PKR">PKR — Pakistani Rupee</option>
+              <option value="LKR">LKR — Sri Lankan Rupee</option>
+              <option value="THB">THB — Thai Baht</option>
+              <option value="PHP">PHP — Philippine Peso</option>
+              <option value="MYR">MYR — Malaysian Ringgit</option>
+              <option value="IDR">IDR — Indonesian Rupiah</option>
+              <option value="SGD">SGD — Singapore Dollar</option>
+              <option value="CNY">CNY — Chinese Yuan</option>
+              <option value="JPY">JPY — Japanese Yen</option>
+              <option value="AED">AED — UAE Dirham</option>
+              <option value="SAR">SAR — Saudi Riyal</option>
+              <option value="QAR">QAR — Qatari Riyal</option>
+              <option value="KWD">KWD — Kuwaiti Dinar</option>
+              <option value="OMR">OMR — Omani Rial</option>
+              <option value="EGP">EGP — Egyptian Pound</option>
+              <option value="MAD">MAD — Moroccan Dirham</option>
+              <option value="ETB">ETB — Ethiopian Birr</option>
+              <option value="RWF">RWF — Rwandan Franc</option>
+              <option value="BWP">BWP — Botswana Pula</option>
+              <option value="NAD">NAD — Namibian Dollar</option>
+              <option value="NOK">NOK — Norwegian Krone</option>
+              <option value="SEK">SEK — Swedish Krona</option>
+              <option value="CHF">CHF — Swiss Franc</option>
+              <option value="CAD">CAD — Canadian Dollar</option>
+              <option value="NZD">NZD — New Zealand Dollar</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Secondary Currency</label>
+            <select id="s-secondary-currency">
+              {% set fx_block = operator.get('fx') or {} %}{% set sec_cur = fx_block.get('secondary_currency') or operator.get('secondary_currency') or '' %}
+              <option value="" {% if sec_cur == '' %}selected{% endif %}>None</option>
+              <option value="USD" {% if sec_cur == 'USD' %}selected{% endif %}>USD — US Dollar</option>
+              <option value="KES" {% if sec_cur == 'KES' %}selected{% endif %}>KES — Kenya Shilling</option>
+              <option value="EUR" {% if sec_cur == 'EUR' %}selected{% endif %}>EUR — Euro</option>
+              <option value="GBP" {% if sec_cur == 'GBP' %}selected{% endif %}>GBP — British Pound</option>
+              <option value="AUD" {% if sec_cur == 'AUD' %}selected{% endif %}>AUD — Australian Dollar</option>
+              <option value="ZAR" {% if sec_cur == 'ZAR' %}selected{% endif %}>ZAR — South African Rand</option>
+              <option value="TZS" {% if sec_cur == 'TZS' %}selected{% endif %}>TZS — Tanzania Shilling</option>
+              <option value="UGX" {% if sec_cur == 'UGX' %}selected{% endif %}>UGX — Uganda Shilling</option>
+              <option value="NGN" {% if sec_cur == 'NGN' %}selected{% endif %}>NGN — Nigerian Naira</option>
+              <option value="GHS" {% if sec_cur == 'GHS' %}selected{% endif %}>GHS — Ghana Cedi</option>
+              <option value="COP" {% if sec_cur == 'COP' %}selected{% endif %}>COP — Colombian Peso</option>
+              <option value="BRL" {% if sec_cur == 'BRL' %}selected{% endif %}>BRL — Brazilian Real</option>
+              <option value="MXN" {% if sec_cur == 'MXN' %}selected{% endif %}>MXN — Mexican Peso</option>
+              <option value="ARS" {% if sec_cur == 'ARS' %}selected{% endif %}>ARS — Argentine Peso</option>
+              <option value="INR" {% if sec_cur == 'INR' %}selected{% endif %}>INR — Indian Rupee</option>
+              <option value="PKR" {% if sec_cur == 'PKR' %}selected{% endif %}>PKR — Pakistani Rupee</option>
+              <option value="LKR" {% if sec_cur == 'LKR' %}selected{% endif %}>LKR — Sri Lankan Rupee</option>
+              <option value="THB" {% if sec_cur == 'THB' %}selected{% endif %}>THB — Thai Baht</option>
+              <option value="PHP" {% if sec_cur == 'PHP' %}selected{% endif %}>PHP — Philippine Peso</option>
+              <option value="MYR" {% if sec_cur == 'MYR' %}selected{% endif %}>MYR — Malaysian Ringgit</option>
+              <option value="IDR" {% if sec_cur == 'IDR' %}selected{% endif %}>IDR — Indonesian Rupiah</option>
+              <option value="SGD" {% if sec_cur == 'SGD' %}selected{% endif %}>SGD — Singapore Dollar</option>
+              <option value="AED" {% if sec_cur == 'AED' %}selected{% endif %}>AED — UAE Dirham</option>
+              <option value="SAR" {% if sec_cur == 'SAR' %}selected{% endif %}>SAR — Saudi Riyal</option>
+              <option value="QAR" {% if sec_cur == 'QAR' %}selected{% endif %}>QAR — Qatari Riyal</option>
+              <option value="EGP" {% if sec_cur == 'EGP' %}selected{% endif %}>EGP — Egyptian Pound</option>
+              <option value="MAD" {% if sec_cur == 'MAD' %}selected{% endif %}>MAD — Moroccan Dirham</option>
+              <option value="ETB" {% if sec_cur == 'ETB' %}selected{% endif %}>ETB — Ethiopian Birr</option>
+              <option value="NOK" {% if sec_cur == 'NOK' %}selected{% endif %}>NOK — Norwegian Krone</option>
+              <option value="SEK" {% if sec_cur == 'SEK' %}selected{% endif %}>SEK — Swedish Krona</option>
+              <option value="CHF" {% if sec_cur == 'CHF' %}selected{% endif %}>CHF — Swiss Franc</option>
+              <option value="CAD" {% if sec_cur == 'CAD' %}selected{% endif %}>CAD — Canadian Dollar</option>
+              <option value="NZD" {% if sec_cur == 'NZD' %}selected{% endif %}>NZD — New Zealand Dollar</option>
+            </select>
+          </div>
+        </div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionCurrency()">Save ✓</button><span class="section-save-msg" id="msg-currency"></span></div>
+      </div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Exchange Rate</h4>
+        <div style="font-size:0.72rem;color:#888;margin-bottom:12px;line-height:1.6">
+          The exchange rate controls currency conversion on quotes and PDFs. Auto mode fetches live rates — if your currency is not supported by the live feed, set a manual rate below.
+        </div>
+        <div class="toggle-row" style="margin-bottom:16px">
+          <input type="checkbox" id="s-fx-manual" onchange="toggleFxMode()" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-fx-manual" style="font-weight:600">Use Manual Rate (override live FX)</label>
+        </div>
+        <div class="toggle-row" style="margin-bottom:16px">
+          <input type="checkbox" id="s-fx-show-kes" checked style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-fx-show-kes" style="font-weight:600">Show secondary currency conversion on client page</label>
+        </div>
+        <div id="fx-auto-status" style="font-size:0.82rem;color:#1b5e20;background:#e8f5e9;padding:10px 14px;border-radius:6px;margin-bottom:12px">
+          ✅ Auto mode — rates fetched live from open.er-api.com
+        </div>
+        <div id="fx-manual-fields" style="display:none">
+          <div id="fx-secondary-field" style="display:none;margin-bottom:12px;background:#f8f9fa;padding:12px;border-radius:6px">
+            <div class="form-group" style="margin-bottom:4px"><label>USD 1 = <span id="fx-secondary-cur-label">—</span> (Your Secondary Currency)</label><input type="number" id="s-fx-secondary" placeholder="Enter rate manually" step="0.0001"></div>
+            <div style="font-size:0.68rem;color:#aaa">Enter manually if the live API cannot fetch this currency.</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label id="fx-label-1">USD 1 = KES</label><input type="number" id="s-fx-kes" placeholder="e.g. 129" step="0.01"></div>
+            <div class="form-group"><label>USD 1 = EUR</label><input type="number" id="s-fx-eur" placeholder="e.g. 0.92" step="0.0001"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>USD 1 = GBP</label><input type="number" id="s-fx-gbp" placeholder="e.g. 0.79" step="0.0001"></div>
+            <div class="form-group"><label>USD 1 = TZS</label><input type="number" id="s-fx-tzs" placeholder="e.g. 2650" step="1"></div>
+          </div>
+          <div class="form-group"><label>USD 1 = UGX</label><input type="number" id="s-fx-ugx" placeholder="e.g. 3700" step="1"></div>
+        </div>
+        <div id="fx-live-rates" style="font-size:0.82rem;color:#555;margin-bottom:12px"></div>
+        <div class="section-save-row"><button class="btn-save-section" onclick="saveFxRates()">Save ✓</button><span class="section-save-msg" id="fx-msg"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card settings-card-collapsible collapsed">
+    <h3 onclick="toggleSettingsCard(this)">Delivery Messages</h3>
+    <div class="card-body">
+      <div style="font-size:0.72rem;color:#888;margin-bottom:14px;line-height:1.6">These messages are sent via WhatsApp when you share a quote, invoice or receipt with a client.</div>
+      <div class="settings-section collapsed">
+        <h4 onclick="toggleSettingsSection(this)">Quote Message</h4>
+        <textarea id="s-msg-quote" rows="6" style="width:100%;font-size:0.82rem;line-height:1.6"></textarea>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveMessageTemplates()">Save ✓</button><span class="section-save-msg" id="msg-quote-tpl"></span></div>
       </div>
       <div class="settings-section collapsed">
