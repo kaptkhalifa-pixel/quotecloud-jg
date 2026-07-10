@@ -3448,7 +3448,7 @@ if (primaryCurEl && (fx.primary_currency || operatorConfig.quoting_rules?.curren
   let liveDiv = document.getElementById('fx-live-rates');
   if (liveDiv) {
     let primaryCur = (operatorConfig.fx && operatorConfig.fx.primary_currency) || 'USD';
-    let secondaryCur = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || 'KES';
+    let secondaryCur = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '';
     let secRate = fxRates[secondaryCur];
     let priRate = fxRates[primaryCur];
     if (secRate && primaryCur !== secondaryCur) {
