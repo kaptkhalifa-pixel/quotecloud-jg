@@ -1468,28 +1468,8 @@ def booking_invoice():
         if not snap:
             return jsonify({"error": "No quote data found for this booking"}), 400
 
-        fx_config = OPERATOR.get("fx", {})
-        show_kes = fx_config.get("show_kes", True)
-        kes_rate_inv = 0
-        pdf_currency_mode = "USD"
-        if show_kes:
-            try:
-                if fx_config.get("mode") == "manual":
-                    kes_rate_inv = float(fx_config.get("rates", {}).get("KES", 0))
-                else:
-                    import requests as req
-                    r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
-                    rdata = r.json()
-                    if rdata.get("result") == "success":
-                        kes_rate_inv = float(rdata.get("rates", {}).get("KES", 0))
-                if kes_rate_inv > 0:
-                    pdf_currency_mode = "BOTH"
-            except Exception:
-                kes_rate_inv = 0
-
         payload, doc_number = build_pdf_payload_from_result(
-            "Invoice", snap, client_name, client_email, client_phone, note, "0", uplift_items,
-            currency=pdf_currency_mode, kes_rate=kes_rate_inv)
+            "Invoice", snap, client_name, client_email, client_phone, note, "0", uplift_items)
 
         payload["number"] = inherit_token(source_token, "I")
         doc_number = payload["number"]
@@ -1501,11 +1481,6 @@ def booking_invoice():
         uplift_total = sum(float(it.get("quantity", 1)) * float(it.get("unit_cost", 0)) for it in uplift_items)
         final_total = round(base_total + uplift_total - disc, 2)
         payload["discounts"] = disc
-
-        if kes_rate_inv > 0:
-            kes_total_val = round(final_total * kes_rate_inv)
-            today_str = datetime.date.today().strftime("%-d/%-m/%y")
-            payload["kes_note"] = f"KES {kes_total_val:,} (rate 1 USD = KES {kes_rate_inv:.2f}, date {today_str})"
 
         out_path = f"/tmp/{doc_number}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
@@ -1578,23 +1553,25 @@ def manual_invoice():
 
         kes_note = ""
         fx_config = OPERATOR.get("fx", {})
-        if fx_config.get("show_kes", True):
+        sec_currency = fx_config.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
+        pri_cur = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+        if fx_config.get("show_kes", True) and sec_currency:
             kes_rate_inv = 0
             try:
                 if fx_config.get("mode") == "manual":
-                    kes_rate_inv = float(fx_config.get("rates", {}).get("KES", 0))
+                    kes_rate_inv = float(fx_config.get("rates", {}).get(sec_currency, 0))
                 else:
                     import requests as req
-                    r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
+                    r = req.get(f"https://open.er-api.com/v6/latest/{pri_cur}", timeout=5)
                     rdata = r.json()
                     if rdata.get("result") == "success":
-                        kes_rate_inv = float(rdata.get("rates", {}).get("KES", 0))
+                        kes_rate_inv = float(rdata.get("rates", {}).get(sec_currency, 0))
             except Exception:
                 kes_rate_inv = 0
             if kes_rate_inv > 0:
                 kes_total = round(total * kes_rate_inv)
-                today_str = datetime.date.today().strftime("%-d/%-m/%y")
-                kes_note = f"KES {kes_total:,} (rate 1 USD = KES {kes_rate_inv:.2f}, date {today_str})"
+                today_str = datetime.date.today().strftime("%d %b %Y")
+                kes_note = f"≈ {sec_currency} {kes_total:,}  (1 {pri_cur} = {kes_rate_inv:.2f} {sec_currency})"
 
         payload = {
             "logo": OPERATOR.get("logo_url", ""),
@@ -2600,24 +2577,8 @@ def booking_pdf():
         token = data.get("token", "")
         result = data.get("result", {})
 
-        fx_config = OPERATOR.get("fx", {})
-        show_kes = fx_config.get("show_kes", True)
-        kes_rate_for_pdf = 0
         pdf_currency_mode = "USD"
-        if show_kes:
-            try:
-                import requests as req
-                if fx_config.get("mode") == "manual":
-                    kes_rate_for_pdf = float(fx_config.get("rates", {}).get("KES", 0))
-                else:
-                    r = req.get("https://open.er-api.com/v6/latest/USD", timeout=5)
-                    rdata = r.json()
-                    if rdata.get("result") == "success":
-                        kes_rate_for_pdf = float(rdata.get("rates", {}).get("KES", 0))
-                if kes_rate_for_pdf > 0:
-                    pdf_currency_mode = "BOTH"
-            except Exception:
-                kes_rate_for_pdf = 0
+        kes_rate_for_pdf = 0
 
         payload, _ = build_pdf_payload_from_result(
             "Quotation", result, client_name, client_email, client_phone, "", "0", [],
