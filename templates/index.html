@@ -215,7 +215,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
 .settings-section h4 { cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; }
 * { -webkit-tap-highlight-color: transparent; }
-.nav-tab, .mobile-nav-tab, .mtab, .btn { cursor: pointer; touch-action: manipulation; }
+h3, h4, .nav-tab, .mobile-nav-tab, .mtab, .card, .settings-section, .settings-card-collapsible, .settings-group-label, .btn, .ac-card { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 input, textarea, select { -webkit-user-select: text !important; user-select: text !important; }
 .settings-section h4::after { content: '▾'; font-size: 0.7rem; color: #999; transition: transform 0.2s; }
 .settings-section.collapsed h4::after { transform: rotate(-90deg); }
@@ -665,7 +665,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <h4 onclick="toggleSettingsSection(this)">Company Logo</h4>
         <div class="form-group-full">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <div style="font-size:0.7rem;color:#888;margin-top:6px;line-height:1.5">For best results upload a PNG with a transparent background. JPG logos with white backgrounds will have white areas removed automatically.</div>
+            <input type="text" id="s-logo-url" oninput="previewLogo()" placeholder="Paste URL or upload" style="flex:1">
             <label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap">
               📷 Upload Logo
               <input type="file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
@@ -910,63 +910,6 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
               <option value="CHF">CHF — Swiss Franc</option>
               <option value="CAD">CAD — Canadian Dollar</option>
               <option value="NZD">NZD — New Zealand Dollar</option>
-              <option value="JPY">JPY — Japanese Yen</option>
-              <option value="CNY">CNY — Chinese Yuan</option>
-              <option value="KRW">KRW — South Korean Won</option>
-              <option value="HKD">HKD — Hong Kong Dollar</option>
-              <option value="TWD">TWD — Taiwan Dollar</option>
-              <option value="VND">VND — Vietnamese Dong</option>
-              <option value="MMK">MMK — Myanmar Kyat</option>
-              <option value="BDT">BDT — Bangladeshi Taka</option>
-              <option value="NPR">NPR — Nepalese Rupee</option>
-              <option value="UZS">UZS — Uzbek Som</option>
-              <option value="KZT">KZT — Kazakhstani Tenge</option>
-              <option value="GEL">GEL — Georgian Lari</option>
-              <option value="AMD">AMD — Armenian Dram</option>
-              <option value="AZN">AZN — Azerbaijani Manat</option>
-              <option value="TRY">TRY — Turkish Lira</option>
-              <option value="ILS">ILS — Israeli Shekel</option>
-              <option value="JOD">JOD — Jordanian Dinar</option>
-              <option value="KWD">KWD — Kuwaiti Dinar</option>
-              <option value="BHD">BHD — Bahraini Dinar</option>
-              <option value="OMR">OMR — Omani Rial</option>
-              <option value="DZD">DZD — Algerian Dinar</option>
-              <option value="TND">TND — Tunisian Dinar</option>
-              <option value="LYD">LYD — Libyan Dinar</option>
-              <option value="GHS">GHS — Ghana Cedi</option>
-              <option value="XOF">XOF — West African CFA</option>
-              <option value="XAF">XAF — Central African CFA</option>
-              <option value="RWF">RWF — Rwandan Franc</option>
-              <option value="MZN">MZN — Mozambican Metical</option>
-              <option value="ZMW">ZMW — Zambian Kwacha</option>
-              <option value="BWP">BWP — Botswana Pula</option>
-              <option value="NAD">NAD — Namibian Dollar</option>
-              <option value="MUR">MUR — Mauritian Rupee</option>
-              <option value="SCR">SCR — Seychellois Rupee</option>
-              <option value="PGK">PGK — Papua New Guinea Kina</option>
-              <option value="FJD">FJD — Fijian Dollar</option>
-              <option value="PEN">PEN — Peruvian Sol</option>
-              <option value="CLP">CLP — Chilean Peso</option>
-              <option value="UYU">UYU — Uruguayan Peso</option>
-              <option value="PYG">PYG — Paraguayan Guarani</option>
-              <option value="BOB">BOB — Bolivian Boliviano</option>
-              <option value="CRC">CRC — Costa Rican Colon</option>
-              <option value="GTQ">GTQ — Guatemalan Quetzal</option>
-              <option value="HNL">HNL — Honduran Lempira</option>
-              <option value="DOP">DOP — Dominican Peso</option>
-              <option value="TTD">TTD — Trinidad Dollar</option>
-              <option value="JMD">JMD — Jamaican Dollar</option>
-              <option value="BBD">BBD — Barbadian Dollar</option>
-              <option value="SEK">SEK — Swedish Krona</option>
-              <option value="DKK">DKK — Danish Krone</option>
-              <option value="PLN">PLN — Polish Zloty</option>
-              <option value="CZK">CZK — Czech Koruna</option>
-              <option value="HUF">HUF — Hungarian Forint</option>
-              <option value="RON">RON — Romanian Leu</option>
-              <option value="BGN">BGN — Bulgarian Lev</option>
-              <option value="HRK">HRK — Croatian Kuna</option>
-              <option value="RSD">RSD — Serbian Dinar</option>
-              <option value="ISK">ISK — Icelandic Krona</option>
             </select>
           </div>
           <div class="form-group"><label>Secondary Currency</label>
@@ -1005,63 +948,6 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
               <option value="CHF">CHF — Swiss Franc</option>
               <option value="CAD">CAD — Canadian Dollar</option>
               <option value="NZD">NZD — New Zealand Dollar</option>
-              <option value="JPY">JPY — Japanese Yen</option>
-              <option value="CNY">CNY — Chinese Yuan</option>
-              <option value="KRW">KRW — South Korean Won</option>
-              <option value="HKD">HKD — Hong Kong Dollar</option>
-              <option value="TWD">TWD — Taiwan Dollar</option>
-              <option value="VND">VND — Vietnamese Dong</option>
-              <option value="MMK">MMK — Myanmar Kyat</option>
-              <option value="BDT">BDT — Bangladeshi Taka</option>
-              <option value="NPR">NPR — Nepalese Rupee</option>
-              <option value="UZS">UZS — Uzbek Som</option>
-              <option value="KZT">KZT — Kazakhstani Tenge</option>
-              <option value="GEL">GEL — Georgian Lari</option>
-              <option value="AMD">AMD — Armenian Dram</option>
-              <option value="AZN">AZN — Azerbaijani Manat</option>
-              <option value="TRY">TRY — Turkish Lira</option>
-              <option value="ILS">ILS — Israeli Shekel</option>
-              <option value="JOD">JOD — Jordanian Dinar</option>
-              <option value="KWD">KWD — Kuwaiti Dinar</option>
-              <option value="BHD">BHD — Bahraini Dinar</option>
-              <option value="OMR">OMR — Omani Rial</option>
-              <option value="DZD">DZD — Algerian Dinar</option>
-              <option value="TND">TND — Tunisian Dinar</option>
-              <option value="LYD">LYD — Libyan Dinar</option>
-              <option value="GHS">GHS — Ghana Cedi</option>
-              <option value="XOF">XOF — West African CFA</option>
-              <option value="XAF">XAF — Central African CFA</option>
-              <option value="RWF">RWF — Rwandan Franc</option>
-              <option value="MZN">MZN — Mozambican Metical</option>
-              <option value="ZMW">ZMW — Zambian Kwacha</option>
-              <option value="BWP">BWP — Botswana Pula</option>
-              <option value="NAD">NAD — Namibian Dollar</option>
-              <option value="MUR">MUR — Mauritian Rupee</option>
-              <option value="SCR">SCR — Seychellois Rupee</option>
-              <option value="PGK">PGK — Papua New Guinea Kina</option>
-              <option value="FJD">FJD — Fijian Dollar</option>
-              <option value="PEN">PEN — Peruvian Sol</option>
-              <option value="CLP">CLP — Chilean Peso</option>
-              <option value="UYU">UYU — Uruguayan Peso</option>
-              <option value="PYG">PYG — Paraguayan Guarani</option>
-              <option value="BOB">BOB — Bolivian Boliviano</option>
-              <option value="CRC">CRC — Costa Rican Colon</option>
-              <option value="GTQ">GTQ — Guatemalan Quetzal</option>
-              <option value="HNL">HNL — Honduran Lempira</option>
-              <option value="DOP">DOP — Dominican Peso</option>
-              <option value="TTD">TTD — Trinidad Dollar</option>
-              <option value="JMD">JMD — Jamaican Dollar</option>
-              <option value="BBD">BBD — Barbadian Dollar</option>
-              <option value="SEK">SEK — Swedish Krona</option>
-              <option value="DKK">DKK — Danish Krone</option>
-              <option value="PLN">PLN — Polish Zloty</option>
-              <option value="CZK">CZK — Czech Koruna</option>
-              <option value="HUF">HUF — Hungarian Forint</option>
-              <option value="RON">RON — Romanian Leu</option>
-              <option value="BGN">BGN — Bulgarian Lev</option>
-              <option value="HRK">HRK — Croatian Kuna</option>
-              <option value="RSD">RSD — Serbian Dinar</option>
-              <option value="ISK">ISK — Icelandic Krona</option>
             </select>
           </div>
         </div>
@@ -1345,7 +1231,30 @@ function toggleSettingsCard(h3) {
 }
 
 
-// Touch scroll fix removed - was interfering with nav tabs
+// Prevent accidental focus on inputs/selects while scrolling on mobile
+(function() {
+  let touchStartY = 0;
+  let touchMoved = false;
+  document.addEventListener('touchstart', function(e) {
+    touchStartY = e.touches[0].clientY;
+    touchMoved = false;
+  }, true);
+  document.addEventListener('touchmove', function(e) {
+    if (Math.abs(e.touches[0].clientY - touchStartY) > 8) {
+      touchMoved = true;
+    }
+  }, true);
+  document.addEventListener('touchend', function(e) {
+    if (touchMoved) {
+      let tag = e.target.tagName;
+      if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') {
+        e.target.blur();
+        e.preventDefault();
+      }
+    }
+    touchMoved = false;
+  }, {capture: true, passive: false});
+})();
 
 function saveStateToStorage() {
   try { localStorage.setItem('qc_last_results', JSON.stringify(lastResults)); } catch(e) {}
@@ -1766,8 +1675,8 @@ function renderBilling(res, extraSegs) {
   if (totalHrs > 0 && rate > 0) {
     let fc = Math.round(totalHrs * rate * 100) / 100;
         let minHrs = res.min_chargeable_hrs || 0;
-    let minMsg = (minHrs > 0 && res.min_applied) ? `<div style="font-size:0.75rem;color:#e65100;background:#fff3e0;border-radius:6px;padding:5px 10px;margin-bottom:6px">Minimum charge of ${fmtHours(minHrs)} applies. Quote reflects minimum billable hours.</div>` : '';
-    rows += `${minMsg}<div class="billing-row"><span>Aircraft Rental (${fmtHours(totalHrs)} @ $${rate.toLocaleString()}/hr)</span><span>USD $${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    let minMsg = (minHrs > 0 && res.min_applied) ? `<div style="font-size:0.75rem;color:#e65100;background:#fff3e0;border-radius:6px;padding:5px 10px;margin-bottom:6px">Minimum charge of ${minHrs.toFixed(1)} flight hours applies. Quote reflects minimum billable hours.</div>` : '';
+    rows += `${minMsg}<div class="billing-row"><span>Aircraft Rental (${totalHrs} hrs @ $${rate.toLocaleString()}/hr)</span><span>USD $${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
   }
   let fee = res.pax_fee_usd || res.pax_fee_usd_display || 0;
   if (fee > 0) rows += `<div class="billing-row"><span>Fees & Taxes</span><span>USD $${parseFloat(fee).toLocaleString()}</span></div>`;
@@ -2039,7 +1948,7 @@ function recalcAdjuster(idx) {
     adjSummary.dataset.applied = 'false';
     adjSummary.style.background = '#fff3e0';
     let warningLine = wasApplied ? `<div style="font-size:0.72rem;color:#e65100;margin-bottom:4px">⚠ This will overwrite your previously applied values.</div>` : '';
-    adjSummary.innerHTML = `${warningLine}<strong>Preview: ${totalDisplay}</strong> &nbsp;·&nbsp; ${fmtHours(hrs)} @ ${rateDisplay} · Pax: ${paxDisplay}`;
+    adjSummary.innerHTML = `${warningLine}<strong>Preview: ${totalDisplay}</strong> &nbsp;·&nbsp; ${hrs} hrs @ ${rateDisplay} · Pax: ${paxDisplay}`;
     adjSummary.style.display = 'block';
   }
 }
@@ -2578,7 +2487,7 @@ function initAdminAc(inputId) {
   });
   input.addEventListener('keydown', e => { if (e.key==='Escape') drop.style.display='none'; });
   document.addEventListener('click', e => { if (!input.contains(e.target) && !drop.contains(e.target)) drop.style.display='none'; });
-  document.addEventListener('touchstart', e => { if (!input.contains(e.target) && !drop.contains(e.target)) drop.style.display='none'; }, {passive:true});
+}
 
 let pdfGenerating = false;
 async function generatePDF(allAircraft) {
@@ -2872,7 +2781,7 @@ function renderAircraft() {
           <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Aircraft Base</label>
           <div style="font-size:0.72rem;color:#888;margin-bottom:8px">Search for your home airstrip, helipad or landing zone — or paste a Google Maps link directly. The system resolves coordinates automatically. The display name below is always editable.</div>
           <div style="position:relative;margin-bottom:8px">
-            <input class="ac-base-search" placeholder="Search airstrip, helipad or paste a Maps pin..." style="width:100%;padding-right:80px" oninput="acBaseSearch(this)" value="">
+            <input class="ac-base-search" placeholder="Search airstrip, helipad or paste a Maps pin..." style="width:100%;padding-right:80px" oninput="acBaseSearch(this)" value="${ac.home_airstrip||''}">
             <button class="btn btn-outline btn-sm" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:4px 10px" onclick="resolveAcBase(this)">Resolve</button>
             <div class="ac-base-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #ddd;border-radius:8px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
           </div>
@@ -3052,8 +2961,8 @@ async function selectAcBase(el, placeId, description, localKey) {
   let latField = card.querySelector('.ac-base-lat');
   let lonField = card.querySelector('.ac-base-lon');
   suggestions.style.display = 'none';
-  searchInput.value = '';
-  if (!homeInput.value) homeInput.value = description;
+  searchInput.value = description;
+  homeInput.value = description;
   status.textContent = 'Resolving...';
   try {
     let r = await fetch('/resolve_place', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({place_id: placeId, label: description, local_key: localKey}) });
@@ -3063,8 +2972,7 @@ async function selectAcBase(el, placeId, description, localKey) {
       lonField.value = data.lon;
       status.textContent = '✅ Base set: ' + parseFloat(data.lat).toFixed(5) + ', ' + parseFloat(data.lon).toFixed(5);
       status.style.color = '#1b5e20';
-      let displayName = homeInput.value || description;
-      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: displayName, lat: data.lat, lon: data.lon, aliases: [description.toLowerCase()]}) });
+      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: description, lat: data.lat, lon: data.lon, aliases: []}) });
     }
   } catch(e) { status.textContent = '❌ Error resolving location'; }
 }
@@ -3540,7 +3448,7 @@ if (primaryCurEl && (fx.primary_currency || operatorConfig.quoting_rules?.curren
   let liveDiv = document.getElementById('fx-live-rates');
   if (liveDiv) {
     let primaryCur = (operatorConfig.fx && operatorConfig.fx.primary_currency) || 'USD';
-    let secondaryCur = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '';
+    let secondaryCur = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || 'KES';
     let secRate = fxRates[secondaryCur];
     let priRate = fxRates[primaryCur];
     if (secRate && primaryCur !== secondaryCur) {
@@ -4795,7 +4703,7 @@ async function saveFxRates() {
     if (data.success) {
       showMsg('fx-msg', 'FX settings saved. Reloading rates...', 'success');
       await loadFX();
-      let secondaryCur2 = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '';
+      let secondaryCur2 = (operatorConfig.fx && operatorConfig.fx.secondary_currency) || 'KES';
       showMsg('fx-msg', 'FX saved. Live ' + secondaryCur2 + ' rate: ' + (fxRates[secondaryCur2]?.toFixed(2) || 'N/A'), 'success');
     } else {
       showMsg('fx-msg', data.error || 'Error', 'error');
