@@ -1224,8 +1224,9 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
 let lastResults = [];
 let fxRates = {};
 let secCurrency = '';
-let priCurrency = 'USD';
-let priCurrencySymbol = '$';
+let priCurrency = '{{ ((operator.get("fx") or {}).get("primary_currency") or (operator.get("quoting_rules") or {}).get("currency") or "USD") }}';
+let priCurrencySymbol = '{{ ((operator.get("fx") or {}).get("primary_currency") or "USD") }}';
+// priCurrencySymbol will be updated to symbol by loadFX
 const WHOLE_NUMBER_CURRENCIES = new Set(['KES','COP','TZS','UGX','NGN','GHS','RWF','ETB','IDR','JPY','KRW','VND','CLP','PYG','XOF','XAF']);
 function fmtAmt(amount) {
   let decimals = WHOLE_NUMBER_CURRENCIES.has(priCurrency) ? 0 : 2;
