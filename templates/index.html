@@ -972,7 +972,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         </div>
         <div id="fx-manual-fields" style="display:none;background:#f8f9fa;padding:14px;border-radius:8px;margin-bottom:12px">
           <div style="font-size:0.78rem;font-weight:600;margin-bottom:12px">
-            <span id="fx-primary-cur-label">USD</span> 1 = 
+            <span id="fx-primary-cur-label">—</span> 1 = 
             <input type="number" id="s-fx-secondary" placeholder="Enter rate" step="0.0001" style="width:140px;display:inline-block;margin:0 6px">
             <span id="fx-secondary-cur-label2">—</span>
           </div>
@@ -4707,6 +4707,13 @@ function toggleFxMode() {
   let isManual = document.getElementById('s-fx-manual').checked;
   document.getElementById('fx-manual-fields').style.display = isManual ? 'block' : 'none';
   document.getElementById('fx-auto-status').style.display = isManual ? 'none' : 'block';
+  // Update currency labels from current config
+  var secCurT = ((operatorConfig.fx && operatorConfig.fx.secondary_currency) || operatorConfig.secondary_currency || '').toUpperCase();
+  var priCurT = ((operatorConfig.fx && operatorConfig.fx.primary_currency) || (operatorConfig.quoting_rules && operatorConfig.quoting_rules.currency) || 'USD').toUpperCase();
+  var sl = document.getElementById('fx-secondary-cur-label2');
+  var pl = document.getElementById('fx-primary-cur-label');
+  if (sl) sl.textContent = secCurT || '—';
+  if (pl) pl.textContent = priCurT;
   if (!isManual) {
     let liveDiv = document.getElementById('fx-live-rates');
     if (liveDiv) liveDiv.innerHTML = '<div style="background:#f8f9fa;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#888">⏳ Switching to live API rate...</div>';
@@ -4717,13 +4724,30 @@ function toggleFxMode() {
         if (liveDiv && data.result === 'success') {
           let rate = data.rates[secCur];
           if (rate) {
-            liveDiv.innerHTML = '<div style="background:#e8f5e9;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#1b5e20">✅ Live rate updated: ' + priCur + ' 1 = ' + rate.toFixed(4) + ' ' + secCur + '</div>';
+            liveDiv.innerHTML = '<div style="background:#e8f5e9;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#1b5e20">✅ Live rate: ' + priCur + ' 1 = ' + rate.toFixed(4) + ' ' + secCur + '</div>';
           } else {
-            liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ ' + secCur + ' not available from live API. Use manual mode to set a rate.</div>';
+            // Auto-fallback to manual mode
+            liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ ' + secCur + ' is not available from the live API. Switched to manual mode — enter your rate below.</div>';
+            let manualCheck = document.getElementById('s-fx-manual');
+            if (manualCheck) {
+              manualCheck.checked = true;
+              document.getElementById('fx-manual-fields').style.display = 'block';
+              document.getElementById('fx-auto-status').style.display = 'none';
+              var sl = document.getElementById('fx-secondary-cur-label2');
+              var pl = document.getElementById('fx-primary-cur-label');
+              if (sl) sl.textContent = secCur;
+              if (pl) pl.textContent = priCur;
+            }
           }
         }
       }).catch(()=>{
-        if (liveDiv) liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ Could not reach live rate API. Check connection.</div>';
+        if (liveDiv) liveDiv.innerHTML = '<div style="background:#fff3e0;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#e65100">⚠️ Could not reach live rate API. Use manual mode to set a rate.</div>';
+        let manualCheck = document.getElementById('s-fx-manual');
+        if (manualCheck) {
+          manualCheck.checked = true;
+          document.getElementById('fx-manual-fields').style.display = 'block';
+          document.getElementById('fx-auto-status').style.display = 'none';
+        }
       });
     }
   }
