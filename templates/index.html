@@ -3211,7 +3211,7 @@ function getPaymentBadge(rec) {
   let total = parseFloat(rec.amount || 0);
   let paid = parseFloat(rec.paid_amount || 0);
   if (!rec.paid && paid === 0) return '<span class="badge-unpaid">UNPAID</span>';
-  if (paid > 0 && paid < total) return `<span class="badge-partial">PART $${paid.toLocaleString()}</span>`;
+  if (paid > 0 && paid < total) return `<span class="badge-partial">PART ${priCurrency} ${fmtAmt(paid * _priRate)}</span>`;
   return '<span class="badge-paid">PAID</span>';
 }
 
@@ -3252,7 +3252,7 @@ function renderRecords(records) {
       <td style="white-space:nowrap">${r.date||'-'}</td>
       <td><span class="badge-${typeKey}">${r.type||'-'}</span></td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.client_name||'-'}</td>
-      <td style="white-space:nowrap">$${parseFloat(r.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(r.amount||0) * _priRate)}</td>
       <td>${getPaymentBadge(r)}</td>
       <td style="white-space:nowrap">
         ${getPaymentActions(r)}
