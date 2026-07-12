@@ -4259,7 +4259,12 @@ function renderEnquiries(enqs) {
       <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.client_name||'-'}</td>
       <td>${waLink}</td>
       <td style="white-space:nowrap;font-size:0.78rem">${(e.ac_label||'-').replace(/\s*\(\d+\s*seater\)/i,'')}</td>
-      <td style="min-width:200px;max-width:280px;font-size:0.78rem;color:#555;white-space:normal;line-height:1.4">${(e.route_summary||'-')}</td>
+      <td style="min-width:200px;max-width:280px;font-size:0.78rem;color:#333;white-space:normal;line-height:1.5">
+        <div style="font-weight:500">${(e.route_summary||'-')}</div>
+        <div style="font-size:0.72rem;color:#888;margin-top:2px">
+          ${e.total_hrs ? fmtHours(e.total_hrs) : ''}${e.total_nm ? ' · ' + Math.round(e.total_nm) + ' nm' : ''}
+        </div>
+      </td>
       <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(e.total_usd||0) * _priRate)}</td>
       <td>${getEnqStatusBadge(e.status)}</td>
       <td style="white-space:nowrap;font-size:0.75rem;color:#4a148c;font-weight:600">

@@ -1311,9 +1311,14 @@ def pdf():
             segs = result.get("segments") or []
             if result.get("mission") == "pick_and_drop":
                 segs = list(result.get("drop", {}).get("segments", [])) + list(result.get("pick", {}).get("segments", []))
+            elif result.get("mission") == "return_both":
+                segs = list((result.get("option_a") or {}).get("segments", [])) + list((result.get("option_b") or {}).get("segments", []))
             rev = [s for s in segs if s.get("type") == "revenue"]
+            all_flight = [s for s in segs if s.get("type") in ("revenue", "positioning", "depositioning")]
             if rev:
                 route_summary = ", ".join(f"{s.get('origin','')} to {s.get('destination','')}" + (f" on {s['date']}" if s.get('date') else "") for s in rev)
+            total_hrs_val = round(sum(float(s.get("hours", 0)) for s in all_flight), 2)
+            total_nm_val = round(sum(float(s.get("distance_nm", 0)) for s in all_flight))
             bookings[doc_number] = {
                 "token": doc_number,
                 "status": "PENDING",
@@ -1325,6 +1330,8 @@ def pdf():
                 "total_usd": total,
                 "mission": result.get("mission", ""),
                 "route_summary": route_summary,
+                "total_hrs": total_hrs_val,
+                "total_nm": total_nm_val,
                 "quote_snapshot": result,
                 "quote_extras": extra_items or [],
                 "pdf_url": pdf_url or "",
