@@ -1931,7 +1931,7 @@ function toggleAdjKesMode(idx) {
     let paxKes = parseFloat(paxField.value) || 0;
     rateField.value = Math.round(rateKes / kesRate * 100) / 100;
     paxField.value = Math.round(paxKes / kesRate * 100) / 100;
-    if (rateLabel) rateLabel.textContent = 'Rate / hr (USD)';
+    if (rateLabel) rateLabel.textContent = 'Rate / hr (' + priCurrency + ')';
     if (paxLabel) paxLabel.textContent = 'Pax / Admin (USD)';
     if (targetLabel) targetLabel.textContent = 'Target Total (USD)';
     if (paxRevLabel) paxRevLabel.textContent = 'Keep Pax/Admin (USD)';
@@ -1948,7 +1948,7 @@ function toggleAdjKesMode(idx) {
   calcReverse(idx);
   let pdfCurrencySelect = document.getElementById('pdf-currency');
   if (pdfCurrencySelect) {
-    pdfCurrencySelect.value = isKes ? 'KES' : 'USD';
+    if (pdfCurrencySelect) pdfCurrencySelect.value = priCurrency;
     updateCurrencyDisplay();
   }
 }
@@ -3589,8 +3589,8 @@ if (primaryCurEl && (fx.primary_currency || (operatorConfig.quoting_rules && ope
     if (secRate && primaryCur !== secondaryCur) {
       let rate = primaryCur === 'USD' ? secRate : (secRate / (priRate || 1));
       liveDiv.textContent = 'Current live rate: ' + primaryCur + ' 1 = ' + secondaryCur + ' ' + rate.toFixed(2);
-    } else if (fxRates['KES']) {
-      liveDiv.textContent = 'Current live rate: USD 1 = KES ' + fxRates['KES'].toFixed(2);
+    } else if (fxRates[secCurrency]) {
+      liveDiv.textContent = 'Current live rate: ' + priCurrency + ' 1 = ' + secCurrency + ' ' + fxRates[secCurrency].toFixed(2);
     }
   }
   await loadMessageTemplates();
@@ -4794,7 +4794,7 @@ function buildAndOpenWa() {
       .replace(/{ac_label}/g, extra.acLabel || rec.ac_label || '')
       .replace(/{route}/g, extra.route || rec.route_summary || '');
   } else {
-    message = `Hello ${clientName},\n\nPlease find herein your ${docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n' + pdfLine : ''}\n\nRef: ${extra.token || docNumber}\nAmount: USD $${amount}\n\nFor any queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
+    message = `Hello ${clientName},\n\nPlease find herein your ${docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n' + pdfLine : ''}\n\nRef: ${extra.token || docNumber}\nAmount: ${priCurrency} ${amount}\n\nFor any queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
   }
   let waUrl = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
   let waBtn = document.querySelector('#share-modal .btn-success');
@@ -4869,9 +4869,9 @@ function updateCurrencyDisplay() {
       totalEl.textContent = 'KES ' + kes.toLocaleString();
     } else if (currency === 'BOTH' && kesRate > 0) {
       let kes = Math.ceil((total * kesRate) / 1000) * 1000;
-      totalEl.innerHTML = `USD $${fmtAmt(total)} <span style="font-size:0.75rem;color:#888;display:block">≈ KES ${kes.toLocaleString()}</span>`;
+      totalEl.innerHTML = `${priCurrency} ${fmtAmt(total)} <span style="font-size:0.75rem;color:#888;display:block">≈ ${secCurrency} ${kes.toLocaleString()}</span>`;
     } else {
-      totalEl.textContent = 'USD $' + fmtAmt(total);
+      totalEl.textContent = priCurrency + ' ' + fmtAmt(total);
     }
   });
 }
