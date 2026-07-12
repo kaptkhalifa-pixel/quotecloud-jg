@@ -4199,8 +4199,8 @@ function renderEnquirySummary(enqs) {
       <div style="font-size:0.75rem;color:#888;margin-top:4px">Pending</div>
     </div>
     <div style="background:#e8f5e9;border-radius:10px;padding:14px;text-align:center;border:1px solid #a5d6a7">
-      <div style="font-size:1.4rem;font-weight:700;color:#1b5e20">$${pipeline.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-      <div style="font-size:0.75rem;color:#888;margin-top:4px">Pipeline (USD)</div>
+      <div style="font-size:1.4rem;font-weight:700;color:#1b5e20">${priCurrency} ${fmtAmt(pipeline)}</div>
+      <div style="font-size:0.75rem;color:#888;margin-top:4px">Pipeline (${priCurrency})</div>
     </div>`;
 }
 
@@ -4778,7 +4778,7 @@ function buildAndOpenWa() {
   let clientName = rec.client_name || extra.clientName || 'Valued Client';
   let company = (typeof config !== 'undefined' ? config.company_name : null) || operatorConfig?.company_name || 'Jetman Global';
   let phone = (typeof config !== 'undefined' ? config.contact?.phone : null) || operatorConfig?.contact?.phone || '+254 701 007 777';
-  let amount = parseFloat(rec.amount || extra.finalTotal || 0).toLocaleString(undefined, {minimumFractionDigits:2});
+  let amount = fmtAmt(parseFloat(rec.amount || extra.finalTotal || 0));
   let pdfLine = pdfUrl ? `📄 View ${docType}: ${pdfUrl}` : '';
   let templateKey = docType === 'Invoice' ? 'invoice' : docType === 'Receipt' ? 'receipt' : 'quote';
   let template = msgTemplates[templateKey] || '';
