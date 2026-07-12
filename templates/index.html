@@ -4188,7 +4188,17 @@ async function loadEnquiries() {
 function renderEnquirySummary(enqs) {
   let total = enqs.length;
   let pending = enqs.filter(e => e.status === 'PENDING').length;
-  let pipeline = enqs.reduce((s,e) => s + parseFloat(e.total_usd||0), 0);
+  // Convert pipeline total to primary currency
+  let _priRate = 1.0;
+  if (priCurrency !== 'USD') {
+    // If USD is secondary, use its rate to convert: total_usd / usd_rate = primary
+    let _usdRate = fxRates['USD'] || 0;
+    if (_usdRate > 0) _priRate = 1.0 / _usdRate;
+    // If primary rate is directly available
+    let _directRate = fxRates[priCurrency] || 0;
+    if (_directRate > 0) _priRate = _directRate;
+  }
+  let pipeline = enqs.reduce((s,e) => s + parseFloat(e.total_usd||0), 0) * _priRate;
   document.getElementById('enq-summary').innerHTML = `
     <div style="background:#f8f9fa;border-radius:10px;padding:14px;text-align:center;border:1px solid #eee">
       <div style="font-size:1.4rem;font-weight:700;color:#333">${total}</div>
