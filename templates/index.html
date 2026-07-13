@@ -4290,10 +4290,26 @@ function filterEnquiries() {
   renderEnquiries(filtered);
 }
 
+function goToRecordPayment(invoiceNumber) {
+  // Switch to records tab
+  let recTab = document.querySelector('.nav-tab[onclick*="records"]') || document.querySelector('.mobile-nav-tab[onclick*="records"]');
+  if (recTab) recTab.click();
+  // Wait for records to load then open payment modal
+  setTimeout(async () => {
+    await loadRecords();
+    let rec = allRecords.find(r => r.number === invoiceNumber);
+    if (rec) openPaidModal(invoiceNumber);
+  }, 500);
+}
+
 function getEnqStatusBadge(status) {
   const colors = { PENDING:'#fff3e0,#e65100', CONTACTED:'#e3f2fd,#0d47a1', ACCEPTED:'#e8f5e9,#1b5e20', INVOICED:'#f3e5f5,#4a148c', PAID:'#e8f5e9,#155724' };
   let [bg, color] = (colors[status]||'#f5f5f5,#666').split(',');
-  return `<span style="background:${bg};color:${color};padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:700">${status}</span>`;
+  let badge = `<span style="background:${bg};color:${color};padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:700">${status}</span>`;
+  if (status === 'INVOICED') {
+    badge += `<div style="font-size:0.65rem;color:#888;margin-top:3px">→ Log payment in Records</div>`;
+  }
+  return badge;
 }
 
 function renderEnquiries(enqs) {
@@ -4335,6 +4351,7 @@ function renderEnquiries(enqs) {
           <option value="PAID">Paid</option>
         </select>
         <button class="btn btn-success btn-sm" onclick="openInvoiceBuilder(${JSON.stringify(e).replace(/"/g,'&quot;')})">📄 Invoice</button>
+        ${e.status === 'INVOICED' && e.invoice_number ? `<button class="btn btn-amber btn-sm" onclick="goToRecordPayment('${e.invoice_number}')">💳 Pay</button>` : ''}
       </td>
     </tr>`;
   }).join('');
