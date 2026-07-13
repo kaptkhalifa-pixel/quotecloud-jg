@@ -861,7 +861,14 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <h4 onclick="toggleSettingsSection(this)">Invoice Settings</h4>
         <div class="form-row">
           <div class="form-group"><label>PDF Prefix</label><input type="text" id="s-invoice-prefix" placeholder="e.g. SAV" maxlength="5"></div>
-          <div class="form-group"><label>Payment Terms</label><input type="text" id="s-invoice-terms" placeholder="Payment due before departure."></div>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>Terms &amp; Conditions <span style="font-size:0.68rem;color:#aaa;font-weight:400">— always shown on invoices</span></label>
+          <textarea id="s-invoice-terms" rows="6" placeholder="Payment due before departure." style="width:100%;font-size:0.82rem;padding:10px;border:1px solid #ddd;border-radius:6px;resize:vertical"></textarea>
+        </div>
+        <div class="toggle-row" style="margin-bottom:14px">
+          <input type="checkbox" id="s-terms-on-quote" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <label for="s-terms-on-quote" style="margin:0;font-size:0.88rem;font-weight:400;cursor:pointer">Show terms &amp; conditions on quotations</label>
         </div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBank()">Save ✓</button><span class="section-save-msg" id="msg-invoice"></span></div>
       </div>
@@ -3577,6 +3584,7 @@ async function loadSettings() {
 - The operator reserves the right to substitute aircraft of equivalent or superior category where necessary.
 - By accepting this invoice and making payment, you agree to these terms and conditions.`;
   document.getElementById('s-invoice-terms').value = inv.terms || _defaultTerms;
+  if (document.getElementById('s-terms-on-quote')) document.getElementById('s-terms-on-quote').checked = inv.terms_on_quote || false;
   let fx = operatorConfig.fx || {};
   let isManual = fx.mode === 'manual';
   document.getElementById('s-fx-manual').checked = isManual;
@@ -3982,7 +3990,8 @@ async function saveSectionBank() {
       paybill: document.getElementById('s-bank-paybill')?.value || ''
     },
     prefix: document.getElementById('s-invoice-prefix')?.value || '',
-    terms: document.getElementById('s-invoice-terms')?.value || ''
+    terms: document.getElementById('s-invoice-terms')?.value || '',
+    terms_on_quote: document.getElementById('s-terms-on-quote')?.checked || false
   };
   try {
     let r = await fetch('/settings/save/bank', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});

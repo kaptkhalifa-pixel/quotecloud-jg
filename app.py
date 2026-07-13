@@ -1176,9 +1176,12 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         "• Passenger IDs/passports required at time of booking confirmation.\n"
         "• Flight operations are subject to weather conditions, ATC routings and other operational restrictions beyond our control.\n"
         "• The operator reserves the right to substitute aircraft of equivalent or superior category where necessary.\n"
-        "• By accepting this invoice and making payment, you agree to these terms and conditions."
+        "• By requesting an invoice and making payment, you agree to these terms and conditions."
     )
     terms = OPERATOR.get("invoice", {}).get("terms", "") or _default_terms
+    # Only show terms on quotations if operator has enabled it
+    if doc_type == "Quotation" and not OPERATOR.get("invoice", {}).get("terms_on_quote", False):
+        terms = ""
     token_override = extra_items.pop("_token_override", None) if isinstance(extra_items, dict) else None
     doc_number = next_record_number(doc_type, token_override)
     disc = float(discount) if discount else 0
@@ -1889,9 +1892,12 @@ def generate_receipt():
         "• Passenger IDs/passports required at time of booking confirmation.\n"
         "• Flight operations are subject to weather conditions, ATC routings and other operational restrictions beyond our control.\n"
         "• The operator reserves the right to substitute aircraft of equivalent or superior category where necessary.\n"
-        "• By accepting this invoice and making payment, you agree to these terms and conditions."
+        "• By requesting an invoice and making payment, you agree to these terms and conditions."
     )
     terms = OPERATOR.get("invoice", {}).get("terms", "") or _default_terms
+    # Only show terms on quotations if operator has enabled it
+    if doc_type == "Quotation" and not OPERATOR.get("invoice", {}).get("terms_on_quote", False):
+        terms = ""
 
     payload = {
         "logo": OPERATOR.get("logo_url", ""),
@@ -2220,6 +2226,7 @@ def save_bank():
         OPERATOR["bank"] = data.get("bank", {})
         if "invoice" not in OPERATOR: OPERATOR["invoice"] = {}
         if "terms" in data: OPERATOR["invoice"]["terms"] = data["terms"]
+        if "terms_on_quote" in data: OPERATOR["invoice"]["terms_on_quote"] = data["terms_on_quote"]
         if "prefix" in data: OPERATOR["invoice"]["prefix"] = data["prefix"]
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
