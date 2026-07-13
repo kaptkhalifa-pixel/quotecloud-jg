@@ -951,6 +951,29 @@ def run_quote_engine(data):
 
     except Exception as e:
         return {"error": str(e)}, 400
+def log_pdf_error(route, error, data=None):
+    """Log PDF generation failures to Firestore for monitoring."""
+    try:
+        import datetime
+        entry = {
+            "route": route,
+            "error": str(error),
+            "timestamp": datetime.datetime.now().isoformat(),
+            "data_keys": list(data.keys()) if data else []
+        }
+        db.collection("tenants").document(TENANT_ID).collection("pdf_errors").add(entry)
+        # Also notify via print for Render logs
+        print(f"PDF_ERROR [{route}]: {error}")
+        # WhatsApp alert to operator
+        wa = get_whatsapp()
+        if wa:
+            msg = f"⚠️ PDF Error on {route}: {str(error)[:100]}"
+            encoded = msg.replace(' ', '%20')
+
+            print(f"WA_ALERT: https://wa.me/{wa}?text={encoded}")
+    except Exception as e:
+        print(f"log_pdf_error failed: {e}")
+
 def get_pdf_timestamp():
     try:
         import pytz
@@ -1381,6 +1404,7 @@ def pdf():
         return response
 
     except Exception as e:
+        log_pdf_error("/pdf", e, data)
         return jsonify({"error": str(e)}), 400
 
 @app.route("/pdf_all", methods=["POST"])
@@ -1472,6 +1496,7 @@ def pdf_all():
 
         return jsonify({"success": True, "files": generated})
     except Exception as e:
+        log_pdf_error("/pdf_all", e, data)
         return jsonify({"error": str(e)}), 400
 
 @app.route("/pdf_download_temp", methods=["GET"])
@@ -1543,6 +1568,7 @@ def booking_invoice():
         response.headers["X-DOC-NUMBER"] = doc_number
         return response
     except Exception as e:
+        log_pdf_error("/booking/invoice", e, data)
         return jsonify({"error": str(e)}), 400
 
 @app.route("/manual_invoice", methods=["POST"])
@@ -2687,6 +2713,7 @@ def booking_pdf():
         response.headers["X-DOC-NUMBER"] = token
         return response
     except Exception as e:
+        log_pdf_error("/manual_invoice", e, data)
         return jsonify({"error": str(e)}), 400
 
 @app.route("/booking/status/<token>", methods=["GET"])
