@@ -427,7 +427,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div class="form-group"><label>Email</label><input type="text" id="pdf-email" placeholder="client@email.com"></div>
       <div class="form-group"><label>Phone</label><input type="text" id="pdf-phone" placeholder="+254..."></div>
     </div>
-    <div class="form-group" style="margin-bottom:14px"><label>Discount (${priCurrency})</label><input type="number" id="pdf-discount" placeholder="0" min="0"></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Discount (<span class="pri-cur-label">KES</span>)</label><input type="number" id="pdf-discount" placeholder="0" min="0"></div>
     <div class="form-group-full"><label>Notes</label><textarea id="pdf-notes" rows="2" placeholder="Special notes..."></textarea></div>
     <div style="margin-bottom:14px">
       <label style="margin-bottom:8px;display:block">Extra Line Items</label>
@@ -594,7 +594,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       </div>
       <button class="btn btn-outline btn-sm" onclick="addMiItem()" style="margin-top:8px">+ Add Line</button>
     </div>
-    <div class="form-group"><label>Discount (${priCurrency})</label><input type="number" id="mi-discount" placeholder="0" min="0"></div>
+    <div class="form-group"><label>Discount (<span class="pri-cur-label">KES</span>)</label><input type="number" id="mi-discount" placeholder="0" min="0"></div>
     <div class="form-group-full"><label>Notes</label><textarea id="mi-notes" rows="2" placeholder="Additional notes..."></textarea></div>
     <div class="form-group-full"><label>Bank Details</label><textarea id="mi-bank" rows="6" style="font-family:monospace;font-size:14px"></textarea></div>
     <div class="form-group-full"><label>Terms & Conditions</label><textarea id="mi-terms" rows="8"></textarea></div>
@@ -3339,10 +3339,9 @@ async function confirmMarkPaid(generateReceipt) {
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a'); a.href = url; a.download = (docNumber||'receipt')+'.pdf'; a.click();
       let recRec = allRecords.find(r => r.number === number) || {};
-      // Close modal and show success in records area
+      // Close modal and show success same as quote/invoice flow
       closePaidModal();
       await loadRecords();
-      // Show share bar in records tab
       let shareHtml = renderShareBar({
         docNumber, pdfUrl, docType: 'Receipt',
         clientName: recRec.client_name || '',
@@ -3352,11 +3351,11 @@ async function confirmMarkPaid(generateReceipt) {
         acLabel: recRec.ac_label || '',
         route: recRec.route_summary || ''
       });
-      let successDiv = document.createElement('div');
-      successDiv.style.cssText = 'margin:12px 0;';
-      successDiv.innerHTML = shareHtml;
-      let recTab = document.getElementById('nav-records');
-      if (recTab) recTab.insertBefore(successDiv, recTab.firstChild);
+      let msgLines = [`✅ <strong>Receipt Generated</strong>`];
+      msgLines.push(`Receipt — ${recRec.client_name || ''} — ${priCurrency} ${fmtAmt(paidAmount)}`);
+      msgLines.push(shareHtml);
+      try { localStorage.setItem('qc_pending_msg', msgLines.join('<br>')); } catch(e) {}
+      appendPdfMsg(msgLines.join('<br>'));
     } else {
       let data = await r.json();
       if (data.success) { closePaidModal(); loadRecords(); }

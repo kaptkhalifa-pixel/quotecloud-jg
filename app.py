@@ -1016,6 +1016,18 @@ def get_pdf_timestamp():
         now = datetime.datetime.utcnow()
         return now.strftime("Generated: %d %b %Y, %H:%M UTC")
 
+WHOLE_NUMBER_CURRENCIES = {
+    "KES","COP","TZS","UGX","NGN","GHS","RWF","ETB","IDR","JPY",
+    "KRW","VND","CLP","PYG","XOF","XAF","MGA","BIF","GNF","SLL"
+}
+
+def round_currency(amount, currency=None):
+    """Round to nearest whole number for currencies that don't use decimals."""
+    cur = currency or OPERATOR.get("fx", {}).get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+    if cur in WHOLE_NUMBER_CURRENCIES:
+        return round(float(amount))
+    return round(float(amount), 2)
+
 def calc_pdf_total(result, extra_items, discount):
     base = float(result.get("total_usd", 0))
     extras_total = sum(
@@ -1023,7 +1035,7 @@ def calc_pdf_total(result, extra_items, discount):
         for ei in (extra_items or [])
     )
     disc = float(discount) if discount else 0
-    return round(base + extras_total - disc, 2)
+    return round_currency(base + extras_total - disc)
 
 def get_flight_segments(result):
     segs = result.get("segments", [])
