@@ -828,7 +828,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         {%- set _fx = operator.get('fx') or {} %}
         {%- set _pri_cur = _fx.get('primary_currency') or (operator.get('quoting_rules') or {}).get('currency') or 'USD' %}
         {%- set _sec_cur = _fx.get('secondary_currency') or operator.get('secondary_currency') or '' %}
-        <div style="font-size:0.78rem;font-weight:700;color:#0d47a1;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px"><span class="bank-pri-label">{{ _pri_cur }}</span> Account</div>
+        <div style="font-size:0.78rem;font-weight:700;color:#0d47a1;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px"><span class="bank-pri-label">{{ _pri_cur }}</span> Account <span style="font-size:0.68rem;font-weight:400;text-transform:none">(Set as primary)</span></div>
         <div class="form-row">
           <div class="form-group"><label>Account Name</label><input type="text" id="s-bank-pri-account-name" value="{{ _bk.get('pri_account_name', _bk.get('account_name', '')) }}"></div>
           <div class="form-group"><label>Bank Name</label><input type="text" id="s-bank-pri-bank-name" value="{{ _bk.get('pri_bank_name', _bk.get('bank_name', '')) }}"></div>
@@ -841,7 +841,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           <div class="form-group"><label>SWIFT / BIC</label><input type="text" id="s-bank-pri-swift" value="{{ _bk.get('pri_swift', _bk.get('swift', '')) }}"></div>
           <div class="form-group"><label>Branch</label><input type="text" id="s-bank-pri-branch" value="{{ _bk.get('pri_branch', _bk.get('branch', '')) }}"></div>
         </div>
-        <div style="font-size:0.78rem;font-weight:700;color:#555;margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.5px"><span class="bank-sec-label">{{ _sec_cur or 'Secondary' }}</span> Account <span style="font-size:0.68rem;color:#aaa;font-weight:400">(optional)</span></div>
+        <div style="font-size:0.78rem;font-weight:700;color:#0d47a1;margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.5px"><span class="bank-sec-label">{{ _sec_cur or 'Secondary' }}</span> Account <span style="font-size:0.68rem;font-weight:400;text-transform:none">(Set as secondary)</span></div>
         <div class="form-row">
           <div class="form-group"><label>Account Name</label><input type="text" id="s-bank-sec-account-name" value="{{ _bk.get('sec_account_name', '') }}"></div>
           <div class="form-group"><label>Bank Name</label><input type="text" id="s-bank-sec-bank-name" value="{{ _bk.get('sec_bank_name', '') }}"></div>
