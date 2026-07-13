@@ -2300,7 +2300,23 @@ def change_password():
 
 @app.route("/get_maps_key", methods=["GET"])
 def get_maps_key():
-    return jsonify({"key": GOOGLE_API_KEY})
+    return jsonify({"key": ""})  # Key no longer exposed to frontend
+
+@app.route("/maps/geocode", methods=["GET"])
+def maps_geocode():
+    import requests as req
+    params = dict(request.args)
+    params["key"] = GOOGLE_API_KEY
+    r = req.get("https://maps.googleapis.com/maps/api/geocode/json", params=params, timeout=5)
+    return jsonify(r.json())
+
+@app.route("/maps/place", methods=["GET"])
+def maps_place():
+    import requests as req
+    params = dict(request.args)
+    params["key"] = GOOGLE_API_KEY
+    r = req.get("https://maps.googleapis.com/maps/api/geocode/json", params=params, timeout=5)
+    return jsonify(r.json())
 
 @app.route("/expand_maps_url", methods=["POST"])
 def expand_maps_url():

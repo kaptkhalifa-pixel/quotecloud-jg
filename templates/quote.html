@@ -596,7 +596,7 @@ function extractCoordsFromUrl(url) {
 async function reverseGeocode(lat, lng) {
   if (!GAPI_KEY) return `${lat},${lng}`;
   try {
-    let r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GAPI_KEY}&region=ke`);
+    let r = await fetch(`/maps/geocode?latlng=${lat},${lng}&region=ke`);
     let data = await r.json();
     if (data.status==='OK') {
       let components = data.results[0].address_components;
@@ -628,7 +628,7 @@ async function resolveMapsShortUrl(url) {
     }
     let ftidMatch = finalUrl.match(/ftid=([^&]+)/);
     if (ftidMatch && GAPI_KEY) {
-      let r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?place_id=${encodeURIComponent(ftidMatch[1])}&key=${GAPI_KEY}`);
+      let r = await fetch(`/maps/place?place_id=${encodeURIComponent(ftidMatch[1])}`);
       let data = await r.json();
       if (data.status==='OK') {
         let loc = data.results[0].geometry.location;
@@ -645,7 +645,7 @@ async function resolveMapsShortUrl(url) {
     if (q && GAPI_KEY) {
       let region = (config.geo_lock||{}).region_name||'Kenya';
       let query = q.toLowerCase().includes(region.toLowerCase()) ? q : `${q} ${region}`;
-      let r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GAPI_KEY}&region=ke`);
+      let r = await fetch(`/maps/geocode?address=${encodeURIComponent(query)}&region=ke`);
       let data = await r.json();
       if (data.status==='OK') {
         let loc = data.results[0].geometry.location;
