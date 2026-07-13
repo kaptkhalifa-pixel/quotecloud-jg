@@ -220,16 +220,30 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
+# Brute force protection
+_login_attempts = {}
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    import time
     error = None
+    ip = request.remote_addr or "unknown"
+    now = time.time()
+    # Clean old entries
+    _login_attempts[ip] = [t for t in _login_attempts.get(ip, []) if now - t < 900]
+    if len(_login_attempts.get(ip, [])) >= 5:
+        mins = int((900 - (now - _login_attempts[ip][0])) / 60) + 1
+        return render_template("login.html", operator=OPERATOR, error=f"Too many attempts. Try again in {mins} minutes.")
     if request.method == "POST":
         if (request.form.get("username") == get_admin_user() and
                 request.form.get("password") == get_admin_pass()):
+            _login_attempts.pop(ip, None)
             session.permanent = True
             session["logged_in"] = True
             return redirect(url_for("index"))
-        error = "Invalid credentials. Please try again."
+        _login_attempts.setdefault(ip, []).append(now)
+        remaining = 5 - len(_login_attempts[ip])
+        error = f"Invalid credentials. {remaining} attempt{'s' if remaining != 1 else ''} remaining."
     return render_template("login.html", operator=OPERATOR, error=error)
 
 @app.route("/logout")
