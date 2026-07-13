@@ -1171,12 +1171,17 @@ def index():
     }
     return render_template("index.html", operator=OPERATOR, msg_templates=msg_templates)
 
+# Rate limiting for quote engine
+_quote_rate = {}
+
 @app.route("/admin/quote", methods=["POST"])
 @login_required
 def admin_quote():
     data = request.get_json()
     result, status = run_quote_engine(data)
     return jsonify(result), status
+
+
 
 @app.route("/quote", methods=["GET"])
 def quote_page():
@@ -1242,6 +1247,13 @@ def quote_brand_pdf():
 
 @app.route("/quote/calculate", methods=["POST"])
 def quote_calculate():
+    import time
+    ip = request.remote_addr or "unknown"
+    now = time.time()
+    _quote_rate[ip] = [t for t in _quote_rate.get(ip, []) if now - t < 60]
+    if len(_quote_rate.get(ip, [])) >= 30:
+        return jsonify({"error": "Too many requests. Please wait a moment."}), 429
+    _quote_rate.setdefault(ip, []).append(now)
     data = request.get_json()
     # Handle custom aircraft injection
     custom_ac = data.pop("custom_aircraft", None)
