@@ -70,7 +70,7 @@ def load_operator_config():
 
 def save_operator_config(config):
     try:
-        tenant_doc().set(config, merge=False)
+        tenant_doc().set(config, merge=True)
     except Exception as e:
         print(f"Firestore save_operator_config error: {e}")
 
