@@ -3339,7 +3339,7 @@ async function confirmMarkPaid(generateReceipt) {
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a'); a.href = url; a.download = (docNumber||'receipt')+'.pdf'; a.click();
       let recRec = allRecords.find(r => r.number === number) || {};
-      // Close modal and show success same as quote/invoice flow
+      // Close modal and show success in records tab
       closePaidModal();
       await loadRecords();
       let shareHtml = renderShareBar({
@@ -3351,11 +3351,14 @@ async function confirmMarkPaid(generateReceipt) {
         acLabel: recRec.ac_label || '',
         route: recRec.route_summary || ''
       });
-      let msgLines = [`✅ <strong>Receipt Generated</strong>`];
-      msgLines.push(`Receipt — ${recRec.client_name || ''} — ${priCurrency} ${fmtAmt(paidAmount)}`);
-      msgLines.push(shareHtml);
-      try { localStorage.setItem('qc_pending_msg', msgLines.join('<br>')); } catch(e) {}
-      appendPdfMsg(msgLines.join('<br>'));
+      // Insert success card at top of records tab
+      let recSuccessDiv = document.createElement('div');
+      recSuccessDiv.style.cssText = 'margin-bottom:14px;position:relative;padding-right:32px';
+      recSuccessDiv.className = 'success-box';
+      recSuccessDiv.innerHTML = `✅ <strong>Receipt Generated</strong><br>${recRec.client_name || ''} — ${priCurrency} ${fmtAmt(paidAmount)}<br><br>${shareHtml}
+        <button onclick="this.parentElement.remove()" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:1rem;cursor:pointer;color:#555">✕</button>`;
+      let recMsgEl = document.getElementById('rec-msg') || document.getElementById('nav-records');
+      if (recMsgEl) recMsgEl.insertBefore(recSuccessDiv, recMsgEl.firstChild);
     } else {
       let data = await r.json();
       if (data.success) { closePaidModal(); loadRecords(); }
