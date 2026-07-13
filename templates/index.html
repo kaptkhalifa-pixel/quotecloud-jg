@@ -983,7 +983,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           <label for="s-fx-show-docs" style="cursor:pointer">Show secondary currency on quotes, invoices &amp; receipts</label>
         </div>
         <div class="toggle-row" style="margin-bottom:10px">
-          <input type="checkbox" id="s-fx-show-kes" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <input type="checkbox" id="s-fx-show-kes" {% if (operator.get("fx") or {}).get("show_kes", False) %}checked{% endif %} style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
           <label for="s-fx-show-kes" style="cursor:pointer">Show secondary currency on client-facing page <span style="font-family:'Space Mono',monospace;font-size:0.52rem;background:#f0f4ff;color:#1a56db;padding:2px 5px;border-radius:3px;margin-left:4px">Pro</span></label>
         </div>
         <div class="toggle-row" style="margin-bottom:10px">
