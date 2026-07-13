@@ -1129,7 +1129,18 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
 
     to_block = "\n".join(filter(None, [client_name, client_phone, client_email]))
     bank_block = get_bank_details_block()
-    terms = OPERATOR.get("invoice", {}).get("terms", "")
+    _validity_hrs = OPERATOR.get("quoting_rules", {}).get("quote_validity_hours", 48)
+    _default_terms = (
+        "• A deposit of 50% is required to confirm the booking.\n"
+        "• Full balance must be settled prior to departure.\n"
+        "• Cancellations within 24 hours of departure are non-refundable.\n"
+        f"• This quotation is valid for {_validity_hrs} hours from time of issue, subject to availability.\n"
+        "• Passenger IDs/passports required at time of booking confirmation.\n"
+        "• Flight operations are subject to weather conditions, ATC routings and other operational restrictions beyond our control.\n"
+        "• The operator reserves the right to substitute aircraft of equivalent or superior category where necessary.\n"
+        "• By accepting this invoice and making payment, you agree to these terms and conditions."
+    )
+    terms = OPERATOR.get("invoice", {}).get("terms", "") or _default_terms
     token_override = extra_items.pop("_token_override", None) if isinstance(extra_items, dict) else None
     doc_number = next_record_number(doc_type, token_override)
     disc = float(discount) if discount else 0
@@ -1831,7 +1842,18 @@ def generate_receipt():
     }]
 
     bank_block = get_bank_details_block()
-    terms = OPERATOR.get("invoice", {}).get("terms", "")
+    _validity_hrs = OPERATOR.get("quoting_rules", {}).get("quote_validity_hours", 48)
+    _default_terms = (
+        "• A deposit of 50% is required to confirm the booking.\n"
+        "• Full balance must be settled prior to departure.\n"
+        "• Cancellations within 24 hours of departure are non-refundable.\n"
+        f"• This quotation is valid for {_validity_hrs} hours from time of issue, subject to availability.\n"
+        "• Passenger IDs/passports required at time of booking confirmation.\n"
+        "• Flight operations are subject to weather conditions, ATC routings and other operational restrictions beyond our control.\n"
+        "• The operator reserves the right to substitute aircraft of equivalent or superior category where necessary.\n"
+        "• By accepting this invoice and making payment, you agree to these terms and conditions."
+    )
+    terms = OPERATOR.get("invoice", {}).get("terms", "") or _default_terms
 
     payload = {
         "logo": OPERATOR.get("logo_url", ""),

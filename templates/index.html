@@ -3542,7 +3542,16 @@ async function loadSettings() {
   document.getElementById('s-bank-swift').value = bk.swift || '';
   document.getElementById('s-bank-branch').value = bk.branch || '';
   document.getElementById('s-invoice-prefix').value = inv.prefix || '';
-  document.getElementById('s-invoice-terms').value = inv.terms || '';
+  let _validityHrs = (operatorConfig.quoting_rules||{}).quote_validity_hours || 48;
+  let _defaultTerms = `• A deposit of 50% is required to confirm the booking.
+- Full balance must be settled prior to departure.
+- Cancellations within 24 hours of departure are non-refundable.
+- This quotation is valid for ${_validityHrs} hours from time of issue, subject to availability.
+- Passenger IDs/passports required at time of booking confirmation.
+- Flight operations are subject to weather conditions, ATC routings and other operational restrictions beyond our control.
+- The operator reserves the right to substitute aircraft of equivalent or superior category where necessary.
+- By accepting this invoice and making payment, you agree to these terms and conditions.`;
+  document.getElementById('s-invoice-terms').value = inv.terms || _defaultTerms;
   let fx = operatorConfig.fx || {};
   let isManual = fx.mode === 'manual';
   document.getElementById('s-fx-manual').checked = isManual;
