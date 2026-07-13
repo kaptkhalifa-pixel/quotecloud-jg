@@ -835,7 +835,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         </div>
         <div class="form-row">
           <div class="form-group"><label>Account Number</label><input type="text" id="s-bank-kes-account" value="{{ _bk.get('pri_account', _bk.get('kes_account', '')) }}"></div>
-          <div class="form-group"><label>Currency Code</label><input type="text" id="s-bank-kes-currency" value="{{ _bk.get('pri_currency', _pri_cur) }}" placeholder="{{ _pri_cur }}"></div>
+          <div class="form-group"><label>Currency Code <span style="font-size:0.68rem;color:#aaa">(from Currency Settings)</span></label><input type="text" id="s-bank-kes-currency" value="{{ _bk.get('pri_currency', _pri_cur) }}" placeholder="{{ _pri_cur }}" readonly style="background:#f8f9fa;color:#555;cursor:not-allowed"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>SWIFT / BIC</label><input type="text" id="s-bank-pri-swift" value="{{ _bk.get('pri_swift', _bk.get('swift', '')) }}"></div>
@@ -848,7 +848,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         </div>
         <div class="form-row">
           <div class="form-group"><label>Account Number</label><input type="text" id="s-bank-usd-account" value="{{ _bk.get('sec_account', _bk.get('usd_account', '')) }}"></div>
-          <div class="form-group"><label>Currency Code</label><input type="text" id="s-bank-usd-currency" value="{{ _bk.get('sec_currency', _sec_cur) }}" placeholder="{{ _sec_cur or 'USD' }}"></div>
+          <div class="form-group"><label>Currency Code <span style="font-size:0.68rem;color:#aaa">(from Currency Settings)</span></label><input type="text" id="s-bank-usd-currency" value="{{ _bk.get('sec_currency', _sec_cur) }}" placeholder="{{ _sec_cur or '' }}" readonly style="background:#f8f9fa;color:#555;cursor:not-allowed"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>SWIFT / BIC</label><input type="text" id="s-bank-sec-swift" value="{{ _bk.get('sec_swift', '') }}"></div>
@@ -3549,9 +3549,9 @@ async function loadSettings() {
   if(document.getElementById('s-bank-account-name')) document.getElementById('s-bank-account-name').value = bk.account_name || '';
   if(document.getElementById('s-bank-name')) document.getElementById('s-bank-name').value = bk.bank_name || '';
   if(document.getElementById('s-bank-kes-account')) document.getElementById('s-bank-kes-account').value = bk.kes_account || '';
-  if (document.getElementById('s-bank-kes-currency')) document.getElementById('s-bank-kes-currency').value = bk.pri_currency || bk.kes_currency || priCurrency || '';
+  if (document.getElementById('s-bank-kes-currency')) document.getElementById('s-bank-kes-currency').value = priCurrency || bk.pri_currency || bk.kes_currency || '';
   if(document.getElementById('s-bank-usd-account')) document.getElementById('s-bank-usd-account').value = bk.usd_account || '';
-  if (document.getElementById('s-bank-usd-currency')) document.getElementById('s-bank-usd-currency').value = bk.sec_currency || bk.usd_currency || secCurrency || '';
+  if (document.getElementById('s-bank-usd-currency')) document.getElementById('s-bank-usd-currency').value = secCurrency || bk.sec_currency || bk.usd_currency || '';
   if (document.getElementById('s-bank-paybill')) document.getElementById('s-bank-paybill').value = bk.paybill || '';
   document.getElementById('s-bank-swift').value = bk.swift || '';
   document.getElementById('s-bank-branch').value = bk.branch || '';
