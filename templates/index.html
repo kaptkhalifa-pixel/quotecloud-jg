@@ -3212,7 +3212,7 @@ function getPaymentBadge(rec) {
   let total = parseFloat(rec.amount || 0);
   let paid = parseFloat(rec.paid_amount || 0);
   if (!rec.paid && paid === 0) return '<span class="badge-unpaid">UNPAID</span>';
-  if (paid > 0 && paid < total) return `<span class="badge-partial">PART ${priCurrency} ${fmtAmt(paid * _priRate)}</span>`;
+  if (paid > 0 && paid < total) return `<span class="badge-partial">PART ${priCurrency} ${fmtAmt(paid)}</span>`;
   return '<span class="badge-paid">PAID</span>';
 }
 
@@ -3253,7 +3253,7 @@ function renderRecords(records) {
       <td style="white-space:nowrap">${r.date||'-'}</td>
       <td><span class="badge-${typeKey}">${r.type||'-'}</span></td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.client_name||'-'}</td>
-      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(r.amount||0) * _priRate)}</td>
+      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(r.amount||0))}</td>
       <td>${getPaymentBadge(r)}</td>
       <td style="white-space:nowrap">
         ${getPaymentActions(r)}
@@ -4200,7 +4200,7 @@ function renderEnquirySummary(enqs) {
     let _directRate = fxRates[priCurrency] || 0;
     if (_directRate > 0) _priRate = _directRate;
   }
-  let pipeline = enqs.reduce((s,e) => s + parseFloat(e.total_usd||0), 0) * _priRate;
+  let pipeline = enqs.reduce((s,e) => s + parseFloat(e.total_usd||0), 0);
   document.getElementById('enq-summary').innerHTML = `
     <div style="background:#f8f9fa;border-radius:10px;padding:14px;text-align:center;border:1px solid #eee">
       <div style="font-size:1.4rem;font-weight:700;color:#333">${total}</div>
@@ -4268,7 +4268,7 @@ function renderEnquiries(enqs) {
           ${e.total_hrs ? fmtHours(e.total_hrs) : ''}${e.total_nm ? ' · ' + Math.round(e.total_nm) + ' nm' : ''}
         </div>
       </td>
-      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(e.total_usd||0) * _priRate)}</td>
+      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(e.total_usd||0))}</td>
       <td>${getEnqStatusBadge(e.status)}</td>
       <td style="white-space:nowrap;font-size:0.75rem;color:#4a148c;font-weight:600">
         ${e.invoice_number ? `<span>${e.invoice_number}</span>` : '-'}
