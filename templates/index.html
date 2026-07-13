@@ -427,7 +427,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div class="form-group"><label>Email</label><input type="text" id="pdf-email" placeholder="client@email.com"></div>
       <div class="form-group"><label>Phone</label><input type="text" id="pdf-phone" placeholder="+254..."></div>
     </div>
-    <div class="form-group" style="margin-bottom:14px"><label>Discount (USD)</label><input type="number" id="pdf-discount" placeholder="0" min="0"></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Discount (${priCurrency})</label><input type="number" id="pdf-discount" placeholder="0" min="0"></div>
     <div class="form-group-full"><label>Notes</label><textarea id="pdf-notes" rows="2" placeholder="Special notes..."></textarea></div>
     <div style="margin-bottom:14px">
       <label style="margin-bottom:8px;display:block">Extra Line Items</label>
@@ -594,7 +594,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       </div>
       <button class="btn btn-outline btn-sm" onclick="addMiItem()" style="margin-top:8px">+ Add Line</button>
     </div>
-    <div class="form-group"><label>Discount (USD)</label><input type="number" id="mi-discount" placeholder="0" min="0"></div>
+    <div class="form-group"><label>Discount (${priCurrency})</label><input type="number" id="mi-discount" placeholder="0" min="0"></div>
     <div class="form-group-full"><label>Notes</label><textarea id="mi-notes" rows="2" placeholder="Additional notes..."></textarea></div>
     <div class="form-group-full"><label>Bank Details</label><textarea id="mi-bank" rows="6" style="font-family:monospace;font-size:14px"></textarea></div>
     <div class="form-group-full"><label>Terms & Conditions</label><textarea id="mi-terms" rows="8"></textarea></div>
@@ -838,7 +838,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         </div>
         <div class="form-row">
           <div class="form-group"><label>Secondary A/C Number</label><input type="text" id="s-bank-usd-account" value="{{ operator.get('bank', {}).get('usd_account', '') }}"></div>
-          <div class="form-group"><label>Secondary Currency</label><input type="text" id="s-bank-usd-currency" placeholder="USD"></div>
+          <div class="form-group"><label>Secondary Currency</label><input type="text" id="s-bank-usd-currency" placeholder="${priCurrency}"></div>
         </div>
         <div class="form-group"><label>Mobile Money / Paybill</label><input type="text" id="s-bank-paybill"></div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBank()">Save ✓</button><span class="section-save-msg" id="msg-bank"></span></div>
@@ -1103,12 +1103,12 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <button class="btn btn-outline btn-sm" onclick="addUpliftItem()" style="margin-top:8px">+ Add Charge</button>
       <div style="font-size:0.72rem;color:#888;margin-top:8px;line-height:1.5">Use uplift charges to add any additional costs including VAT, permits, landing fees or handling charges.</div>
     </div>
-    <div class="form-group" style="margin-bottom:14px"><label>Discount (USD)</label><input type="number" id="ib-discount" placeholder="0" min="0" value="0" oninput="recalcInvoiceTotal()"></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Discount (${priCurrency})</label><input type="number" id="ib-discount" placeholder="0" min="0" value="0" oninput="recalcInvoiceTotal()"></div>
     <div style="background:#1a1a1a;border-radius:8px;padding:14px;margin-bottom:16px">
-      <div style="display:flex;justify-content:space-between;color:#aaa;font-size:0.82rem;margin-bottom:6px"><span>Base Charter</span><span id="ib-total-base">$0.00</span></div>
-      <div style="display:flex;justify-content:space-between;color:#aaa;font-size:0.82rem;margin-bottom:6px"><span>Uplift Charges</span><span id="ib-total-uplift">$0.00</span></div>
-      <div style="display:flex;justify-content:space-between;color:#aaa;font-size:0.82rem;margin-bottom:8px"><span>Discount</span><span id="ib-total-discount">-$0.00</span></div>
-      <div style="display:flex;justify-content:space-between;color:#fff;font-size:1rem;font-weight:700;border-top:1px solid #444;padding-top:10px"><span>INVOICE TOTAL</span><span id="ib-total-final">$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;color:#aaa;font-size:0.82rem;margin-bottom:6px"><span>Base Charter</span><span id="ib-total-base">${priCurrency} 0</span></div>
+      <div style="display:flex;justify-content:space-between;color:#aaa;font-size:0.82rem;margin-bottom:6px"><span>Uplift Charges</span><span id="ib-total-uplift">${priCurrency} 0</span></div>
+      <div style="display:flex;justify-content:space-between;color:#aaa;font-size:0.82rem;margin-bottom:8px"><span>Discount</span><span id="ib-total-discount">-${priCurrency} 0</span></div>
+      <div style="display:flex;justify-content:space-between;color:#fff;font-size:1rem;font-weight:700;border-top:1px solid #444;padding-top:10px"><span>INVOICE TOTAL</span><span id="ib-total-final">${priCurrency} 0</span></div>
     </div>
     <div class="form-group-full" style="margin-bottom:16px"><label>Notes</label><textarea id="ib-notes" rows="2" placeholder="Any special notes..."></textarea></div>
     <div class="modal-actions">
@@ -4358,7 +4358,7 @@ function openInvoiceBuilder(enq) {
   }
   document.getElementById('ib-base-line').textContent =
     `${enq.ac_label||'Aircraft Charter'} — ${enq.route_summary||''} — ${priCurrency} ${fmtAmt(base)}`;
-  document.getElementById('ib-total-base').textContent = `$${fmtAmt(base)}`;
+  document.getElementById('ib-total-base').textContent = `${priCurrency} ${fmtAmt(base)}`;
   recalcInvoiceTotal();
   document.getElementById('invoice-builder-modal').classList.add('active');
 }
@@ -4508,7 +4508,7 @@ function addUpliftItem(prefillDesc='', prefillQty=1, prefillAmt=0, fromQuote=fal
   div.innerHTML = `
     <textarea placeholder="${label} — e.g. International Permit, Landing Fee..." class="ib-desc" rows="2" oninput="recalcInvoiceTotal()" style="flex:1;min-width:140px;min-height:60px">${prefillDesc}</textarea>
     <input type="number" placeholder="Qty" class="ib-qty qty" value="${prefillQty}" oninput="recalcInvoiceTotal()" style="max-width:70px">
-    <input type="number" placeholder="USD" class="ib-unit amount" value="${prefillAmt > 0 ? prefillAmt : ''}" oninput="recalcInvoiceTotal()" style="max-width:110px">
+    <input type="number" placeholder="${priCurrency}" class="ib-unit amount" value="${prefillAmt > 0 ? prefillAmt : ''}" oninput="recalcInvoiceTotal()" style="max-width:110px">
     <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove();recalcInvoiceTotal()">✕</button>`;
   document.getElementById('ib-uplift-items').appendChild(div);
   recalcInvoiceTotal();
@@ -4524,9 +4524,9 @@ function recalcInvoiceTotal() {
   });
   let discount = parseFloat(document.getElementById('ib-discount').value) || 0;
   let total = Math.max(base + uplift - discount, 0);
-  document.getElementById('ib-total-uplift').textContent = `$${uplift.toLocaleString(undefined,{minimumFractionDigits:2})}`;
-  document.getElementById('ib-total-discount').textContent = `-$${discount.toLocaleString(undefined,{minimumFractionDigits:2})}`;
-  document.getElementById('ib-total-final').textContent = `$${fmtAmt(total)}`;
+  document.getElementById('ib-total-uplift').textContent = `${priCurrency} ${fmtAmt(uplift)}`;
+  document.getElementById('ib-total-discount').textContent = `-${priCurrency} ${fmtAmt(discount)}`;
+  document.getElementById('ib-total-final').textContent = `${priCurrency} ${fmtAmt(total)}`;
 }
 
 async function generateAndSendInvoice() {
