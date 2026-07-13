@@ -397,6 +397,14 @@ body { font-family: 'Cormorant Garamond', Georgia, serif; background: var(--whit
 // Quotecloud JG v2.5.2 - Black & White luxury skin
 let config = {};
 let fxRates = {};
+let priCurrency = '{{ ((operator.get("fx") or {}).get("primary_currency") or (operator.get("quoting_rules") or {}).get("currency") or "USD") }}';
+let secCurrency = '{{ ((operator.get("fx") or {}).get("secondary_currency") or operator.get("secondary_currency") or "") }}';
+let priCurrencySymbol = priCurrency;
+const WHOLE_NUMBER_CURRENCIES = new Set(['KES','COP','TZS','UGX','NGN','GHS','RWF','ETB','IDR','JPY','KRW','VND','CLP']);
+function fmtAmt(amount) {
+  let decimals = WHOLE_NUMBER_CURRENCIES.has(priCurrency) ? 0 : 2;
+  return parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+}
 let lastResults = [];
 let GAPI_KEY = '';
 let acTimers = {};
@@ -545,6 +553,8 @@ async function loadFX() {
     if (data.success) {
       fxRates = data.rates;
       showKes = data.show_kes !== false;
+      priCurrency = data.primary_currency || priCurrency;
+      secCurrency = data.secondary_currency || secCurrency;
       if (data.updated) document.getElementById('fx-updated').textContent = 'Rates: ' + new Date(data.updated).toLocaleDateString();
     }
   } catch(e) {}
@@ -848,23 +858,24 @@ function renderBilling(res) {
     let fc=Math.round(hrs*rate*100)/100;
     let minHrs=res.min_chargeable_hrs||0;
     let minMsg=(minHrs>0&&res.min_applied)?`<div style="font-family:'DM Sans',sans-serif;font-size:0.72rem;color:#e65100;background:#fff3e0;border-radius:2px;padding:5px 10px;margin-bottom:6px">Minimum charge of ${minHrs.toFixed(1)} flight hours applies.</div>`:"";
-        let showBreakdown=(config.quoting_rules||{}).show_rate_breakdown!==false; let rateLabel=showBreakdown?`<span style="color:#aaa;font-size:0.72rem"> ${hrs}hrs @ $${rate.toLocaleString()}/hr</span>`:''; rows+=`${minMsg}<div class="billing-row"><span>Aircraft Charter${rateLabel}</span><span>$${fc.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+        let showBreakdown=(config.quoting_rules||{}).show_rate_breakdown!==false; let rateLabel=showBreakdown?`<span style="color:#aaa;font-size:0.72rem"> ${hrs}hrs @ ${priCurrencySymbol}${rate.toLocaleString()}/hr</span>`:''; rows+=`${minMsg}<div class="billing-row"><span>Aircraft Charter${rateLabel}</span><span>${priCurrency} ${fmtAmt(fc)}</span></div>`;
   }
   let fee=res.pax_fee_usd||res.pax_fee_usd_display||0;
-  if (fee>0) rows+=`<div class="billing-row"><span>Taxes & Admin</span><span>$${parseFloat(fee).toLocaleString()}</span></div>`;
+  if (fee>0) rows+=`<div class="billing-row"><span>${res.pax_label||'Taxes & Admin'}</span><span>${priCurrency} ${fmtAmt(fee)}</span></div>`;
   let ov=res.overnight_usd||res.overnight_cost_usd||0, oRate=res.overnight_rate_usd||0;
   if (ov>0&&oRate>0) {
     let n=Math.round(ov/oRate);
-    rows+=`<div class="billing-row"><span>Overnight Per Diem <span style="color:#aaa;font-size:0.72rem">${n} night${n!==1?'s':''} @ $${oRate}</span></span><span>$${parseFloat(ov).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    rows+=`<div class="billing-row"><span>Overnight Per Diem <span style="color:#aaa;font-size:0.72rem">${n} night${n!==1?'s':''} @ ${priCurrencySymbol}${oRate}</span></span><span>${priCurrency} ${fmtAmt(ov)}</span></div>`;
   }
   let wu=res.waiting_usd||res.idle_cost_usd||0, ir=res.idle_day_rate_usd||0;
   if (wu>0) {
     let days=ir>0?Math.round(wu/ir):1;
-    rows+=`<div class="billing-row"><span>Idle Day <span style="color:#aaa;font-size:0.72rem">${days} day${days!==1?'s':''} @ $${ir.toLocaleString()}</span></span><span>$${parseFloat(wu).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>`;
+    rows+=`<div class="billing-row"><span>Idle Day <span style="color:#aaa;font-size:0.72rem">${days} day${days!==1?'s':''} @ ${priCurrencySymbol}${ir.toLocaleString()}</span></span><span>${priCurrency} ${fmtAmt(wu)}</span></div>`;
   }
   let kesRate = fxRates['KES'] || 0;
-  let kesFx = (showKes && kesRate > 0) ? `<div style="font-family:'DM Sans',sans-serif;font-size:0.62rem;color:var(--grey-500);text-align:right;margin-top:4px;letter-spacing:0.3px">Live FX &nbsp;·&nbsp; KES ${Math.round((res.total_usd||0) * kesRate).toLocaleString()}</div>` : '';
-  return `<div class="billing">${rows}<div class="billing-total"><span>Total Estimate</span><span>USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>${kesFx}</div>`;
+  let secRate = fxRates[secCurrency] || 0;
+  let kesFx = (showKes && secCurrency && secRate > 0) ? `<div style="font-family:'DM Sans',sans-serif;font-size:0.62rem;color:var(--grey-500);text-align:right;margin-top:4px;letter-spacing:0.3px">≈ ${secCurrency} ${Math.round((res.total_usd||0) * secRate).toLocaleString()}</div>` : '';
+  return `<div class="billing">${rows}<div class="billing-total"><span>Total Estimate</span><span>${priCurrency} ${fmtAmt(res.total_usd||0)}</span></div>${kesFx}</div>`;
 }
 
 function renderOneAc(res, showDist, isDark) {
@@ -942,14 +953,14 @@ function whatsappEnquireAc(res) {
   }
 
   function totalLine(usd) {
-    let t = `USD $${usd.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+    let t = `${priCurrency} ${fmtAmt(usd)}`;
     if (showKesLine) t += ` (≈ KES ${Math.round(usd * kesRate).toLocaleString()})`;
     return t;
   }
 
   let lines = ["Hello, I would like to enquire about a charter flight.", ""];
   lines.push(`✈ Aircraft: ${acLabel}`);
-  if (res.rate_usd) lines.push(`Rate: USD $${res.rate_usd}/hr`);
+  if (res.rate_usd) lines.push(`Rate: ${priCurrencySymbol}${res.rate_usd}/hr`);
   lines.push("");
 
   if (res.mission === 'return_both') {
@@ -1075,7 +1086,7 @@ function buildWhatsApp(results, mission) {
       let wd=res.wait_days, maxN=res.max_nights||3;
       if (wd>=maxN) {
         let b=res.option_b;
-        lines.push(`Pick & Drop — USD $${(b.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+        lines.push(`Pick & Drop — ${priCurrency} ${fmtAmt(b.total_usd||0)}`);
         (b.drop?.segments||[]).filter(s=>s.type==='revenue').forEach(s=>lines.push(`Drop: ${s.origin} → ${s.destination}${s.date?' on '+s.date:''}`));
         (b.pick?.segments||[]).filter(s=>s.type==='revenue').forEach(s=>lines.push(`Pick: ${s.origin} → ${s.destination}${s.date?' on '+s.date:''}`));
       } else {
@@ -1084,7 +1095,7 @@ function buildWhatsApp(results, mission) {
         (res.option_a?.segments||[]).filter(s=>s.type==='revenue').forEach(s=>lines.push(`${s.origin} → ${s.destination}${s.date?' on '+s.date:''}`));
       }
     } else {
-      lines.push(`USD $${(res.total_usd||0).toLocaleString(undefined,{minimumFractionDigits:2})}`);
+      lines.push(`${priCurrency} ${fmtAmt(res.total_usd||0)}`);
       (res.segments||[]).filter(s=>s.type==='revenue').forEach(s=>lines.push(`${s.origin} → ${s.destination}${s.date?' on '+s.date:''}`));
     }
     lines.push('');
@@ -1127,7 +1138,7 @@ function openBookingModal(res) {
   currentBookingToken = null;
   document.getElementById('bm-ac-label').textContent = res.ac_label || '';
   let total = res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
-  document.getElementById('bm-total').textContent = `USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('bm-total').textContent = `${priCurrency} ${fmtAmt(total)}`;
   document.getElementById('bm-name').value = '';
   document.getElementById('bm-email').value = '';
   document.getElementById('bm-error').style.display = 'none';
@@ -1256,7 +1267,7 @@ async function submitBookingForm() {
       `Name: ${name}`,
       `Aircraft: ${res.ac_label || ''}`,
       `Route: ${routeSummary}`,
-      `Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`
+      `Total: ${priCurrency} ${fmtAmt(total)}`
     ];
     let waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waLines.join('\n'))}`;
     document.getElementById('bm-wa-link').href = waUrl;
@@ -1288,7 +1299,7 @@ function requestInvoice() {
       `Name: ${document.getElementById('bm-name').value.trim()}`,
       `Aircraft: ${res.ac_label || ''}`,
       `Route: ${routeSummary}`,
-      `Total: USD $${total.toLocaleString(undefined,{minimumFractionDigits:2})}`
+      `Total: ${priCurrency} ${fmtAmt(total)}`
     ];
     waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(waLines.join('\n'))}`;
     document.getElementById('bm-wa-link').href = waUrl;
