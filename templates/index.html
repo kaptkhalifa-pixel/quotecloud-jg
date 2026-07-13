@@ -854,7 +854,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           <div class="form-group"><label>SWIFT / BIC</label><input type="text" id="s-bank-sec-swift" value="{{ _bk.get('sec_swift', '') }}"></div>
           <div class="form-group"><label>Branch</label><input type="text" id="s-bank-sec-branch" value="{{ _bk.get('sec_branch', '') }}"></div>
         </div>
-        <div class="form-group"><label>Mobile Money / Paybill</label><input type="text" id="s-bank-paybill" value="{{ _bk.get('paybill', '') }}"></div>
+        <div class="form-group"><label>Mobile Money / Other Payment Instructions</label><textarea id="s-bank-paybill" rows="4" placeholder="e.g. M-Pesa Paybill: 123456, Account: CompanyName&#10;Venmo: @yourhandle&#10;PayPal: payments@company.com&#10;Cash App: $yourhandle" style="width:100%;font-size:0.88rem;padding:10px;border:1px solid #ddd;border-radius:6px;resize:vertical">{{ _bk.get('paybill', '') }}</textarea></div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBank()">Save ✓</button><span class="section-save-msg" id="msg-bank"></span></div>
       </div>
       <div class="settings-section collapsed">
