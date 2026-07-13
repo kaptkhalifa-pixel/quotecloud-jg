@@ -195,24 +195,50 @@ def get_company_from_block():
 
 def get_bank_details_block():
     bank = OPERATOR.get("bank", {})
+    fx = OPERATOR.get("fx", {})
+    pri_cur = bank.get("pri_currency") or fx.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+    sec_cur = bank.get("sec_currency") or fx.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
     lines = []
-    if bank.get("account_name"):
-        lines.append(bank["account_name"].upper())
-    if bank.get("bank_name"):
-        bank_line = bank["bank_name"].upper()
-        if bank.get("swift"):
-            bank_line += f" | SWIFT: {bank['swift']}"
-        if bank.get("branch"):
-            bank_line += f" | {bank['branch'].upper()}"
-        lines.append(bank_line)
-    if bank.get("kes_account"):
-        kes_cur = bank.get("kes_currency", "KES")
-        lines.append(f"{kes_cur} A/C: {bank['kes_account']}")
-    if bank.get("usd_account"):
-        usd_cur = bank.get("usd_currency", "USD")
-        lines.append(f"{usd_cur} A/C: {bank['usd_account']}")
+
+    # Primary account
+    pri_name = bank.get("pri_account_name") or bank.get("account_name", "")
+    pri_bank = bank.get("pri_bank_name") or bank.get("bank_name", "")
+    pri_acc = bank.get("pri_account") or bank.get("kes_account", "")
+    pri_swift = bank.get("pri_swift") or bank.get("swift", "")
+    pri_branch = bank.get("pri_branch") or bank.get("branch", "")
+
+    if any([pri_name, pri_bank, pri_acc]):
+        lines.append(f"── {pri_cur} ACCOUNT ──")
+        if pri_name: lines.append(pri_name.upper())
+        if pri_bank:
+            bank_line = pri_bank.upper()
+            if pri_swift: bank_line += f" | SWIFT: {pri_swift}"
+            if pri_branch: bank_line += f" | {pri_branch.upper()}"
+            lines.append(bank_line)
+        if pri_acc: lines.append(f"A/C: {pri_acc}")
+
+    # Secondary account
+    sec_name = bank.get("sec_account_name", "")
+    sec_bank = bank.get("sec_bank_name", "")
+    sec_acc = bank.get("sec_account") or bank.get("usd_account", "")
+    sec_swift = bank.get("sec_swift", "")
+    sec_branch = bank.get("sec_branch", "")
+
+    if sec_cur and any([sec_name, sec_bank, sec_acc]):
+        if lines: lines.append("")
+        lines.append(f"── {sec_cur} ACCOUNT ──")
+        if sec_name: lines.append(sec_name.upper())
+        if sec_bank:
+            bank_line = sec_bank.upper()
+            if sec_swift: bank_line += f" | SWIFT: {sec_swift}"
+            if sec_branch: bank_line += f" | {sec_branch.upper()}"
+            lines.append(bank_line)
+        if sec_acc: lines.append(f"A/C: {sec_acc}")
+
     if bank.get("paybill"):
-        lines.append(f"MOBILE: {bank['paybill']}")
+        if lines: lines.append("")
+        lines.append(f"MOBILE MONEY: {bank['paybill']}")
+
     return "\n".join(lines)
 
 hq.set_firestore_collection_fn(tenant_collection)
