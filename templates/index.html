@@ -3549,9 +3549,9 @@ async function loadSettings() {
   if(document.getElementById('s-bank-account-name')) document.getElementById('s-bank-account-name').value = bk.account_name || '';
   if(document.getElementById('s-bank-name')) document.getElementById('s-bank-name').value = bk.bank_name || '';
   if(document.getElementById('s-bank-kes-account')) document.getElementById('s-bank-kes-account').value = bk.kes_account || '';
-  if (document.getElementById('s-bank-kes-currency')) document.getElementById('s-bank-kes-currency').value = bk.kes_currency || 'KES';
+  if (document.getElementById('s-bank-kes-currency')) document.getElementById('s-bank-kes-currency').value = bk.pri_currency || bk.kes_currency || priCurrency || '';
   if(document.getElementById('s-bank-usd-account')) document.getElementById('s-bank-usd-account').value = bk.usd_account || '';
-  if (document.getElementById('s-bank-usd-currency')) document.getElementById('s-bank-usd-currency').value = bk.usd_currency || 'USD';
+  if (document.getElementById('s-bank-usd-currency')) document.getElementById('s-bank-usd-currency').value = bk.sec_currency || bk.usd_currency || secCurrency || '';
   if (document.getElementById('s-bank-paybill')) document.getElementById('s-bank-paybill').value = bk.paybill || '';
   document.getElementById('s-bank-swift').value = bk.swift || '';
   document.getElementById('s-bank-branch').value = bk.branch || '';
