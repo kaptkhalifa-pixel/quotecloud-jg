@@ -1144,7 +1144,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div class="balance-row remaining"><span>Remaining Balance</span><span id="bs-remaining">-</span></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Amount Paid (USD)</label><input type="number" id="paid-amount" placeholder="Enter amount" min="0" step="0.01"></div>
+      <div class="form-group"><label>Amount Paid (<span class="pri-cur-label">KES</span>)</label><input type="number" id="paid-amount" placeholder="Enter amount" min="0" step="0.01"></div>
       <div class="form-group"><label>Payment Date</label><input type="text" id="paid-date" placeholder="DD/MM/YYYY"></div>
     </div>
     <div class="form-group" style="margin-bottom:14px"><label>Mode of Payment</label>
@@ -1154,6 +1154,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <option value="Bank Transfer / RTGS">Bank Transfer / RTGS</option>
         <option value="Cheque">Cheque</option>
         <option value="Cash">Cash</option>
+        <option value="JamboPay">JamboPay</option>
         <option value="Stripe">Stripe</option>
         <option value="Paystack">Paystack</option>
         <option value="Other">Other</option>
@@ -3338,7 +3339,11 @@ async function confirmMarkPaid(generateReceipt) {
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a'); a.href = url; a.download = (docNumber||'receipt')+'.pdf'; a.click();
       let recRec = allRecords.find(r => r.number === number) || {};
-      document.getElementById('paid-msg').innerHTML = renderShareBar({
+      // Close modal and show success in records area
+      closePaidModal();
+      await loadRecords();
+      // Show share bar in records tab
+      let shareHtml = renderShareBar({
         docNumber, pdfUrl, docType: 'Receipt',
         clientName: recRec.client_name || '',
         clientWa: recRec.client_whatsapp || '',
@@ -3346,8 +3351,12 @@ async function confirmMarkPaid(generateReceipt) {
         amount: paidAmount,
         acLabel: recRec.ac_label || '',
         route: recRec.route_summary || ''
-      }) + `<div style="margin-top:8px"><button class="btn btn-grey btn-sm" onclick="closePaidModal()">✕ Close</button></div>`;
-      loadRecords();
+      });
+      let successDiv = document.createElement('div');
+      successDiv.style.cssText = 'margin:12px 0;';
+      successDiv.innerHTML = shareHtml;
+      let recTab = document.getElementById('nav-records');
+      if (recTab) recTab.insertBefore(successDiv, recTab.firstChild);
     } else {
       let data = await r.json();
       if (data.success) { closePaidModal(); loadRecords(); }
@@ -3368,7 +3377,7 @@ async function openLogModal(number) {
   } else {
     let rows = log.map(entry => `<tr>
       <td>${entry.date||'-'}</td>
-      <td>$${parseFloat(entry.amount||0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td>${priCurrency} ${fmtAmt(entry.amount||0)}</td>
       <td>${entry.mode||'-'}</td>
       <td>${entry.ref||'-'}</td>
       <td>${entry.receipt||'-'}</td>
