@@ -4,3 +4,4 @@ gunicorn==23.0.0
 weasyprint==65.1
 firebase-admin
 resend==2.0.0
+sentry-sdk

@@ -7,6 +7,12 @@
 # =========================================================
 import sys, os, json, re, pathlib, datetime
 sys.path.insert(0, os.path.dirname(__file__))
+import sentry_sdk
+sentry_sdk.init(
+    dsn="https://927f7b2d7a09ae0f6cfd3a2407d5c6d3@o4511728925278208.ingest.us.sentry.io/4511728938844160",
+    traces_sample_rate=0.1,
+    send_default_pii=False,
+)
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 from functools import wraps
 import quotecloud_engine as hq
