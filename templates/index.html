@@ -1225,6 +1225,7 @@ let lastResults = [];
 let fxRates = {};
 let secCurrency = '';
 let _priRate = 1.0;
+let _fxReady = false;
 let priCurrency = '{{ ((operator.get("fx") or {}).get("primary_currency") or (operator.get("quoting_rules") or {}).get("currency") or "USD") }}';
 let priCurrencySymbol = '{{ ((operator.get("fx") or {}).get("primary_currency") or "USD") }}';
 // priCurrencySymbol will be updated to symbol by loadFX
@@ -4154,6 +4155,7 @@ async function loadFX() {
       // Update currency labels throughout UI
       document.querySelectorAll('.pri-cur-label').forEach(el => el.textContent = priCurrency);
       document.querySelectorAll('.pri-sym-label').forEach(el => el.textContent = priCurrencySymbol);
+      _fxReady = true;
       // Update pdf-currency dropdown
       let pdfCurSel = document.getElementById('pdf-currency');
       if (pdfCurSel) {
@@ -4178,6 +4180,7 @@ async function loadFX() {
 }
 
 async function loadEnquiries() {
+  if (!_fxReady) { await loadFX(); }
   try {
     let r = await fetch('/bookings');
     allEnquiries = await r.json();
