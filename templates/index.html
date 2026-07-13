@@ -3656,7 +3656,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
   loadFX();
-  loadStateFromStorage();
   try {
     let pendingMsg = localStorage.getItem('qc_pending_msg');
     if (pendingMsg) {
@@ -3769,6 +3768,8 @@ document.addEventListener('DOMContentLoaded', () => {
       let mobileEl = document.querySelector(`.mobile-nav-tab[onclick*="'${savedTab}'"]`);
       if (desktopEl) showNav(savedTab, desktopEl);
       else if (mobileEl) showNavMobile(savedTab, mobileEl);
+    } else {
+      loadStateFromStorage();
     }
   } catch(e) {}
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','leg-origin-1','leg-dest-1'].forEach(id => initAdminAc(id));
@@ -4004,6 +4005,7 @@ async function saveAllCurrencySettings() {
       if (!operatorConfig.fx) operatorConfig.fx = {};
       operatorConfig.fx.secondary_currency = secondary;
       operatorConfig.fx.primary_currency = primary;
+      operatorConfig.fx.show_kes = showSec;
     } else {
       showSectionMsg('msg-currency', 'Error saving', 'err');
     }
