@@ -3290,7 +3290,7 @@ function renderRecords(records) {
 async function openPaidModal(number) {
   let r = await fetch('/records/get_one', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({number}) });
   let rec = await r.json();
-  if (rec.error) { alert(rec.error); return; }
+  if (rec.error) { closePaidModal(); alert(rec.error); return; }
   let total = parseFloat(rec.amount || 0);
   let prevPaid = parseFloat(rec.paid_amount || 0);
   let remaining = Math.max(total - prevPaid, 0);
@@ -3310,20 +3310,31 @@ async function openPaidModal(number) {
   document.getElementById('paid-ref').value = rec.payment_ref || '';
   let today = new Date();
   document.getElementById('paid-date').value = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+  let saveBtn = document.getElementById('btn-save-payment');
+  let recBtn = document.getElementById('btn-gen-receipt');
+  saveBtn.disabled = false; saveBtn.textContent = 'Save Payment';
+  recBtn.disabled = false; recBtn.textContent = 'Generate Receipt';
   if (isFullyPaid) {
     document.getElementById('paid-modal-title').textContent = 'Generate Receipt';
-    document.getElementById('btn-save-payment').style.display = 'none';
-    document.getElementById('btn-gen-receipt').style.display = 'inline-flex';
+    saveBtn.style.display = 'none';
+    recBtn.style.display = 'inline-flex';
   } else {
     document.getElementById('paid-modal-title').textContent = prevPaid > 0 ? 'Update Payment' : 'Mark as Paid';
-    document.getElementById('btn-save-payment').style.display = 'inline-flex';
-    document.getElementById('btn-gen-receipt').style.display = 'none';
+    saveBtn.style.display = 'inline-flex';
+    recBtn.style.display = 'none';
   }
   document.getElementById('paid-msg').innerHTML = '';
   document.getElementById('paid-modal').classList.add('active');
 }
 
-function closePaidModal() { document.getElementById('paid-modal').classList.remove('active'); }
+function closePaidModal() {
+  document.getElementById('paid-modal').classList.remove('active');
+  let saveBtn = document.getElementById('btn-save-payment');
+  let recBtn = document.getElementById('btn-gen-receipt');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Payment'; }
+  if (recBtn) { recBtn.disabled = false; recBtn.textContent = 'Generate Receipt'; }
+  document.getElementById('paid-msg').innerHTML = '';
+}
 
 async function confirmMarkPaid(generateReceipt) {
   let number = document.getElementById('paid-record-number').value;
@@ -3332,23 +3343,34 @@ async function confirmMarkPaid(generateReceipt) {
   let paymentMode = document.getElementById('paid-mode').value;
   let paymentRef = document.getElementById('paid-ref').value;
   if (!paidAmount) { showMsg('paid-msg','Enter amount paid.','error'); return; }
+
+  let btn = generateReceipt ? document.getElementById('btn-gen-receipt') : document.getElementById('btn-save-payment');
+  let originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = generateReceipt ? 'Generating Receipt…' : 'Saving Payment…';
+  document.getElementById('paid-msg').innerHTML = '';
+
   let endpoint = generateReceipt ? '/records/generate_receipt' : '/records/mark_paid';
-  showMsg('paid-msg', generateReceipt ? 'Generating receipt...' : 'Saving...', 'success');
   try {
     let r = await fetch(endpoint, {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ number, paid_amount: paidAmount, paid_date: paidDate, payment_mode: paymentMode, payment_ref: paymentRef })
     });
-    if (generateReceipt && r.ok) {
+
+    if (generateReceipt) {
+      if (!r.ok) {
+        let data = {}; try { data = await r.json(); } catch(e) {}
+        showMsg('paid-msg', data.error || 'Error generating receipt', 'error');
+        btn.disabled = false; btn.textContent = originalLabel;
+        return;
+      }
       let pdfUrl = r.headers.get('X-PDF-URL') || '';
       let docNumber = r.headers.get('X-DOC-NUMBER') || '';
       let blob = await r.blob();
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a'); a.href = url; a.download = (docNumber||'receipt')+'.pdf'; a.click();
-      let recRec = allRecords.find(r => r.number === number) || {};
-      // Close modal and show success in records tab
-      closePaidModal();
       await loadRecords();
+      let recRec = allRecords.find(rr => rr.number === number) || {};
       let shareHtml = renderShareBar({
         docNumber, pdfUrl, docType: 'Receipt',
         clientName: recRec.client_name || '',
@@ -3358,37 +3380,52 @@ async function confirmMarkPaid(generateReceipt) {
         acLabel: recRec.ac_label || '',
         route: recRec.route_summary || ''
       });
-      // Insert success card at top of records tab
-      let recSuccessDiv = document.createElement('div');
-      recSuccessDiv.style.cssText = 'margin-bottom:14px;position:relative;padding-right:32px';
-      recSuccessDiv.className = 'success-box';
-      recSuccessDiv.innerHTML = `✅ <strong>Receipt Generated</strong><br>${recRec.client_name || ''} — ${priCurrency} ${fmtAmt(paidAmount)}<br><br>${shareHtml}
-        <button onclick="this.parentElement.remove()" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:1rem;cursor:pointer;color:#555">✕</button>`;
-      let recMsgEl = document.getElementById('rec-msg') || document.getElementById('nav-records');
-      if (recMsgEl) recMsgEl.insertBefore(recSuccessDiv, recMsgEl.firstChild);
+      document.getElementById('btn-save-payment').style.display = 'none';
+      document.getElementById('btn-gen-receipt').style.display = 'none';
+      document.getElementById('paid-modal-title').textContent = 'Receipt Generated';
+      document.getElementById('paid-msg').innerHTML = `
+        <div class="success-box" style="margin-top:6px">
+          ✅ <strong>Receipt Generated</strong><br>
+          ${recRec.client_name || ''} — ${priCurrency} ${fmtAmt(paidAmount)}
+          <div style="margin-top:10px">${shareHtml}</div>
+          <div style="margin-top:12px;text-align:right">
+            <button class="btn btn-grey btn-sm" onclick="closePaidModal(); loadRecords();">Done — Close</button>
+          </div>
+        </div>`;
     } else {
       let data = await r.json();
-      if (data.success) {
-        // Stay in modal, switch to receipt mode
-        await loadRecords();
-        showMsg('paid-msg', '✅ Payment saved! You can now generate a receipt.', 'success');
+      if (!data.success) {
+        showMsg('paid-msg', data.error || 'Error', 'error');
+        btn.disabled = false; btn.textContent = originalLabel;
+        return;
+      }
+      await loadRecords();
+      let updatedRec = allRecords.find(rr => rr.number === number) || {};
+      let newTotal = parseFloat(updatedRec.amount || 0);
+      let newPaid = parseFloat(updatedRec.paid_amount || 0);
+      let remaining = Math.max(newTotal - newPaid, 0);
+      document.getElementById('bs-total').textContent = `${priCurrency} ${fmtAmt(newTotal)}`;
+      document.getElementById('bs-prev').textContent = `${priCurrency} ${fmtAmt(newPaid)}`;
+      document.getElementById('bs-prev-row').style.display = 'flex';
+      document.getElementById('bs-remaining').textContent = `${priCurrency} ${fmtAmt(remaining)}`;
+
+      if (remaining <= 0) {
         document.getElementById('paid-modal-title').textContent = 'Generate Receipt';
         document.getElementById('btn-save-payment').style.display = 'none';
         document.getElementById('btn-gen-receipt').style.display = 'inline-flex';
-        // Update balance display
-        let updatedRec = allRecords.find(r => r.number === number);
-        if (updatedRec) {
-          let newTotal = parseFloat(updatedRec.amount || 0);
-          let newPaid = parseFloat(updatedRec.paid_amount || 0);
-          document.getElementById('bs-total').textContent = `${priCurrency} ${fmtAmt(newTotal)}`;
-          document.getElementById('bs-prev').textContent = `${priCurrency} ${fmtAmt(newPaid)}`;
-          document.getElementById('bs-prev-row').style.display = 'flex';
-          document.getElementById('bs-remaining').textContent = `${priCurrency} ${fmtAmt(Math.max(newTotal - newPaid, 0))}`;
-        }
+        document.getElementById('btn-gen-receipt').disabled = false;
+        document.getElementById('btn-gen-receipt').textContent = 'Generate Receipt';
+        document.getElementById('paid-msg').innerHTML = `<div class="success-box" style="margin-top:6px">✅ Payment saved in full. Tap <strong>Generate Receipt</strong> below to issue it.</div>`;
+      } else {
+        document.getElementById('paid-modal-title').textContent = 'Update Payment';
+        btn.disabled = false; btn.textContent = 'Save Payment';
+        document.getElementById('paid-msg').innerHTML = `<div class="success-box" style="margin-top:6px">✅ Payment of ${priCurrency} ${fmtAmt(paidAmount)} saved. Remaining balance: ${priCurrency} ${fmtAmt(remaining)}.</div>`;
       }
-      else showMsg('paid-msg', data.error||'Error','error');
     }
-  } catch(e) { showMsg('paid-msg','Error: '+e.message,'error'); }
+  } catch(e) {
+    showMsg('paid-msg','Error: '+e.message,'error');
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
 }
 
 async function openLogModal(number) {
@@ -4320,14 +4357,25 @@ function filterEnquiries() {
 }
 
 async function goToRecordPayment(invoiceNumber) {
-  // Show records FIRST before hiding others to prevent flash
+  // Open modal INSTANTLY so any tab-switching underneath is invisible - eliminates flash
+  document.getElementById('paid-modal').classList.add('active');
+  document.getElementById('paid-modal-title').textContent = 'Loading…';
+  document.getElementById('paid-msg').innerHTML = '<div style="text-align:center;padding:16px;color:#888">Loading payment details…</div>';
+  document.getElementById('bs-total').textContent = '-';
+  document.getElementById('bs-remaining').textContent = '-';
+  document.getElementById('bs-prev-row').style.display = 'none';
+  document.getElementById('btn-save-payment').style.display = 'none';
+  document.getElementById('btn-gen-receipt').style.display = 'none';
+
+  // Switch underlying tab state in background - covered by modal, no visible flash
   let recContent = document.getElementById('nav-records');
-  if (recContent) recContent.classList.add('active');
   document.querySelectorAll('.tab-content').forEach(t => { if (t.id !== 'nav-records') t.classList.remove('active'); });
+  if (recContent) recContent.classList.add('active');
   document.querySelectorAll('.nav-tab,.mobile-nav-tab').forEach(t => t.classList.remove('active'));
   let recTabEl = document.querySelector('.nav-tab[onclick*="records"]') || document.querySelector('.mobile-nav-tab[onclick*="records"]');
   if (recTabEl) recTabEl.classList.add('active');
   try { localStorage.setItem('qc_active_tab', 'records'); } catch(e) {}
+
   await loadRecords();
   openPaidModal(invoiceNumber);
 }
