@@ -3565,6 +3565,7 @@ async function createManualInvoice() {
 }
 
 async function loadSettings() {
+ try {
   let r = await fetch('/settings/config');
   operatorConfig = await r.json();
   let b = operatorConfig.branding || {};
@@ -3623,8 +3624,16 @@ async function loadSettings() {
   if(document.getElementById('s-bank-usd-account')) document.getElementById('s-bank-usd-account').value = bk.usd_account || '';
   if (document.getElementById('s-bank-usd-currency')) document.getElementById('s-bank-usd-currency').value = secCurrency || bk.sec_currency || bk.usd_currency || '';
   if (document.getElementById('s-bank-paybill')) document.getElementById('s-bank-paybill').value = bk.paybill || '';
-  document.getElementById('s-bank-swift').value = bk.swift || '';
-  document.getElementById('s-bank-branch').value = bk.branch || '';
+  if (document.getElementById('s-bank-swift')) document.getElementById('s-bank-swift').value = bk.swift || '';
+  if (document.getElementById('s-bank-branch')) document.getElementById('s-bank-branch').value = bk.branch || '';
+  if (document.getElementById('s-bank-pri-swift')) document.getElementById('s-bank-pri-swift').value = bk.pri_swift || bk.swift || '';
+  if (document.getElementById('s-bank-pri-branch')) document.getElementById('s-bank-pri-branch').value = bk.pri_branch || bk.branch || '';
+  if (document.getElementById('s-bank-sec-swift')) document.getElementById('s-bank-sec-swift').value = bk.sec_swift || '';
+  if (document.getElementById('s-bank-sec-branch')) document.getElementById('s-bank-sec-branch').value = bk.sec_branch || '';
+  if (document.getElementById('s-bank-pri-account-name')) document.getElementById('s-bank-pri-account-name').value = bk.pri_account_name || bk.account_name || '';
+  if (document.getElementById('s-bank-pri-bank-name')) document.getElementById('s-bank-pri-bank-name').value = bk.pri_bank_name || bk.bank_name || '';
+  if (document.getElementById('s-bank-sec-account-name')) document.getElementById('s-bank-sec-account-name').value = bk.sec_account_name || '';
+  if (document.getElementById('s-bank-sec-bank-name')) document.getElementById('s-bank-sec-bank-name').value = bk.sec_bank_name || '';
   document.getElementById('s-invoice-prefix').value = inv.prefix || '';
   let _validityHrs = (operatorConfig.quoting_rules||{}).quote_validity_hours || 48;
   let _defaultTerms = `• A deposit of 50% is required to confirm the booking.
@@ -3690,6 +3699,17 @@ if (primaryCurEl && (fx.primary_currency || (operatorConfig.quoting_rules && ope
     }
   }
   await loadMessageTemplates();
+ } catch(e) {
+   console.error('loadSettings failed:', e);
+   let firstCard = document.querySelector('#nav-settings .card, #nav-settings');
+   if (firstCard) {
+     let errDiv = document.createElement('div');
+     errDiv.className = 'error-box';
+     errDiv.style.cssText = 'margin:12px 0;padding:12px;font-size:0.85rem';
+     errDiv.innerHTML = `⚠️ Some settings failed to load: ${e.message}. Please screenshot this and report it.`;
+     firstCard.prepend(errDiv);
+   }
+ }
 }
 async function uploadLogo(input) {
   let status = document.getElementById('logo-upload-status');
