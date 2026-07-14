@@ -756,9 +756,9 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
                 rdata = r.json()
                 if rdata.get("result") == "success":
                     _cf = float(rdata.get("rates", {}).get(pri_cur, 1.0))
-            rate = rate * _cf
-            overnight_rate = overnight_rate * _cf
-            idle_day_rate = idle_day_rate * _cf
+            rate = round_currency(rate * _cf)
+            overnight_rate = round_currency(overnight_rate * _cf)
+            idle_day_rate = round_currency(idle_day_rate * _cf)
         except Exception:
             _cf = 1.0
     routing_mode = ac_cfg.get("routing_mode", "standard")
