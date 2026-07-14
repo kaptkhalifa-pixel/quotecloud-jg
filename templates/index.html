@@ -1154,6 +1154,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div class="form-group"><label>Amount Paid (<span class="pri-cur-label">KES</span>)</label><input type="number" id="paid-amount" placeholder="Enter amount" min="0" step="0.01"></div>
       <div class="form-group"><label>Payment Date</label><input type="text" id="paid-date" placeholder="DD/MM/YYYY"></div>
     </div>
+    <div id="paid-amount-lock-hint" style="display:none;font-size:0.78rem;color:#888;margin:-8px 0 14px">Locked to full balance. For partial or staggered payments, <a href="#" onclick="closePaidModal();return false;" style="color:#0d47a1;font-weight:600">close this and use Log Payment in Records</a>.</div>
     <div class="form-group" style="margin-bottom:14px"><label>Mode of Payment</label>
       <select id="paid-mode">
         <option value="">-- Select --</option>
@@ -3287,7 +3288,7 @@ function renderRecords(records) {
   }).join('');
 }
 
-async function openPaidModal(number) {
+async function openPaidModal(number, lockToFull) {
   let r = await fetch('/records/get_one', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({number}) });
   let rec = await r.json();
   if (rec.error) { closePaidModal(); alert(rec.error); return; }
@@ -3305,7 +3306,20 @@ async function openPaidModal(number) {
   } else {
     prevRow.style.display = 'none';
   }
-  document.getElementById('paid-amount').value = remaining > 0 ? remaining : total;
+  let amountInput = document.getElementById('paid-amount');
+  let lockHint = document.getElementById('paid-amount-lock-hint');
+  amountInput.value = remaining > 0 ? remaining : total;
+  if (lockToFull) {
+    amountInput.readOnly = true;
+    amountInput.style.background = '#f8f9fa';
+    amountInput.style.cursor = 'not-allowed';
+    if (lockHint) lockHint.style.display = 'block';
+  } else {
+    amountInput.readOnly = false;
+    amountInput.style.background = '';
+    amountInput.style.cursor = '';
+    if (lockHint) lockHint.style.display = 'none';
+  }
   document.getElementById('paid-mode').value = rec.payment_mode || '';
   document.getElementById('paid-ref').value = rec.payment_ref || '';
   let today = new Date();
@@ -4397,7 +4411,8 @@ async function goToRecordPayment(invoiceNumber) {
   try { localStorage.setItem('qc_active_tab', 'records'); } catch(e) {}
 
   await loadRecords();
-  openPaidModal(invoiceNumber);
+  // CRM shortcut = full payment only. Partial/staggered stays a Records-only action.
+  openPaidModal(invoiceNumber, true);
 }
 
 function getEnqStatusBadge(status) {
