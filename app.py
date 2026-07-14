@@ -872,6 +872,13 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         result["pax_fee_enabled"] = pax_enabled
         result["overnight_enabled"] = overnight_enabled
         result["routing_mode"] = routing_mode
+        # Round all totals to primary currency precision
+        for _key in ("total_usd",):
+            if _key in result:
+                result[_key] = round_currency(result[_key])
+        for _sub in ("option_a", "option_b", "drop", "pick"):
+            if _sub in result and isinstance(result[_sub], dict) and "total_usd" in result[_sub]:
+                result[_sub]["total_usd"] = round_currency(result[_sub]["total_usd"])
         min_hrs = float(rules.get("min_flight_hours", 1.0))
         result["min_chargeable_hrs"] = min_hrs
         result["min_applied"] = result.get("billed_hours", 0) > sum(
