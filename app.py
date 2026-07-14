@@ -67,12 +67,17 @@ def load_operator_config():
             data = snap.to_dict()
             if data:
                 return data
+        # Firestore doc genuinely doesn't exist yet - safe to seed once from local file
+        file_config = load_operator_config_from_file()
+        if file_config:
+            save_operator_config(file_config)
+        return file_config
     except Exception as e:
-        print(f"Firestore load_operator_config error: {e}")
-    file_config = load_operator_config_from_file()
-    if file_config:
-        save_operator_config(file_config)
-    return file_config
+        # Firestore READ failed at boot - the live doc is probably fine, we just
+        # couldn't see it. Use local file for THIS boot only. NEVER write back here -
+        # that clobbers live production data with a stale bundled file.
+        print(f"Firestore load_operator_config error (using local file for this boot, NOT persisting): {e}")
+        return load_operator_config_from_file()
 
 def save_operator_config(config):
     try:
