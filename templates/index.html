@@ -3755,7 +3755,9 @@ function toggleGeoFields() {
 }
 
 function toggleBuffer() {
-  document.getElementById('buffer-minutes-field').style.display = document.getElementById('s-buffer-enabled').checked ? 'block' : 'none';
+  let field = document.getElementById('buffer-minutes-field');
+  let toggle = document.getElementById('s-buffer-enabled');
+  if (field && toggle) field.style.display = toggle.checked ? 'block' : 'none';
 }
 
 function toggleDisclaimer() {
