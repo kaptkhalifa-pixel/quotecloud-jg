@@ -3366,9 +3366,7 @@ async function confirmMarkPaid(generateReceipt) {
       }
       let pdfUrl = r.headers.get('X-PDF-URL') || '';
       let docNumber = r.headers.get('X-DOC-NUMBER') || '';
-      let blob = await r.blob();
-      let url = URL.createObjectURL(blob);
-      let a = document.createElement('a'); a.href = url; a.download = (docNumber||'receipt')+'.pdf'; a.click();
+      await r.blob(); // consume response body only - matches invoice flow. Forcing a blob a.click() download here breaks SPA state on mobile Safari (it often navigates the tab instead of downloading). PDF is reachable via the permanent pdfUrl link in the share bar below.
       await loadRecords();
       let recRec = allRecords.find(rr => rr.number === number) || {};
       let shareHtml = renderShareBar({
