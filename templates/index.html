@@ -3781,6 +3781,13 @@ document.addEventListener('DOMContentLoaded', () => {
   ['paid-modal','log-modal','edit-modal','delete-modal','invoice-builder-modal','share-modal','breakdown-modal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
   });
+  // Eagerly load operatorConfig on page load - previously only loaded lazily when Settings
+  // or Records tab was opened first, causing company_name/bank/contact to read empty
+  // (falling back to hardcoded 'us') if a quote was shared via WhatsApp before either tab
+  // was ever visited in that session.
+  if (!operatorConfig.company_name) {
+    fetch('/settings/config').then(r => r.json()).then(d => { operatorConfig = d; }).catch(() => {});
+  }
   loadFX();
   try {
     let pendingMsg = localStorage.getItem('qc_pending_msg');
