@@ -4912,7 +4912,8 @@ function shareBarWa(id) {
       .replace(/{phone}/g, phone)
       .replace(/{ref}/g, p.docNumber)
       .replace(/{amount}/g, fmtAmt(p.amount||0))
-      .replace(/{pdf_url}/g, pdfLine)
+      .replace(/{currency}/g, priCurrency)
+      .replace(/{pdf_url}/g, p.pdfUrl || '')
       .replace(/{ac_label}/g, p.acLabel || '')
       .replace(/{route}/g, p.route || '');
   } else {
@@ -4995,7 +4996,8 @@ function buildAndOpenWa() {
       .replace(/{phone}/g, phone)
       .replace(/{ref}/g, extra.token || docNumber)
       .replace(/{amount}/g, amount)
-      .replace(/{pdf_url}/g, pdfLine)
+      .replace(/{currency}/g, priCurrency)
+      .replace(/{pdf_url}/g, pdfUrl || '')
       .replace(/{ac_label}/g, extra.acLabel || rec.ac_label || '')
       .replace(/{route}/g, extra.route || rec.route_summary || '');
   } else {
