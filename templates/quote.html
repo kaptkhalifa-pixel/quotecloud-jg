@@ -883,7 +883,7 @@ function renderOneAc(res, showDist, isDark) {
   let isFixed = res.ac_type==='fixed_wing';
   let badgeClass = isDark ? (isFixed?'badge-fixed':'badge-heli') : (isFixed?'badge-fixed-light':'badge-heli-light');
   let badgeText = isFixed ? '✈ Fixed Wing' : '🚁 Helicopter';
-  let disclaimer = isFixed?`<div class="info-box">${config.landing_field_disclaimer||'Fixed wing aircraft. Runway required. Contact us to confirm suitability.'}</div>`:'';
+  let disclaimer = isFixed?`<div class="info-box">${config.landing_field_disclaimer||'Fixed wing aircraft, runway required. Runway conditions can vary; contact us to confirm suitability.'}</div>`:'';
   let headerClass = isDark ? 'ac-header dark' : 'ac-header light';
   let content='';
   if (res.mission==='return_both') {

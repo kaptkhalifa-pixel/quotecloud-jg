@@ -735,7 +735,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           </select>
         </div>
         <div id="disclaimer-field">
-          <div class="form-group-full"><label>Fixed Wing Landing Field Disclaimer</label><textarea id="s-disclaimer" rows="3"></textarea></div>
+          <div class="form-group-full"><label>Fixed Wing Landing Field Disclaimer <span style="font-family:'Space Mono',monospace;font-size:0.52rem;background:#f0f4ff;color:#1a56db;padding:2px 5px;border-radius:3px;margin-left:4px">Pro</span></label><textarea id="s-disclaimer" rows="3"></textarea></div>
         </div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionAircraftMode()">Save ✓</button><span class="section-save-msg" id="msg-aircraft-mode"></span></div>
       </div>
@@ -1752,7 +1752,7 @@ function renderOneAc(res) {
   let typeBadge = res.ac_type==='fixed_wing'?`<span class="tag tag-fixed">Fixed Wing</span>`:`<span class="tag tag-heli">Helicopter</span>`;
   let routeBadge = '';
   let homeInfo = res.home_airstrip ? `<span style="color:#888;font-size:0.78rem">Base: ${res.home_airstrip}</span>` : '';
-  let disclaimer = res.ac_type==='fixed_wing' ? `<div class="info-box">Fixed wing aircraft. Runway required for takeoff/landing. Confirm runway suitability before booking.</div>` : '';
+  let disclaimer = res.ac_type==='fixed_wing' ? `<div class="info-box">${operatorConfig.landing_field_disclaimer || 'Fixed wing aircraft, runway required. Runway conditions can vary; contact us to confirm suitability.'}</div>` : '';
   let content = '';
 
   if (res.mission === 'return_both') {
@@ -3595,7 +3595,7 @@ async function loadSettings() {
   document.getElementById('s-facebook').value = s.facebook || '';
   document.getElementById('s-twitter').value = s.twitter || '';
   document.getElementById('s-aircraft-mode').value = operatorConfig.aircraft_mode || 'helicopter';
-  document.getElementById('s-disclaimer').value = operatorConfig.landing_field_disclaimer || '';
+  document.getElementById('s-disclaimer').value = operatorConfig.landing_field_disclaimer || 'Fixed wing aircraft, runway required. Runway conditions can vary; contact us to confirm suitability.';
   document.getElementById('s-phone').value = c.phone || '';
   document.getElementById('s-whatsapp').value = c.whatsapp || '';
   document.getElementById('s-whatsapp-greeting').value = c.whatsapp_greeting || '';
