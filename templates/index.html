@@ -1840,12 +1840,6 @@ function quickWA(idx) {
   }
   let revSegs2 = allSegs2.filter(s => ['revenue','positioning','depositioning'].includes(s.type));
   let totalHrs2 = allSegs2.reduce((sum, s) => sum + parseFloat(s.hours||0), 0);
-  let legLines2 = revSegs2.map((s, i) => {
-    let hrs = parseFloat(s.hours||0).toFixed(1);
-    let dist = s.distance_nm ? ' ' + Math.round(s.distance_nm) + ' nm' : '';
-    let dt = s.date ? ' ' + s.date : '';
-    return '  ' + (i+1) + '. ' + s.origin + ' to ' + s.destination + ' (' + hrs + ' hrs' + dist + dt + ')';
-  });
   let rate2 = res._adj_rate || res.rate_usd || 0;
   let pax2 = res.pax_fee_usd || res.pax_fee_usd_display || 0;
   let paxLabel2 = res.pax_label || 'Mission Fixed Costs';
@@ -1854,53 +1848,55 @@ function quickWA(idx) {
   let company2 = operatorConfig?.company_name || operatorConfig?.company || 'us';
   let phone2 = operatorConfig.contact?.phone || '';
   let validity2 = (operatorConfig.quoting_rules?.quote_validity_hours || 48);
-  let priceLines2 = [];
-  priceLines2.push('  Flight (' + fmtHours(totalHrs2) + ' @ ' + priCurrencySymbol + fmtAmt(rate2) + '/hr)');
-  if (pax2 > 0) priceLines2.push('  ' + paxLabel2 + ': ' + priCurrency + ' ' + fmtAmt(pax2));
-  if (nights2 > 0 && ovRate2 > 0) priceLines2.push('  Overnight x' + nights2 + ': ' + priCurrency + ' ' + fmtAmt(ovRate2 * nights2));
-  // Build leg lines by type
-  let posLines = allSegs2.filter(s => s.type === 'positioning').map(s => {
-    let hrs = parseFloat(s.hours||0).toFixed(1);
-    let dist = s.distance_nm ? ' · ' + Math.round(s.distance_nm) + ' nm' : '';
-    return 'Positioning:     ' + s.origin + ' → ' + s.destination + ' (' + hrs + ' hrs' + dist + ')';
-  });
-  let revLines = allSegs2.filter(s => s.type === 'revenue').map((s, i) => {
+  // Walk every leg in ACTUAL FLOWN ORDER, reading each segment's real type.
+  // Fixes: repositioning legs were silently dropped by the old 3-way filter (never matched
+  // 'positioning'/'revenue'/'depositioning'). Legs now shown in true sequence, not regrouped.
+  let revenueCount = allSegs2.filter(s => s.type === 'revenue').length;
+  let revenueSeen = 0;
+  let allLegLines = allSegs2.filter(s => s.type && s.origin && s.destination).map(s => {
     let hrs = parseFloat(s.hours||0).toFixed(1);
     let dist = s.distance_nm ? ' · ' + Math.round(s.distance_nm) + ' nm' : '';
     let dt = s.date ? ' · ' + s.date : '';
-    let label = revSegs2.filter(x => x.type==='revenue').length > 1 ? 'Leg ' + (i+1) + ':          ' : 'Your Mission:    ';
+    let label;
+    if (s.type === 'revenue') {
+      revenueSeen++;
+      label = revenueCount > 1 ? 'Leg ' + revenueSeen + ': ' : 'Your Mission: ';
+    } else if (s.type === 'positioning') {
+      label = 'Pos: ';
+    } else if (s.type === 'repositioning') {
+      label = 'Repo: ';
+    } else if (s.type === 'depositioning') {
+      label = 'Depo: ';
+    } else {
+      label = s.type.charAt(0).toUpperCase() + s.type.slice(1) + ': ';
+    }
     return label + s.origin + ' → ' + s.destination + ' (' + hrs + ' hrs' + dist + dt + ')';
   });
-  let depLines = allSegs2.filter(s => s.type === 'depositioning').map(s => {
-    let hrs = parseFloat(s.hours||0).toFixed(1);
-    let dist = s.distance_nm ? ' · ' + Math.round(s.distance_nm) + ' nm' : '';
-    return 'Depositioning:   ' + s.origin + ' → ' + s.destination + ' (' + hrs + ' hrs' + dist + ')';
-  });
-  let allLegLines = [...posLines, ...revLines, ...depLines];
 
-  // Cost lines - only show if non-zero
+  // Cost breakdown: Base Charter Cost, Overnight, Idle Day, Mission Fixed Costs last. Omitted when zero.
   let costLines = [];
-  costLines.push('Mission Fixed Costs:   ' + (pax2 > 0 ? priCurrency + ' ' + fmtAmt(pax2) : '—'));
-  if (nights2 > 0 && ovRate2 > 0) costLines.push('Overnight Per Diem:    ' + priCurrency + ' ' + fmtAmt(ovRate2 * nights2));
+  if (rate2 > 0 && totalHrs2 > 0) costLines.push('Base Charter Cost: ' + priCurrency + ' ' + fmtAmt(rate2 * totalHrs2));
+  if (nights2 > 0 && ovRate2 > 0) costLines.push('Overnight: ' + priCurrency + ' ' + fmtAmt(ovRate2 * nights2));
   let idleDays2 = res.idle_days || 0;
   let idleRate2 = res.idle_day_rate_usd || 0;
-  if (idleDays2 > 0 && idleRate2 > 0) costLines.push('Idle Day Charge:       ' + priCurrency + ' ' + fmtAmt(idleRate2 * idleDays2));
+  if (idleDays2 > 0 && idleRate2 > 0) costLines.push('Idle Day: ' + priCurrency + ' ' + fmtAmt(idleRate2 * idleDays2));
+  if (pax2 > 0) costLines.push(paxLabel2 + ': ' + priCurrency + ' ' + fmtAmt(pax2));
 
   let lines = [
     'Hello,',
     '',
     'Here is your charter quotation from ' + company2 + '.',
     '',
-    'FLIGHT PLAN',
+    'ROUTING',
     ...allLegLines,
     '',
-    'Equipment: ' + (res.ac_label||''),
+    'Aircraft: ' + (res.ac_label||''),
     'Total Billed Flight Time: ' + fmtHours(totalHrs2),
     '',
     'COST BREAKDOWN',
     ...costLines,
     '',
-    'TOTAL: ' + priCurrency + ' ' + fmtAmt(total),
+    'GRAND TOTAL: ' + priCurrency + ' ' + fmtAmt(total),
     '',
     'Offer valid ' + validity2 + ' hours, subject to availability.',
     'Reply to receive a PDF copy of this quotation.',
