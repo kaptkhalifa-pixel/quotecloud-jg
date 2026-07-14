@@ -1843,8 +1843,12 @@ function quickWA(idx) {
   let rate2 = res._adj_rate || res.rate_usd || 0;
   let pax2 = res.pax_fee_usd || res.pax_fee_usd_display || 0;
   let paxLabel2 = res.pax_label || 'Mission Fixed Costs';
-  let nights2 = res.nights || 0;
+  // Was reading res.nights/res.idle_days directly - those keys never exist on the
+  // result object (only overnight_usd/waiting_usd totals do). Same fix already proven
+  // correct elsewhere in this file (adjustRevenue) - cost / rate, not a non-existent count field.
+  let baseOv2 = res.overnight_usd || (res.mission==='return_both' ? res.option_a?.overnight_usd : 0) || 0;
   let ovRate2 = res.overnight_rate_usd || 0;
+  let nights2 = ovRate2 > 0 && baseOv2 > 0 ? Math.round(baseOv2 / ovRate2) : 0;
   let company2 = operatorConfig?.company_name || operatorConfig?.company || 'us';
   let phone2 = operatorConfig.contact?.phone || '';
   let validity2 = (operatorConfig.quoting_rules?.quote_validity_hours || 48);
@@ -1877,8 +1881,9 @@ function quickWA(idx) {
   let costLines = [];
   if (rate2 > 0 && totalHrs2 > 0) costLines.push('Base Charter Cost: ' + priCurrency + ' ' + fmtAmt(rate2 * totalHrs2));
   if (nights2 > 0 && ovRate2 > 0) costLines.push('Overnight: ' + priCurrency + ' ' + fmtAmt(ovRate2 * nights2));
-  let idleDays2 = res.idle_days || 0;
+  let baseIdle2 = res.waiting_usd || (res.mission==='return_both' ? res.option_a?.waiting_usd : 0) || 0;
   let idleRate2 = res.idle_day_rate_usd || 0;
+  let idleDays2 = idleRate2 > 0 && baseIdle2 > 0 ? Math.round(baseIdle2 / idleRate2) : 0;
   if (idleDays2 > 0 && idleRate2 > 0) costLines.push('Idle Day: ' + priCurrency + ' ' + fmtAmt(idleRate2 * idleDays2));
   if (pax2 > 0) costLines.push(paxLabel2 + ': ' + priCurrency + ' ' + fmtAmt(pax2));
 
