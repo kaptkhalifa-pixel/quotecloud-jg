@@ -806,7 +806,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         "base_label": ac_cfg.get("home_airstrip", "Wilson Airport, Nairobi"),
     }
     pax_enabled = ac_cfg.get("pax_fee_enabled", True)
-    hq.PAX_ADMIN_FEE_USD = float(ac_cfg["pax_fee"]) * _cf if pax_enabled else 0.0
+    hq.PAX_ADMIN_FEE_USD = round_currency(float(ac_cfg["pax_fee"]) * _cf) if pax_enabled else 0.0
     hq.MIN_CHARGEABLE_HR = float(rules.get("min_flight_hours", 1.0))
 
     try:
@@ -866,7 +866,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         overnight_enabled = ac_cfg.get("overnight_enabled", True)
         result["overnight_rate_usd"] = overnight_rate if overnight_enabled else 0.0
         result["idle_day_rate_usd"] = idle_day_rate
-        result["pax_fee_usd_display"] = float(ac_cfg["pax_fee"]) * _cf if pax_enabled else 0.0
+        result["pax_fee_usd_display"] = round_currency(float(ac_cfg["pax_fee"]) * _cf) if pax_enabled else 0.0
         result["pax_label"] = ac_cfg.get("pax_label", "Mission Fixed Costs")
         result["overnight_label"] = ac_cfg.get("overnight_label", "Crew Overnight")
         result["pax_fee_enabled"] = pax_enabled
@@ -1171,6 +1171,12 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             "quantity": str(ei.get("quantity", "1")),
             "unit_cost": str(ei.get("unit_cost", "0"))
         })
+    # Round all item unit costs to primary currency precision
+    for item in items:
+        try:
+            item["unit_cost"] = str(round_currency(float(item["unit_cost"])))
+        except (ValueError, TypeError):
+            pass
 
     to_block = "\n".join(filter(None, [client_name, client_phone, client_email]))
     bank_block = get_bank_details_block()
