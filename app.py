@@ -1852,7 +1852,7 @@ def mark_paid():
         rec["payment_log"] = []
     rec["payment_log"].append({
         "date": paid_date,
-        "amount": round(paid_amount, 2),
+        "amount": round_currency(paid_amount),
         "mode": payment_mode,
         "ref": payment_ref,
         "recorded_at": datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -1897,22 +1897,11 @@ def generate_receipt():
     items = [{
         "name": "\n".join(payment_desc_lines),
         "quantity": "1",
-        "unit_cost": str(total)
+        "unit_cost": str(round_currency(total))
     }]
 
-    bank_block = get_bank_details_block()
-    _validity_hrs = OPERATOR.get("quoting_rules", {}).get("quote_validity_hours", 48)
-    _default_terms = (
-        "• A deposit of 50% is required to confirm the booking.\n"
-        "• Full balance must be settled prior to departure.\n"
-        "• Cancellations within 24 hours of departure are non-refundable.\n"
-        f"• This quotation is valid for {_validity_hrs} hours from time of issue, subject to availability.\n"
-        "• Passenger IDs/passports required at time of booking confirmation.\n"
-        "• Flight operations are subject to weather conditions, ATC routings and other operational restrictions beyond our control.\n"
-        "• The operator reserves the right to substitute aircraft of equivalent or superior category where necessary.\n"
-        "• By requesting an invoice and making payment, you agree to these terms and conditions."
-    )
-    terms = ""  # Receipts never show terms
+    # Receipts never show bank details or terms - payment already confirmed
+    pri_cur = OPERATOR.get("fx", {}).get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
 
     payload = {
         "logo": OPERATOR.get("logo_url", ""),
@@ -1925,10 +1914,10 @@ def generate_receipt():
         "discounts": 0,
         "fields": {"tax": False, "discounts": False, "shipping": False},
         "notes": "",
-        "notes_title": "BANK DETAILS",
-        "terms": terms,
-        "terms_title": "TERMS & CONDITIONS",
-        "currency": "USD",
+        "notes_title": "",
+        "terms": "",
+        "terms_title": "",
+        "currency": pri_cur,
         "header": "Receipt"
     }
 
@@ -1937,7 +1926,7 @@ def generate_receipt():
     receipt_pdf_url = upload_pdf_to_firebase(out_path, receipt_number)
 
     rec["paid"] = paid_amount >= total
-    rec["paid_amount"] = round(paid_amount, 2)
+    rec["paid_amount"] = round_currency(paid_amount)
     rec["paid_date"] = paid_date
     rec["payment_mode"] = payment_mode
     rec["payment_ref"] = payment_ref
@@ -1948,7 +1937,7 @@ def generate_receipt():
         rec["payment_log"] = []
     rec["payment_log"].append({
         "date": paid_date,
-        "amount": round(paid_amount, 2),
+        "amount": round_currency(paid_amount),
         "mode": payment_mode,
         "ref": payment_ref,
         "recorded_at": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
