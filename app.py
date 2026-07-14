@@ -1894,10 +1894,7 @@ def generate_receipt():
         "• The operator reserves the right to substitute aircraft of equivalent or superior category where necessary.\n"
         "• By requesting an invoice and making payment, you agree to these terms and conditions."
     )
-    terms = OPERATOR.get("invoice", {}).get("terms", "") or _default_terms
-    # Only show terms on quotations if operator has enabled it
-    if doc_type == "Quotation" and not OPERATOR.get("invoice", {}).get("terms_on_quote", False):
-        terms = ""
+    terms = ""  # Receipts never show terms
 
     payload = {
         "logo": OPERATOR.get("logo_url", ""),
