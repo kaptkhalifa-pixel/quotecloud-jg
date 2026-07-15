@@ -1106,7 +1106,19 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     note_line = f"Note: {note}" if note else ""
 
     if ghost_mode:
+        # Ghost Mode bundles EVERYTHING into one lump sum - base charter, pax fee,
+        # overnight, idle days, AND any extra line items. Previously only rate+pax
+        # were folded in here; overnight/idle/extras were computed and added as
+        # separate visible line items further below regardless of ghost_mode,
+        # silently defeating the "one number, no breakdown" guarantee.
         total_bundled = float(result.get("total_usd", 0))
+        _gm_overnight = float(result.get("overnight_usd") or result.get("overnight_cost_usd") or 0)
+        _gm_idle = float(result.get("waiting_usd") or result.get("idle_cost_usd") or 0)
+        _gm_extras = sum(
+            float(ei.get("quantity", 1)) * float(ei.get("unit_cost", 0))
+            for ei in (extra_items or [])
+        )
+        total_bundled = total_bundled + _gm_overnight + _gm_idle + _gm_extras
         item_parts = [f"Equipment: {ac_label}"]
         if routing_text:
             item_parts.append(routing_text)
@@ -1116,7 +1128,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         items.append({
             "name": "Charter Package\n" + "\n".join(item_parts),
             "quantity": "1",
-            "unit_cost": str(round(total_bundled, 2))
+            "unit_cost": str(round_currency(total_bundled))
         })
     elif total_hrs > 0 and rate > 0:
         item_parts = [f"Equipment: {ac_label}"]
@@ -1150,32 +1162,33 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
                     "unit_cost": str(round(adj_pax, 2))
                 })
 
-    overnight_usd = result.get("overnight_usd") or result.get("overnight_cost_usd") or 0
-    if overnight_usd > 0 and overnight_rate > 0:
-        nights = round(float(overnight_usd) / float(overnight_rate))
-        if nights > 0:
-            items.append({
-                "name": f"Overnight Per Diem\n{nights} night{'s' if nights != 1 else ''} away from base",
-                "quantity": str(nights),
-                "unit_cost": str(overnight_rate)
-            })
+    if not ghost_mode:
+        overnight_usd = result.get("overnight_usd") or result.get("overnight_cost_usd") or 0
+        if overnight_usd > 0 and overnight_rate > 0:
+            nights = round(float(overnight_usd) / float(overnight_rate))
+            if nights > 0:
+                items.append({
+                    "name": f"Overnight Per Diem\n{nights} night{'s' if nights != 1 else ''} away from base",
+                    "quantity": str(nights),
+                    "unit_cost": str(overnight_rate)
+                })
 
-    waiting_usd = result.get("waiting_usd") or result.get("idle_cost_usd") or 0
-    if waiting_usd > 0 and idle_day_rate > 0:
-        idle_days = round(float(waiting_usd) / float(idle_day_rate))
-        if idle_days > 0:
-            items.append({
-                "name": f"Idle Day Charge\nAircraft on ground, not utilised",
-                "quantity": str(idle_days),
-                "unit_cost": str(idle_day_rate)
-            })
+        waiting_usd = result.get("waiting_usd") or result.get("idle_cost_usd") or 0
+        if waiting_usd > 0 and idle_day_rate > 0:
+            idle_days = round(float(waiting_usd) / float(idle_day_rate))
+            if idle_days > 0:
+                items.append({
+                    "name": f"Idle Day Charge\nAircraft on ground, not utilised",
+                    "quantity": str(idle_days),
+                    "unit_cost": str(idle_day_rate)
+                })
 
-    for ei in (extra_items or []):
-        items.append({
-            "name": ei.get("name", "Additional Charge"),
-            "quantity": str(ei.get("quantity", "1")),
-            "unit_cost": str(ei.get("unit_cost", "0"))
-        })
+        for ei in (extra_items or []):
+            items.append({
+                "name": ei.get("name", "Additional Charge"),
+                "quantity": str(ei.get("quantity", "1")),
+                "unit_cost": str(ei.get("unit_cost", "0"))
+            })
     # Round all item unit costs to primary currency precision
     for item in items:
         try:
