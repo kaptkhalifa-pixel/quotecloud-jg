@@ -1859,6 +1859,24 @@ def mark_paid():
     })
 
     save_records(records)
+
+    # Sync CRM the moment full settlement actually happens - previously this only
+    # happened inside generate_receipt, so an invoice could be fully paid in the Log
+    # while CRM still showed INVOICED until someone separately clicked Generate Receipt.
+    if new_total_paid >= total:
+        bookings = load_bookings()
+        matching_token = None
+        for tok, b in bookings.items():
+            if b.get("invoice_number") == number:
+                matching_token = tok
+                break
+        if matching_token:
+            bookings[matching_token]["status"] = "PAID"
+            bookings[matching_token]["payment_method"] = payment_mode
+            bookings[matching_token]["payment_ref"] = payment_ref
+            bookings[matching_token]["updated_at"] = datetime.datetime.now().isoformat()
+            save_bookings(bookings)
+
     return jsonify({"success": True, "balance": round(total - new_total_paid, 2),
                     "fully_paid": new_total_paid >= total})
 
@@ -1886,13 +1904,28 @@ def generate_receipt():
         rec.get("client_email", ""),
     ]))
 
-    payment_desc_lines = ["Amount Invoiced"]
-    if payment_mode:
-        payment_desc_lines.append(f"Mode: {payment_mode}")
-    if payment_ref:
-        payment_desc_lines.append(f"Reference: {payment_ref}")
-    payment_desc_lines.append(f"Date: {paid_date}")
-    payment_desc_lines.append(f"Invoice Ref: {number}")
+    # Show the FULL payment trail from payment_log, not just this single request's
+    # payment - an invoice settled across multiple partial payments (e.g. M-Pesa then
+    # Bank Transfer then Cash) previously only showed the LAST payment's mode/reference
+    # on the receipt, silently hiding the earlier ones from the audit trail.
+    payment_desc_lines = ["Amount Invoiced", f"Invoice Ref: {number}", ""]
+    payment_log = rec.get("payment_log", [])
+    if payment_log:
+        payment_desc_lines.append("Payment History:")
+        for entry in payment_log:
+            line = f"  {entry.get('date', '')} — {round_currency(float(entry.get('amount', 0)))}"
+            if entry.get("mode"):
+                line += f" via {entry['mode']}"
+            if entry.get("ref"):
+                line += f" (Ref: {entry['ref']})"
+            payment_desc_lines.append(line)
+    else:
+        # Fallback for records with no payment_log yet (older records, or edge case)
+        if payment_mode:
+            payment_desc_lines.append(f"Mode: {payment_mode}")
+        if payment_ref:
+            payment_desc_lines.append(f"Reference: {payment_ref}")
+        payment_desc_lines.append(f"Date: {paid_date}")
 
     items = [{
         "name": "\n".join(payment_desc_lines),
