@@ -2233,7 +2233,10 @@ def save_extra_time():
         if "quoting_rules" not in OPERATOR:
             OPERATOR["quoting_rules"] = {}
         OPERATOR["quoting_rules"]["ground_time_buffer_enabled"] = data.get("enabled", False)
-        OPERATOR["quoting_rules"]["ground_time_buffer_minutes"] = data.get("minutes", 0)
+        # Hard cap at 120 minutes regardless of what's sent - this is the real enforcement
+        # point since a client-side max= alone can be bypassed by calling the API directly.
+        raw_minutes = float(data.get("minutes", 0) or 0)
+        OPERATOR["quoting_rules"]["ground_time_buffer_minutes"] = max(0, min(raw_minutes, 120))
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:

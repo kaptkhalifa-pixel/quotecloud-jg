@@ -798,7 +798,11 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           <input type="checkbox" id="s-buffer-enabled" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
           <label for="s-buffer-enabled" style="font-weight:600">Enable Extra Time</label>
         </div>
-        <div class="form-group"><label>Extra Time (minutes per sector)</label><input type="number" id="s-buffer-minutes" step="5" placeholder="0"></div>
+        <div class="form-group">
+          <label>Extra Time (minutes per sector)</label>
+          <input type="number" id="s-buffer-minutes" step="5" min="0" max="120" placeholder="0">
+          <div style="font-size:0.7rem;color:#888;margin-top:3px">Max 120 minutes (2 hrs) — covers ATC routing, STARs and airways on ultra-long-range sectors.</div>
+        </div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionExtraTime()">Save ✓</button><span class="section-save-msg" id="msg-extra-time"></span></div>
       </div>
       <div class="settings-section collapsed">
