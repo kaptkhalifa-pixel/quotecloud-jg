@@ -1473,6 +1473,11 @@ def pdf():
                 "quote_snapshot": result,
                 "quote_extras": extra_items or [],
                 "pdf_url": pdf_url or "",
+                # Ghost Mode is a ONE-WAY, PERMANENT lock once a quote has been ghosted.
+                # It persists on the booking itself so every downstream stage (WhatsApp,
+                # CRM display, future invoice) can check it - previously this only ever
+                # existed as a transient in-memory JS flag that died with the browser tab.
+                "is_ghost": bool(ghost_mode),
                 "invoice_number": "",
                 "invoice_url": "",
                 "created_at": datetime.datetime.now().isoformat(),
