@@ -2737,7 +2737,7 @@ async function generatePDF(allAircraft) {
     if (res2._adj_total !== undefined) {
       adjTotal = msgIsKes && msgKesRate > 0
         ? ` · Total: ${secCurrency} ${(Math.ceil(res2._adj_total*msgKesRate/1000)*1000).toLocaleString()}`
-        : ` · Total: ${priCurrency} ${res2._adj_fmtAmt(total)}`;
+        : ` · Total: ${priCurrency} ${fmtAmt(res2._adj_total)}`;
     } else {
       adjTotal = '';
     }
