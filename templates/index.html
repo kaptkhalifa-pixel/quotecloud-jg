@@ -3324,8 +3324,11 @@ async function openPaidModal(number, lockToFull) {
     amountInput.style.cursor = '';
     if (lockHint) lockHint.style.display = 'none';
   }
-  document.getElementById('paid-mode').value = rec.payment_mode || '';
-  document.getElementById('paid-ref').value = rec.payment_ref || '';
+  // Do NOT prefill mode/reference from the previous payment - each logged payment is a
+  // separate transaction and may use a different method/reference. Prefilling the old
+  // value risked two different real payments being recorded under the same reference code.
+  document.getElementById('paid-mode').value = '';
+  document.getElementById('paid-ref').value = '';
   let today = new Date();
   document.getElementById('paid-date').value = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
   let saveBtn = document.getElementById('btn-save-payment');
