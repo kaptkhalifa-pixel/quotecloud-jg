@@ -2126,9 +2126,15 @@ function confirmApply(idx) {
           <div style="font-size:1rem;font-weight:700;color:#888">${oldTotalDisplay}</div>
         </div>
       </div>
-      <div style="font-size:0.72rem;color:#555;margin-top:8px">✅ Ready — tap Generate PDF to proceed. To unlock, switch to Target Price tab.</div>`;
+      <div style="font-size:0.72rem;color:#555;margin-top:8px">✅ Ready — tap Generate PDF to proceed. To unlock, tap Reset below.</div>`;
     adjSummary.scrollIntoView({behavior:'smooth', block:'center'});
   }
+
+  // Hide Apply/Preset buttons once locked - previously they stayed visible and clickable
+  // even after a successful lock, sitting right below a message saying "tap Generate PDF",
+  // with no indication the button itself was now redundant.
+  let manualBtnRow = document.getElementById('adj-tab-manual-'+idx)?.querySelector('.btn-row');
+  if (manualBtnRow) manualBtnRow.style.display = 'none';
 
   // Update live total display
   let liveTotalEl = document.getElementById('adj-live-total-'+idx);
@@ -2436,6 +2442,9 @@ function resetAdjuster(idx) {
   if (lockWarn) lockWarn.remove();
   document.getElementById('adj-rate-'+idx).value = res.rate_usd || 0;
   document.getElementById('adj-pax-'+idx).value = res.pax_fee_usd || res.pax_fee_usd_display || 0;
+  // Restore the Apply/Preset button row that gets hidden once Manual mode locks a price
+  let manualBtnRow = document.getElementById('adj-tab-manual-'+idx)?.querySelector('.btn-row');
+  if (manualBtnRow) manualBtnRow.style.display = '';
   recalcAdjuster(idx);
 }
 
