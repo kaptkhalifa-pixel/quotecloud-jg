@@ -401,6 +401,9 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     </div>
   </div>
 
+  <div id="quote-result-top-actions" style="display:none;justify-content:flex-end;margin-bottom:8px">
+    <button class="btn btn-clear btn-sm" onclick="clearQuote()">Clear Quote</button>
+  </div>
   <div id="quote-result" class="result-box"></div>
 
   <div class="card pdf-section" id="pdf-section" style="display:none">
@@ -1328,6 +1331,8 @@ function clearQuote() {
   lastResults = [];
   try { localStorage.removeItem('qc_last_results'); } catch(e) {}
   document.getElementById('quote-result').innerHTML = '';
+  let topActions = document.getElementById('quote-result-top-actions');
+  if (topActions) topActions.style.display = 'none';
   document.getElementById('pdf-section').style.display = 'none';
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','rt-depart','rt-return',
    'pdf-name','pdf-email','pdf-phone','pdf-discount','pdf-notes'].forEach(id => {
@@ -1810,6 +1815,8 @@ function renderResults(results) {
       </div>
     </div>`).join('');
   document.getElementById('quote-result').innerHTML = html;
+  let topActions = document.getElementById('quote-result-top-actions');
+  if (topActions) topActions.style.display = results.length ? 'flex' : 'none';
   loadPresetChips();
 }
 
