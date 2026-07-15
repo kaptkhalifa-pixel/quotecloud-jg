@@ -2082,6 +2082,10 @@ function recalcAdjuster(idx) {
 function confirmApply(idx) {
   let res = lastResults[idx];
   if (!res) return;
+  if (res._locked && res._implied_rate !== undefined) {
+    alert('This quote is already locked via Target Price mode. Tap Reset first if you want to switch to Manual mode instead.');
+    return;
+  }
   let isKes = document.getElementById('adj-kes-mode-'+idx)?.checked;
   let kesRate = fxRates['KES'] || 0;
   let rateUsd = res._adj_rate || 0;
@@ -2469,11 +2473,15 @@ function toggleGhostManual(idx) {
 }
 
 function applyFromReverse(idx) {
+  let res = lastResults[idx];
+  if (res && res._locked && res._implied_rate === undefined) {
+    alert('This quote is already locked via Manual mode. Tap Reset first if you want to switch to Target Price mode instead.');
+    return;
+  }
   let impliedRate = lastResults[idx]._implied_rate;
   let targetRaw = parseFloat(document.getElementById('adj-target-'+idx)?.value) || 0;
   let pax = parseFloat(document.getElementById('adj-rev-pax-'+idx)?.value) || 0;
   if (!impliedRate) return;
-  let res = lastResults[idx];
   let origTotal = res.total_usd || 0;
   res._adj_rate = impliedRate;
   res._adj_pax = pax;
@@ -2522,18 +2530,36 @@ function saveSecondaryCurrency() {
   operatorConfig.fx.show_kes = val !== '';
   saveSettings();
 }
+// Rate presets are now scoped PER AIRCRAFT (keyed by ac_key), capped at 3 each.
+// Previously one shared flat list meant a preset saved on one aircraft (e.g. a
+// Cessna 206) would incorrectly show up as an option on every other aircraft too
+// (e.g. an AS350 helicopter), with no cap and no way to remove one.
+function getAcPresets(acKey) {
+  let all = operatorConfig.rate_presets;
+  // Migrate old flat-array shape if ever encountered - treat as empty per-aircraft data
+  if (Array.isArray(all) || !all) all = {};
+  return all[acKey] || [];
+}
+
 function loadPresetChips() {
-  let presets = operatorConfig.rate_presets || [];
   document.querySelectorAll('[id^="preset-chips-"]').forEach(el => {
     let idx = el.id.replace('preset-chips-','');
-    el.innerHTML = presets.map((p,pi) =>
-      `<span class="preset-chip" onclick="applyPreset(${idx},${pi})">${p.name}</span>`
-    ).join('');
+    let res = lastResults[idx];
+    if (!res) { el.innerHTML = ''; return; }
+    let presets = getAcPresets(res.ac_key);
+    el.innerHTML = presets.map((p,pi) => `
+      <span class="preset-chip" style="display:inline-flex;align-items:center;gap:5px">
+        <span onclick="applyPreset(${idx},${pi})" style="cursor:pointer">${p.name}</span>
+        <span onclick="event.stopPropagation();deletePreset(${idx},${pi})" style="cursor:pointer;color:#c00;font-weight:700;padding:0 3px" title="Delete preset">✕</span>
+      </span>`
+    ).join('') || `<span style="font-size:0.72rem;color:#aaa">No saved rates yet for this aircraft</span>`;
   });
 }
 
 function applyPreset(idx, pi) {
-  let presets = operatorConfig.rate_presets || [];
+  let res = lastResults[idx];
+  if (!res) return;
+  let presets = getAcPresets(res.ac_key);
   let p = presets[pi];
   if (!p) return;
   document.getElementById('adj-rate-'+idx).value = p.rate;
@@ -2544,17 +2570,37 @@ function applyPreset(idx, pi) {
 }
 
 async function savePreset(idx) {
+  let res = lastResults[idx];
+  if (!res || !res.ac_key) { showMsg('quote-msg', 'Could not identify aircraft for this preset.', 'error'); return; }
+  let acKey = res.ac_key;
+  let existing = getAcPresets(acKey);
+  if (existing.length >= 3) {
+    showMsg('quote-msg', `This aircraft already has 3 saved rates (max). Delete one first using the ✕ on a preset chip.`, 'error');
+    return;
+  }
   let name = prompt('Preset name (e.g. Peak Season, Wet Lease):');
   if (!name) return;
   let rate = parseFloat(document.getElementById('adj-rate-'+idx).value) || 0;
   let pax = parseFloat(document.getElementById('adj-pax-'+idx).value) || 0;
   let speed = parseFloat(document.getElementById('adj-speed-'+idx).value) || 0;
-  let presets = operatorConfig.rate_presets || [];
-  presets.push({name, rate, pax, speed});
-  operatorConfig.rate_presets = presets;
+  if (!operatorConfig.rate_presets || Array.isArray(operatorConfig.rate_presets)) operatorConfig.rate_presets = {};
+  if (!operatorConfig.rate_presets[acKey]) operatorConfig.rate_presets[acKey] = [];
+  operatorConfig.rate_presets[acKey].push({name, rate, pax, speed});
   await fetch('/settings/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(operatorConfig)});
   loadPresetChips();
-  showMsg('quote-msg', `Preset "${name}" saved.`, 'success');
+  showMsg('quote-msg', `Preset "${name}" saved for ${res.ac_label || 'this aircraft'}.`, 'success');
+}
+
+async function deletePreset(idx, pi) {
+  let res = lastResults[idx];
+  if (!res || !res.ac_key) return;
+  if (!confirm('Delete this saved rate?')) return;
+  let presets = getAcPresets(res.ac_key);
+  presets.splice(pi, 1);
+  operatorConfig.rate_presets[res.ac_key] = presets;
+  await fetch('/settings/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(operatorConfig)});
+  loadPresetChips();
+  showMsg('quote-msg', 'Preset deleted.', 'success');
 }
 
 let adminAcTimers = {};
