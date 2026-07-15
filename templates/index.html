@@ -2703,7 +2703,10 @@ async function generatePDF(allAircraft) {
     msgLines.push(shareBarHtml);
     let ind = document.getElementById('pdf-generating-indicator');
     if (ind) ind.remove();
-    try { localStorage.setItem('qc_pending_msg', msgLines.join('<br>')); } catch(e) {}
+    // Message is shown directly below - no reload happens here, so no need to also
+    // save to qc_pending_msg. Saving AND showing immediately caused a duplicate:
+    // any later DOMContentLoaded trigger (tab refocus, bfcache restore) would find
+    // this same message still sitting in localStorage and show it a second time.
     appendPdfMsg(msgLines.join('<br>'));
     loadEnquiries();
     loadRecords();
