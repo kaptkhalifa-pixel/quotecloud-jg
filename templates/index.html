@@ -339,8 +339,16 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <span style="color:#aaa;font-size:0.82rem">Come back to the Quote tab, enter a route and get your first price in seconds.</span>
     </div>
   </div>
-  <button onclick="document.getElementById('onboarding-banner').style.display='none'" style="background:transparent;border:1px solid #444;color:#aaa;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:0.72rem;white-space:nowrap;font-family:'Space Mono',monospace">Dismiss</button>
+  <button onclick="document.getElementById('onboarding-banner').style.display='none'; try { localStorage.setItem('qc_onboarding_dismissed', '1'); } catch(e) {}" style="background:transparent;border:1px solid #444;color:#aaa;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:0.72rem;white-space:nowrap;font-family:'Space Mono',monospace">Dismiss</button>
 </div>
+<script>
+  try {
+    if (localStorage.getItem('qc_onboarding_dismissed') === '1') {
+      let banner = document.getElementById('onboarding-banner');
+      if (banner) banner.style.display = 'none';
+    }
+  } catch(e) {}
+</script>
 {% endif %}
 <div class="tab-content active" id="nav-quote">
   <div class="card">
