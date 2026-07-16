@@ -1272,6 +1272,15 @@ function fmtAmt(amount) {
   let decimals = WHOLE_NUMBER_CURRENCIES.has(priCurrency) ? 0 : 2;
   return parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
 }
+
+// JS equivalent of the backend's round_currency() - rounds the ACTUAL value (not just
+// its display) to the operator's real currency precision. Needed anywhere a computed
+// number gets carried forward and used again (e.g. Apply Implied Rate), not just shown
+// once and discarded - fmtAmt alone only rounds what's printed on screen.
+function roundCurrency(amount) {
+  if (WHOLE_NUMBER_CURRENCIES.has(priCurrency)) return Math.round(amount);
+  return Math.round(amount * 100) / 100;
+}
 const CURRENCY_SYMBOLS = {'USD':'$','EUR':'€','GBP':'£','KES':'KES','COP':'COP','BRL':'R$','AED':'AED','INR':'₹','LKR':'Rs','IDR':'Rp','MYR':'RM','SGD':'S$','AUD':'A$','CAD':'CA$','NZD':'NZ$','ZAR':'R','NGN':'₦','GHS':'GH₵','TZS':'TZS','UGX':'UGX','SAR':'SAR','QAR':'QAR','EGP':'E£','NOK':'kr','SEK':'kr','CHF':'CHF','THB':'฿','PHP':'₱','JPY':'¥','CNY':'¥','KWD':'KWD','OMR':'OMR','MXN':'MX$','ARS':'AR$','CLP':'CLP','PEN':'PEN'};
 let placeIdMap = {};
 let allLocations = [];
@@ -2209,8 +2218,12 @@ function calcReverse(idx) {
     idle = res.option_a?.waiting_usd || 0;
   }
   let fixedCosts = pax + overnight + idle;
-  let impliedFlight = target - fixedCosts;
-  let impliedRate = Math.round((impliedFlight / hrs) * 100) / 100;
+  let impliedFlight = roundCurrency(target - fixedCosts);
+  // Rounds to the operator's real currency precision (whole shillings for KES, cents
+  // for USD) at the point of calculation - not just at display time - since this value
+  // gets carried forward via _implied_rate into "Apply Implied Rate" and should never
+  // silently carry fractional shillings into a real quote/invoice.
+  let impliedRate = roundCurrency(impliedFlight / hrs);
 
   if (impliedRate < 0) {
     el.style.color = '#dc3545';
@@ -2221,20 +2234,17 @@ function calcReverse(idx) {
 
   let fixedBreakdown = [];
   if (pax > 0) fixedBreakdown.push(`Pax ${priCurrencySymbol}${pax}`);
-  if (overnight > 0) fixedBreakdown.push(`Overnight $${overnight}`);
+  if (overnight > 0) fixedBreakdown.push(`Overnight ${priCurrencySymbol}${overnight}`);
   if (idle > 0) fixedBreakdown.push(`Idle ${priCurrencySymbol}${idle}`);
   let fixedLine = fixedBreakdown.length ? ` &nbsp;·&nbsp; Fixed: ${fixedBreakdown.join(' + ')}` : '';
 
   lastResults[idx]._implied_rate = impliedRate;
   let applyBtn = document.getElementById('adj-rev-apply-'+idx);
   if (applyBtn) applyBtn.style.display = 'block';
-  if (isKes && kesRate > 0) {
-    let impliedFlightKes = Math.ceil((impliedFlight * kesRate) / 1000) * 1000;
-    let impliedRateKes = Math.round(impliedFlightKes / hrs);
-    el.innerHTML = `<div style="background:#e8f5e9;border-radius:6px;padding:10px 12px;font-size:0.82rem"><div>Implied Rate: <strong>KES ${impliedRateKes.toLocaleString()}/hr</strong></div><div style="color:#555;margin-top:4px">Flight cost: KES ${impliedFlightKes.toLocaleString()}${fixedLine}</div></div>`;
-  } else {
-    el.innerHTML = `<div style="background:#e8f5e9;border-radius:6px;padding:10px 12px;font-size:0.82rem"><div>Implied Rate: <strong>$${impliedRate.toLocaleString(undefined,{minimumFractionDigits:2})}/hr</strong></div><div style="color:#555;margin-top:4px">Flight cost: $${impliedFlight.toLocaleString(undefined,{minimumFractionDigits:2})}${fixedLine}</div></div>`;
-  }
+  // Was branching on the same dead isKes checkbox as everywhere else in this file -
+  // always fell through to the hardcoded $ branch regardless of the operator's real
+  // primary currency. Now always uses priCurrency/fmtAmt, matching the rest of the app.
+  el.innerHTML = `<div style="background:#e8f5e9;border-radius:6px;padding:10px 12px;font-size:0.82rem"><div>Implied Rate: <strong>${priCurrency} ${fmtAmt(impliedRate)}/hr</strong></div><div style="color:#555;margin-top:4px">Flight cost: ${priCurrency} ${fmtAmt(impliedFlight)}${fixedLine}</div></div>`;
 }
 
 function renderAdjuster(res, idx) {
