@@ -2058,18 +2058,13 @@ function recalcAdjuster(idx) {
   let totalEl = card.querySelector('.billing-total span:last-child');
   let flightEl = card.querySelectorAll('.billing-row')[0]?.querySelector('span:last-child');
   let paxEl = card.querySelectorAll('.billing-row')[1]?.querySelector('span:last-child');
-  if (isKes && kesRate > 0) {
-    let totalKes = Math.ceil(total * kesRate / 1000) * 1000;
-    let flightKes = Math.ceil(flightCost * kesRate / 1000) * 1000;
-    let paxKes = Math.ceil(pax * kesRate / 1000) * 1000;
-    if (totalEl) totalEl.textContent = 'KES ' + totalKes.toLocaleString();
-    if (flightEl) flightEl.textContent = 'KES ' + flightKes.toLocaleString();
-    if (paxEl) paxEl.textContent = 'KES ' + paxKes.toLocaleString();
-  } else {
-    if (totalEl) totalEl.textContent = 'USD $' + total.toLocaleString(undefined, {minimumFractionDigits:2});
-    if (flightEl) flightEl.textContent = '$' + flightCost.toLocaleString(undefined, {minimumFractionDigits:2});
-    if (paxEl) paxEl.textContent = '$' + pax.toLocaleString();
-  }
+  // Was branching on a checkbox (adj-kes-mode) that doesn't exist anywhere in the HTML -
+  // the isKes branch above could never fire, and the else branch was hardcoded to USD
+  // regardless of the operator's actual primary currency. Every money value here now
+  // always reads priCurrency/fmtAmt, matching the rest of this file's dynamic-currency system.
+  if (totalEl) totalEl.textContent = priCurrency + ' ' + fmtAmt(total);
+  if (flightEl) flightEl.textContent = priCurrency + ' ' + fmtAmt(flightCost);
+  if (paxEl) paxEl.textContent = priCurrency + ' ' + fmtAmt(pax);
   lastResults[idx]._adj_rate = rateUsd;
   lastResults[idx]._adj_pax = paxUsd;
   lastResults[idx]._adj_total = total;
