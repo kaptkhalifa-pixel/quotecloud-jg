@@ -1615,6 +1615,11 @@ def booking_invoice():
         note = data.get("note", "")
         discount = data.get("discount", "0")
         uplift_items = data.get("uplift_items", [])
+        # Ghost Mode on an invoice is an explicit, per-invoice operator choice - NOT
+        # automatically inherited from the original quote. The quote's own ghost state
+        # is a permanent one-way lock, but the invoice is a separate document; the
+        # operator is asked each time whether to keep it bundled or itemize.
+        invoice_ghost_mode = bool(data.get("ghost_mode", False))
 
         bookings = load_bookings()
         booking = bookings.get(source_token)
@@ -1626,7 +1631,8 @@ def booking_invoice():
             return jsonify({"error": "No quote data found for this booking"}), 400
 
         payload, doc_number = build_pdf_payload_from_result(
-            "Invoice", snap, client_name, client_email, client_phone, note, "0", uplift_items)
+            "Invoice", snap, client_name, client_email, client_phone, note, "0", uplift_items,
+            ghost_mode=invoice_ghost_mode)
 
         payload["number"] = inherit_token(source_token, "I")
         doc_number = payload["number"]

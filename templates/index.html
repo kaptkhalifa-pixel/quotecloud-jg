@@ -4605,6 +4605,29 @@ function openInvoiceBuilder(enq) {
     ibWarning.innerHTML = '';
     if (ibGenBtn) { ibGenBtn.disabled = false; ibGenBtn.style.opacity = ''; ibGenBtn.style.cursor = ''; }
   }
+  // Ghost Mode is permanent on the quote (one-way lock, per policy), but the INVOICE
+  // is a separate document with its own explicit choice each time - stay ghosted
+  // (one lump sum, matching the client's original quote) or itemize normally.
+  let ghostChoiceBox = document.getElementById('ib-ghost-choice');
+  if (enq.is_ghost) {
+    if (!ghostChoiceBox) {
+      ghostChoiceBox = document.createElement('div');
+      ghostChoiceBox.id = 'ib-ghost-choice';
+      ghostChoiceBox.style.cssText = 'background:#f0f0f0;border:1.5px solid #666;border-radius:8px;padding:12px 14px;font-size:0.82rem;line-height:1.6;margin-bottom:12px';
+      ibWarning.insertAdjacentElement('afterend', ghostChoiceBox);
+    }
+    ghostChoiceBox.style.display = 'block';
+    ghostChoiceBox.innerHTML = `
+      <strong>👻 This quote was generated in Ghost Mode</strong><br>
+      <span style="color:#555">The original quotation showed the client one bundled price with no rate breakdown. Choose how this invoice should be presented:</span>
+      <div style="margin-top:8px;display:flex;gap:16px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="ib-ghost-mode" value="1" checked> Keep Ghosted (one lump sum)</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="ib-ghost-mode" value="0"> Itemize this invoice</label>
+      </div>`;
+  } else if (ghostChoiceBox) {
+    ghostChoiceBox.style.display = 'none';
+  }
+
   document.getElementById('ib-base-line').textContent =
     `${enq.ac_label||'Aircraft Charter'} — ${enq.route_summary||''} — ${priCurrency} ${fmtAmt(base)}`;
   document.getElementById('ib-total-base').textContent = `${priCurrency} ${fmtAmt(base)}`;
@@ -4801,10 +4824,12 @@ async function generateAndSendInvoice() {
   if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Generating...'; }
   document.getElementById('ib-msg').innerHTML = '<div class="success-box" style="margin-top:10px">Generating invoice...</div>';
   try {
+    let ghostRadio = document.querySelector('input[name="ib-ghost-mode"]:checked');
+    let invoiceGhostMode = enq.is_ghost ? (ghostRadio ? ghostRadio.value === '1' : true) : false;
     let body = {
       client_name: clientName, client_email: clientEmail, client_phone: clientWaRaw,
       discount, note: notes, uplift_items: upliftItems,
-      source_token: enq.token
+      source_token: enq.token, ghost_mode: invoiceGhostMode
     };
     let r = await fetch('/booking/invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('ib-msg', e.error||'Failed','error'); return; }
