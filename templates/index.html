@@ -1163,7 +1163,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     </div>
     <div id="paid-amount-lock-hint" style="display:none;font-size:0.78rem;color:#888;margin:-8px 0 14px">Locked to full balance. For partial or staggered payments, <a href="#" onclick="closePaidModal();return false;" style="color:#0d47a1;font-weight:600">close this and use Log Payment in Records</a>.</div>
     <div class="form-group" style="margin-bottom:14px"><label>Mode of Payment</label>
-      <select id="paid-mode">
+      <select id="paid-mode" onchange="document.getElementById('paid-ref-required').style.display = (this.value && this.value !== 'Cash') ? 'inline' : 'none';">
         <option value="">-- Select --</option>
         <option value="M-Pesa">M-Pesa</option>
         <option value="Bank Transfer / RTGS">Bank Transfer / RTGS</option>
@@ -1176,7 +1176,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       </select>
     </div>
     <div class="form-group-full" style="margin-bottom:14px">
-      <label>Reference / Transaction ID</label>
+      <label>Reference / Transaction ID <span id="paid-ref-required" style="color:#c00;display:none">(required for audit trail)</span></label>
       <input type="text" id="paid-ref" placeholder="e.g. M-Pesa code, Cheque no...">
     </div>
     <div class="modal-actions">
@@ -3437,8 +3437,12 @@ async function confirmMarkPaid(generateReceipt) {
   let paidAmount = parseFloat(document.getElementById('paid-amount').value) || 0;
   let paidDate = document.getElementById('paid-date').value;
   let paymentMode = document.getElementById('paid-mode').value;
-  let paymentRef = document.getElementById('paid-ref').value;
+  let paymentRef = document.getElementById('paid-ref').value.trim();
   if (!paidAmount) { showMsg('paid-msg','Enter amount paid.','error'); return; }
+  if (paymentMode && paymentMode !== 'Cash' && !paymentRef) {
+    showMsg('paid-msg', `Reference/Transaction ID is required for ${paymentMode} payments (audit trail).`, 'error');
+    return;
+  }
 
   let btn = generateReceipt ? document.getElementById('btn-gen-receipt') : document.getElementById('btn-save-payment');
   let originalLabel = btn.textContent;
