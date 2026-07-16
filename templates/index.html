@@ -2186,8 +2186,10 @@ function calcReverse(idx) {
   let el = document.getElementById('adj-rev-result-'+idx);
   let targetLabel = document.getElementById('adj-target-label-'+idx);
   let paxLabel = document.getElementById('adj-pax-label-'+idx);
-  if (targetLabel) targetLabel.textContent = isKes ? 'Target Total (KES)' : 'Target Total (USD)';
-  if (paxLabel) paxLabel.textContent = isKes ? 'Keep Pax/Admin (KES)' : 'Keep Pax/Admin (USD)';
+  // Removed: this overwrote the correct, dynamic priCurrency label (set once, correctly,
+  // in the initial HTML) with a hardcoded USD/KES ternary the instant the user typed
+  // anything - the ternary's isKes check reads a checkbox that doesn't exist in the HTML,
+  // so it always evaluated to the USD branch. Label is already correct; leave it alone.
   if (!targetRaw || !hrs) { el.textContent = ''; return; }
 
   // Strip ALL fixed costs from target before calculating implied rate
