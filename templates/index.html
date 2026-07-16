@@ -2403,7 +2403,7 @@ function switchAdjTab(idx, tab) {
   }
 }
 function activateGhostMode(idx) {
-  if (!confirm('👻 Ghost Mode will bundle all charter costs into one price. No rate breakdown shown on PDF. Tap Reset to undo. Continue?')) return;
+  if (!confirm('👻 Ghost Mode bundles this quote into one all-inclusive price - no rate, overnight, idle, or extra cost breakdown will ever be shown to the client on this quote (PDF or WhatsApp). This cannot be undone once the quote is saved. You will still be able to choose an itemized invoice later, if needed. Continue?')) return;
   lastResults[idx]._ghost_mode = true;
   ['adj-ghost-'+idx, 'adj-ghost-rev-'+idx].forEach(id => {
     let el = document.getElementById(id);
