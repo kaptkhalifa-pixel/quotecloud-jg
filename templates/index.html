@@ -3145,20 +3145,49 @@ function addAircraftRow() {
   renderAircraft();
 }
 
-function removeAcRow(btn) {
+async function removeAcRow(btn) {
   let card = btn.closest('.ac-card');
   let key = card.dataset.key;
-  // Track explicit removal so the next Save Aircraft Details call actually deletes
-  // this from Firestore too - under the new per-document save, simply removing it
-  // from the local aircraftData object is not enough, since nothing else is sent
-  // to tell the backend this aircraft should be deleted.
-  if (key && aircraftData[key] && !key.startsWith('aircraft_')) {
-    // Only track keys that exist in Firestore already (not brand-new unsaved rows,
-    // which use a temporary 'aircraft_<timestamp>' key and were never persisted)
-    removedAircraftKeys.push(key);
+  let isUnsaved = !key || key.startsWith('aircraft_') || !aircraftData[key];
+
+  if (isUnsaved) {
+    // Brand-new row, never saved to Firestore - nothing real to lose, no confirm needed
+    delete aircraftData[key];
+    card.remove();
+    return;
   }
-  delete aircraftData[key];
-  card.remove();
+
+  let label = aircraftData[key]?.label || key;
+  if (!confirm(`Delete "${label}" permanently? This cannot be undone - it will be removed from Firestore immediately, not just from this screen. Type nothing, just confirm to proceed.`)) {
+    return;
+  }
+
+  // Delete immediately via the backend, right now - do NOT defer to the next Save,
+  // since relying on a future save action to actually persist the deletion meant a
+  // page reload before that save happened would silently bring the aircraft back,
+  // with the operator believing it was already gone.
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  try {
+    let r = await fetch('/aircraft/save', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ aircraft: {}, delete_keys: [key] })
+    });
+    let res = await r.json();
+    if (res.success) {
+      delete aircraftData[key];
+      card.remove();
+      showMsg('ac-msg', `${label} deleted.`, 'success');
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Remove';
+      showMsg('ac-msg', res.error || 'Failed to delete aircraft.', 'error');
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Remove';
+    showMsg('ac-msg', 'Network error while deleting: ' + e.message, 'error');
+  }
 }
 async function uploadAcImage(input) {
   let card = input.closest('.ac-card');
