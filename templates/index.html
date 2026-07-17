@@ -2959,9 +2959,16 @@ async function deleteLocation(name) {
   else alert(data.error||'Error');
 }
 
+let persistedAircraftKeys = new Set();
+
 async function loadAircraft() {
   let r = await fetch('/aircraft');
   aircraftData = await r.json();
+  // Snapshot which keys genuinely exist in Firestore right now - this is the ONLY
+  // reliable way to know "was this ever actually saved", since a newly-added
+  // aircraft's temporary key (aircraft_<timestamp>) is never replaced with anything
+  // else once saved, so the key's naming pattern alone can't tell new from persisted.
+  persistedAircraftKeys = new Set(Object.keys(aircraftData));
   renderAircraft();
 }
 
@@ -3148,7 +3155,11 @@ function addAircraftRow() {
 async function removeAcRow(btn) {
   let card = btn.closest('.ac-card');
   let key = card.dataset.key;
-  let isUnsaved = !key || key.startsWith('aircraft_') || !aircraftData[key];
+  // Was checking key.startsWith('aircraft_') to guess "never saved" - but the
+  // temporary aircraft_<timestamp> key assigned on add is NEVER replaced once saved,
+  // so a genuinely persisted aircraft still has that same prefix forever. Correct
+  // check: was this key actually present in the last known server-confirmed state?
+  let isUnsaved = !key || !persistedAircraftKeys.has(key);
 
   if (isUnsaved) {
     // Brand-new row, never saved to Firestore - nothing real to lose, no confirm needed
@@ -3344,6 +3355,7 @@ async function saveAircraft(btnOrKey) {
   let res = await r.json();
   if (res.success) {
     aircraftData[key] = acData;
+    persistedAircraftKeys.add(key);
     removedAircraftKeys = [];
   }
   showMsg('ac-msg', res.success ? `${acData.label || 'Aircraft'} saved.` : (res.error||'Error'), res.success?'success':'error');
