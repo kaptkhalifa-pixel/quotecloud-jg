@@ -1268,6 +1268,15 @@ let priCurrency = '{{ ((operator.get("fx") or {}).get("primary_currency") or (op
 let priCurrencySymbol = '{{ ((operator.get("fx") or {}).get("primary_currency") or "USD") }}';
 // priCurrencySymbol will be updated to symbol by loadFX
 const WHOLE_NUMBER_CURRENCIES = new Set(['KES','COP','TZS','UGX','NGN','GHS','RWF','ETB','IDR','JPY','KRW','VND','CLP','PYG','XOF','XAF']);
+function updateAcCurrencyNotes(selectEl) {
+  let card = selectEl.closest('.ac-card');
+  if (!card) return;
+  let newCurrency = selectEl.value;
+  card.querySelectorAll('.ac-rate-currency-note').forEach(note => {
+    note.textContent = `💱 Same currency as Hourly Rate (${newCurrency}) — not set independently.`;
+  });
+}
+
 function fmtAmt(amount) {
   let decimals = WHOLE_NUMBER_CURRENCIES.has(priCurrency) ? 0 : 2;
   return parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
@@ -3038,7 +3047,7 @@ function renderAircraft() {
             <label>Hourly Rate</label>
             <div style="display:flex;gap:6px;align-items:center">
               <input class="ac-rate" type="number" value="${ac.rate}" style="flex:1">
-              <select class="ac-rate-currency" style="width:80px;font-size:0.82rem">
+              <select class="ac-rate-currency" style="width:80px;font-size:0.82rem" onchange="updateAcCurrencyNotes(this)">
                 <option value="USD" ${(ac.rate_currency||'USD')==='USD'?'selected':''}>USD</option>
                 <option value="EUR" ${ac.rate_currency==='EUR'?'selected':''}>EUR</option>
                 <option value="GBP" ${ac.rate_currency==='GBP'?'selected':''}>GBP</option>
@@ -3060,6 +3069,7 @@ function renderAircraft() {
             <input class="ac-pax-label" placeholder="Mission Fixed Costs" value="${ac.pax_label||'Mission Fixed Costs'}" style="margin-bottom:6px;font-size:0.82rem">
             <input class="ac-pax" type="number" value="${ac.pax_fee}">
             <div style="font-size:0.72rem;color:#888;margin-top:4px">Fixed costs charged once per mission regardless of distance — navigation fees, landing fees, departure taxes. Uncheck to exclude from all quotes.</div>
+            <div class="ac-rate-currency-note" style="font-size:0.7rem;color:#1a56db;margin-top:3px">💱 Same currency as Hourly Rate (${ac.rate_currency||'USD'}) — not set independently.</div>
           </div>
         </div>
         <div class="form-row">
@@ -3071,8 +3081,13 @@ function renderAircraft() {
             <input class="ac-overnight-label" placeholder="Crew Overnight" value="${ac.overnight_label||'Crew Overnight'}" style="margin-bottom:6px;font-size:0.82rem">
             <input class="ac-overnight" type="number" value="${ac.overnight_rate||300}">
             <div style="font-size:0.72rem;color:#888;margin-top:4px">Charged when the aircraft and crew sleep outside home base. Covers crew accommodation and per diem. Uncheck to exclude overnight charges from all quotes.</div>
+            <div class="ac-rate-currency-note" style="font-size:0.7rem;color:#1a56db;margin-top:3px">💱 Same currency as Hourly Rate (${ac.rate_currency||'USD'}) — not set independently.</div>
           </div>
-          <div class="form-group"><label>Idle Day Rate (same currency as hourly rate)</label><input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}"></div>
+          <div class="form-group">
+            <label>Idle Day Rate</label>
+            <input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}">
+            <div class="ac-rate-currency-note" style="font-size:0.7rem;color:#1a56db;margin-top:3px">💱 Same currency as Hourly Rate (${ac.rate_currency||'USD'}) — not set independently.</div>
+          </div>
         </div>
         <div class="form-group" style="margin-bottom:14px">
           <label>Amenities (comma separated)</label>
