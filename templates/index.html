@@ -3118,7 +3118,7 @@ function renderAircraft() {
         </div>
         <input type="hidden" class="ac-active" value="${ac.active ? 'true' : 'false'}">
         <div class="btn-row">
-          <button class="btn btn-success" onclick="saveAircraft()">💾 Save All</button>
+          <button class="btn btn-success" onclick="saveAircraft(this)">💾 Save Aircraft Details</button>
           <button class="btn btn-grey btn-sm" onclick="toggleAcEdit('${key}')">Cancel</button>
         </div>
       </div>
@@ -3135,7 +3135,7 @@ function toggleAcEdit(key) {
 function toggleAcActive(key) {
   if (aircraftData[key]) {
     aircraftData[key].active = !aircraftData[key].active;
-    saveAircraft().then(() => renderAircraft());
+    saveAircraft(key).then(() => renderAircraft());
   }
 }
 
@@ -3147,7 +3147,17 @@ function addAircraftRow() {
 
 function removeAcRow(btn) {
   let card = btn.closest('.ac-card');
-  delete aircraftData[card.dataset.key];
+  let key = card.dataset.key;
+  // Track explicit removal so the next Save Aircraft Details call actually deletes
+  // this from Firestore too - under the new per-document save, simply removing it
+  // from the local aircraftData object is not enough, since nothing else is sent
+  // to tell the backend this aircraft should be deleted.
+  if (key && aircraftData[key] && !key.startsWith('aircraft_')) {
+    // Only track keys that exist in Firestore already (not brand-new unsaved rows,
+    // which use a temporary 'aircraft_<timestamp>' key and were never persisted)
+    removedAircraftKeys.push(key);
+  }
+  delete aircraftData[key];
   card.remove();
 }
 async function uploadAcImage(input) {
@@ -3257,42 +3267,57 @@ async function resolveAcBase(btn) {
   }
 }
 
-async function saveAircraft() {
-  let data = {};
-  document.querySelectorAll('#aircraft-list .ac-card').forEach(card => {
-    let key = card.querySelector('.ac-key').value.trim();
-    data[key] = {
-      label: card.querySelector('.ac-label').value,
-      seater: parseInt(card.querySelector('.ac-seater').value),
-      speed: parseFloat(card.querySelector('.ac-speed').value),
-      rate: parseFloat(card.querySelector('.ac-rate').value),
-      rate_currency: card.querySelector('.ac-rate-currency')?.value || 'USD',
-pax_fee: parseFloat(card.querySelector('.ac-pax').value),
-      pax_label: card.querySelector('.ac-pax-label')?.value.trim() || 'Mission Fixed Costs',
-      pax_fee_enabled: card.querySelector('.ac-pax-enabled')?.checked !== false,
-      overnight_rate: parseFloat(card.querySelector('.ac-overnight').value),
-      overnight_label: card.querySelector('.ac-overnight-label')?.value.trim() || 'Crew Overnight',
-      overnight_enabled: card.querySelector('.ac-overnight-enabled')?.checked !== false,
-      idle_day_rate: parseFloat(card.querySelector('.ac-idle').value),
-      active: card.querySelector('.ac-active').value === 'true',
-      snap_radius_nm: parseFloat(card.querySelector('.ac-snap-radius')?.value || 4),
-      amenities: (card.querySelector('.ac-amenities')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
-      show_amenities: card.querySelector('.ac-show-amenities')?.checked || false,
-      description: card.querySelector('.ac-description')?.value.trim() || '',
-      type: card.querySelector('.ac-type').value,
-      home_airstrip: card.querySelector('.ac-home').value,
-      routing_mode: 'direct',
-      images: aircraftData[card.dataset.key]?.images || [],
-      base_lat: parseFloat(card.querySelector('.ac-base-lat').value) || null,
-      base_lon: parseFloat(card.querySelector('.ac-base-lon').value) || null,
-      allow_urban_hops: card.querySelector('.ac-urban-hops').checked
-    };
+let removedAircraftKeys = [];
 
-  });
-  let activeCount = Object.values(data).filter(v => v.active).length;
-  let r = await fetch('/aircraft/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+async function saveAircraft(btnOrKey) {
+  // Saves ONLY the specific aircraft whose card this was called from - plus any
+  // explicit removals made during this session. Never touches other aircraft.
+  // Accepts either the clicked button element (from the edit form's Save button,
+  // which derives the card via closest()) or a plain key string directly (from
+  // toggleAcActive, which already has the key and no button to derive from).
+  let card, key;
+  if (typeof btnOrKey === 'string') {
+    key = btnOrKey;
+    card = document.querySelector(`.ac-card[data-key="${key}"]`);
+  } else if (btnOrKey) {
+    card = btnOrKey.closest('.ac-card');
+    key = card ? card.querySelector('.ac-key').value.trim() : null;
+  }
+  if (!card || !key) { showMsg('ac-msg', 'Could not identify which aircraft to save.', 'error'); return; }
+  let acData = {
+    label: card.querySelector('.ac-label').value,
+    seater: parseInt(card.querySelector('.ac-seater').value),
+    speed: parseFloat(card.querySelector('.ac-speed').value),
+    rate: parseFloat(card.querySelector('.ac-rate').value),
+    rate_currency: card.querySelector('.ac-rate-currency')?.value || 'USD',
+    pax_fee: parseFloat(card.querySelector('.ac-pax').value),
+    pax_label: card.querySelector('.ac-pax-label')?.value.trim() || 'Mission Fixed Costs',
+    pax_fee_enabled: card.querySelector('.ac-pax-enabled')?.checked !== false,
+    overnight_rate: parseFloat(card.querySelector('.ac-overnight').value),
+    overnight_label: card.querySelector('.ac-overnight-label')?.value.trim() || 'Crew Overnight',
+    overnight_enabled: card.querySelector('.ac-overnight-enabled')?.checked !== false,
+    idle_day_rate: parseFloat(card.querySelector('.ac-idle').value),
+    active: card.querySelector('.ac-active').value === 'true',
+    snap_radius_nm: parseFloat(card.querySelector('.ac-snap-radius')?.value || 4),
+    amenities: (card.querySelector('.ac-amenities')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
+    show_amenities: card.querySelector('.ac-show-amenities')?.checked || false,
+    description: card.querySelector('.ac-description')?.value.trim() || '',
+    type: card.querySelector('.ac-type').value,
+    home_airstrip: card.querySelector('.ac-home').value,
+    routing_mode: 'direct',
+    images: aircraftData[key]?.images || [],
+    base_lat: parseFloat(card.querySelector('.ac-base-lat').value) || null,
+    base_lon: parseFloat(card.querySelector('.ac-base-lon').value) || null,
+    allow_urban_hops: card.querySelector('.ac-urban-hops').checked
+  };
+  let body = { aircraft: { [key]: acData }, delete_keys: removedAircraftKeys };
+  let r = await fetch('/aircraft/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
   let res = await r.json();
-  showMsg('ac-msg', res.success?'Aircraft saved.':(res.error||'Error'), res.success?'success':'error');
+  if (res.success) {
+    aircraftData[key] = acData;
+    removedAircraftKeys = [];
+  }
+  showMsg('ac-msg', res.success ? `${acData.label || 'Aircraft'} saved.` : (res.error||'Error'), res.success?'success':'error');
 }
 
 async function loadRecords() {
