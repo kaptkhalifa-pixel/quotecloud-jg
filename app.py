@@ -314,6 +314,10 @@ def load_aircraft():
     return default
 
 def save_aircraft(data):
+    """LEGACY full-replace: deletes every existing aircraft doc, recreates from the
+    provided dict. Kept unchanged for backward compatibility. Do NOT use this for a
+    single-aircraft save - use upsert_and_delete_aircraft() instead, which only
+    touches the specific documents named."""
     try:
         col = tenant_collection("aircraft")
         batch = db.batch()
@@ -328,6 +332,26 @@ def save_aircraft(data):
         batch.commit()
     except Exception as e:
         print(f"Firestore save_aircraft error: {e}")
+        raise
+
+def upsert_and_delete_aircraft(upsert_data, delete_keys):
+    """SAFE per-document save: only writes the aircraft explicitly given in
+    upsert_data, and only deletes the keys explicitly listed in delete_keys.
+    Never touches any other aircraft in the fleet, unlike the legacy full-replace
+    save_aircraft() above."""
+    try:
+        col = tenant_collection("aircraft")
+        batch = db.batch()
+        for key, ac in (upsert_data or {}).items():
+            doc_ref = col.document(key)
+            batch.set(doc_ref, ac)
+        for key in (delete_keys or []):
+            doc_ref = col.document(key)
+            batch.delete(doc_ref)
+        batch.commit()
+    except Exception as e:
+        print(f"Firestore upsert_and_delete_aircraft error: {e}")
+        raise
 
 def load_bookings():
     try:
@@ -2151,6 +2175,14 @@ def resolve_base():
 def save_aircraft_route():
     data = request.get_json()
     try:
+        # New explicit shape: {"aircraft": {key: {...}}, "delete_keys": [...]}
+        # Only touches what's named - safe for saving a single aircraft without
+        # affecting the rest of the fleet. Detected by the presence of "aircraft" key.
+        if isinstance(data, dict) and "aircraft" in data:
+            upsert_and_delete_aircraft(data.get("aircraft", {}), data.get("delete_keys", []))
+            return jsonify({"success": True})
+        # Legacy shape: flat {key: {...}, key2: {...}} dict - full-replace behavior,
+        # unchanged, kept for backward compatibility with any caller not yet migrated.
         save_aircraft(data)
         return jsonify({"success": True})
     except Exception as e:
