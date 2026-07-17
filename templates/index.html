@@ -3169,7 +3169,7 @@ async function removeAcRow(btn) {
   }
 
   let label = aircraftData[key]?.label || key;
-  if (!confirm(`Delete "${label}" permanently? This cannot be undone - it will be removed from Firestore immediately, not just from this screen. Type nothing, just confirm to proceed.`)) {
+  if (!confirm(`Delete "${label}" permanently? This cannot be undone. It will be deleted from your database immediately, not just removed from this screen.`)) {
     return;
   }
 
