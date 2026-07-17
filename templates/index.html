@@ -2233,7 +2233,7 @@ function calcReverse(idx) {
   el.style.color = '#1a56db';
 
   let fixedBreakdown = [];
-  if (pax > 0) fixedBreakdown.push(`Pax ${priCurrencySymbol}${pax}`);
+  if (pax > 0) fixedBreakdown.push(`${res.pax_label || 'Pax'} ${priCurrencySymbol}${pax}`);
   if (overnight > 0) fixedBreakdown.push(`Overnight ${priCurrencySymbol}${overnight}`);
   if (idle > 0) fixedBreakdown.push(`Idle ${priCurrencySymbol}${idle}`);
   let fixedLine = fixedBreakdown.length ? ` &nbsp;·&nbsp; Fixed: ${fixedBreakdown.join(' + ')}` : '';
@@ -2306,13 +2306,14 @@ function renderAdjuster(res, idx) {
           <div style="font-size:0.7rem;color:#888;margin-top:3px">${idleDays} day${idleDays!==1?'s':''} · original ${priCurrencySymbol}${idleRate}/day</div>
         </div>` : `<input type="hidden" id="adj-idle-rate-${idx}" value="${idleRate}">`}
       </div>
+      ${res.pax_fee_enabled !== false ? `
       <div class="adjuster-field" style="margin-bottom:10px">
-        <label>Pax / Admin Fee</label>
+        <label>${res.pax_label || 'Mission Fixed Costs'}</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="adj-pax-name-${idx}" value="Passenger Taxes & Admin Fees" style="flex:2;font-size:0.82rem" oninput="recalcAdjuster(${idx})">
+          <input type="text" id="adj-pax-name-${idx}" value="${res.pax_label || 'Mission Fixed Costs'}" style="flex:2;font-size:0.82rem" oninput="recalcAdjuster(${idx})">
           <input type="number" id="adj-pax-${idx}" value="${pax}" oninput="recalcAdjuster(${idx})" style="flex:1;max-width:110px">
         </div>
-      </div>
+      </div>` : `<input type="hidden" id="adj-pax-name-${idx}" value=""><input type="hidden" id="adj-pax-${idx}" value="0">`}
       <div id="adj-live-total-${idx}" style="background:#0d47a1;color:#fff;border-radius:8px;padding:12px 14px;font-size:1rem;font-weight:700;text-align:right;margin-bottom:10px">
         ${priCurrency} ${fmtAmt(res.total_usd||0)}
       </div>
@@ -2342,10 +2343,11 @@ function renderAdjuster(res, idx) {
         <label>Idle Day Rate (${priCurrencySymbol}/day × ${idleDays} day${idleDays!==1?'s':''})</label>
         <input type="number" id="adj-idle-rate-rev-${idx}" value="${idleRate}" oninput="calcReverse(${idx})">
       </div>` : ''}
+      ${res.pax_fee_enabled !== false ? `
       <div class="adjuster-field" style="margin-bottom:14px">
-        <label id="adj-pax-rev-label-${idx}">Mission Fixed Costs (${priCurrency})</label>
+        <label id="adj-pax-rev-label-${idx}">${res.pax_label || 'Mission Fixed Costs'} (${priCurrency})</label>
         <input type="number" id="adj-rev-pax-${idx}" value="${pax}" oninput="calcReverse(${idx})">
-      </div>
+      </div>` : `<input type="hidden" id="adj-rev-pax-${idx}" value="0">`}
       <div class="adjuster-result" id="adj-rev-result-${idx}" style="min-height:40px"></div>
       <div id="adj-rev-apply-${idx}" style="display:none;margin-top:10px">
         <button class="btn btn-success" onclick="applyFromReverse(${idx})">Apply Implied Rate →</button>
