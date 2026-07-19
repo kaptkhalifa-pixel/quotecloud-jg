@@ -128,6 +128,21 @@ def get_admin_user():
 def get_admin_pass():
     return os.environ.get("ADMIN_PASS", OPERATOR.get("env", {}).get("admin_pass", "changeme"))
 
+def verify_admin_pass(submitted):
+    """Hash-aware password verification for the multiple destructive-action
+    guards throughout this file (edit/delete paid records, wipe data, delete
+    bookings, change email). All of these previously compared the submitted
+    password directly against the now-hashed stored value with plain ==,
+    which always fails once passwords are correctly hashed - a real, live
+    bug blocking every one of these actions on real production data."""
+    stored = get_admin_pass()
+    if stored.startswith("pbkdf2:") or stored.startswith("scrypt:"):
+        try:
+            return check_password_hash(stored, submitted)
+        except Exception:
+            return False
+    return submitted == stored
+
 def get_quoting_rules():
     return OPERATOR.get("quoting_rules", {
         "min_flight_hours": 1.0,
@@ -2124,7 +2139,7 @@ def edit_record():
         return jsonify({"error": "Record not found"}), 404
 
     if rec.get("paid") or float(rec.get("paid_amount", 0)) > 0:
-        if password != get_admin_pass():
+        if not verify_admin_pass(password):
             return jsonify({"error": "Password required to edit a paid record."}), 403
 
     if data.get("client_name"):
@@ -2436,7 +2451,7 @@ def save_change_email():
     new_email = data.get("new_email", "").strip().lower()
     if not new_email:
         return jsonify({"error": "Email required"}), 400
-    if password != get_admin_pass():
+    if not verify_admin_pass(password):
         return jsonify({"error": "Incorrect password"}), 400
     try:
         if "contact" not in OPERATOR: OPERATOR["contact"] = {}
@@ -3093,7 +3108,7 @@ def delete_bookings():
     data = request.get_json()
     password = data.get("password", "")
     tokens = data.get("tokens", [])
-    if password != get_admin_pass():
+    if not verify_admin_pass(password):
         return jsonify({"error": "Invalid password."}), 403
     if not tokens:
         return jsonify({"error": "No tokens provided."}), 400
@@ -3125,7 +3140,7 @@ def debug_pdf_test():
 @login_required
 def wipe_data():
     data = request.get_json()
-    if data.get("password") != get_admin_pass():
+    if not verify_admin_pass(data.get("password")):
         return jsonify({"error": "Invalid password"}), 403
     pathlib.Path(RECORDS_FILE).write_text("[]")
     pathlib.Path(BOOKINGS_FILE).write_text("{}")
