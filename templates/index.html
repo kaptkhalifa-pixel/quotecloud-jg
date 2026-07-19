@@ -3034,6 +3034,15 @@ function renderAircraft() {
             <input class="ac-home" value="${ac.home_airstrip||''}" placeholder="e.g. Angama Mara, Wilson Airport" style="width:100%">
           </div>
           <div class="ac-base-status" style="font-size:0.75rem;color:#888;margin-top:4px">${ac.base_lat && ac.base_lon ? '✅ Base set: '+ac.base_lat.toFixed(5)+', '+ac.base_lon.toFixed(5) : '⚠️ No base coordinates set — search above or paste a Maps pin'}</div>
+          <a href="#" onclick="event.preventDefault(); toggleManualCoords(this)" style="font-size:0.72rem;color:#1a56db;display:inline-block;margin-top:4px">Or enter coordinates manually →</a>
+          <div class="ac-manual-coords" style="display:none;margin-top:8px;padding:10px;background:#f8f9fa;border-radius:6px">
+            <div style="font-size:0.7rem;color:#888;margin-bottom:6px">Use this if search can't find your exact location - e.g. a private helipad or unlisted landing zone.</div>
+            <div style="display:flex;gap:8px">
+              <input type="number" step="any" class="ac-base-lat-manual" placeholder="Latitude e.g. -1.29" style="flex:1" value="${ac.base_lat||''}">
+              <input type="number" step="any" class="ac-base-lon-manual" placeholder="Longitude e.g. 36.82" style="flex:1" value="${ac.base_lon||''}">
+              <button type="button" class="btn btn-outline btn-sm" onclick="applyManualCoords(this)">Set</button>
+            </div>
+          </div>
           <input type="hidden" class="ac-base-lat" value="${ac.base_lat||''}">
           <input type="hidden" class="ac-base-lon" value="${ac.base_lon||''}">
         </div>
@@ -3104,6 +3113,7 @@ function renderAircraft() {
           <div class="form-group">
             <label>Idle Day Rate</label>
             <input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}">
+            <div style="font-size:0.72rem;color:#888;margin-top:4px">Charged per full day the aircraft sits idle away from home base awaiting the next leg of a multi-day mission (e.g. safari, standby charter). Not charged for simple there-and-back trips.</div>
             <div class="ac-rate-currency-note" style="font-size:0.7rem;color:#1a56db;margin-top:3px">💱 Same currency as Hourly Rate (${ac.rate_currency||'USD'}) — not set independently.</div>
           </div>
         </div>
@@ -3279,7 +3289,11 @@ async function selectAcBase(el, placeId, description, localKey) {
   let lonField = card.querySelector('.ac-base-lon');
   suggestions.style.display = 'none';
   searchInput.value = description;
-  homeInput.value = description;
+  // FIX: was unconditionally overwriting the Display Name with Google's
+  // resolved place description, even if the operator had already typed
+  // their own custom name. Only fill it if genuinely empty - matches the
+  // guard already correctly used elsewhere for this same field.
+  if (!homeInput.value.trim()) homeInput.value = description;
   status.textContent = 'Resolving...';
   try {
     let r = await fetch('/resolve_place', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({place_id: placeId, label: description, local_key: localKey}) });
@@ -3289,9 +3303,42 @@ async function selectAcBase(el, placeId, description, localKey) {
       lonField.value = data.lon;
       status.textContent = '✅ Base set: ' + parseFloat(data.lat).toFixed(5) + ', ' + parseFloat(data.lon).toFixed(5);
       status.style.color = '#1b5e20';
-      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: description, lat: data.lat, lon: data.lon, aliases: []}) });
+      // Explicit consent before writing to the shared location database -
+      // the aircraft's own display name (homeInput.value) is saved on the
+      // aircraft record regardless of this choice; this only controls
+      // whether a new shared, searchable airport entry gets created too.
+      if (confirm(`Add "${homeInput.value || description}" to your saved airports list, so it's searchable for future aircraft and quotes?`)) {
+        await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || description, lat: data.lat, lon: data.lon, aliases: []}) });
+      }
     }
   } catch(e) { status.textContent = '❌ Error resolving location'; }
+}
+
+function toggleManualCoords(link) {
+  let card = link.closest('.ac-card');
+  let box = card.querySelector('.ac-manual-coords');
+  let showing = box.style.display === 'block';
+  box.style.display = showing ? 'none' : 'block';
+  link.textContent = showing ? 'Or enter coordinates manually →' : '← Back to search';
+}
+
+function applyManualCoords(btn) {
+  let card = btn.closest('.ac-card');
+  let latInput = card.querySelector('.ac-base-lat-manual');
+  let lonInput = card.querySelector('.ac-base-lon-manual');
+  let lat = parseFloat(latInput.value);
+  let lon = parseFloat(lonInput.value);
+  if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    alert('Enter valid coordinates: latitude between -90 and 90, longitude between -180 and 180.');
+    return;
+  }
+  card.querySelector('.ac-base-lat').value = lat;
+  card.querySelector('.ac-base-lon').value = lon;
+  card.querySelector('.ac-base-status').textContent = '✅ Base set (manual): ' + lat.toFixed(5) + ', ' + lon.toFixed(5);
+  card.querySelector('.ac-base-status').style.color = '#1b5e20';
+  // Manual entry never touches the shared airport database automatically -
+  // no consent prompt needed here since nothing gets written unless the
+  // operator separately, deliberately uses the Airports tab for that.
 }
 
 async function resolveAcBase(btn) {
@@ -3313,7 +3360,13 @@ async function resolveAcBase(btn) {
       if (!homeInput.value) homeInput.value = data.display;
       status.textContent = '✅ Base set: ' + data.lat.toFixed(5) + ', ' + data.lon.toFixed(5);
       status.style.color = '#1b5e20';
-      await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || data.display, lat: data.lat, lon: data.lon, aliases: []}) });
+      // Explicit consent before writing to the shared location database -
+      // the aircraft's own display name (homeInput.value) is saved on the
+      // aircraft record regardless of this choice; this only controls
+      // whether a new shared, searchable airport entry gets created too.
+      if (confirm(`Add "${homeInput.value || data.display}" to your saved airports list, so it's searchable for future aircraft and quotes?`)) {
+        await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || data.display, lat: data.lat, lon: data.lon, aliases: []}) });
+      }
     } else {
       status.textContent = '❌ Could not resolve. Try a Maps pin.';
       status.style.color = '#c00';
