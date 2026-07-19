@@ -3023,11 +3023,21 @@ function renderAircraft() {
  <div style="margin-bottom:14px">
           <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Aircraft Base</label>
           <div style="font-size:0.72rem;color:#e65100;margin-bottom:2px">⚠️ Required — this aircraft cannot be saved without a name and resolved coordinates. Without a real base, it can never appear in a quote.</div>
-          <div style="font-size:0.72rem;color:#888;margin-bottom:8px">Search for your home airstrip, helipad or landing zone — or paste a Google Maps link directly. The system resolves coordinates automatically. The display name below is always editable.</div>
-          <div style="position:relative;margin-bottom:8px">
-            <input class="ac-base-search" placeholder="Search airstrip, helipad or paste a Maps pin..." style="width:100%;padding-right:80px" oninput="acBaseSearch(this)" value="${ac.home_airstrip||''}">
-            <button class="btn btn-outline btn-sm" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:4px 10px" onclick="resolveAcBase(this)">Resolve</button>
+          <div class="ac-base-tabs" style="display:flex;gap:4px;margin-bottom:8px">
+            <button type="button" class="btn btn-sm ac-base-tab-btn" data-tab="search" onclick="switchBaseTab(this,'search')" style="flex:1;background:#0a0a0a;color:#fff">🔍 Search by Name</button>
+            <button type="button" class="btn btn-outline btn-sm ac-base-tab-btn" data-tab="link" onclick="switchBaseTab(this,'link')" style="flex:1">🔗 Paste Maps Link</button>
+          </div>
+          <div class="ac-base-tab-panel" data-panel="search" style="position:relative;margin-bottom:8px">
+            <input class="ac-base-search" placeholder="Search airstrip, helipad or landing zone..." style="width:100%" oninput="acBaseSearch(this)" value="${ac.home_airstrip||''}">
             <div class="ac-base-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #ddd;border-radius:8px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
+            <div style="font-size:0.7rem;color:#888;margin-top:4px">Tap a suggested result to lock in that location - no further action needed.</div>
+          </div>
+          <div class="ac-base-tab-panel" data-panel="link" style="display:none;margin-bottom:8px">
+            <div style="display:flex;gap:6px">
+              <input class="ac-base-link-input" placeholder="Paste a Google Maps link here..." style="flex:1">
+              <button type="button" class="btn btn-outline btn-sm" onclick="resolveAcBase(this)">Resolve</button>
+            </div>
+            <div style="font-size:0.7rem;color:#888;margin-top:4px">For an exact pin - share a location from Google Maps and paste the link here, then tap Resolve.</div>
           </div>
           <div style="margin-bottom:8px">
             <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:4px">Display Name (editable)</label>
@@ -3093,6 +3103,7 @@ function renderAircraft() {
               <input type="checkbox" class="ac-pax-enabled" ${ac.pax_fee_enabled!==false?'checked':''} style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
               <label style="margin:0;font-size:0.88rem;font-weight:600">Mission Fixed Costs</label>
             </div>
+            <div style="font-size:0.7rem;color:#1a56db;margin-bottom:4px">✏️ Rename this to whatever your clients will recognize (e.g. "Park Fees", "Handling Charges") - the calculation stays exactly the same either way.</div>
             <input class="ac-pax-label" placeholder="Mission Fixed Costs" value="${ac.pax_label||'Mission Fixed Costs'}" style="margin-bottom:6px;font-size:0.82rem">
             <input class="ac-pax" type="number" value="${ac.pax_fee}">
             <div style="font-size:0.72rem;color:#888;margin-top:4px">Fixed costs charged once per mission regardless of distance — navigation fees, landing fees, departure taxes. Uncheck to exclude from all quotes.</div>
@@ -3105,6 +3116,7 @@ function renderAircraft() {
               <input type="checkbox" class="ac-overnight-enabled" ${ac.overnight_enabled!==false?'checked':''} style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
               <label style="margin:0;font-size:0.88rem;font-weight:600">Crew Overnight / Per Diem</label>
             </div>
+            <div style="font-size:0.7rem;color:#1a56db;margin-bottom:4px">✏️ Rename this to whatever your clients will recognize (e.g. "Layover Fee", "Standby Charge") - the calculation stays exactly the same either way.</div>
             <input class="ac-overnight-label" placeholder="Crew Overnight" value="${ac.overnight_label||'Crew Overnight'}" style="margin-bottom:6px;font-size:0.82rem">
             <input class="ac-overnight" type="number" value="${ac.overnight_rate||300}">
             <div style="font-size:0.72rem;color:#888;margin-top:4px">Charged when the aircraft and crew sleep outside home base. Covers crew accommodation and per diem. Uncheck to exclude overnight charges from all quotes.</div>
@@ -3303,12 +3315,15 @@ async function selectAcBase(el, placeId, description, localKey) {
       lonField.value = data.lon;
       status.textContent = '✅ Base set: ' + parseFloat(data.lat).toFixed(5) + ', ' + parseFloat(data.lon).toFixed(5);
       status.style.color = '#1b5e20';
-      // Explicit consent before writing to the shared location database -
-      // the aircraft's own display name (homeInput.value) is saved on the
-      // aircraft record regardless of this choice; this only controls
-      // whether a new shared, searchable airport entry gets created too.
-      if (confirm(`Add "${homeInput.value || description}" to your saved airports list, so it's searchable for future aircraft and quotes?`)) {
-        await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || description, lat: data.lat, lon: data.lon, aliases: []}) });
+      // Only ask for consent on a FRESH Google result (localKey empty). If
+      // localKey is set, the backend already matched this against an
+      // existing entry in USER_AIRPORTS ("Verified Location" in the
+      // suggestion list) - it's already saved, asking again is pointless
+      // friction the operator correctly flagged.
+      if (!localKey) {
+        if (confirm(`Add "${homeInput.value || description}" to your saved airports list, so it's searchable for future aircraft and quotes?`)) {
+          await fetch('/add_airport', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: homeInput.value || description, lat: data.lat, lon: data.lon, aliases: []}) });
+        }
       }
     }
   } catch(e) { status.textContent = '❌ Error resolving location'; }
@@ -3341,9 +3356,22 @@ function applyManualCoords(btn) {
   // operator separately, deliberately uses the Airports tab for that.
 }
 
+function switchBaseTab(btn, tab) {
+  let card = btn.closest('.ac-card');
+  card.querySelectorAll('.ac-base-tab-btn').forEach(b => {
+    let isActive = b.dataset.tab === tab;
+    b.className = isActive ? 'btn btn-sm ac-base-tab-btn' : 'btn btn-outline btn-sm ac-base-tab-btn';
+    b.style.background = isActive ? '#0a0a0a' : '';
+    b.style.color = isActive ? '#fff' : '';
+  });
+  card.querySelectorAll('.ac-base-tab-panel').forEach(p => {
+    p.style.display = p.dataset.panel === tab ? 'block' : 'none';
+  });
+}
+
 async function resolveAcBase(btn) {
   let card = btn.closest('.ac-card');
-  let input = card.querySelector('.ac-base-search');
+  let input = card.querySelector('.ac-base-link-input');
   let status = card.querySelector('.ac-base-status');
   let latField = card.querySelector('.ac-base-lat');
   let lonField = card.querySelector('.ac-base-lon');
