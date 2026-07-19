@@ -2694,6 +2694,24 @@ def resolve_place():
     data = request.get_json()
     place_id = (data.get("place_id") or "").strip()
     label = (data.get("label") or "").strip()
+    local_key = (data.get("local_key") or "").strip()
+    # CRITICAL FIX: a "Verified Location" suggestion (already in USER_AIRPORTS)
+    # correctly has an EMPTY place_id and a real local_key instead - but this
+    # route only ever checked place_id, immediately returning found:false for
+    # every single already-saved location an operator tried to select. Look
+    # it up directly rather than needlessly re-querying Google for data we
+    # already have.
+    if local_key and not place_id:
+        rec = hq.USER_AIRPORTS.get(local_key)
+        if rec:
+            return jsonify({
+                "found": True,
+                "lat": float(rec["lat"]),
+                "lon": float(rec["lon"]),
+                "display": label or rec.get("name", local_key).title(),
+                "coord": f"{rec['lat']},{rec['lon']}"
+            })
+        return jsonify({"found": False})
     if not place_id:
         return jsonify({"found": False}), 400
     try:
