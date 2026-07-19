@@ -1081,14 +1081,12 @@ def log_pdf_error(route, error, data=None):
         print(f"log_pdf_error failed: {e}")
 
 def get_pdf_timestamp():
-    try:
-        import pytz
-        eat = pytz.timezone("Africa/Nairobi")
-        now = datetime.datetime.now(eat)
-        return now.strftime("Generated: %d %b %Y, %H:%M EAT")
-    except Exception:
-        now = datetime.datetime.utcnow()
-        return now.strftime("Generated: %d %b %Y, %H:%M UTC")
+    # Switched to Zulu (UTC) time, the standard aviation convention that
+    # removes timezone ambiguity - matches the fix applied to QC Aero, and
+    # is genuinely more correct for a charter aviation product than any
+    # single local timezone, including our own.
+    now = datetime.datetime.utcnow()
+    return now.strftime("Generated: %d %b %Y, %H:%MZ")
 
 WHOLE_NUMBER_CURRENCIES = {
     "KES","COP","TZS","UGX","NGN","GHS","RWF","ETB","IDR","JPY",
