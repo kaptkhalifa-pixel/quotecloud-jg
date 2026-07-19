@@ -898,6 +898,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         result["pax_fee_usd_display"] = round_currency(float(ac_cfg["pax_fee"]) * _cf) if pax_enabled else 0.0
         result["pax_label"] = ac_cfg.get("pax_label", "Mission Fixed Costs")
         result["overnight_label"] = ac_cfg.get("overnight_label", "Crew Overnight")
+        result["idle_day_label"] = ac_cfg.get("idle_day_label", "Idle Day Rate")
         result["pax_fee_enabled"] = pax_enabled
         result["overnight_enabled"] = overnight_enabled
         result["routing_mode"] = routing_mode
@@ -1212,8 +1213,9 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         if waiting_usd > 0 and idle_day_rate > 0:
             idle_days = round(float(waiting_usd) / float(idle_day_rate))
             if idle_days > 0:
+                idle_label = result.get("idle_day_label") or "Idle Day Charge"
                 items.append({
-                    "name": f"Idle Day Charge\nAircraft on ground, not utilised",
+                    "name": f"{idle_label}\nAircraft on ground, not utilised",
                     "quantity": str(idle_days),
                     "unit_cost": str(idle_day_rate)
                 })

@@ -3124,6 +3124,8 @@ function renderAircraft() {
           </div>
           <div class="form-group">
             <label>Idle Day Rate</label>
+            <div style="font-size:0.7rem;color:#1a56db;margin-bottom:4px">✏️ Rename this to whatever your clients will recognize (e.g. "Standby Day", "Ground Day Fee") - the calculation stays exactly the same either way.</div>
+            <input class="ac-idle-label" placeholder="Idle Day Rate" value="${ac.idle_day_label||'Idle Day Rate'}" style="margin-bottom:6px;font-size:0.82rem">
             <input class="ac-idle" type="number" value="${ac.idle_day_rate||ac.rate||0}">
             <div style="font-size:0.72rem;color:#888;margin-top:4px">Charged per full day the aircraft sits idle away from home base awaiting the next leg of a multi-day mission (e.g. safari, standby charter). Not charged for simple there-and-back trips.</div>
             <div class="ac-rate-currency-note" style="font-size:0.7rem;color:#1a56db;margin-top:3px">💱 Same currency as Hourly Rate (${ac.rate_currency||'USD'}) — not set independently.</div>
@@ -3187,7 +3189,7 @@ function addAircraftRow() {
   // force a genuine, deliberate entry of real data before this aircraft
   // can ever be saved and used in a quote.
   let key = 'aircraft_' + Date.now();
-  aircraftData[key] = {label:'',seater:null,speed:null,rate:null,pax_fee:0,overnight_rate:0,idle_day_rate:0,active:false,type:'helicopter',home_airstrip:'',routing_mode:'standard'};
+  aircraftData[key] = {label:'',seater:null,speed:null,rate:null,pax_fee:0,overnight_rate:0,idle_day_rate:0,idle_day_label:'Idle Day Rate',active:false,type:'helicopter',home_airstrip:'',routing_mode:'standard'};
   renderAircraft();
 }
 
@@ -3435,6 +3437,7 @@ async function saveAircraft(btnOrKey) {
     overnight_label: card.querySelector('.ac-overnight-label')?.value.trim() || 'Crew Overnight',
     overnight_enabled: card.querySelector('.ac-overnight-enabled')?.checked !== false,
     idle_day_rate: parseFloat(card.querySelector('.ac-idle').value),
+    idle_day_label: card.querySelector('.ac-idle-label')?.value.trim() || 'Idle Day Rate',
     // CRITICAL FIX: was reading the hidden .ac-active input directly from the DOM,
     // but that input is only regenerated when renderAircraft() runs - which happens
     // AFTER saveAircraft() completes when called from toggleAcActive(). This meant
