@@ -1120,7 +1120,18 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         flight_total_usd = result.get("total_usd", 0)
 
     flying_segs = [s for s in all_segments if s.get("type") and s.get("origin")]
-    total_hrs = sum(float(s.get("hours", 0)) for s in flying_segs)
+    # CRITICAL FIX: was recomputing hours from raw segment sums, independently
+    # of the engine's own billed_hours - which is the authoritative, already-
+    # correctly-rounded figure the actual total_usd was calculated from. This
+    # caused a real, silent drift on real invoices (confirmed: engine billed
+    # 1.2 hrs at KES 292,537/hr = correct total; PDF recomputed 1.1666 -> 1.17
+    # hrs, producing a total ~8,776 lower than what the client was actually
+    # quoted and charged in the CRM). Trust billed_hours directly; only fall
+    # back to the raw sum if that field is genuinely absent (older records).
+    if result.get("billed_hours"):
+        total_hrs = float(result["billed_hours"])
+    else:
+        total_hrs = sum(float(s.get("hours", 0)) for s in flying_segs)
     min_hrs = float(result.get("min_chargeable_hrs", 0))
     if min_hrs > 0 and total_hrs < min_hrs:
         total_hrs = min_hrs
