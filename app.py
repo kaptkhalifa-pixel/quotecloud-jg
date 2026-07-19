@@ -1888,7 +1888,17 @@ def delete_record_route():
     records = load_records()
     rec = next((r for r in records if r.get("number") == number), None)
     if rec and (rec.get("paid") or float(rec.get("paid_amount", 0)) > 0):
-        if password != get_admin_pass():
+        # CRITICAL FIX: was comparing the submitted password directly against
+        # the now-hashed stored password with plain ==, which would ALWAYS
+        # fail once the password was correctly hashed - meaning nobody could
+        # ever delete a paid record through the normal flow, even with the
+        # genuinely correct password.
+        stored_pass = get_admin_pass()
+        if stored_pass.startswith("pbkdf2:") or stored_pass.startswith("scrypt:"):
+            password_ok = check_password_hash(stored_pass, password)
+        else:
+            password_ok = (password == stored_pass)
+        if not password_ok:
             return jsonify({"error": "Password required to delete a paid record."}), 403
     for r in records:
         if r.get("number") == number:
