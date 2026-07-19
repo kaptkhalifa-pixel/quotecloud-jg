@@ -2201,6 +2201,41 @@ def save_aircraft_route():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route("/aircraft/drafts", methods=["GET"])
+@login_required
+def get_aircraft_drafts():
+    """Draft aircraft - genuine server-side storage (not localStorage) since
+    the max-2 cap needs one true, authoritative count, not a per-browser
+    number that could silently differ across devices."""
+    docs = list(tenant_collection("aircraft_drafts").stream())
+    return jsonify({d.id: d.to_dict() for d in docs})
+
+@app.route("/aircraft/draft/save", methods=["POST"])
+@login_required
+def save_aircraft_draft():
+    data = request.get_json()
+    key = data.get("key", "").strip()
+    draft_data = data.get("draft", {})
+    if not key:
+        return jsonify({"error": "Draft key required"}), 400
+    col = tenant_collection("aircraft_drafts")
+    existing = list(col.stream())
+    existing_keys = {d.id for d in existing}
+    if key not in existing_keys and len(existing_keys) >= 2:
+        return jsonify({"error": "Maximum of 2 drafts allowed. Finish or discard an existing draft first.", "cap_reached": True}), 400
+    col.document(key).set(draft_data)
+    return jsonify({"success": True})
+
+@app.route("/aircraft/draft/delete", methods=["POST"])
+@login_required
+def delete_aircraft_draft():
+    data = request.get_json()
+    key = data.get("key", "").strip()
+    if not key:
+        return jsonify({"error": "Draft key required"}), 400
+    tenant_collection("aircraft_drafts").document(key).delete()
+    return jsonify({"success": True})
+
 @app.route("/settings/config", methods=["GET"])
 @login_required
 def get_config():
