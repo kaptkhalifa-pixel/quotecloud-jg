@@ -3031,7 +3031,7 @@ def booking_pdf():
         response.headers["X-DOC-NUMBER"] = token
         return response
     except Exception as e:
-        log_pdf_error("/manual_invoice", e, data)
+        log_pdf_error("/booking/pdf", e, data)
         return jsonify({"error": str(e)}), 400
 
 @app.route("/booking/status/<token>", methods=["GET"])
