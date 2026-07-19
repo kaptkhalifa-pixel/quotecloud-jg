@@ -1530,7 +1530,7 @@ def pdf():
             if rev:
                 route_summary = ", ".join(f"{s.get('origin','')} to {s.get('destination','')}" + (f" on {s['date']}" if s.get('date') else "") for s in rev)
             total_hrs_val = round(sum(float(s.get("hours", 0)) for s in all_flight), 2)
-            total_nm_val = round(sum(float(s.get("distance_nm", 0)) for s in all_flight))
+            total_nm_val = round(sum(float(s.get("dist_nm", 0)) for s in all_flight))
             bookings[doc_number] = {
                 "token": doc_number,
                 "status": "PENDING",
@@ -2932,7 +2932,7 @@ def booking_request():
                 (quote_snapshot.get("option_a") or {}).get("segments", []),
                 (quote_snapshot.get("option_b") or {}).get("segments", []),
             ] for seg in segs if seg.get("type") in ("revenue", "positioning", "depositioning")]), 2),
-            "total_nm": round(sum(float(s.get("distance_nm", 0)) for s in [seg for segs in [
+            "total_nm": round(sum(float(s.get("dist_nm", 0)) for s in [seg for segs in [
                 quote_snapshot.get("segments") or [],
                 (quote_snapshot.get("drop") or {}).get("segments", []),
                 (quote_snapshot.get("pick") or {}).get("segments", []),
