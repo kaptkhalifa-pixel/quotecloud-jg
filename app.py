@@ -2803,16 +2803,47 @@ def backup_configs():
 def upload_image():
     try:
         from firebase_admin import storage as fb_storage
-        import uuid
+        import uuid, io
         file = request.files.get("image")
         if not file:
             return jsonify({"error": "No image provided"}), 400
-        ext = pathlib.Path(file.filename or "image.jpg").suffix or ".jpg"
-        unique_name = f"{uuid.uuid4().hex}{ext}"
-        bucket = fb_storage.bucket()
+        unique_name = f"{uuid.uuid4().hex}.png"
         blob_path = f"tenants/{TENANT_ID}/images/{unique_name}"
+
+        # Read file bytes
+        file_bytes = file.read()
+
+        # CRITICAL SECURITY FIX: this route previously uploaded ANY file with
+        # zero validation - a renamed executable, video, or arbitrary file
+        # would have been accepted as long as it had an image-like extension,
+        # trusting only the browser-supplied mimetype (trivially fakeable).
+        # Found via side-by-side audit against QC Aero, which had already
+        # been fixed during this morning's security certification but this
+        # gap on JG itself was never checked. Genuinely parse and re-encode
+        # via Pillow; reject anything that isn't a real image.
+        try:
+            from PIL import Image
+            img = Image.open(io.BytesIO(file_bytes)).convert("RGBA")
+            datas = img.getdata()
+            new_data = []
+            for item in datas:
+                r, g, b, a = item
+                if r > 220 and g > 220 and b > 220:
+                    new_data.append((r, g, b, 0))
+                else:
+                    new_data.append(item)
+            img.putdata(new_data)
+            output = io.BytesIO()
+            img.save(output, format="PNG")
+            output.seek(0)
+            upload_bytes = output
+            content_type = "image/png"
+        except Exception:
+            return jsonify({"error": "Uploaded file is not a valid image. Please upload a genuine JPG, PNG, or WEBP file."}), 400
+
+        bucket = fb_storage.bucket()
         blob = bucket.blob(blob_path)
-        blob.upload_from_file(file, content_type=file.mimetype or "image/jpeg")
+        blob.upload_from_file(upload_bytes, content_type=content_type)
         blob.make_public()
         return jsonify({"success": True, "url": blob.public_url})
     except Exception as e:
