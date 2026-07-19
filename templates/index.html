@@ -2969,47 +2969,67 @@ async function loadAircraft() {
   // aircraft's temporary key (aircraft_<timestamp>) is never replaced with anything
   // else once saved, so the key's naming pattern alone can't tell new from persisted.
   persistedAircraftKeys = new Set(Object.keys(aircraftData));
+  // Merge in any drafts left from a previous session (e.g. before a refresh
+  // interrupted editing) - marked with _isDraft so renderAircraft() shows
+  // them visually distinct, and they stay genuinely inactive/unfinished
+  // until promoted to a real save.
+  try {
+    let dr = await fetch('/aircraft/drafts');
+    let drafts = await dr.json();
+    for (let [dkey, ddata] of Object.entries(drafts)) {
+      if (!aircraftData[dkey]) {
+        aircraftData[dkey] = {...ddata, active: false, _isDraft: true};
+      }
+    }
+  } catch(e) { console.error('Failed to load drafts:', e); }
   renderAircraft();
 }
 
 function renderAircraft() {
   let html = Object.entries(aircraftData).map(([key, ac]) => {
-    let statusColor = ac.active ? '#1b5e20' : '#888';
-    let statusBg = ac.active ? '#e8f5e9' : '#f5f5f5';
-    let statusLabel = ac.active ? 'Active' : 'Inactive';
+    let statusColor = ac._isDraft ? '#8a6d00' : (ac.active ? '#1b5e20' : '#888');
+    let statusBg = ac._isDraft ? '#fff8e1' : (ac.active ? '#e8f5e9' : '#f5f5f5');
+    let statusLabel = ac._isDraft ? 'Draft - Unfinished' : (ac.active ? 'Active' : 'Inactive');
     let typeLabel = ac.type === 'fixed_wing' ? '✈ Fixed Wing' : '🚁 Helicopter';
     let amenities = (ac.amenities || []).join(', ');
     let _missingCoords = !ac.base_lat || !ac.base_lon;
     let _cannotQuote = !ac.active || _missingCoords;
-    let _blockReason = !ac.active && _missingCoords
+    let _blockReason = ac._isDraft
+      ? 'This is a draft in progress - it will never appear in quotes until you finish and save it as a real aircraft.'
+      : !ac.active && _missingCoords
       ? 'This aircraft is inactive AND has no base location set - it will not appear in any quote until both are fixed.'
       : !ac.active
       ? 'This aircraft is inactive - it will not appear in any quote until you tap Activate.'
       : 'This aircraft has no base location set - it will not appear in any quote until you resolve its coordinates below.';
-    return `<div class="ac-card" data-key="${key}" style="margin-bottom:12px;padding:0;overflow:hidden">
+    return `<div class="ac-card" data-key="${key}" style="margin-bottom:12px;padding:0;overflow:hidden;${ac._isDraft ? 'border:1.5px dashed #d4a017' : ''}">
       <!-- COLLAPSED HEADER -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:0.95rem;color:#1a1a1a;margin-bottom:4px">${ac.label}</div>
+          <div style="font-weight:700;font-size:0.95rem;color:#1a1a1a;margin-bottom:4px">${ac.label || '(Untitled draft)'}</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span style="font-size:0.72rem;color:#666">${typeLabel}</span>
             <span style="font-size:0.72rem;color:#666">·</span>
-            <span style="font-size:0.72rem;color:#666">${ac.seater} seats</span>
+            <span style="font-size:0.72rem;color:#666">${ac.seater||'?'} seats</span>
             <span style="font-size:0.72rem;color:#666">·</span>
-            <span style="font-size:0.72rem;color:#666">$${ac.rate}/hr</span>
+            <span style="font-size:0.72rem;color:#666">$${ac.rate||'?'}/hr</span>
             <span style="background:${statusBg};color:${statusColor};font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:10px">${statusLabel}</span>
           </div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
+          ${ac._isDraft ? `
+          <button class="btn btn-outline btn-sm" onclick="toggleAcEdit('${key}')">✏️ Continue Editing</button>
+          <button class="btn btn-danger btn-sm" onclick="discardDraft('${key}')">🗑 Discard Draft</button>
+          ` : `
           <button class="btn btn-outline btn-sm" onclick="toggleAcEdit('${key}')">✏️ Edit</button>
           <button class="btn btn-sm ${ac.active ? 'btn-amber' : 'btn-success'}" onclick="toggleAcActive('${key}')">${ac.active ? 'Deactivate' : 'Activate'}</button>
           <button class="btn btn-danger btn-sm" onclick="removeAcRow(this)">🗑</button>
+          `}
         </div>
       </div>
       ${_cannotQuote ? `<div style="background:#fff3e0;color:#e65100;padding:10px 16px;font-size:0.78rem;font-weight:600;border-top:1px solid #ffe0b2">⚠️ ${_blockReason}</div>` : ''}
       <div id="ac-msg-${key}" style="display:none;padding:8px 16px;font-size:0.78rem;font-weight:600;border-top:1px solid #eee"></div>
       <!-- EXPANDED EDIT FORM -->
-      <div id="ac-edit-${key}" style="display:none;border-top:1px solid #eee;padding:16px">
+      <div id="ac-edit-${key}" style="display:none;border-top:1px solid #eee;padding:16px" oninput="scheduleDraftSave(this.closest('.ac-card'), '${key}')" onchange="scheduleDraftSave(this.closest('.ac-card'), '${key}')">
         <input type="hidden" class="ac-key" value="${key}">
         <div class="form-group" style="margin-bottom:14px"><label>Aircraft Name</label><input class="ac-label" value="${ac.label}" placeholder="e.g. Cessna 206 Station Air"></div>
         <div class="form-row">
@@ -3190,6 +3210,15 @@ function addAircraftRow() {
   // can ever be saved and used in a quote.
   let key = 'aircraft_' + Date.now();
   aircraftData[key] = {label:'',seater:null,speed:null,rate:null,pax_fee:0,overnight_rate:0,idle_day_rate:0,idle_day_label:'Idle Day Rate',active:false,type:'helicopter',home_airstrip:'',routing_mode:'standard'};
+  renderAircraft();
+}
+
+async function discardDraft(key) {
+  if (!confirm('Discard this draft? Everything typed so far will be permanently deleted.')) return;
+  try {
+    await fetch('/aircraft/draft/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key}) });
+  } catch(e) { console.error('Failed to discard draft:', e); }
+  delete aircraftData[key];
   renderAircraft();
 }
 
@@ -3409,6 +3438,67 @@ async function resolveAcBase(btn) {
 
 let removedAircraftKeys = [];
 
+let _draftSaveTimers = {};
+
+function scheduleDraftSave(card, key) {
+  // Debounced - waits 2 seconds after the last keystroke before actually
+  // writing to the server, so drafts don't fire a network request on every
+  // single character typed.
+  if (_draftSaveTimers[key]) clearTimeout(_draftSaveTimers[key]);
+  _draftSaveTimers[key] = setTimeout(() => saveDraft(card, key), 2000);
+}
+
+async function saveDraft(card, key) {
+  let draftData = readAcCardData(card, key);
+  try {
+    let r = await fetch('/aircraft/draft/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key, draft: draftData}) });
+    let res = await r.json();
+    let msgId = `ac-msg-${key}`;
+    let msgEl = document.getElementById(msgId);
+    if (res.cap_reached) {
+      if (msgEl) msgEl.style.display = 'block';
+      showMsg(msgId, res.error, 'error');
+    }
+    // Silent on success - a draft auto-saving shouldn't interrupt the
+    // operator with a message every 2 seconds while they're mid-typing.
+  } catch(e) {
+    console.error('Draft auto-save failed:', e);
+  }
+}
+
+function readAcCardData(card, key) {
+  // Shared field-reading logic - used by both the real save (with the
+  // safety-critical guard) and draft auto-save (no guard, since a draft is
+  // explicitly allowed to be incomplete).
+  return {
+    label: card.querySelector('.ac-label').value,
+    seater: parseInt(card.querySelector('.ac-seater').value),
+    speed: parseFloat(card.querySelector('.ac-speed').value),
+    rate: parseFloat(card.querySelector('.ac-rate').value),
+    rate_currency: card.querySelector('.ac-rate-currency')?.value || 'USD',
+    pax_fee: parseFloat(card.querySelector('.ac-pax').value),
+    pax_label: card.querySelector('.ac-pax-label')?.value.trim() || 'Mission Fixed Costs',
+    pax_fee_enabled: card.querySelector('.ac-pax-enabled')?.checked !== false,
+    overnight_rate: parseFloat(card.querySelector('.ac-overnight').value),
+    overnight_label: card.querySelector('.ac-overnight-label')?.value.trim() || 'Crew Overnight',
+    overnight_enabled: card.querySelector('.ac-overnight-enabled')?.checked !== false,
+    idle_day_rate: parseFloat(card.querySelector('.ac-idle').value),
+    idle_day_label: card.querySelector('.ac-idle-label')?.value.trim() || 'Idle Day Rate',
+    active: aircraftData[key] ? aircraftData[key].active : (card.querySelector('.ac-active').value === 'true'),
+    snap_radius_nm: parseFloat(card.querySelector('.ac-snap-radius')?.value || 4),
+    amenities: (card.querySelector('.ac-amenities')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
+    show_amenities: card.querySelector('.ac-show-amenities')?.checked || false,
+    description: card.querySelector('.ac-description')?.value.trim() || '',
+    type: card.querySelector('.ac-type').value,
+    home_airstrip: card.querySelector('.ac-home').value,
+    routing_mode: 'direct',
+    images: aircraftData[key]?.images || [],
+    base_lat: parseFloat(card.querySelector('.ac-base-lat').value) || null,
+    base_lon: parseFloat(card.querySelector('.ac-base-lon').value) || null,
+    allow_urban_hops: card.querySelector('.ac-urban-hops').checked
+  };
+}
+
 async function saveAircraft(btnOrKey) {
   // Saves ONLY the specific aircraft whose card this was called from - plus any
   // explicit removals made during this session. Never touches other aircraft.
@@ -3424,40 +3514,7 @@ async function saveAircraft(btnOrKey) {
     key = card ? card.querySelector('.ac-key').value.trim() : null;
   }
   if (!card || !key) { showMsg('ac-msg', 'Could not identify which aircraft to save.', 'error'); return; }
-  let acData = {
-    label: card.querySelector('.ac-label').value,
-    seater: parseInt(card.querySelector('.ac-seater').value),
-    speed: parseFloat(card.querySelector('.ac-speed').value),
-    rate: parseFloat(card.querySelector('.ac-rate').value),
-    rate_currency: card.querySelector('.ac-rate-currency')?.value || 'USD',
-    pax_fee: parseFloat(card.querySelector('.ac-pax').value),
-    pax_label: card.querySelector('.ac-pax-label')?.value.trim() || 'Mission Fixed Costs',
-    pax_fee_enabled: card.querySelector('.ac-pax-enabled')?.checked !== false,
-    overnight_rate: parseFloat(card.querySelector('.ac-overnight').value),
-    overnight_label: card.querySelector('.ac-overnight-label')?.value.trim() || 'Crew Overnight',
-    overnight_enabled: card.querySelector('.ac-overnight-enabled')?.checked !== false,
-    idle_day_rate: parseFloat(card.querySelector('.ac-idle').value),
-    idle_day_label: card.querySelector('.ac-idle-label')?.value.trim() || 'Idle Day Rate',
-    // CRITICAL FIX: was reading the hidden .ac-active input directly from the DOM,
-    // but that input is only regenerated when renderAircraft() runs - which happens
-    // AFTER saveAircraft() completes when called from toggleAcActive(). This meant
-    // every "Deactivate" tap read the STALE, pre-toggle value and saved the OPPOSITE
-    // of what was intended - confirmed live: aircraft never actually deactivated.
-    // Trust the in-memory aircraftData value directly instead, which toggleAcActive
-    // already correctly updated before calling this function.
-    active: aircraftData[key] ? aircraftData[key].active : (card.querySelector('.ac-active').value === 'true'),
-    snap_radius_nm: parseFloat(card.querySelector('.ac-snap-radius')?.value || 4),
-    amenities: (card.querySelector('.ac-amenities')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
-    show_amenities: card.querySelector('.ac-show-amenities')?.checked || false,
-    description: card.querySelector('.ac-description')?.value.trim() || '',
-    type: card.querySelector('.ac-type').value,
-    home_airstrip: card.querySelector('.ac-home').value,
-    routing_mode: 'direct',
-    images: aircraftData[key]?.images || [],
-    base_lat: parseFloat(card.querySelector('.ac-base-lat').value) || null,
-    base_lon: parseFloat(card.querySelector('.ac-base-lon').value) || null,
-    allow_urban_hops: card.querySelector('.ac-urban-hops').checked
-  };
+  let acData = readAcCardData(card, key);
   // SAFETY-CRITICAL GUARD: an aircraft with no real base location, no home
   // name, or no rate can still technically be "saved" but is functionally
   // useless - it can never appear in a real quote (base coords) or produces
@@ -3494,9 +3551,17 @@ async function saveAircraft(btnOrKey) {
   let r = await fetch('/aircraft/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
   let res = await r.json();
   if (res.success) {
+    // Promotion: this aircraft just became genuinely saved/real - if it was
+    // a draft, clean up the server-side draft record and any pending
+    // auto-save timer, so it doesn't linger as a phantom duplicate.
+    let wasDraft = aircraftData[key]?._isDraft;
     aircraftData[key] = acData;
     persistedAircraftKeys.add(key);
     removedAircraftKeys = [];
+    if (wasDraft) {
+      if (_draftSaveTimers[key]) { clearTimeout(_draftSaveTimers[key]); delete _draftSaveTimers[key]; }
+      fetch('/aircraft/draft/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key}) }).catch(e => console.error('Draft cleanup failed:', e));
+    }
   }
   // Context-aware message: reflects what actually changed (activated,
   // deactivated, or just details) rather than one generic "saved" for
