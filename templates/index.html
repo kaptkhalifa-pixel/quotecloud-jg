@@ -3345,7 +3345,14 @@ async function saveAircraft(btnOrKey) {
     overnight_label: card.querySelector('.ac-overnight-label')?.value.trim() || 'Crew Overnight',
     overnight_enabled: card.querySelector('.ac-overnight-enabled')?.checked !== false,
     idle_day_rate: parseFloat(card.querySelector('.ac-idle').value),
-    active: card.querySelector('.ac-active').value === 'true',
+    // CRITICAL FIX: was reading the hidden .ac-active input directly from the DOM,
+    // but that input is only regenerated when renderAircraft() runs - which happens
+    // AFTER saveAircraft() completes when called from toggleAcActive(). This meant
+    // every "Deactivate" tap read the STALE, pre-toggle value and saved the OPPOSITE
+    // of what was intended - confirmed live: aircraft never actually deactivated.
+    // Trust the in-memory aircraftData value directly instead, which toggleAcActive
+    // already correctly updated before calling this function.
+    active: aircraftData[key] ? aircraftData[key].active : (card.querySelector('.ac-active').value === 'true'),
     snap_radius_nm: parseFloat(card.querySelector('.ac-snap-radius')?.value || 4),
     amenities: (card.querySelector('.ac-amenities')?.value || '').split(',').map(s=>s.trim()).filter(Boolean),
     show_amenities: card.querySelector('.ac-show-amenities')?.checked || false,
@@ -3358,6 +3365,10 @@ async function saveAircraft(btnOrKey) {
     base_lon: parseFloat(card.querySelector('.ac-base-lon').value) || null,
     allow_urban_hops: card.querySelector('.ac-urban-hops').checked
   };
+  // Genuine in-progress feedback: shows immediately, before the network call
+  // even starts, so a real save is visibly distinguishable from a silent no-op.
+  let _wasActiveBefore = card.querySelector('.ac-active').value === 'true';
+  showMsg('ac-msg', `${acData.label || 'Aircraft'} details saving...`, 'info');
   let body = { aircraft: { [key]: acData }, delete_keys: removedAircraftKeys };
   let r = await fetch('/aircraft/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
   let res = await r.json();
@@ -3366,7 +3377,20 @@ async function saveAircraft(btnOrKey) {
     persistedAircraftKeys.add(key);
     removedAircraftKeys = [];
   }
-  showMsg('ac-msg', res.success ? `${acData.label || 'Aircraft'} saved.` : (res.error||'Error'), res.success?'success':'error');
+  // Context-aware message: reflects what actually changed (activated,
+  // deactivated, or just details) rather than one generic "saved" for
+  // every kind of change.
+  let _msg;
+  if (!res.success) {
+    _msg = res.error || 'Error';
+  } else if (acData.active && !_wasActiveBefore) {
+    _msg = `${acData.label || 'Aircraft'} activated - now available for quotes.`;
+  } else if (!acData.active && _wasActiveBefore) {
+    _msg = `${acData.label || 'Aircraft'} deactivated - won't appear in quotes.`;
+  } else {
+    _msg = `${acData.label || 'Aircraft'} saved.`;
+  }
+  showMsg('ac-msg', _msg, res.success ? 'success' : 'error');
 }
 
 async function loadRecords() {
