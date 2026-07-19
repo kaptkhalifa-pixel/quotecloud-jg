@@ -6,6 +6,7 @@
 #   - Fixed missing @app.route decorator on /fx/rates
 # =========================================================
 import sys, os, json, re, pathlib, datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 sys.path.insert(0, os.path.dirname(__file__))
 import sentry_sdk
 sentry_sdk.init(
@@ -272,8 +273,29 @@ def login():
         mins = int((900 - (now - _login_attempts[ip][0])) / 60) + 1
         return render_template("login.html", operator=OPERATOR, error=f"Too many attempts. Try again in {mins} minutes.")
     if request.method == "POST":
-        if (request.form.get("username") == get_admin_user() and
-                request.form.get("password") == get_admin_pass()):
+        username_ok = request.form.get("username") == get_admin_user()
+        submitted_pass = request.form.get("password") or ""
+        stored_pass = get_admin_pass()
+        password_ok = False
+        needs_migration = False
+        if stored_pass.startswith("pbkdf2:") or stored_pass.startswith("scrypt:"):
+            try:
+                password_ok = check_password_hash(stored_pass, submitted_pass)
+            except Exception:
+                password_ok = False
+        else:
+            # Legacy plain-text password - compare directly, then silently
+            # upgrade to a real hash on successful login. CRITICAL FIX: this
+            # route previously compared and stored the password in plain text
+            # with no hashing at all - the exact same severe vulnerability
+            # found and fixed on QC Aero during this morning's security
+            # certification, but this gap on JG itself was never checked.
+            password_ok = (submitted_pass == stored_pass)
+            needs_migration = password_ok
+        if username_ok and password_ok:
+            if needs_migration:
+                OPERATOR["env"]["admin_pass"] = generate_password_hash(submitted_pass)
+                save_operator_config(OPERATOR)
             _login_attempts.pop(ip, None)
             session.permanent = True
             session["logged_in"] = True
@@ -2539,7 +2561,7 @@ def reset_password(token):
         global OPERATOR
         if "env" not in OPERATOR or OPERATOR["env"] is None:
             OPERATOR["env"] = {}
-        OPERATOR["env"]["admin_pass"] = new_pass
+        OPERATOR["env"]["admin_pass"] = generate_password_hash(new_pass)
         save_operator_config(OPERATOR)
         invalidate_reset_token(token)
         return jsonify({"success": True})
@@ -2554,14 +2576,19 @@ def change_password():
     current = data.get("current_password", "")
     new_pass = data.get("new_password", "")
     confirm = data.get("confirm_password", "")
-    if current != get_admin_pass():
+    stored_pass = get_admin_pass()
+    if stored_pass.startswith("pbkdf2:") or stored_pass.startswith("scrypt:"):
+        current_ok = check_password_hash(stored_pass, current)
+    else:
+        current_ok = (current == stored_pass)
+    if not current_ok:
         return jsonify({"error": "Current password is incorrect."}), 400
     if not new_pass or len(new_pass) < 6:
         return jsonify({"error": "New password must be at least 6 characters."}), 400
     if new_pass != confirm:
         return jsonify({"error": "Passwords do not match."}), 400
     try:
-        OPERATOR["env"]["admin_pass"] = new_pass
+        OPERATOR["env"]["admin_pass"] = generate_password_hash(new_pass)
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:
