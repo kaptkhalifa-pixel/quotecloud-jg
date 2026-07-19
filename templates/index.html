@@ -2979,6 +2979,13 @@ function renderAircraft() {
     let statusLabel = ac.active ? 'Active' : 'Inactive';
     let typeLabel = ac.type === 'fixed_wing' ? '✈ Fixed Wing' : '🚁 Helicopter';
     let amenities = (ac.amenities || []).join(', ');
+    let _missingCoords = !ac.base_lat || !ac.base_lon;
+    let _cannotQuote = !ac.active || _missingCoords;
+    let _blockReason = !ac.active && _missingCoords
+      ? 'This aircraft is inactive AND has no base location set - it will not appear in any quote until both are fixed.'
+      : !ac.active
+      ? 'This aircraft is inactive - it will not appear in any quote until you tap Activate.'
+      : 'This aircraft has no base location set - it will not appear in any quote until you resolve its coordinates below.';
     return `<div class="ac-card" data-key="${key}" style="margin-bottom:12px;padding:0;overflow:hidden">
       <!-- COLLAPSED HEADER -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:10px;flex-wrap:wrap">
@@ -2999,6 +3006,7 @@ function renderAircraft() {
           <button class="btn btn-danger btn-sm" onclick="removeAcRow(this)">🗑</button>
         </div>
       </div>
+      ${_cannotQuote ? `<div style="background:#fff3e0;color:#e65100;padding:10px 16px;font-size:0.78rem;font-weight:600;border-top:1px solid #ffe0b2">⚠️ ${_blockReason}</div>` : ''}
       <!-- EXPANDED EDIT FORM -->
       <div id="ac-edit-${key}" style="display:none;border-top:1px solid #eee;padding:16px">
         <input type="hidden" class="ac-key" value="${key}">
