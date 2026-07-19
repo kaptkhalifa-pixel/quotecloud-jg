@@ -3007,6 +3007,7 @@ function renderAircraft() {
         </div>
       </div>
       ${_cannotQuote ? `<div style="background:#fff3e0;color:#e65100;padding:10px 16px;font-size:0.78rem;font-weight:600;border-top:1px solid #ffe0b2">⚠️ ${_blockReason}</div>` : ''}
+      <div id="ac-msg-${key}" style="display:none;padding:8px 16px;font-size:0.78rem;font-weight:600;border-top:1px solid #eee"></div>
       <!-- EXPANDED EDIT FORM -->
       <div id="ac-edit-${key}" style="display:none;border-top:1px solid #eee;padding:16px">
         <input type="hidden" class="ac-key" value="${key}">
@@ -3021,6 +3022,7 @@ function renderAircraft() {
         </div>
  <div style="margin-bottom:14px">
           <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:6px">Aircraft Base</label>
+          <div style="font-size:0.72rem;color:#e65100;margin-bottom:2px">⚠️ Required — this aircraft cannot be saved without a name and resolved coordinates. Without a real base, it can never appear in a quote.</div>
           <div style="font-size:0.72rem;color:#888;margin-bottom:8px">Search for your home airstrip, helipad or landing zone — or paste a Google Maps link directly. The system resolves coordinates automatically. The display name below is always editable.</div>
           <div style="position:relative;margin-bottom:8px">
             <input class="ac-base-search" placeholder="Search airstrip, helipad or paste a Maps pin..." style="width:100%;padding-right:80px" oninput="acBaseSearch(this)" value="${ac.home_airstrip||''}">
@@ -3075,6 +3077,7 @@ function renderAircraft() {
               </select>
             </div>
             <div style="font-size:0.72rem;color:#888;margin-top:4px">Currency your rates are stored in. System converts to primary currency for quotes.</div>
+            <div style="font-size:0.72rem;color:#e65100;margin-top:2px">⚠️ Required — this aircraft cannot be saved without a real hourly rate.</div>
           </div>
           <div class="form-group">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -3155,8 +3158,14 @@ function toggleAcActive(key) {
 }
 
 function addAircraftRow() {
+  // Genuinely blank slate - was pre-filling realistic-looking numbers
+  // (rate:1500, seater:4, etc.) that an operator could easily save without
+  // noticing they were still just placeholders, not their real aircraft's
+  // real specs. Empty/zero values here, paired with the save guard below,
+  // force a genuine, deliberate entry of real data before this aircraft
+  // can ever be saved and used in a quote.
   let key = 'aircraft_' + Date.now();
-  aircraftData[key] = {label:'New Aircraft',seater:4,speed:120,rate:1500,pax_fee:100,overnight_rate:300,idle_day_rate:1500,active:false,type:'helicopter',home_airstrip:'',routing_mode:'standard'};
+  aircraftData[key] = {label:'',seater:null,speed:null,rate:null,pax_fee:0,overnight_rate:0,idle_day_rate:0,active:false,type:'helicopter',home_airstrip:'',routing_mode:'standard'};
   renderAircraft();
 }
 
@@ -3365,10 +3374,38 @@ async function saveAircraft(btnOrKey) {
     base_lon: parseFloat(card.querySelector('.ac-base-lon').value) || null,
     allow_urban_hops: card.querySelector('.ac-urban-hops').checked
   };
+  // SAFETY-CRITICAL GUARD: an aircraft with no real base location, no home
+  // name, or no rate can still technically be "saved" but is functionally
+  // useless - it can never appear in a real quote (base coords) or produces
+  // meaningless output (no rate). Treating this the way a genuinely
+  // safety-critical component would be treated: block the save entirely
+  // rather than let an incomplete aircraft silently exist in the fleet list
+  // looking configured when it isn't.
+  let _missingSpecs = [];
+  if (!acData.home_airstrip || !acData.home_airstrip.trim()) _missingSpecs.push('Base/Home Airstrip name');
+  if (!acData.base_lat || !acData.base_lon) _missingSpecs.push('Base coordinates (search or paste a Maps link, then Resolve)');
+  if (!acData.rate || acData.rate <= 0) _missingSpecs.push('Hourly Rate');
+  if (_missingSpecs.length > 0) {
+    let _guardMsgId = `ac-msg-${key}`;
+    let _guardMsgEl = document.getElementById(_guardMsgId);
+    if (_guardMsgEl) _guardMsgEl.style.display = 'block';
+    showMsg(_guardMsgId, `Cannot save - missing: ${_missingSpecs.join(', ')}.`, 'error');
+    return;
+  }
   // Genuine in-progress feedback: shows immediately, before the network call
   // even starts, so a real save is visibly distinguishable from a silent no-op.
+  // Targets THIS specific aircraft's own message element (was pointed at a
+  // single page-level element shared by every card, so messages appeared at
+  // the extreme bottom of the page regardless of which aircraft was edited).
   let _wasActiveBefore = card.querySelector('.ac-active').value === 'true';
-  showMsg('ac-msg', `${acData.label || 'Aircraft'} details saving...`, 'info');
+  let _msgId = `ac-msg-${key}`;
+  let _msgEl = document.getElementById(_msgId);
+  if (_msgEl) _msgEl.style.display = 'block';
+  showMsg(_msgId, `${acData.label || 'Aircraft'} details saving...`, 'info');
+  // If called from an actual Save button (not the Activate/Deactivate toggle,
+  // which passes a plain key string with no button), show a spinner there too.
+  let _saveBtn = (btnOrKey && typeof btnOrKey !== 'string') ? btnOrKey : null;
+  if (_saveBtn) btnFeedback(_saveBtn, 'loading');
   let body = { aircraft: { [key]: acData }, delete_keys: removedAircraftKeys };
   let r = await fetch('/aircraft/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
   let res = await r.json();
@@ -3390,7 +3427,8 @@ async function saveAircraft(btnOrKey) {
   } else {
     _msg = `${acData.label || 'Aircraft'} saved.`;
   }
-  showMsg('ac-msg', _msg, res.success ? 'success' : 'error');
+  showMsg(_msgId, _msg, res.success ? 'success' : 'error');
+  if (_saveBtn) btnFeedback(_saveBtn, res.success ? 'success' : 'error', res.success ? 'Saved' : 'Failed');
 }
 
 async function loadRecords() {
