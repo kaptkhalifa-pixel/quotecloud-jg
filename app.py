@@ -423,6 +423,18 @@ def write_audit_log(action, details={}):
         })
     except Exception as e:
         print(f"Audit log error: {e}")
+def safe_doc_number(doc_number):
+    """CRITICAL SECURITY FIX: doc_number flows directly into file paths
+    (f"/tmp/{doc_number}.pdf") at seven separate places in this file, with
+    zero sanitization. Confirmed live: a real path-traversal attack attempt
+    was logged in production (source_token containing '../../etc/passwd',
+    passed through inherit_token() which only checks segment COUNT, not
+    content, then straight into the file path). The OS denied the write due
+    to permissions, but that's accidental protection, not a real defense.
+    Strip to only characters a genuine token would ever contain."""
+    import re as _re
+    return _re.sub(r'[^A-Za-z0-9\-]', '', str(doc_number))[:100]
+
 def generate_token(doc_type="Q"):
     import random, string
     prefix = OPERATOR.get("invoice", {}).get("prefix", "JG")
@@ -436,8 +448,14 @@ def generate_booking_token():
     return generate_token("Q")
 
 def inherit_token(token, new_type):
-    parts = token.split("-")
-    if len(parts) == 4:
+    # CRITICAL SECURITY FIX: was only checking segment COUNT (4 parts), not
+    # segment CONTENT - meaning a client-supplied token containing path-
+    # traversal characters (e.g. embedded '../') would be trusted and
+    # reassembled as-is, since 4 hyphen-separated segments is all it took.
+    # Confirmed live: a real attack attempt reached this exact function.
+    # Now requires every segment to be genuinely alphanumeric.
+    parts = str(token).split("-")
+    if len(parts) == 4 and all(p.isalnum() for p in parts):
         parts[1] = new_type
         return "-".join(parts)
     return generate_token(new_type)
@@ -1394,7 +1412,7 @@ def quote_brand_pdf():
         payload["from"] = from_block
         payload["logo"] = logo_url
         payload["powered_by"] = "Powered by QC Aero · qcaero.app"
-        out_path = f"/tmp/{doc_number}.pdf"
+        out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
         with open(out_path, "rb") as f:
             pdf_bytes = f.read()
@@ -1496,7 +1514,7 @@ def pdf():
             currency=currency, kes_rate=kes_rate, ghost_mode=ghost_mode)
         payload["powered_by"] = "Quotecloud JG"
 
-        out_path = f"/tmp/{doc_number}.pdf"
+        out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
         import os
         pdf_size = os.path.getsize(out_path) if os.path.exists(out_path) else 0
@@ -1613,7 +1631,7 @@ def pdf_all():
                 doc_type, actual, client_name, client_email,
                 client_phone, note, discount, extra_items)
 
-            out_path = f"/tmp/{doc_number}.pdf"
+            out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
             hq.generate_pdf_weasy(payload, out_path)
 
             total = calc_pdf_total(actual, extra_items, discount)
@@ -1717,7 +1735,7 @@ def booking_invoice():
         final_total = round(base_total + uplift_total - disc, 2)
         payload["discounts"] = disc
 
-        out_path = f"/tmp/{doc_number}.pdf"
+        out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_firebase(out_path, doc_number)
 
@@ -1828,7 +1846,7 @@ def manual_invoice():
             "header": doc_type
         }
 
-        out_path = f"/tmp/{doc_number}.pdf"
+        out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_firebase(out_path, doc_number)
         save_record(doc_type, client_name, client_email, total, doc_number,
@@ -2060,7 +2078,7 @@ def generate_receipt():
         "header": "Receipt"
     }
 
-    out_path = f"/tmp/{receipt_number}.pdf"
+    out_path = f"/tmp/{safe_doc_number(receipt_number)}.pdf"
     hq.generate_pdf_weasy(payload, out_path)
     receipt_pdf_url = upload_pdf_to_firebase(out_path, receipt_number)
 
@@ -2969,7 +2987,7 @@ def booking_request():
 @app.route("/booking/pdf/<token>", methods=["GET"])
 def booking_pdf_get(token):
     try:
-        out_path = f"/tmp/{token}.pdf"
+        out_path = f"/tmp/{safe_doc_number(token)}.pdf"
         if not pathlib.Path(out_path).exists():
             return jsonify({"error": "PDF not found"}), 404
         return send_file(out_path, as_attachment=False,
@@ -3003,7 +3021,7 @@ def booking_pdf():
         payload["number"] = token
         payload["notes"] = ""
         payload["notes_title"] = ""
-        out_path = f"/tmp/{token}.pdf"
+        out_path = f"/tmp/{safe_doc_number(token)}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_firebase(out_path, token)
         total = float(result.get("total_usd", 0))
