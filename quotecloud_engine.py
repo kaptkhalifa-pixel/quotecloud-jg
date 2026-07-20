@@ -81,13 +81,15 @@ WHOLE_NUMBER_CURRENCIES = {
 
 def _fmt_money(x, currency="USD"):
     """A finished monetary value (unit rate, line amount, subtotal, total)
-    should respect the currency's real precision - was hardcoded to always
-    show two decimals (:,.2f) regardless of currency, meaning a whole-number
-    currency like KES showed 'KES 765,000.00' instead of the correct
-    'KES 765,000'. Quantities are unaffected by this - only finished values."""
-    if currency in WHOLE_NUMBER_CURRENCIES:
-        return f"{currency} {round(float(x)):,}"
-    return f"{currency} {float(x):,.2f}"
+    should ALWAYS show as a whole number, regardless of currency - was
+    initially built to only strip decimals for a specific whole-number-
+    currency list, but that was a misunderstanding of the actual rule:
+    decimals on a finished monetary value are bad UX across the board
+    (e.g. "8,000.00" can be misread more easily than "8,000"), not just for
+    certain currencies. Quantities are unaffected by this - only finished
+    values. WHOLE_NUMBER_CURRENCIES kept above for reference/potential
+    future use but no longer branches on it here."""
+    return f"{currency} {round(float(x)):,}"
 
 def _fmt_usd(x):   return f"USD {float(x):,.2f}"
 
