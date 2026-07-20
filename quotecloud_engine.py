@@ -74,6 +74,21 @@ def _today_long(): return datetime.date.today().strftime("%b %d, %Y")
 def _yyyymmdd():   return datetime.date.today().strftime("%Y%m%d")
 def norm(s):       return (s or "").strip().lower()
 def ceil_0_1(h):   return math.ceil((h or 0.0) * 10) / 10
+WHOLE_NUMBER_CURRENCIES = {
+    "KES","COP","TZS","UGX","NGN","GHS","RWF","ETB","IDR","JPY",
+    "KRW","VND","CLP","PYG","XOF","XAF","MGA","BIF","GNF","SLL"
+}
+
+def _fmt_money(x, currency="USD"):
+    """A finished monetary value (unit rate, line amount, subtotal, total)
+    should respect the currency's real precision - was hardcoded to always
+    show two decimals (:,.2f) regardless of currency, meaning a whole-number
+    currency like KES showed 'KES 765,000.00' instead of the correct
+    'KES 765,000'. Quantities are unaffected by this - only finished values."""
+    if currency in WHOLE_NUMBER_CURRENCIES:
+        return f"{currency} {round(float(x)):,}"
+    return f"{currency} {float(x):,.2f}"
+
 def _fmt_usd(x):   return f"USD {float(x):,.2f}"
 
 # =========================================================
@@ -754,11 +769,11 @@ def _build_pdf_html(payload):
         detail = "<br>".join(esc(p) for p in parts[1:] if p.strip()) if len(parts) > 1 else ""
         detail_html = f'<span class="item-detail">{detail}</span>' if detail else ""
         qty_display = int(qty) if qty == int(qty) else qty
-        rows_html += f'<tr><td><span class="item-title">{title}</span>{detail_html}</td><td>{qty_display}</td><td>{currency} {unit:,.2f}</td><td>{currency} {amount:,.2f}</td></tr>'
+        rows_html += f'<tr><td><span class="item-title">{title}</span>{detail_html}</td><td>{qty_display}</td><td>{_fmt_money(unit, currency)}</td><td>{_fmt_money(amount, currency)}</td></tr>'
 
     total = round(subtotal - discount, 2)
     total_display = round(total)
-    discount_row = f'<div class="total-row discount"><span>Discount</span><span>&minus; {currency} {discount:,.2f}</span></div>' if discount > 0 else ""
+    discount_row = f'<div class="total-row discount"><span>Discount</span><span>&minus; {_fmt_money(discount, currency)}</span></div>' if discount > 0 else ""
 
     kes_line_html = ""
     kes_note = payload.get("kes_note", "")
@@ -853,7 +868,7 @@ def _build_pdf_html(payload):
         ".footer-right{font-size:13pt;color:#666;font-style:italic}"
     )
 
-    return f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><style>{css}</style></head><body><div class="accent-bar"></div><div class="page"><div class="header"><div><img class="logo" src="{esc(logo)}" alt="Logo"><div class="company-block"><span class="company-name">{esc(company_name)}</span>{company_rest}</div></div><div><div class="doc-type">{esc(doc_type)}</div><div class="doc-number">Ref &mdash; {esc(number)}</div></div></div><div class="meta-row"><div class="bill-to"><div class="party-label">{esc(bill_label)}</div><div class="party-name">{esc(client_name)}</div><div class="party-detail">{client_rest}</div></div><div class="dates-box"><div class="date-item"><div class="date-label">Date</div><div class="date-value">{esc(date)}</div></div><div class="date-item"><div class="date-label">{esc(date_label2)}</div><div class="date-value">{esc(date_val2)}</div></div><div class="date-item"><div class="date-label">Currency</div><div class="date-value">{esc(currency)}</div></div></div></div><table><thead><tr><th style="width:52%">Description</th><th>Qty</th><th>Unit Rate</th><th>Amount</th></tr></thead><tbody>{rows_html}</tbody></table><div class="totals-wrap"><div class="totals"><div class="total-row"><span>Subtotal</span><span>{currency} {subtotal:,.2f}</span></div>{discount_row}<div class="total-final"><span class="total-final-label">{esc(total_label)}</span><span class="total-final-amount">{currency} {total_display:,.0f}</span></div>{kes_line_html}</div></div>{bottom_html}<div class="footer"><div class="footer-brand">{esc(payload.get("powered_by", ""))}</div><div class="footer-right">{footer_right_html}</div></div></div></body></html>"""
+    return f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><style>{css}</style></head><body><div class="accent-bar"></div><div class="page"><div class="header"><div><img class="logo" src="{esc(logo)}" alt="Logo"><div class="company-block"><span class="company-name">{esc(company_name)}</span>{company_rest}</div></div><div><div class="doc-type">{esc(doc_type)}</div><div class="doc-number">Ref &mdash; {esc(number)}</div></div></div><div class="meta-row"><div class="bill-to"><div class="party-label">{esc(bill_label)}</div><div class="party-name">{esc(client_name)}</div><div class="party-detail">{client_rest}</div></div><div class="dates-box"><div class="date-item"><div class="date-label">Date</div><div class="date-value">{esc(date)}</div></div><div class="date-item"><div class="date-label">{esc(date_label2)}</div><div class="date-value">{esc(date_val2)}</div></div><div class="date-item"><div class="date-label">Currency</div><div class="date-value">{esc(currency)}</div></div></div></div><table><thead><tr><th style="width:52%">Description</th><th>Qty</th><th>Unit Rate</th><th>Amount</th></tr></thead><tbody>{rows_html}</tbody></table><div class="totals-wrap"><div class="totals"><div class="total-row"><span>Subtotal</span><span>{_fmt_money(subtotal, currency)}</span></div>{discount_row}<div class="total-final"><span class="total-final-label">{esc(total_label)}</span><span class="total-final-amount">{currency} {total_display:,.0f}</span></div>{kes_line_html}</div></div>{bottom_html}<div class="footer"><div class="footer-brand">{esc(payload.get("powered_by", ""))}</div><div class="footer-right">{footer_right_html}</div></div></div></body></html>"""
 
 
 def generate_pdf_weasy(payload, out_path):
