@@ -2035,9 +2035,17 @@ def generate_receipt():
     payment_desc_lines = ["Amount Invoiced", f"Invoice Ref: {number}", ""]
     payment_log = rec.get("payment_log", [])
     if payment_log:
+        # FIX: was interpolating round_currency()'s raw numeric return value
+        # directly into the string, showing a completely unformatted Python
+        # number (e.g. "765000.0", no comma separator, no currency label) -
+        # round_currency() returns a NUMBER, not a display string. Now uses
+        # hq._fmt_money() to genuinely format it, matching the same currency-
+        # aware formatting already applied to every other amount on this
+        # receipt. Found via testing the same fix on QC Aero.
+        _cur_ph = OPERATOR.get("fx", {}).get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
         payment_desc_lines.append("Payment History:")
         for entry in payment_log:
-            line = f"  {entry.get('date', '')} — {round_currency(float(entry.get('amount', 0)))}"
+            line = f"  {entry.get('date', '')} — {hq._fmt_money(float(entry.get('amount', 0)), _cur_ph)}"
             if entry.get("mode"):
                 line += f" via {entry['mode']}"
             if entry.get("ref"):
