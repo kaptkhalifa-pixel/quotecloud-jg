@@ -435,6 +435,28 @@ def safe_doc_number(doc_number):
     import re as _re
     return _re.sub(r'[^A-Za-z0-9\-]', '', str(doc_number))[:100]
 
+def is_safe_logo_url(url):
+    """Prevents SSRF: only allows fetching logo images from our own known,
+    trusted storage hosts. Without this, a raw user-supplied URL would let
+    anyone make this server fetch arbitrary internal addresses - including
+    cloud metadata endpoints that can leak real credentials - and embed
+    whatever came back directly into a generated PDF. Found via systematic
+    side-by-side audit against QC Aero, which had already been fixed during
+    this morning's security certification, but this identical gap on JG's
+    own public demo PDF route was never checked until now."""
+    if not url or not url.startswith("https://"):
+        return False
+    allowed_hosts = (
+        "storage.googleapis.com",
+        "firebasestorage.googleapis.com",
+    )
+    try:
+        from urllib.parse import urlparse
+        host = urlparse(url).hostname or ""
+        return any(host == h or host.endswith("." + h) for h in allowed_hosts)
+    except Exception:
+        return False
+
 def generate_token(doc_type="Q"):
     import random, string
     prefix = OPERATOR.get("invoice", {}).get("prefix", "JG")
@@ -1402,6 +1424,11 @@ def quote_brand_pdf():
     phone = data.get("phone", "")
     client_name = data.get("client_name", "Valued Client")
     logo_url = data.get("logo_url", "")
+    # SECURITY FIX: was passed through with zero validation - confirmed
+    # missing via systematic side-by-side audit against QC Aero, which
+    # already had this SSRF protection from this morning's certification.
+    if logo_url and not is_safe_logo_url(logo_url):
+        logo_url = ""
     try:
         from_block = company_name
         if address: from_block += f"\n{address}"
@@ -1411,7 +1438,9 @@ def quote_brand_pdf():
             currency="USD", kes_rate=0, ghost_mode=False)
         payload["from"] = from_block
         payload["logo"] = logo_url
-        payload["powered_by"] = "Powered by QC Aero · qcaero.app"
+        # FIX: was incorrectly branded with QC Aero's name inside JG's own
+        # codebase, likely a copy-paste leftover from this function's origin.
+        payload["powered_by"] = "Powered by Jetman Global"
         out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
         with open(out_path, "rb") as f:
