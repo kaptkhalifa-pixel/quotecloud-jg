@@ -522,14 +522,18 @@ def next_record_number(doc_type="Quotation", token_override=None):
         type_code = "Q"
     return generate_token(type_code)
 
-def save_record(record_type, client_name, client_email, amount, doc_number, result=None, extra=None):
+def save_record(record_type, client_name, client_email, amount, doc_number, result=None, extra=None, client_address=None):
     records = load_records()
     rec = {
         "number": doc_number,
         "type": record_type,
         "client_name": client_name,
+        "client_address": client_address or "",
         "client_email": client_email,
-        "amount": round(float(amount), 2),
+        # FIX: was hardcoded to round(...,2), always storing two decimal
+        # places regardless of the tenant's actual currency precision -
+        # same bug already found and fixed on QC Aero, never ported here.
+        "amount": round_currency(float(amount)),
         "date": datetime.date.today().strftime("%d/%m/%Y"),
         "timestamp": datetime.datetime.now().isoformat(),
         "result_summary": result or {},
@@ -1731,6 +1735,7 @@ def booking_invoice():
     try:
         source_token = data.get("source_token", "")
         client_name = data.get("client_name", "Client")
+        client_address = data.get("client_address", "")
         client_email = data.get("client_email", "")
         client_phone = data.get("client_phone", "")
         note = data.get("note", "")
@@ -1753,7 +1758,7 @@ def booking_invoice():
 
         payload, doc_number = build_pdf_payload_from_result(
             "Invoice", snap, client_name, client_email, client_phone, note, "0", uplift_items,
-            ghost_mode=invoice_ghost_mode)
+            ghost_mode=invoice_ghost_mode, client_address=client_address)
 
         payload["number"] = inherit_token(source_token, "I")
         doc_number = payload["number"]
@@ -1771,7 +1776,7 @@ def booking_invoice():
         pdf_url = upload_pdf_to_firebase(out_path, doc_number)
 
         save_record("Invoice", client_name, client_email, final_total, doc_number,
-                    extra={"pdf_url": pdf_url or ""})
+                    extra={"pdf_url": pdf_url or ""}, client_address=client_address)
 
         bookings[source_token]["invoice_number"] = doc_number
         bookings[source_token]["invoice_url"] = pdf_url or ""
@@ -2200,10 +2205,14 @@ def edit_record():
 
     if data.get("client_name"):
         rec["client_name"] = data["client_name"]
+    if data.get("client_address") is not None:
+        rec["client_address"] = data["client_address"]
     if data.get("client_email") is not None:
         rec["client_email"] = data["client_email"]
     if data.get("amount") is not None:
-        rec["amount"] = round(float(data["amount"]), 2)
+        # FIX: was hardcoded to round(...,2), ignoring the tenant's actual
+        # currency precision - same bug already found and fixed elsewhere.
+        rec["amount"] = round_currency(float(data["amount"]))
     if data.get("date"):
         rec["date"] = data["date"]
 
