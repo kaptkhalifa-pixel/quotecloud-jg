@@ -1170,7 +1170,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     </div>
     <div class="form-row">
       <div class="form-group"><label>Amount Paid (<span class="pri-cur-label">KES</span>)</label><input type="number" id="paid-amount" placeholder="Enter amount" min="0" step="0.01"></div>
-      <div class="form-group"><label>Payment Date</label><input type="text" id="paid-date" placeholder="DD/MM/YYYY"></div>
+      <div class="form-group"><label>Payment Date</label><input type="text" id="paid-date" placeholder="Tap to pick date"></div>
     </div>
     <div id="paid-amount-lock-hint" style="display:none;font-size:0.78rem;color:#888;margin:-8px 0 14px">Locked to full balance. For partial or staggered payments, <a href="#" onclick="closePaidModal();return false;" style="color:#0d47a1;font-weight:600">close this and use Log Payment in Records</a>.</div>
     <div class="form-group" style="margin-bottom:14px"><label>Mode of Payment</label>
@@ -3732,8 +3732,19 @@ async function openPaidModal(number, lockToFull) {
   // value risked two different real payments being recorded under the same reference code.
   document.getElementById('paid-mode').value = '';
   document.getElementById('paid-ref').value = '';
-  let today = new Date();
-  document.getElementById('paid-date').value = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+  // Genuine flatpickr calendar, defaulting to today - no min/max restriction
+  // at all, since a real payment is often logged for a date in the past
+  // (bank transfer, cash) and occasionally needs correcting to a different
+  // date entirely. Destroy any previous instance first, since this modal
+  // can open multiple times across a session.
+  let paidDateEl = document.getElementById('paid-date');
+  if (paidDateEl._flatpickr) paidDateEl._flatpickr.destroy();
+  flatpickr(paidDateEl, {
+    dateFormat: 'd/m/Y',
+    defaultDate: 'today',
+    disableMobile: true,
+    allowInput: true
+  });
   let saveBtn = document.getElementById('btn-save-payment');
   let recBtn = document.getElementById('btn-gen-receipt');
   saveBtn.disabled = false; saveBtn.textContent = 'Save Payment';
