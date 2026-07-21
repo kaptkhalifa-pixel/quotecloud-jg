@@ -438,6 +438,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div class="form-group"><label>Email</label><input type="text" id="pdf-email" placeholder="client@email.com"></div>
       <div class="form-group"><label>Phone</label><input type="text" id="pdf-phone" placeholder="+254..."></div>
     </div>
+    <div class="form-group"><label>Address <span style="font-weight:400;color:#888">(optional)</span></label><input type="text" id="pdf-address" placeholder="e.g. P.O. Box 12345, Nairobi"></div>
     <div class="form-group" style="margin-bottom:14px"><label>Discount (<span class="pri-cur-label">KES</span>)</label><input type="number" id="pdf-discount" placeholder="0" min="0"></div>
     <div class="form-group-full"><label>Notes</label><textarea id="pdf-notes" rows="2" placeholder="Special notes..."></textarea></div>
     <div style="margin-bottom:14px">
@@ -2720,6 +2721,7 @@ async function generatePDF(allAircraft) {
   try {
   let docType = 'Quotation';
   let clientName = document.getElementById('pdf-name').value;
+  let clientAddress = document.getElementById('pdf-address')?.value || '';
   let clientEmail = document.getElementById('pdf-email').value;
   let clientPhone = document.getElementById('pdf-phone').value;
   let discount = document.getElementById('pdf-discount').value || 0;
@@ -2729,7 +2731,7 @@ async function generatePDF(allAircraft) {
   if (allAircraft) {
     showMsg('pdf-msg','Generating for all aircraft...','success');
     try {
-      let body = { results: lastResults, doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, extras };
+      let body = { results: lastResults, doc_type: docType, client_name: clientName, client_address: clientAddress, client_email: clientEmail, client_phone: clientPhone, discount, note, extras };
       let r = await fetch('/pdf_all', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
       let data = await r.json();
       if (!r.ok || !data.success) { showMsg('pdf-msg', data.error||'Failed','error'); return; }
@@ -2757,7 +2759,7 @@ async function generatePDF(allAircraft) {
     let kesRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
     let acIdx = parseInt(document.getElementById('pdf-aircraft-select').value)||0;
     let ghostMode = lastResults[acIdx]?._ghost_mode || document.getElementById('adj-ghost-'+acIdx)?.value === '1' || false;
-    let body = { doc_type: docType, client_name: clientName, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras, currency, kes_rate: kesRate, ghost_mode: ghostMode };
+    let body = { doc_type: docType, client_name: clientName, client_address: clientAddress, client_email: clientEmail, client_phone: clientPhone, discount, note, result, extras, currency, kes_rate: kesRate, ghost_mode: ghostMode };
     let r = await fetch('/pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); let ind2=document.getElementById('pdf-generating-indicator'); if(ind2)ind2.remove(); showMsg('pdf-msg',e.error||'Failed','error'); return; }
     let pdfUrl = r.headers.get('X-PDF-URL') || '';

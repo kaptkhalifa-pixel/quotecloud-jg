@@ -1176,7 +1176,7 @@ def build_routing_lines(segments):
 
 def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
                                    client_phone, note, discount, extra_items,
-                                   currency="USD", kes_rate=0, ghost_mode=False):
+                                   currency="USD", kes_rate=0, ghost_mode=False, client_address=None):
 
     items = []
     ac_label = result.get("ac_label", "Aircraft")
@@ -1308,7 +1308,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         except (ValueError, TypeError):
             pass
 
-    to_block = "\n".join(filter(None, [client_name, client_phone, client_email]))
+    to_block = "\n".join(filter(None, [client_name, client_address, client_phone, client_email]))
     bank_block = get_bank_details_block()
     _validity_hrs = OPERATOR.get("quoting_rules", {}).get("quote_validity_hours", 48)
     _default_terms = (
@@ -1528,6 +1528,7 @@ def pdf():
         if doc_type in ("Invoice", "Receipt"):
             return jsonify({"error": "Invoices and receipts must be generated from the CRM. Go to Enquiries to invoice this client."}), 400
         client_name = data.get("client_name", "Client")
+        client_address = data.get("client_address", "")
         client_email = data.get("client_email", "")
         client_phone = data.get("client_phone", "")
         note = data.get("note", "")
@@ -1540,7 +1541,7 @@ def pdf():
         payload, doc_number = build_pdf_payload_from_result(
             doc_type, result, client_name, client_email,
             client_phone, note, discount, extra_items,
-            currency=currency, kes_rate=kes_rate, ghost_mode=ghost_mode)
+            currency=currency, kes_rate=kes_rate, ghost_mode=ghost_mode, client_address=client_address)
         payload["powered_by"] = "Quotecloud JG"
 
         out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
@@ -1628,6 +1629,7 @@ def pdf_all():
         results = data.get("results", [])
         doc_type = data.get("doc_type", "Quotation")
         client_name = data.get("client_name", "Client")
+        client_address = data.get("client_address", "")
         client_email = data.get("client_email", "")
         client_phone = data.get("client_phone", "")
         note = data.get("note", "")
@@ -1658,7 +1660,7 @@ def pdf_all():
 
             payload, doc_number = build_pdf_payload_from_result(
                 doc_type, actual, client_name, client_email,
-                client_phone, note, discount, extra_items)
+                client_phone, note, discount, extra_items, client_address=client_address)
 
             out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
             hq.generate_pdf_weasy(payload, out_path)
@@ -1796,6 +1798,7 @@ def manual_invoice():
     data = request.get_json()
     try:
         client_name = data.get("client_name", "Client")
+        client_address = data.get("client_address", "")
         client_email = data.get("client_email", "")
         client_phone = data.get("client_phone", "")
         note = data.get("note", "")
@@ -1830,7 +1833,7 @@ def manual_invoice():
         disc = float(discount) if discount else 0
         total = round(total - disc, 2)
 
-        to_block = "\n".join(filter(None, [client_name, client_phone, client_email]))
+        to_block = "\n".join(filter(None, [client_name, client_address, client_phone, client_email]))
         bank_block = bank_override if bank_override else get_bank_details_block()
         terms = terms_override if terms_override else OPERATOR.get("invoice", {}).get("terms", "")
 
