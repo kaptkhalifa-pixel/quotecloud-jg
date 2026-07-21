@@ -1122,7 +1122,6 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <button onclick="closeInvoiceBuilder()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#888;line-height:1;padding:4px">✕</button>
     </div>
     <input type="hidden" id="ib-token">
-    <input type="hidden" id="ib-client-whatsapp">
     <div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:0.82rem;color:#555">
       <div id="ib-summary"></div>
       <div id="ib-warning" style="display:none;margin-top:10px"></div>
@@ -1130,6 +1129,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     <div class="form-row">
       <div class="form-group"><label>Client Name</label><input type="text" id="ib-name"></div>
       <div class="form-group"><label>Client Email</label><input type="text" id="ib-email"></div>
+      <div class="form-group"><label>Client Phone</label><input type="text" id="ib-client-whatsapp" placeholder="+254..."></div>
     </div>
     <div class="form-group"><label>Address <span style="font-weight:400;color:#888">(optional)</span></label><input type="text" id="ib-address" placeholder="e.g. P.O. Box 12345, Nairobi"></div>
     <div style="margin-bottom:14px">
@@ -4896,9 +4896,15 @@ let currentInvoiceEnquiry = null;
 function openInvoiceBuilder(enq) {
   currentInvoiceEnquiry = enq;
   document.getElementById('ib-token').value = enq.token || '';
+  // FIX: client_whatsapp was a hidden field the operator could never see
+  // or edit, and address was never pre-filled at all - both silently
+  // empty on every real invoice generation. All four fields now genuinely
+  // pre-load from the original quote/booking, exactly as they were, so the
+  // operator only needs to edit something if it's genuinely different.
   document.getElementById('ib-client-whatsapp').value = enq.client_whatsapp || '';
   document.getElementById('ib-name').value = enq.client_name || '';
   document.getElementById('ib-email').value = enq.client_email || '';
+  document.getElementById('ib-address').value = enq.client_address || '';
   document.getElementById('ib-discount').value = '0';
   document.getElementById('ib-notes').value = '';
   document.getElementById('ib-uplift-items').innerHTML = '';

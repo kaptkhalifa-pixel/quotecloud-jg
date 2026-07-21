@@ -1950,7 +1950,7 @@ def manual_invoice():
         hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_firebase(out_path, doc_number)
         save_record(doc_type, client_name, client_email, total, doc_number,
-                    extra={"pdf_url": pdf_url or ""})
+                    extra={"pdf_url": pdf_url or ""}, client_address=client_address)
 
         bookings = load_bookings()
         if source_token and source_token in bookings:
@@ -1964,6 +1964,11 @@ def manual_invoice():
                 "token": doc_number,
                 "status": "INVOICED" if doc_type == "Invoice" else "PENDING",
                 "client_name": client_name,
+                # FIX: this booking dict never included client_address at
+                # all, meaning even after wiring the invoice builder's own
+                # pre-fill logic, there was genuinely nothing to pre-fill
+                # FROM for a manually-created quote.
+                "client_address": client_address,
                 "client_email": client_email,
                 "client_whatsapp": client_phone,
                 "ac_label": "",
@@ -3043,6 +3048,7 @@ def booking_request():
     try:
         client_name = data.get("client_name", "").strip()
         print(f"DEBUG booking_request: selected_total={data.get('selected_total')} snap_total={data.get('quote_snapshot',{}).get('total_usd')} option_a_total={data.get('quote_snapshot',{}).get('option_a',{}).get('total_usd') if data.get('quote_snapshot',{}).get('option_a') else None}")
+        client_address = data.get("client_address", "").strip()
         client_email = data.get("client_email", "").strip()
         quote_snapshot = data.get("quote_snapshot", {})
         if not client_name:
@@ -3055,6 +3061,7 @@ def booking_request():
             "token": token,
             "status": "PENDING",
             "client_name": client_name,
+            "client_address": client_address,
             "client_email": client_email,
             "client_whatsapp": client_whatsapp,
             "ac_label": quote_snapshot.get("ac_label", ""),
