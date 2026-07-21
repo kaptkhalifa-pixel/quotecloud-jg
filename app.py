@@ -2077,6 +2077,14 @@ def mark_paid():
     if not rec:
         return jsonify({"error": "Record not found"}), 404
 
+    # FIX: this requirement previously only existed in the browser's own
+    # JS validation - meaning a direct API call, bypassing the UI entirely,
+    # could record a non-cash payment with no reference at all, silently
+    # undermining the audit trail this feature exists to protect. Now
+    # genuinely enforced server-side too, not just suggested by the UI.
+    if payment_mode and payment_mode != "Cash" and not payment_ref.strip():
+        return jsonify({"error": f"Reference/Transaction ID is required for {payment_mode} payments (audit trail)."}), 400
+
     total = float(rec.get("amount", 0))
     prev_paid = float(rec.get("paid_amount", 0))
     remaining = round(total - prev_paid, 2)
@@ -2136,6 +2144,12 @@ def generate_receipt():
     rec = next((r for r in records if r.get("number") == number), None)
     if not rec:
         return jsonify({"error": "Record not found"}), 404
+
+    # FIX: same requirement as mark_paid, previously only enforced by the
+    # browser's own JS - this is a genuinely separate route that can also
+    # record a payment, and had zero backend validation of its own.
+    if payment_mode and payment_mode != "Cash" and not payment_ref.strip():
+        return jsonify({"error": f"Reference/Transaction ID is required for {payment_mode} payments (audit trail)."}), 400
 
     total = float(rec.get("amount", 0))
     receipt_number = inherit_token(number, "R")
