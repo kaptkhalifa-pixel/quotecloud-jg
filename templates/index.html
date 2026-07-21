@@ -1462,6 +1462,13 @@ function checkLegLocations(n) {
 }
 
 function getPrevLegDate(n) {
+  // FIX: was unconditionally adding one day to the previous leg's date,
+  // forcing every subsequent leg to start the day AFTER, making same-day
+  // multi-leg impossible - a real, correct itinerary (e.g. two legs both
+  // on the same day) had no way to be entered. minDate should simply be
+  // the previous leg's own date - same-day is fine; only an EARLIER date
+  // should ever be blocked. The separate hour-limit warning in
+  // checkLegDate() already handles flagging genuinely excessive legs.
   if (n <= 1) return 'today';
   let prevDate = document.getElementById('leg-date-'+(n-1))?.value;
   if (!prevDate) return 'today';
@@ -1470,7 +1477,6 @@ function getPrevLegDate(n) {
   let parts = parsed.split('/');
   if (parts.length !== 3) return 'today';
   let d = new Date(2000 + parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
-  d.setDate(d.getDate() + 1);
   return d;
 }
 
