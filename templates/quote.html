@@ -701,11 +701,32 @@ function parseSmartDate(s) {
   return s;
 }
 
+function getPrevLegDateClient() {
+  // Same fix as the admin panel: a leg's date must never be BEFORE the
+  // previous leg's date, but same-day is genuinely valid and must be
+  // allowed - this file previously had no logic at all connecting legs'
+  // dates together (every leg independently allowed minDate:'today'),
+  // meaning a client could pick an earlier date for a later leg with
+  // zero protection. Finds the previous leg's date input by DOM position,
+  // since these inputs have no stable numbered ID.
+  let dateInputs = document.querySelectorAll('#safari-legs .leg-date');
+  if (dateInputs.length === 0) return 'today';
+  let prevInput = dateInputs[dateInputs.length - 1];
+  let prevVal = prevInput?.value;
+  if (!prevVal) return 'today';
+  let parsed = parseSmartDate(prevVal);
+  if (!parsed) return 'today';
+  let parts = parsed.split('/');
+  if (parts.length !== 3) return 'today';
+  return new Date(2000 + parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+}
+
 function addLeg() {
   let n = document.querySelectorAll('#safari-legs .leg-row').length + 1;
   let ts = Date.now();
   let originId = `leg-origin-${n}-${ts}`;
   let destId = `leg-dest-${n}-${ts+1}`;
+  let minDate = getPrevLegDateClient();
   let div = document.createElement('div');
   div.className = 'leg-row';
   div.innerHTML = `<span class="leg-num">${n}</span>
@@ -722,7 +743,7 @@ function addLeg() {
   document.getElementById('safari-legs').appendChild(div);
   attachAc(document.getElementById(originId));
   attachAc(document.getElementById(destId));
-  div.querySelectorAll('.leg-date').forEach(function(el){flatpickr(el,{dateFormat:'d M Y',minDate:'today',disableMobile:false});});
+  div.querySelectorAll('.leg-date').forEach(function(el){flatpickr(el,{dateFormat:'d M Y',minDate:minDate,disableMobile:false});});
 }
 
 function showResolving(show) {
