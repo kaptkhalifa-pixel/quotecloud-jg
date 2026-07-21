@@ -79,6 +79,20 @@ WHOLE_NUMBER_CURRENCIES = {
     "KRW","VND","CLP","PYG","XOF","XAF","MGA","BIF","GNF","SLL"
 }
 
+def format_fx_rate_display(pri_cur, sec_cur, rate):
+    """Displays an exchange rate always on the readable, >=1 side,
+    regardless of which currency happens to be configured as primary.
+    "1 KES = 0.0077 USD" is genuinely hard for a client to read at a
+    glance; this shows "1 USD = 130.00 KES" instead - the same real
+    rate, just expressed the way real FX quotes conventionally are.
+    `rate` follows the established convention already used everywhere:
+    how many units of sec_cur equal 1 unit of pri_cur."""
+    if rate <= 0:
+        return ""
+    if rate >= 1:
+        return f"1 {pri_cur} = {rate:.2f} {sec_cur}"
+    return f"1 {sec_cur} = {1.0 / rate:.2f} {pri_cur}"
+
 def _fmt_money(x, currency="USD"):
     """A finished monetary value (unit rate, line amount, subtotal, total)
     should ALWAYS show as a whole number, regardless of currency - was

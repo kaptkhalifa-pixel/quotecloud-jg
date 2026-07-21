@@ -1911,7 +1911,11 @@ def manual_invoice():
             if kes_rate_inv > 0:
                 kes_total = round(total * kes_rate_inv)
                 today_str = datetime.date.today().strftime("%d %b %Y")
-                kes_note = f"≈ {sec_currency} {kes_total:,}  (1 {pri_cur} = {kes_rate_inv:.2f} {sec_currency})"
+                # FIX: was always displayed as "1 {pri_cur} = {rate} {sec}",
+                # meaning a rate under 1 (e.g. 1 KES = 0.0077 USD) showed a
+                # hard-to-read tiny decimal instead of the readable direction
+                # any real FX quote would use (1 USD = 130 KES).
+                kes_note = f"≈ {sec_currency} {kes_total:,}  ({hq.format_fx_rate_display(pri_cur, sec_currency, kes_rate_inv)})"
 
         payload = {
             "logo": OPERATOR.get("logo_url", ""),
@@ -3133,8 +3137,26 @@ def booking_pdf():
         token = data.get("token", "")
         result = data.get("result", {})
 
-        pdf_currency_mode = "USD"
+        fx_config = OPERATOR.get("fx", {})
+        pri_cur = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+        sec_currency = fx_config.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
+        pdf_currency_mode = pri_cur
+        # FIX: kes_rate_for_pdf was hardcoded to 0 and never recomputed
+        # anywhere in this function, meaning the entire secondary-currency
+        # note below was genuinely dead code that could never execute.
         kes_rate_for_pdf = 0
+        if fx_config.get("show_kes", True) and sec_currency:
+            try:
+                if fx_config.get("mode") == "manual":
+                    kes_rate_for_pdf = float(fx_config.get("rates", {}).get(sec_currency, 0))
+                else:
+                    import requests as req
+                    r = req.get(f"https://open.er-api.com/v6/latest/{pri_cur}", timeout=5)
+                    rdata = r.json()
+                    if rdata.get("result") == "success":
+                        kes_rate_for_pdf = float(rdata.get("rates", {}).get(sec_currency, 0))
+            except Exception:
+                kes_rate_for_pdf = 0
 
         payload, _ = build_pdf_payload_from_result(
             "Quotation", result, client_name, client_email, client_phone, "", "0", [],
@@ -3145,7 +3167,12 @@ def booking_pdf():
                 total_for_kes = float((result.get("option_a") or {}).get("total_usd", 0))
             kes_total_val = round(total_for_kes * kes_rate_for_pdf)
             today_str = datetime.date.today().strftime("%-d/%-m/%y")
-            payload["kes_note"] = f"KES {kes_total_val:,} (rate 1 USD = KES {kes_rate_for_pdf:.2f}, date {today_str})"
+            # FIX: was hardcoded to literal "USD"/"KES" text regardless of
+            # the tenant's actual configured currencies, and always shown
+            # in a fixed direction that could produce an unreadable tiny
+            # decimal. Now uses the real currencies and the readable
+            # display direction.
+            payload["kes_note"] = f"{sec_currency} {kes_total_val:,} (rate {hq.format_fx_rate_display(pri_cur, sec_currency, kes_rate_for_pdf)}, date {today_str})"
         payload["number"] = token
         payload["notes"] = ""
         payload["notes_title"] = ""
