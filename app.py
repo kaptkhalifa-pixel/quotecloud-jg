@@ -1362,7 +1362,15 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         "to": to_block,
         "number": doc_number,
         "date": datetime.date.today().strftime("%d %b %Y"),
-        "due_date": (datetime.date.today() + datetime.timedelta(days=7)).strftime("%d %b %Y"),
+        # CRITICAL FIX: was hardcoded to days=7 for every document type,
+        # completely ignoring the real quote_validity_hours setting - the
+        # exact "top says 7, bottom says 48" contradiction reported live.
+        # A Quotation's "Valid Until" now genuinely reflects the real
+        # setting, in hours. Invoice due-date left as a 7-day default for
+        # now since no separate "invoice due in N days" setting exists yet.
+        "due_date": (
+            datetime.datetime.now() + datetime.timedelta(hours=float(OPERATOR.get("quoting_rules", {}).get("quote_validity_hours", 48)))
+        ).strftime("%d %b %Y") if doc_type in ("Quotation", "Quote") else (datetime.date.today() + datetime.timedelta(days=7)).strftime("%d %b %Y"),
         "items": items,
         "discounts": disc,
         "fields": {"tax": False, "discounts": True, "shipping": False},
@@ -1870,7 +1878,17 @@ def manual_invoice():
             "to": to_block,
             "number": doc_number,
             "date": datetime.date.today().strftime("%d %b %Y"),
-            "due_date": (datetime.date.today() + datetime.timedelta(days=7)).strftime("%d %b %Y"),
+            # CRITICAL FIX: was hardcoded to days=7 for every document type,
+            # completely ignoring the real quote_validity_hours setting -
+            # the exact "top says 7, bottom says 48" contradiction. A
+            # Quotation's "Valid Until" now genuinely reflects the real
+            # setting, in hours, not a hardcoded day count. Invoice due-date
+            # left as a 7-day default for now since no separate "invoice
+            # due in N days" setting currently exists - worth confirming
+            # this is the right policy separately.
+            "due_date": (
+                datetime.datetime.now() + datetime.timedelta(hours=float(OPERATOR.get("quoting_rules", {}).get("quote_validity_hours", 48)))
+            ).strftime("%d %b %Y") if doc_type in ("Quotation", "Quote") else (datetime.date.today() + datetime.timedelta(days=7)).strftime("%d %b %Y"),
             "items": items,
             "discounts": disc,
             "fields": {"tax": False, "discounts": True, "shipping": False},
@@ -1878,7 +1896,11 @@ def manual_invoice():
             "notes_title": "BANK DETAILS",
             "terms": terms,
             "terms_title": "TERMS & CONDITIONS",
-            "currency": "USD",
+            # CRITICAL FIX: was hardcoded to "USD" regardless of the
+            # tenant's actual configured currency - meaning KES-denominated
+            # figures displayed under a literal "USD" label. pri_cur is
+            # already correctly computed above from the real fx settings.
+            "currency": pri_cur,
             "kes_note": kes_note,
             "header": doc_type
         }
