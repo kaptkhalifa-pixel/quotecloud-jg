@@ -601,7 +601,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <div class="line-item-row">
           <textarea placeholder="Description" class="mi-desc" rows="3"></textarea>
           <input type="number" placeholder="Qty" class="mi-qty qty" value="1">
-          <input type="number" placeholder="Unit Cost (USD)" class="mi-unit amount">
+          <input type="number" placeholder='Unit Cost ({{ ((operator.get("fx") or {}).get("primary_currency") or (operator.get("quoting_rules") or {}).get("currency") or "USD") }})' class="mi-unit amount">
           <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>
         </div>
       </div>
@@ -3946,7 +3946,7 @@ function addMiItem() {
   div.className = 'line-item-row';
   div.innerHTML = `<textarea placeholder="Description" class="mi-desc" rows="3"></textarea>
     <input type="number" placeholder="Qty" class="mi-qty qty" value="1">
-    <input type="number" placeholder="Unit Cost (USD)" class="mi-unit amount">
+    <input type="number" placeholder="Unit Cost (${priCurrency})" class="mi-unit amount">
     <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>`;
   document.getElementById('mi-items').appendChild(div);
 }
