@@ -1761,23 +1761,64 @@ def booking_invoice():
             return jsonify({"error": "Booking not found"}), 404
 
         snap = booking.get("quote_snapshot", {})
-        if not snap:
+        # FIX: a manual quotation (built via manual_invoice, not the real
+        # aircraft quote engine) genuinely has an empty quote_snapshot by
+        # design, but now DOES have its real line items persisted as
+        # manual_items. Detect this case and build the invoice directly
+        # from those stored items, using the same currency/due-date/
+        # kes_note logic already proven correct in manual_invoice(),
+        # instead of assuming every booking came through the quote engine.
+        if not snap and booking.get("manual_items"):
+            manual_items = booking.get("manual_items", [])
+            manual_disc = float(booking.get("manual_discount", 0))
+            uplift_total = sum(float(it.get("quantity", 1)) * float(it.get("unit_cost", 0)) for it in uplift_items)
+            base_total = sum(float(it.get("quantity", 1)) * float(it.get("unit_cost", 0)) for it in manual_items) - manual_disc
+            disc = float(discount) if discount else 0
+            final_total = round(base_total + uplift_total - disc, 2)
+            all_items = manual_items + uplift_items
+
+            fx_config = OPERATOR.get("fx", {})
+            pri_cur = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+            to_block = "\n".join(filter(None, [client_name, client_address, client_phone, client_email]))
+            bank_block = get_bank_details_block()
+            terms = OPERATOR.get("invoice", {}).get("terms", "")
+            doc_number = inherit_token(source_token, "I")
+
+            payload = {
+                "logo": OPERATOR.get("logo_url", ""),
+                "from": get_company_from_block(),
+                "to": to_block,
+                "number": doc_number,
+                "date": datetime.date.today().strftime("%d %b %Y"),
+                "due_date": (datetime.date.today() + datetime.timedelta(days=7)).strftime("%d %b %Y"),
+                "items": all_items,
+                "discounts": disc,
+                "fields": {"tax": False, "discounts": True, "shipping": False},
+                "notes": bank_block + (f"\n\nNote: {note}" if note else ""),
+                "notes_title": "BANK DETAILS",
+                "terms": terms,
+                "terms_title": "TERMS & CONDITIONS",
+                "currency": pri_cur,
+                "kes_note": "",
+                "header": "Invoice"
+            }
+        elif not snap:
             return jsonify({"error": "No quote data found for this booking"}), 400
+        else:
+            payload, doc_number = build_pdf_payload_from_result(
+                "Invoice", snap, client_name, client_email, client_phone, note, "0", uplift_items,
+                ghost_mode=invoice_ghost_mode, client_address=client_address)
 
-        payload, doc_number = build_pdf_payload_from_result(
-            "Invoice", snap, client_name, client_email, client_phone, note, "0", uplift_items,
-            ghost_mode=invoice_ghost_mode, client_address=client_address)
+            payload["number"] = inherit_token(source_token, "I")
+            doc_number = payload["number"]
 
-        payload["number"] = inherit_token(source_token, "I")
-        doc_number = payload["number"]
-
-        disc = float(discount) if discount else 0
-        base_total = float(snap.get("total_usd", 0))
-        if snap.get("mission") == "return_both":
-            base_total = float((snap.get("option_a") or {}).get("total_usd", 0))
-        uplift_total = sum(float(it.get("quantity", 1)) * float(it.get("unit_cost", 0)) for it in uplift_items)
-        final_total = round(base_total + uplift_total - disc, 2)
-        payload["discounts"] = disc
+            disc = float(discount) if discount else 0
+            base_total = float(snap.get("total_usd", 0))
+            if snap.get("mission") == "return_both":
+                base_total = float((snap.get("option_a") or {}).get("total_usd", 0))
+            uplift_total = sum(float(it.get("quantity", 1)) * float(it.get("unit_cost", 0)) for it in uplift_items)
+            final_total = round(base_total + uplift_total - disc, 2)
+            payload["discounts"] = disc
 
         out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
@@ -1930,7 +1971,16 @@ def manual_invoice():
                 "total_usd": total,
                 "mission": "manual",
                 "route_summary": ", ".join(it.get("name","") for it in items)[:120],
+                # FIX: quote_snapshot was correctly empty (no real quote-engine
                 "quote_snapshot": {},
+                # result exists for a manually-typed quotation), but the actual,
+                # real line items were never saved anywhere else either - only
+                # a truncated, 120-char text summary above. This meant a manual
+                # quote could genuinely never become an invoice later, since
+                # there was nothing left to rebuild one from. Now genuinely
+                # persists the real items so booking_invoice() can reuse them.
+                "manual_items": items,
+                "manual_discount": disc,
                 "pdf_url": pdf_url or "",
                 "invoice_number": doc_number if doc_type == "Invoice" else "",
                 "invoice_url": pdf_url or "" if doc_type == "Invoice" else "",
