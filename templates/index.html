@@ -2716,7 +2716,18 @@ function initAdminAc(inputId) {
     adminAcTimers[inputId] = setTimeout(() => adminAcFetch(val, drop, input), 150);
   });
   input.addEventListener('keydown', e => { if (e.key==='Escape') drop.style.display='none'; });
+  // FIX: real, live mobile Safari behavior - a genuine finger tap moving to
+  // the NEXT field doesn't always fire a full synthetic click event,
+  // meaning the dropdown could be left floating indefinitely on a real
+  // phone, even though desktop clicks always worked correctly. Three
+  // redundant safeguards now, so no single missed event leaves it stuck:
+  // 1) close on ANY focus elsewhere, not just a generic document click
+  // 2) close on genuine touch too, not just click
+  // 3) close on this input's own blur, as a final safety net
   document.addEventListener('click', e => { if (!input.contains(e.target) && !drop.contains(e.target)) drop.style.display='none'; });
+  document.addEventListener('touchstart', e => { if (!input.contains(e.target) && !drop.contains(e.target)) drop.style.display='none'; }, {passive: true});
+  document.addEventListener('focusin', e => { if (e.target !== input && !drop.contains(e.target)) drop.style.display='none'; });
+  input.addEventListener('blur', () => { setTimeout(() => { drop.style.display='none'; }, 200); });
 }
 
 let pdfGenerating = false;
