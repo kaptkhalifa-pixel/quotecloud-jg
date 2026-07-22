@@ -2282,16 +2282,37 @@ def generate_receipt():
     rec["receipt_number"] = receipt_number
     rec["receipt_url"] = receipt_pdf_url or ""
 
+    # CRITICAL FIX: was always appending a brand-new payment_log entry,
+    # even when this exact payment had already been logged moments earlier
+    # by mark_paid() - which happens whenever the CRM's "Pay" shortcut
+    # settles an invoice in full, since that flow calls mark_paid() and
+    # then immediately generate_receipt() for the same, single real
+    # payment. Confirmed live: two genuinely identical entries (same
+    # amount, mode, ref, recorded_at) for one real cash payment. Now
+    # checks whether the most recent existing entry already matches this
+    # exact payment, and if so, updates it in place with the receipt
+    # reference instead of creating a genuine duplicate.
     if "payment_log" not in rec:
         rec["payment_log"] = []
-    rec["payment_log"].append({
-        "date": paid_date,
-        "amount": round_currency(paid_amount),
-        "mode": payment_mode,
-        "ref": payment_ref,
-        "recorded_at": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
-        "receipt": receipt_number
-    })
+    existing_entry = rec["payment_log"][-1] if rec["payment_log"] else None
+    is_same_payment = (
+        existing_entry
+        and abs(float(existing_entry.get("amount", 0)) - round_currency(paid_amount)) < 0.01
+        and existing_entry.get("mode", "") == payment_mode
+        and existing_entry.get("ref", "") == payment_ref
+        and not existing_entry.get("receipt")
+    )
+    if is_same_payment:
+        existing_entry["receipt"] = receipt_number
+    else:
+        rec["payment_log"].append({
+            "date": paid_date,
+            "amount": round_currency(paid_amount),
+            "mode": payment_mode,
+            "ref": payment_ref,
+            "recorded_at": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "receipt": receipt_number
+        })
 
     save_records(records)
     save_record("Receipt", rec.get("client_name", ""), rec.get("client_email", ""),
