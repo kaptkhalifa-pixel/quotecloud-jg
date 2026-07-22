@@ -622,6 +622,27 @@ def reverse_geocode(lat, lon):
 def is_maps_url(s):
     return any(x in s for x in ["google.com/maps", "goo.gl", "maps.app", "maps.google"])
 
+def resolve_place_by_id(place_id, label):
+    """Resolves a genuine, trusted Google place_id directly, rather than
+    re-guessing from raw text - same fix already proven live on QC Aero.
+    Returns (display, coord) matching resolve_location's own return shape,
+    or (None, place_id) on failure/geo-lock rejection."""
+    try:
+        import requests as req
+        r = req.get("https://maps.googleapis.com/maps/api/geocode/json",
+                    params={"place_id": place_id, "key": GOOGLE_API_KEY},
+                    timeout=5)
+        gdata = r.json()
+        if gdata.get("status") == "OK":
+            loc = gdata["results"][0]["geometry"]["location"]
+            lat, lon = float(loc["lat"]), float(loc["lng"])
+            if check_geo_lock(lat, lon):
+                display = label or reverse_geocode(lat, lon) or f"Pin, {lat:.5f}, {lon:.5f}"
+                return display, f"{lat},{lon}"
+    except Exception:
+        pass
+    return None, place_id
+
 def resolve_location(s, user_label=None):
     s = (s or "").strip()
     if not s:
@@ -1080,8 +1101,21 @@ def run_quote_engine(data):
             for L in (data.get("legs") or []):
                 raw_o = L.get("origin", "")
                 raw_d2 = L.get("destination", "")
-                o_disp, o_coord = resolve_location(raw_o, user_label=raw_o)
-                d_disp2, d_coord2 = resolve_location(raw_d2, user_label=raw_d2)
+                # CRITICAL FIX: was always re-geocoding the raw typed text
+                # from scratch, even when the operator genuinely tapped a
+                # real, resolved autocomplete suggestion client-side - that
+                # resolution was silently discarded, and Google's geocoder
+                # can behave differently for a short, ambiguous name than
+                # the full official name, sometimes failing to resolve at
+                # all. Confirmed live on QC Aero (ADA, "Ndjili") before
+                # porting the fix here. A place_id, when the frontend
+                # provides one, is trusted directly instead of re-guessing.
+                o_place_id = L.get("origin_place_id", "")
+                d_place_id = L.get("destination_place_id", "")
+                o_disp, o_coord = (resolve_place_by_id(o_place_id, raw_o) if o_place_id
+                                    else resolve_location(raw_o, user_label=raw_o))
+                d_disp2, d_coord2 = (resolve_place_by_id(d_place_id, raw_d2) if d_place_id
+                                      else resolve_location(raw_d2, user_label=raw_d2))
                 if o_disp is None:
                     return {"error": geo_lock_error(raw_o), "not_found": raw_o}, 400
                 if d_disp2 is None:

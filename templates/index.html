@@ -1592,10 +1592,24 @@ async function submitQuote(mission) {
   } else {
     body.legs = [];
     document.querySelectorAll('#safari-legs .leg-card').forEach(card => {
-      let origin = card.querySelector('.leg-origin')?.value.trim();
-      let dest = card.querySelector('.leg-dest')?.value.trim();
+      let originEl = card.querySelector('.leg-origin');
+      let destEl = card.querySelector('.leg-dest');
+      let origin = originEl?.value.trim();
+      let dest = destEl?.value.trim();
       let date = parseSmartDate(card.querySelector('.leg-date')?.value || '');
-      if (origin && dest) body.legs.push({ origin, destination: dest, date: date || '' });
+      // CRITICAL FIX: was only ever sending plain text, even when the
+      // operator genuinely tapped a real, resolved autocomplete suggestion
+      // - the backend then had to blindly re-geocode the raw text from
+      // scratch, which can behave differently for a short, ambiguous name
+      // than the full official name, sometimes failing to resolve at all
+      // and misleadingly showing a geo-lock rejection instead of the real
+      // "location not found" reason. Confirmed live on QC Aero (ADA,
+      // "Ndjili"). Now genuinely carries each leg's real place_id, matching
+      // the one-way tab.
+      let leg = { origin, destination: dest, date: date || '' };
+      if (originEl?.id && placeIdMap[originEl.id]) leg.origin_place_id = placeIdMap[originEl.id];
+      if (destEl?.id && placeIdMap[destEl.id]) leg.destination_place_id = placeIdMap[destEl.id];
+      if (origin && dest) body.legs.push(leg);
     });
     if (!body.legs.length) { showMsg('quote-result', '<div class="error-box">Add at least one leg with From and To locations.</div>'); showLoading && showLoading(false); return; }
     let missingDate = body.legs.findIndex(l => !l.date);
