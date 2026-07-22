@@ -1422,7 +1422,13 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         today_str = _dt.date.today().strftime("%d %b %Y")
         total_usd = float(result.get("total_usd", 0))
         sec_total = round(total_usd * sec_rate)
-        payload["kes_note"] = f"≈ {sec_currency} {sec_total:,}  (1 {pdf_currency} = {sec_rate:.2f} {sec_currency})"
+        # FIX: was always displayed as "1 {pdf_currency} = {rate} {sec}",
+        # meaning a rate under 1 showed a hard-to-read tiny decimal instead
+        # of the readable direction any real FX quote would use - same fix
+        # already proven correct in manual_invoice/booking_pdf, but this
+        # main quote-PDF route (build_pdf_payload_from_result) was missed
+        # at the time.
+        payload["kes_note"] = f"≈ {sec_currency} {sec_total:,}  ({hq.format_fx_rate_display(pdf_currency, sec_currency, sec_rate)})"
 
     return payload, doc_number
 
