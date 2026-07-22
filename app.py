@@ -1633,6 +1633,15 @@ def pdf():
                 "token": doc_number,
                 "status": "PENDING",
                 "client_name": client_name,
+                # CRITICAL FIX: this booking dict never included
+                # client_address at all, meaning any quote genuinely built
+                # and generated through the real admin quote tool silently
+                # lost the client's address the moment it was upgraded to
+                # an invoice - confirmed live on a real, brand-new client
+                # enquiry. Same class of gap already found and fixed in
+                # manual_invoice() and booking_request(), a third, separate
+                # occurrence nobody had checked yet.
+                "client_address": client_address,
                 "client_email": client_email,
                 "client_whatsapp": client_phone,
                 "ac_label": result.get("ac_label", ""),
@@ -1735,6 +1744,9 @@ def pdf_all():
                 "token": doc_number,
                 "status": "PENDING",
                 "client_name": client_name,
+                # CRITICAL FIX: same gap as pdf() - this booking dict never
+                # included client_address at all.
+                "client_address": client_address,
                 "client_email": client_email,
                 "client_whatsapp": client_phone,
                 "ac_label": res.get("ac_label", ""),
@@ -3190,6 +3202,15 @@ def booking_pdf():
         client_phone = data.get("client_phone", "")
         token = data.get("token", "")
         result = data.get("result", {})
+        # FIX: never read client_address at all - this route updates an
+        # EXISTING booking (a client generating their own PDF), so rather
+        # than expect a fresh resend, fall back to whatever's already
+        # stored on the real booking record.
+        client_address = data.get("client_address", "")
+        if not client_address:
+            _existing_bookings = load_bookings()
+            _existing_booking = _existing_bookings.get(token, {})
+            client_address = _existing_booking.get("client_address", "")
 
         fx_config = OPERATOR.get("fx", {})
         pri_cur = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
@@ -3214,7 +3235,7 @@ def booking_pdf():
 
         payload, _ = build_pdf_payload_from_result(
             "Quotation", result, client_name, client_email, client_phone, "", "0", [],
-            currency=pdf_currency_mode, kes_rate=kes_rate_for_pdf)
+            currency=pdf_currency_mode, kes_rate=kes_rate_for_pdf, client_address=client_address)
         if kes_rate_for_pdf > 0:
             total_for_kes = float(result.get("total_usd", 0))
             if result.get("mission") == "return_both":
@@ -3243,7 +3264,7 @@ def booking_pdf():
             "ac_label": result.get("ac_label", ""),
             "mission": result.get("mission", ""),
             "source": "client"
-        })
+        }, client_address=client_address)
         bookings = load_bookings()
         if token in bookings:
             bookings[token]["pdf_url"] = pdf_url or ""
