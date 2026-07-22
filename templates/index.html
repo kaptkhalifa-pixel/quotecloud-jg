@@ -1224,7 +1224,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     </div>
     <div class="form-group"><label>Address <span style="font-weight:400;color:#888">(optional)</span></label><input type="text" id="edit-client-address" placeholder="e.g. P.O. Box 12345, Nairobi"></div>
     <div class="form-row">
-      <div class="form-group"><label>Amount (USD)</label><input type="number" id="edit-amount" step="0.01" min="0"></div>
+      <div class="form-group"><label>Amount (<span class="pri-cur-label">{{ (operator.get("fx") or {}).get("primary_currency") or (operator.get("quoting_rules") or {}).get("currency") or "USD" }}</span>)</label><input type="number" id="edit-amount" step="0.01" min="0"></div>
       <div class="form-group"><label>Date</label><input type="text" id="edit-date" placeholder="DD/MM/YYYY"></div>
     </div>
     <div id="edit-password-section" style="display:none">
@@ -1705,7 +1705,7 @@ function addExtraItem() {
   div.className = 'line-item-row';
   div.innerHTML = `<textarea placeholder="Description" class="extra-desc" rows="2"></textarea>
     <input type="number" placeholder="Qty" class="extra-qty qty" value="1">
-    <input type="number" placeholder="Amount (USD)" class="extra-amount amount">
+    <input type="number" placeholder="Amount (${priCurrency})" class="extra-amount amount">
     <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>`;
   document.getElementById('extra-items').appendChild(div);
 }
@@ -2027,10 +2027,14 @@ function toggleAdjKesMode(idx) {
     let paxKes = parseFloat(paxField.value) || 0;
     rateField.value = Math.round(rateKes / kesRate * 100) / 100;
     paxField.value = Math.round(paxKes / kesRate * 100) / 100;
+    // FIX: three sibling labels were hardcoded to literal "USD" while
+    // rateLabel, right above them, already correctly used the real,
+    // dynamic priCurrency variable - genuinely inconsistent and wrong for
+    // any non-USD tenant.
     if (rateLabel) rateLabel.textContent = 'Rate / hr (' + priCurrency + ')';
-    if (paxLabel) paxLabel.textContent = 'Pax / Admin (USD)';
-    if (targetLabel) targetLabel.textContent = 'Target Total (USD)';
-    if (paxRevLabel) paxRevLabel.textContent = 'Keep Pax/Admin (USD)';
+    if (paxLabel) paxLabel.textContent = 'Pax / Admin (' + priCurrency + ')';
+    if (targetLabel) targetLabel.textContent = 'Target Total (' + priCurrency + ')';
+    if (paxRevLabel) paxRevLabel.textContent = 'Keep Pax/Admin (' + priCurrency + ')';
     let origRateVal = res.rate_usd || 0;
     let origPaxVal = res.pax_fee_usd || res.pax_fee_usd_display || 0;
     let origTotalVal = res.total_usd || 0;
