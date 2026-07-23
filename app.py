@@ -1374,7 +1374,7 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     # Fetch secondary currency reference rate
     sec_currency = ""
     sec_rate = 0.0
-    show_secondary = fx_cfg.get("show_kes", True)
+    show_secondary = should_show_secondary_currency(fx_cfg)
     sec_currency = fx_cfg.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
     if show_secondary and sec_currency:
         try:
@@ -1947,7 +1947,7 @@ def manual_invoice():
         fx_config = OPERATOR.get("fx", {})
         sec_currency = fx_config.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
         pri_cur = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
-        if fx_config.get("show_kes", True) and sec_currency:
+        if should_show_secondary_currency(fx_config) and sec_currency:
             kes_rate_inv = 0
             try:
                 if fx_config.get("mode") == "manual":
@@ -2899,7 +2899,7 @@ def expand_maps_url():
 @app.route("/fx/rates", methods=["GET"])
 def fx_rates():
     fx_config = OPERATOR.get("fx", {})
-    show_kes = fx_config.get("show_kes", True)
+    show_kes = should_show_secondary_currency(fx_config)
     pri_cur = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
     sec_cur = fx_config.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
     if fx_config.get("mode") == "manual":
@@ -2938,6 +2938,16 @@ def fx_rates():
         pass
     return jsonify({"success": False, "rates": {}, "mode": "auto"})
 
+def should_show_secondary_currency(fx_cfg):
+    """FIX (item 4, updated bug list): 'Disable secondary currency entirely'
+    must genuinely override show_kes everywhere it's checked - a real,
+    top-level kill switch, not just another independent toggle. Single,
+    shared helper so all real call sites stay correctly, consistently
+    in sync, rather than risk patching some but not others."""
+    if fx_cfg.get("disabled", False):
+        return False
+    return fx_cfg.get("show_kes", True)
+
 @app.route("/fx/save", methods=["POST"])
 @login_required
 def fx_save():
@@ -2950,9 +2960,14 @@ def fx_save():
         rates = {}
         if sec_cur and data.get(sec_cur):
             rates[sec_cur] = float(data.get(sec_cur, 0))
+        # FIX (item 4, updated bug list): "Disable secondary currency
+        # entirely" existed in the HTML but was never actually wired to
+        # any real logic anywhere - genuinely dead markup. Now a real,
+        # persisted setting.
         OPERATOR["fx"] = {
             "mode": data.get("mode", "auto"),
             "show_kes": data.get("show_kes", True),
+            "disabled": data.get("disabled", False),
             "primary_currency": pri_cur,
             "secondary_currency": sec_cur,
             "rates": rates
@@ -3251,7 +3266,7 @@ def booking_pdf():
         # anywhere in this function, meaning the entire secondary-currency
         # note below was genuinely dead code that could never execute.
         kes_rate_for_pdf = 0
-        if fx_config.get("show_kes", True) and sec_currency:
+        if should_show_secondary_currency(fx_config) and sec_currency:
             try:
                 if fx_config.get("mode") == "manual":
                     kes_rate_for_pdf = float(fx_config.get("rates", {}).get(sec_currency, 0))
