@@ -4398,12 +4398,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-function showSectionMsg(id, msg, type) {
+function showSectionMsg(id, msg, type, durationMs) {
+  // FIX: was always auto-clearing after a flat 3 seconds regardless of
+  // message length or importance - fine for a quick "Saved" confirmation,
+  // but a real warning (e.g. "verify your bank details") needs longer to
+  // actually be read. Optional durationMs lets specific, important
+  // messages stay up longer without changing the default behavior
+  // everywhere else this function is already correctly used.
   let el = document.getElementById(id);
   if (!el) return;
   el.textContent = msg;
   el.className = 'section-save-msg ' + (type || '');
-  setTimeout(() => { el.textContent = ''; el.className = 'section-save-msg'; }, 3000);
+  setTimeout(() => { el.textContent = ''; el.className = 'section-save-msg'; }, durationMs || 3000);
 }
 
 async function saveSectionBranding() {
@@ -4629,7 +4635,17 @@ async function saveAllCurrencySettings() {
     let d1 = await r1.json();
     let d2 = await r2.json();
     if (d1.success && d2.success) {
-      showSectionMsg('msg-currency', '✓ Saved', 'ok');
+      // FIX (item 5, updated bug list): a bank account denominated in the
+      // OLD currency doesn't automatically become valid in the new one
+      // just because this setting changed - the operator needs a clear,
+      // real prompt to go verify/update their actual bank details.
+      if (d1.currency_changed) {
+        showSectionMsg('msg-currency',
+          `✓ Saved. Your primary currency changed from ${d1.old_currency} to ${d1.new_currency} — please verify your Bank Details are correct for ${d1.new_currency} before sending any new invoices.`,
+          'ok', 10000);
+      } else {
+        showSectionMsg('msg-currency', '✓ Saved', 'ok');
+      }
       operatorConfig.secondary_currency = secondary;
       if (!operatorConfig.fx) operatorConfig.fx = {};
       operatorConfig.fx.secondary_currency = secondary;

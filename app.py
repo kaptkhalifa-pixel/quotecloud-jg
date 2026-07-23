@@ -2663,15 +2663,25 @@ def save_currency():
     global OPERATOR
     data = request.get_json()
     try:
+        # FIX (item 5, updated bug list): capture the real, current primary
+        # currency BEFORE overwriting it, so we can tell the operator their
+        # bank details almost certainly still need reviewing - a bank
+        # account denominated in the old currency doesn't automatically
+        # become valid in the new one just because the setting changed.
+        old_currency = OPERATOR.get("fx", {}).get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+        new_currency = data.get("currency", "USD")
+
         if "quoting_rules" not in OPERATOR: OPERATOR["quoting_rules"] = {}
-        OPERATOR["quoting_rules"]["currency"] = data.get("currency", "USD")
+        OPERATOR["quoting_rules"]["currency"] = new_currency
         OPERATOR["quoting_rules"]["currency_symbol"] = data.get("currency_symbol", "$")
         OPERATOR["secondary_currency"] = data.get("secondary_currency", "")
         if "fx" not in OPERATOR: OPERATOR["fx"] = {}
         OPERATOR["fx"]["secondary_currency"] = data.get("secondary_currency", "")
-        OPERATOR["fx"]["primary_currency"] = data.get("currency", "USD")
+        OPERATOR["fx"]["primary_currency"] = new_currency
         save_operator_config(OPERATOR)
-        return jsonify({"success": True})
+        currency_changed = old_currency != new_currency
+        return jsonify({"success": True, "currency_changed": currency_changed,
+                        "old_currency": old_currency, "new_currency": new_currency})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
