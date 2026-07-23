@@ -1798,6 +1798,9 @@ def booking_invoice():
         client_address = data.get("client_address", "")
         client_email = data.get("client_email", "")
         client_phone = data.get("client_phone", "")
+        # FIX (item 7, updated bug list): thread the real client_id through
+        # to the booking record, same discipline as client_address earlier.
+        client_id = data.get("client_id", "")
         note = data.get("note", "")
         discount = data.get("discount", "0")
         uplift_items = data.get("uplift_items", [])
@@ -1883,6 +1886,11 @@ def booking_invoice():
         bookings[source_token]["invoice_url"] = pdf_url or ""
         bookings[source_token]["status"] = "INVOICED"
         bookings[source_token]["updated_at"] = datetime.datetime.now().isoformat()
+        # FIX (item 7, updated bug list): only update if a real, new value
+        # was genuinely provided - never silently erase an existing
+        # client_id if this specific request doesn't resupply one.
+        if client_id:
+            bookings[source_token]["client_id"] = client_id
         save_bookings(bookings)
 
         with open(out_path, "rb") as f:

@@ -1140,6 +1140,18 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <div id="ib-summary"></div>
       <div id="ib-warning" style="display:none;margin-top:10px"></div>
     </div>
+    <!-- FIX (item 7, updated bug list): client tokenization, same pattern
+    already proven on Manual Quote. -->
+    <div class="form-group" style="position:relative">
+      <label>Search Existing Client <span style="font-weight:400;color:#888">(optional)</span></label>
+      <input type="text" id="ib-client-search" placeholder="Search by name, phone, or email..." autocomplete="off" oninput="searchClientsFor('ib')">
+      <div id="ib-client-results" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+    </div>
+    <input type="hidden" id="ib-client-id" value="">
+    <div class="toggle-row" style="margin-bottom:10px">
+      <input type="checkbox" id="ib-create-new-client" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+      <label for="ib-create-new-client" style="cursor:pointer">Create new client ID for this person</label>
+    </div>
     <div class="form-row">
       <div class="form-group"><label>Client Name</label><input type="text" id="ib-name"></div>
       <div class="form-group"><label>Client Email</label><input type="text" id="ib-email"></div>
@@ -5103,6 +5115,12 @@ function openInvoiceBuilder(enq) {
   document.getElementById('ib-name').value = enq.client_name || '';
   document.getElementById('ib-email').value = enq.client_email || '';
   document.getElementById('ib-address').value = enq.client_address || '';
+  // FIX (item 7, updated bug list): if this enquiry's original booking
+  // already carries a real client_id, restore it here too - so upgrading
+  // an existing, tokenized client's quote to an invoice doesn't silently
+  // lose the link back to their real identity.
+  if (document.getElementById('ib-client-id')) document.getElementById('ib-client-id').value = enq.client_id || '';
+  if (document.getElementById('ib-client-search')) document.getElementById('ib-client-search').value = '';
   document.getElementById('ib-discount').value = '0';
   document.getElementById('ib-notes').value = '';
   document.getElementById('ib-uplift-items').innerHTML = '';
@@ -5357,6 +5375,17 @@ async function generateAndSendInvoice() {
   let discount = parseFloat(document.getElementById('ib-discount').value) || 0;
   let notes = document.getElementById('ib-notes').value.trim();
   if (!clientName) { showMsg('ib-msg','Client name required.','error'); return; }
+  // FIX (item 7, updated bug list): purely opt-in - only ever creates a
+  // real client record when the operator explicitly checked the box.
+  if (document.getElementById('ib-create-new-client')?.checked) {
+    try {
+      let clientR = await fetch('/clients/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
+        name: clientName, phone: clientWaRaw, email: clientEmail, address: clientAddress
+      })});
+      let clientData = await clientR.json();
+      if (clientData.success) document.getElementById('ib-client-id').value = clientData.client.client_id;
+    } catch(e) { /* non-fatal - the actual invoice still generates even if client creation fails */ }
+  }
   let base = parseFloat(enq.total_usd || 0);
   let upliftItems = [];
   document.querySelectorAll('#ib-uplift-items .line-item-row').forEach(row => {
@@ -5375,6 +5404,7 @@ async function generateAndSendInvoice() {
     let invoiceGhostMode = enq.is_ghost ? (ghostRadio ? ghostRadio.value === '1' : true) : false;
     let body = {
       client_name: clientName, client_address: clientAddress, client_email: clientEmail, client_phone: clientWaRaw,
+      client_id: document.getElementById('ib-client-id')?.value || '',
       discount, note: notes, uplift_items: upliftItems,
       source_token: enq.token, ghost_mode: invoiceGhostMode
     };
