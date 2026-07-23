@@ -1459,6 +1459,7 @@ function checkLegLocations(n) {
   } else {
     if (dateRow) dateRow.style.display = 'none';
   }
+  checkAllLegsComplete();
 }
 
 function getPrevLegDate(n) {
@@ -1481,6 +1482,10 @@ function getPrevLegDate(n) {
 }
 
 function checkLegDate(n) {
+  // Runs first, unconditionally, regardless of which of this function's
+  // own early-return paths fires below - checkAllLegsComplete() reads its
+  // own values directly from the DOM, independent of anything local here.
+  checkAllLegsComplete();
   let dateVal = document.getElementById('leg-date-'+n)?.value;
   let msgEl = document.getElementById('leg-date-msg-'+n);
   let addBtn = document.getElementById('safari-add-leg-btn');
@@ -1513,8 +1518,13 @@ function checkLegDate(n) {
   }
 }
 
-function addLeg() {
-  // Validate all existing legs before adding new one
+// FIX: guardMsg previously only got set/cleared once, inside addLeg()
+// itself - meaning it stayed frozen on screen even after the operator
+// correctly finished filling in a leg's details, since nothing re-checked
+// it live. Extracted into its own function so every keystroke and date
+// change can re-evaluate it in real time: disappears the instant a leg
+// becomes complete, reappears the instant a new, incomplete leg exists.
+function checkAllLegsComplete() {
   let existing = document.querySelectorAll('#safari-legs .leg-card');
   let guardMsg = document.getElementById('safari-guard-msg');
   for (let i = 0; i < existing.length; i++) {
@@ -1525,14 +1535,19 @@ function addLeg() {
     let legNum = i + 1;
     if (!origin || !dest) {
       if (guardMsg) guardMsg.textContent = `⚠️ Please fill From and To for Leg ${legNum} before adding another.`;
-      return;
+      return false;
     }
     if (!date) {
       if (guardMsg) guardMsg.textContent = `⚠️ Please set a date for Leg ${legNum} before adding another.`;
-      return;
+      return false;
     }
   }
   if (guardMsg) guardMsg.textContent = '';
+  return true;
+}
+
+function addLeg() {
+  if (!checkAllLegsComplete()) return;
   let n = document.querySelectorAll('#safari-legs .leg-card').length + 1;
   let div = document.createElement('div');
   div.className = 'leg-card';
@@ -1562,13 +1577,19 @@ function addLeg() {
   initAdminAc('leg-origin-'+n);
   initAdminAc('leg-dest-'+n);
   div.querySelector('.leg-origin').focus();
+  // FIX: without this, the new, genuinely empty leg wouldn't be flagged
+  // as incomplete until the operator typed something into it - the
+  // warning should reappear the INSTANT a new, incomplete leg exists.
+  checkAllLegsComplete();
 }
 
 function removeLeg(btn, n) {
   let card = document.getElementById('leg-card-'+n);
   if (card) card.remove();
-  let guardMsg = document.getElementById('safari-guard-msg');
-  if (guardMsg) guardMsg.textContent = '';
+  // FIX: was unconditionally blanking the message regardless of whether
+  // the REMAINING legs are actually all complete - now correctly
+  // re-evaluates the real, current state after a removal.
+  checkAllLegsComplete();
 }
 
 async function submitQuote(mission) {
