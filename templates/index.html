@@ -589,6 +589,20 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     <div style="font-size:0.78rem;color:#666;background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 14px;margin-bottom:16px;line-height:1.6">
       This tool generates <strong>Quotations only</strong>. Every quote is saved to CRM automatically. To upgrade to an Invoice, navigate to <strong>Enquiries</strong> and use the Invoice Builder there.
     </div>
+    <!-- FIX (item 7, updated bug list): client tokenization - purely
+    opt-in search, existing clients auto-fill the fields below. The
+    checkbox is the deliberate, explicit guard against every document
+    silently spawning a duplicate client record. -->
+    <div class="form-group" style="position:relative">
+      <label>Search Existing Client <span style="font-weight:400;color:#888">(optional)</span></label>
+      <input type="text" id="mi-client-search" placeholder="Search by name, phone, or email..." autocomplete="off" oninput="searchClientsFor('mi')">
+      <div id="mi-client-results" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+    </div>
+    <input type="hidden" id="mi-client-id" value="">
+    <div class="toggle-row" style="margin-bottom:14px">
+      <input type="checkbox" id="mi-create-new-client" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+      <label for="mi-create-new-client" style="cursor:pointer">Create new client ID for this person</label>
+    </div>
     <div class="form-row">
       <div class="form-group"><label>Client Name</label><input type="text" id="mi-name" placeholder="Full name"></div>
       <div class="form-group"><label>Email</label><input type="text" id="mi-email" placeholder="client@email.com"></div>
@@ -2701,6 +2715,60 @@ async function deletePreset(idx, pi) {
 }
 
 let adminAcTimers = {};
+// CLIENT TOKENIZATION (item 7, updated bug list) - shared across all three
+// real forms (Manual Quote "mi-", Invoice Builder "ib-", Admin Quote tool
+// "pdf-"). Each form's field-ID map handles its own real naming quirks
+// (e.g. phone is "mi-phone" on Manual Quote but "ib-client-whatsapp" on
+// Invoice Builder).
+let clientSearchTimers = {};
+const CLIENT_FIELD_MAP = {
+  'mi': {name: 'mi-name', email: 'mi-email', phone: 'mi-phone', address: 'mi-address', clientId: 'mi-client-id'},
+  'ib': {name: 'ib-name', email: 'ib-email', phone: 'ib-client-whatsapp', address: 'ib-address', clientId: 'ib-client-id'},
+  'pdf': {name: 'pdf-name', email: 'pdf-email', phone: 'pdf-phone', address: 'pdf-address', clientId: 'pdf-client-id'}
+};
+
+async function searchClientsFor(prefix) {
+  let query = document.getElementById(prefix + '-client-search')?.value.trim();
+  let resultsEl = document.getElementById(prefix + '-client-results');
+  clearTimeout(clientSearchTimers[prefix]);
+  if (!query || query.length < 2) { if (resultsEl) resultsEl.style.display = 'none'; return; }
+  clientSearchTimers[prefix] = setTimeout(async () => {
+    try {
+      let r = await fetch('/clients/search', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({query})});
+      let clients = await r.json();
+      if (!resultsEl) return;
+      if (!Array.isArray(clients) || !clients.length) {
+        resultsEl.innerHTML = '<div style="padding:10px 14px;color:#888;font-size:0.8rem">No matching clients found</div>';
+        resultsEl.style.display = 'block';
+        return;
+      }
+      resultsEl.innerHTML = clients.map(c => `
+        <div onmousedown="selectClient('${prefix}', ${JSON.stringify(c).replace(/"/g,'&quot;')})" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.82rem">
+          <div style="font-weight:600">${c.name || ''}</div>
+          <div style="font-size:0.72rem;color:#888">${c.phone || ''} ${c.email ? '· ' + c.email : ''}</div>
+        </div>`).join('');
+      resultsEl.style.display = 'block';
+    } catch(e) { if (resultsEl) resultsEl.style.display = 'none'; }
+  }, 200);
+}
+
+function selectClient(prefix, client) {
+  let map = CLIENT_FIELD_MAP[prefix];
+  if (!map) return;
+  if (document.getElementById(map.name)) document.getElementById(map.name).value = client.name || '';
+  if (document.getElementById(map.email)) document.getElementById(map.email).value = client.email || '';
+  if (document.getElementById(map.phone)) document.getElementById(map.phone).value = client.phone || '';
+  if (document.getElementById(map.address)) document.getElementById(map.address).value = client.address || '';
+  if (document.getElementById(map.clientId)) document.getElementById(map.clientId).value = client.client_id || '';
+  let searchEl = document.getElementById(prefix + '-client-search');
+  if (searchEl) searchEl.value = client.name || '';
+  let resultsEl = document.getElementById(prefix + '-client-results');
+  if (resultsEl) resultsEl.style.display = 'none';
+  // Selecting an existing client always implies NOT creating a new one
+  let checkboxEl = document.getElementById(prefix + '-create-new-client');
+  if (checkboxEl) checkboxEl.checked = false;
+}
+
 async function adminAcFetch(query, drop, input) {
   try {
     let r = await fetch('/autocomplete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query}) });
@@ -4021,10 +4089,26 @@ async function createManualInvoice() {
     if (desc) lineItems.push({ description: desc, quantity: qty, unit_cost: unit });
   });
   if (!lineItems.length) return showMsg('mi-msg','Add at least one line item.','error');
-  let body = { client_name: document.getElementById('mi-name').value, client_address: document.getElementById('mi-address')?.value || '', client_email: document.getElementById('mi-email').value, client_phone: document.getElementById('mi-phone').value, discount: document.getElementById('mi-discount').value || 0, note: document.getElementById('mi-notes').value, bank_block: document.getElementById('mi-bank').value, terms: document.getElementById('mi-terms').value, doc_type: 'Quotation', line_items: lineItems };
   let miBtn = document.getElementById('mi-generate-btn');
   if (miBtn) { miBtn.disabled = true; miBtn.textContent = 'Generating...'; }
   document.getElementById('mi-msg').innerHTML = '';
+  // FIX (item 7, updated bug list): purely opt-in - only ever creates a
+  // real client record when the operator explicitly checked the box.
+  // Never fires automatically, guarding against duplicate client records
+  // piling up from every single document.
+  if (document.getElementById('mi-create-new-client')?.checked) {
+    try {
+      let clientR = await fetch('/clients/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
+        name: document.getElementById('mi-name').value,
+        phone: document.getElementById('mi-phone').value,
+        email: document.getElementById('mi-email').value,
+        address: document.getElementById('mi-address')?.value || ''
+      })});
+      let clientData = await clientR.json();
+      if (clientData.success) document.getElementById('mi-client-id').value = clientData.client.client_id;
+    } catch(e) { /* non-fatal - the actual document still generates even if client creation fails */ }
+  }
+  let body = { client_name: document.getElementById('mi-name').value, client_address: document.getElementById('mi-address')?.value || '', client_email: document.getElementById('mi-email').value, client_phone: document.getElementById('mi-phone').value, client_id: document.getElementById('mi-client-id')?.value || '', discount: document.getElementById('mi-discount').value || 0, note: document.getElementById('mi-notes').value, bank_block: document.getElementById('mi-bank').value, terms: document.getElementById('mi-terms').value, doc_type: 'Quotation', line_items: lineItems };
   try {
     let r = await fetch('/manual_invoice', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); showMsg('mi-msg',e.error||'Failed','error'); return; }

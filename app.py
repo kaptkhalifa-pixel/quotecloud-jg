@@ -1907,6 +1907,10 @@ def manual_invoice():
         client_address = data.get("client_address", "")
         client_email = data.get("client_email", "")
         client_phone = data.get("client_phone", "")
+        # FIX (item 7, updated bug list): thread the real client_id through
+        # to the actual booking record, so a document genuinely links back
+        # to its client's real, tokenized identity, not just a name string.
+        client_id = data.get("client_id", "")
         note = data.get("note", "")
         discount = data.get("discount", "0")
         terms_override = data.get("terms", "")
@@ -2025,6 +2029,7 @@ def manual_invoice():
                 # pre-fill logic, there was genuinely nothing to pre-fill
                 # FROM for a manually-created quote.
                 "client_address": client_address,
+                "client_id": client_id,
                 "client_email": client_email,
                 "client_whatsapp": client_phone,
                 "ac_label": "",
