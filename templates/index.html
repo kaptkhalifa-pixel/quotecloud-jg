@@ -4833,7 +4833,12 @@ function renderEnquirySummary(enqs) {
     let _directRate = fxRates[priCurrency] || 0;
     if (_directRate > 0) _priRate = _directRate;
   }
-  let pipeline = enqs.reduce((s,e) => s + parseFloat(e.total_usd||0), 0);
+  // CRITICAL FIX: pipeline was a raw, unconverted sum of total_usd values,
+  // displayed under the real, dynamic currency LABEL but never actually
+  // multiplied by the real conversion rate - meaning a KES-primary tenant's
+  // pipeline total showed raw USD figures mislabeled as KES. _priRate is
+  // already correctly computed just above; it was simply never applied.
+  let pipeline = enqs.reduce((s,e) => s + parseFloat(e.total_usd||0), 0) * _priRate;
   document.getElementById('enq-summary').innerHTML = `
     <div style="background:#f8f9fa;border-radius:10px;padding:14px;text-align:center;border:1px solid #eee">
       <div style="font-size:1.4rem;font-weight:700;color:#333">${total}</div>
@@ -4930,7 +4935,7 @@ function renderEnquiries(enqs) {
           ${e.total_hrs ? fmtHours(e.total_hrs) : ''}${e.total_nm ? ' · ' + Math.round(e.total_nm) + ' nm' : ''}
         </div>
       </td>
-      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(e.total_usd||0))}</td>
+      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(e.total_usd||0) * _priRate)}</td>
       <td>${getEnqStatusBadge(e.status)}</td>
       <td style="white-space:nowrap;font-size:0.75rem;color:#4a148c;font-weight:600">
         ${e.invoice_number ? `<span>${e.invoice_number}</span>` : '-'}
