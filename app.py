@@ -1583,6 +1583,9 @@ def pdf():
         client_address = data.get("client_address", "")
         client_email = data.get("client_email", "")
         client_phone = data.get("client_phone", "")
+        # FIX (item 7, updated bug list): thread the real client_id through
+        # to the booking record, same discipline as client_address.
+        client_id = data.get("client_id", "")
         note = data.get("note", "")
         discount = data.get("discount", "0")
         extra_items = data.get("extras", [])
@@ -1642,6 +1645,7 @@ def pdf():
                 # manual_invoice() and booking_request(), a third, separate
                 # occurrence nobody had checked yet.
                 "client_address": client_address,
+                "client_id": client_id,
                 "client_email": client_email,
                 "client_whatsapp": client_phone,
                 "ac_label": result.get("ac_label", ""),
@@ -1693,6 +1697,8 @@ def pdf_all():
         client_address = data.get("client_address", "")
         client_email = data.get("client_email", "")
         client_phone = data.get("client_phone", "")
+        # FIX (item 7, updated bug list): same discipline as pdf().
+        client_id = data.get("client_id", "")
         note = data.get("note", "")
         discount = data.get("discount", "0")
         extra_items = data.get("extras", [])
@@ -1747,6 +1753,7 @@ def pdf_all():
                 # CRITICAL FIX: same gap as pdf() - this booking dict never
                 # included client_address at all.
                 "client_address": client_address,
+                "client_id": client_id,
                 "client_email": client_email,
                 "client_whatsapp": client_phone,
                 "ac_label": res.get("ac_label", ""),
