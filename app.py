@@ -2069,6 +2069,59 @@ def get_records():
 
     return jsonify(load_records())
 
+# ============================================================
+# CLIENT TOKENIZATION (item 7, updated bug list)
+# ============================================================
+# Purely opt-in by explicit operator decision: a client record is ONLY ever
+# created when the operator explicitly checks "create new client ID" -
+# never automatically, to guard against every single document silently
+# spawning a duplicate, near-identical client record. Search matches name,
+# phone, or email against this real, separate 'clients' Firestore
+# subcollection, independent of documents/bookings.
+
+@app.route("/clients/search", methods=["POST"])
+@login_required
+def search_clients():
+    data = request.get_json()
+    query = (data.get("query") or "").strip().lower()
+    if len(query) < 2:
+        return jsonify([])
+    try:
+        docs = tenant_collection("clients").stream()
+        results = []
+        for doc in docs:
+            c = doc.to_dict()
+            if (query in (c.get("name", "") or "").lower()
+                    or query in (c.get("phone", "") or "").lower()
+                    or query in (c.get("email", "") or "").lower()):
+                results.append(c)
+        results.sort(key=lambda c: c.get("name", ""))
+        return jsonify(results[:10])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/clients/create", methods=["POST"])
+@login_required
+def create_client():
+    data = request.get_json()
+    name = (data.get("name") or "").strip()
+    if not name:
+        return jsonify({"error": "Client name required"}), 400
+    try:
+        client_id = generate_token("C")
+        client_record = {
+            "client_id": client_id,
+            "name": name,
+            "phone": (data.get("phone") or "").strip(),
+            "email": (data.get("email") or "").strip(),
+            "address": (data.get("address") or "").strip(),
+            "created_at": datetime.datetime.now().isoformat()
+        }
+        tenant_collection("clients").document(client_id).set(client_record)
+        return jsonify({"success": True, "client": client_record})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/records/get_one", methods=["POST"])
 @login_required
 def get_one_record():
