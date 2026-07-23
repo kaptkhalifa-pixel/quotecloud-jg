@@ -1025,7 +1025,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           <label for="s-fx-show-kes" style="cursor:pointer">Show secondary currency on client-facing page <span style="font-family:'Space Mono',monospace;font-size:0.52rem;background:#f0f4ff;color:#1a56db;padding:2px 5px;border-radius:3px;margin-left:4px">Pro</span></label>
         </div>
         <div class="toggle-row" style="margin-bottom:10px">
-          <input type="checkbox" id="s-fx-disabled" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
+          <input type="checkbox" id="s-fx-disabled" onchange="applyFxDisabledFreeze(this.checked)" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
           <label for="s-fx-disabled" style="cursor:pointer;color:#c00">Disable secondary currency entirely</label>
         </div>
       </div>
@@ -4140,6 +4140,15 @@ async function loadSettings() {
   let isManual = fx.mode === 'manual';
   document.getElementById('s-fx-manual').checked = isManual;
   document.getElementById('s-fx-show-kes').checked = fx.show_kes !== false;
+  // FIX (item 4, updated bug list): restore the real, persisted "Disable
+  // secondary currency entirely" state on load, and immediately apply the
+  // correct freeze/unfreeze UI state to match - this checkbox previously
+  // existed but was never actually wired to anything.
+  let fxDisabledEl = document.getElementById('s-fx-disabled');
+  if (fxDisabledEl) {
+    fxDisabledEl.checked = fx.disabled === true;
+    applyFxDisabledFreeze(fxDisabledEl.checked);
+  }
 let primaryCurEl = document.getElementById('s-primary-currency');
   let secondaryCur = document.getElementById('s-secondary-currency');
 if (primaryCurEl && (fx.primary_currency || (operatorConfig.quoting_rules && operatorConfig.quoting_rules.currency))) {
@@ -4617,6 +4626,28 @@ async function onSecondaryChange() {
   }
 }
 
+// FIX (item 4, updated bug list): a genuine "kill switch" - when secondary
+// currency is disabled, every dependent setting freezes visually (greyed
+// out, untappable) so the operator clearly sees these settings no longer
+// apply, rather than leaving them looking active while silently ignored.
+// Does NOT clear any stored secondary bank details - fully reversible if
+// re-enabled later.
+function applyFxDisabledFreeze(isDisabled) {
+  let idsToFreeze = [
+    's-secondary-currency', 's-fx-show-docs', 's-fx-show-kes', 's-fx-manual', 's-fx-secondary',
+    's-bank-sec-account-name', 's-bank-sec-bank-name', 's-bank-usd-account',
+    's-bank-sec-swift', 's-bank-sec-branch'
+  ];
+  idsToFreeze.forEach(id => {
+    let el = document.getElementById(id);
+    if (!el) return;
+    el.disabled = isDisabled;
+    el.style.opacity = isDisabled ? '0.4' : '';
+    el.style.pointerEvents = isDisabled ? 'none' : '';
+    el.style.cursor = isDisabled ? 'not-allowed' : '';
+  });
+}
+
 async function saveAllCurrencySettings() {
   let primary = document.getElementById('s-primary-currency').value || 'USD';
   let secondary = document.getElementById('s-secondary-currency').value || '';
@@ -4629,7 +4660,8 @@ async function saveAllCurrencySettings() {
     let r1 = await fetch('/settings/save/currency', {method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({currency: primary, currency_symbol: symbols[primary] || primary, secondary_currency: secondary})});
     // Save FX settings
-    let fxBody = {mode: isManual ? 'manual' : 'auto', show_kes: showSec};
+    let fxDisabled = document.getElementById('s-fx-disabled')?.checked || false;
+    let fxBody = {mode: isManual ? 'manual' : 'auto', show_kes: showSec, disabled: fxDisabled};
     if (isManual && secondary && manualRate) fxBody[secondary] = manualRate;
     let r2 = await fetch('/fx/save', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(fxBody)});
     let d1 = await r1.json();
