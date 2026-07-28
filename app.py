@@ -2181,6 +2181,44 @@ def get_one_record():
         return jsonify({"error": "Record not found"}), 404
     return jsonify(rec)
 
+@app.route("/records/batch_delete", methods=["POST"])
+@login_required
+def batch_delete_records():
+    # FIX: batch delete for records, explicit decision - requires the real
+    # password once for the whole batch, and blocks ENTIRELY if any
+    # selected record has real payment history, forcing those to be
+    # deleted individually through the existing, proven single-delete
+    # flow. Never silently skips paid records, since that could mislead
+    # an operator into thinking their whole selection was cleared.
+    data = request.get_json()
+    numbers = data.get("numbers", [])
+    password = data.get("password", "")
+    if not numbers:
+        return jsonify({"error": "No records selected."}), 400
+    stored_pass = get_admin_pass()
+    if stored_pass.startswith("pbkdf2:") or stored_pass.startswith("scrypt:"):
+        password_ok = check_password_hash(stored_pass, password)
+    else:
+        password_ok = (password == stored_pass)
+    if not password_ok:
+        return jsonify({"error": "Password required to delete records."}), 403
+
+    records = load_records()
+    to_delete = [r for r in records if r.get("number") in numbers]
+    paid_ones = [r.get("number") for r in to_delete if r.get("paid") or float(r.get("paid_amount", 0)) > 0]
+    if paid_ones:
+        return jsonify({"error": f"{len(paid_ones)} selected record(s) have real payment history and cannot be batch-deleted: {', '.join(paid_ones[:5])}{'...' if len(paid_ones) > 5 else ''}. Delete these individually instead."}), 403
+
+    deleted_count = 0
+    for r in records:
+        if r.get("number") in numbers:
+            r["deleted"] = True
+            r["deleted_at"] = datetime.datetime.now().isoformat()
+            write_audit_log("record_deleted", {"number": r.get("number"), "batch": True})
+            deleted_count += 1
+    save_records(records)
+    return jsonify({"success": True, "deleted_count": deleted_count})
+
 @app.route("/records/delete", methods=["POST"])
 @login_required
 def delete_record_route():
