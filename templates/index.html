@@ -4148,31 +4148,48 @@ function promptDelete(number) {
 
 function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('active'); }
 
+// FIX: delete had zero visual feedback - clicking Delete silently,
+// instantly closed the modal with no indication anything happened at
+// all, unlike document creation's clear "Generating..." state. Now
+// reuses the existing, proven btnFeedback() helper for a genuine
+// loading -> success/error sequence, same real pattern used elsewhere.
 async function confirmDelete() {
   let password = document.getElementById('delete-password').value;
   if (!password) { showMsg('delete-msg','Enter password.','error'); return; }
+  let btn = document.getElementById('delete-modal-confirm-btn');
+  btnFeedback(btn, 'loading', 'Deleting...');
   let isBatch = document.getElementById('delete-is-batch').value === 'true';
   if (isBatch) {
     let numbers = JSON.parse(document.getElementById('delete-record-number').value);
-    await deleteBatchRecords(numbers, password);
+    await deleteBatchRecords(numbers, password, btn);
   } else {
     let number = document.getElementById('delete-record-number').value;
-    await deleteRecord(number, password);
+    await deleteRecord(number, password, btn);
   }
 }
 
-async function deleteRecord(number, password) {
+async function deleteRecord(number, password, btn) {
   let r = await fetch('/records/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ number, password }) });
   let data = await r.json();
-  if (data.success) { closeDeleteModal(); loadRecords(); }
-  else showMsg('delete-msg', data.error||'Error', 'error');
+  if (data.success) {
+    btnFeedback(btn, 'success', 'Deleted');
+    setTimeout(() => { closeDeleteModal(); loadRecords(); }, 900);
+  } else {
+    btnFeedback(btn, 'error', 'Failed');
+    showMsg('delete-msg', data.error||'Error', 'error');
+  }
 }
 
-async function deleteBatchRecords(numbers, password) {
+async function deleteBatchRecords(numbers, password, btn) {
   let r = await fetch('/records/batch_delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ numbers, password }) });
   let data = await r.json();
-  if (data.success) { closeDeleteModal(); loadRecords(); }
-  else showMsg('delete-msg', data.error||'Error', 'error');
+  if (data.success) {
+    btnFeedback(btn, 'success', `Deleted ${data.deleted_count||''}`.trim());
+    setTimeout(() => { closeDeleteModal(); loadRecords(); }, 900);
+  } else {
+    btnFeedback(btn, 'error', 'Failed');
+    showMsg('delete-msg', data.error||'Error', 'error');
+  }
 }
 
 function addMiItem() {
