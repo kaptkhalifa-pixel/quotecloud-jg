@@ -4993,23 +4993,52 @@ async function loadEnquiries() {
   } catch(e) { console.log('Enquiries error:', e); }
 }
 
+// FIX: CRM math rewrite - convert EACH record individually, using its own
+// real, tagged currency (record_currency), rather than sum every record's
+// raw number first and apply one blanket rate. A single blanket rate is
+// only correct if every record was created under the same currency; the
+// moment currency has genuinely changed even once in real history, that
+// approach double-converts records from after the switch. Per explicit
+// decision: records with NO record_currency (created before this fix)
+// are intentionally, safely excluded from these totals rather than
+// guessed at - operators were notified this new CRM only covers records
+// from today forward.
+function convertToPrimary(amount, fromCurrency) {
+  amount = parseFloat(amount || 0);
+  if (!fromCurrency || fromCurrency === priCurrency) return amount;
+  // fxRates is keyed by the SECONDARY currency: value means "1 primary =
+  // X secondary" - so converting a secondary-currency amount back to
+  // primary means dividing by that same rate.
+  if (fromCurrency === secCurrency) {
+    let rate = fxRates[secCurrency] || 0;
+    return rate > 0 ? amount / rate : 0;
+  }
+  // Record's currency is neither the current primary nor secondary - no
+  // live rate exists for it, so honestly exclude rather than guess.
+  return 0;
+}
+
 function renderEnquirySummary(enqs) {
   let total = enqs.length;
   let pending = enqs.filter(e => e.status === 'PENDING').length;
-  // Convert pipeline total to primary currency
-  _priRate = 1.0;
-  if (priCurrency !== 'USD') {
-    let _usdRate = fxRates['USD'] || 0;
-    if (_usdRate > 0) _priRate = 1.0 / _usdRate;
-    let _directRate = fxRates[priCurrency] || 0;
-    if (_directRate > 0) _priRate = _directRate;
-  }
-  // CRITICAL FIX: pipeline was a raw, unconverted sum of total_usd values,
-  // displayed under the real, dynamic currency LABEL but never actually
-  // multiplied by the real conversion rate - meaning a KES-primary tenant's
-  // pipeline total showed raw USD figures mislabeled as KES. _priRate is
-  // already correctly computed just above; it was simply never applied.
-  let pipeline = enqs.reduce((s,e) => s + parseFloat(e.total_usd||0), 0) * _priRate;
+
+  // Only records tagged with a real record_currency are included in the
+  // real, converted totals below - untagged, pre-fix records are safely,
+  // intentionally skipped rather than guessed at.
+  let tagged = enqs.filter(e => e.record_currency);
+  let untaggedCount = enqs.length - tagged.length;
+
+  let quotesTotal = 0, invoicedTotal = 0, paidTotal = 0;
+  let quotesCount = 0, invoicedCount = 0, paidCount = 0;
+  tagged.forEach(e => {
+    let converted = convertToPrimary(e.total_usd, e.record_currency);
+    quotesTotal += converted;
+    quotesCount++;
+    if (e.status === 'INVOICED' || e.status === 'PAID') { invoicedTotal += converted; invoicedCount++; }
+    if (e.status === 'PAID') { paidTotal += converted; paidCount++; }
+  });
+  let conversionRate = quotesCount > 0 ? Math.round((paidCount / quotesCount) * 100) : 0;
+
   document.getElementById('enq-summary').innerHTML = `
     <div style="background:#f8f9fa;border-radius:10px;padding:14px;text-align:center;border:1px solid #eee">
       <div style="font-size:1.4rem;font-weight:700;color:#333">${total}</div>
@@ -5020,9 +5049,22 @@ function renderEnquirySummary(enqs) {
       <div style="font-size:0.75rem;color:#888;margin-top:4px">Pending</div>
     </div>
     <div style="background:#e8f5e9;border-radius:10px;padding:14px;text-align:center;border:1px solid #a5d6a7">
-      <div style="font-size:1.4rem;font-weight:700;color:#1b5e20">${priCurrency} ${fmtAmt(pipeline)}</div>
-      <div style="font-size:0.75rem;color:#888;margin-top:4px">Pipeline (${priCurrency})</div>
-    </div>`;
+      <div style="font-size:1.4rem;font-weight:700;color:#1b5e20">${priCurrency} ${fmtAmt(quotesTotal)}</div>
+      <div style="font-size:0.75rem;color:#888;margin-top:4px">Total Value of Quotes</div>
+    </div>
+    <div style="background:#e3f2fd;border-radius:10px;padding:14px;text-align:center;border:1px solid #90caf9">
+      <div style="font-size:1.4rem;font-weight:700;color:#0d47a1">${priCurrency} ${fmtAmt(invoicedTotal)}</div>
+      <div style="font-size:0.75rem;color:#888;margin-top:4px">Total Invoiced</div>
+    </div>
+    <div style="background:#f3e5f5;border-radius:10px;padding:14px;text-align:center;border:1px solid #ce93d8">
+      <div style="font-size:1.4rem;font-weight:700;color:#4a148c">${priCurrency} ${fmtAmt(paidTotal)}</div>
+      <div style="font-size:0.75rem;color:#888;margin-top:4px">Total Paid</div>
+    </div>
+    <div style="background:#fce4ec;border-radius:10px;padding:14px;text-align:center;border:1px solid #f48fb1">
+      <div style="font-size:1.4rem;font-weight:700;color:#880e4f">${conversionRate}%</div>
+      <div style="font-size:0.75rem;color:#888;margin-top:4px">Quotes → Paid Business</div>
+    </div>
+    ${untaggedCount > 0 ? `<div style="grid-column:1/-1;font-size:0.7rem;color:#aaa;text-align:center;padding-top:4px">${untaggedCount} older record(s) not included - see the operator notice about the new CRM figures.</div>` : ''}`;
 }
 
 function filterEnquiries() {

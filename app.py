@@ -1646,6 +1646,19 @@ def pdf():
                 # occurrence nobody had checked yet.
                 "client_address": client_address,
                 "client_id": client_id,
+                # FIX: CRM math bug - a record's total was always stored
+                # as a raw number under a field literally named total_usd,
+                # regardless of what was genuinely primary at creation
+                # time. Real, historical records with a real currency
+                # switch mid-way through mixed genuinely different
+                # currencies under one misleading field name, causing
+                # wildly wrong figures when a single, blanket conversion
+                # rate was later applied to the whole sum. Every NEW
+                # record now tags its own, real currency at creation -
+                # older records intentionally, safely have no such field,
+                # so new CRM math can tell the two apart and skip
+                # untagged, old data rather than guess.
+                "record_currency": currency,
                 "client_email": client_email,
                 "client_whatsapp": client_phone,
                 "ac_label": result.get("ac_label", ""),
@@ -1754,6 +1767,11 @@ def pdf_all():
                 # included client_address at all.
                 "client_address": client_address,
                 "client_id": client_id,
+                # FIX: same CRM math fix as pdf() - tag the real currency
+                # at creation time. payload["currency"] is genuinely,
+                # safely available here without touching
+                # build_pdf_payload_from_result's return signature at all.
+                "record_currency": payload.get("currency", ""),
                 "client_email": client_email,
                 "client_whatsapp": client_phone,
                 "ac_label": res.get("ac_label", ""),
@@ -2045,6 +2063,10 @@ def manual_invoice():
                 # FROM for a manually-created quote.
                 "client_address": client_address,
                 "client_id": client_id,
+                # FIX: same CRM math fix as pdf()/pdf_all() - tag the real
+                # currency at creation time, using pri_cur, already
+                # correctly computed earlier in this same function.
+                "record_currency": pri_cur,
                 "client_email": client_email,
                 "client_whatsapp": client_phone,
                 "ac_label": "",
@@ -3246,11 +3268,21 @@ def booking_request():
         bookings = load_bookings()
         route_summary = data.get("route_summary", "")
         client_whatsapp = data.get("client_whatsapp", "").strip()
+        # FIX: same CRM math fix as pdf()/pdf_all()/manual_invoice() -
+        # this real, public client-facing route never had ANY currency
+        # variable in scope at all, meaning a real client's own,
+        # directly-submitted quote would have silently missed the new
+        # currency tagging entirely, and never been counted correctly by
+        # the new CRM math.
+        _fx_cfg_br = OPERATOR.get("fx", {})
+        _record_currency = _fx_cfg_br.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
         bookings[token] = {
             "token": token,
             "status": "PENDING",
             "client_name": client_name,
             "client_address": client_address,
+            "client_id": data.get("client_id", ""),
+            "record_currency": _record_currency,
             "client_email": client_email,
             "client_whatsapp": client_whatsapp,
             "ac_label": quote_snapshot.get("ac_label", ""),
