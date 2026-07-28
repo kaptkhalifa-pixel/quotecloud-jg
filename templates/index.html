@@ -3840,7 +3840,7 @@ function renderRecords(records) {
       <td style="white-space:nowrap">${r.date||'-'}</td>
       <td><span class="badge-${typeKey}">${r.type||'-'}</span></td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.client_name||'-'}</td>
-      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(r.amount||0))}</td>
+      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(convertToPrimary(r.amount, r.record_currency))}</td>
       <td>${getPaymentBadge(r)}</td>
       <td style="white-space:nowrap">
         ${getPaymentActions(r)}
