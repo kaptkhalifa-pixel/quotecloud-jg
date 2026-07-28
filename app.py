@@ -413,6 +413,20 @@ def save_bookings(bookings):
         batch.commit()
     except Exception as e:
         print(f"Firestore save_bookings error: {e}")
+
+def save_single_booking(token, booking):
+    """CRITICAL FIX: same class of severe, real bug already found and
+    fixed for save_records()/save_single_record() - save_bookings() does
+    a genuine, complete delete-then-recreate cycle across the ENTIRE
+    collection every time it's called, meaning any two real, near-
+    simultaneous writes could silently, completely erase each other's
+    data. Writes ONLY the one, specific booking that actually changed,
+    using its own real, unique token as the document ID."""
+    try:
+        col = tenant_collection("bookings")
+        col.document(token).set(booking)
+    except Exception as e:
+        print(f"Firestore save_single_booking error: {e}")
 def write_audit_log(action, details={}):
     try:
         tenant_collection("audit").add({
@@ -509,6 +523,23 @@ def save_records(records):
     except Exception as e:
         print(f"Firestore save_records error: {e}")
 
+def save_single_record(rec):
+    """CRITICAL FIX: save_records() does a genuine, complete delete-then-
+    recreate cycle across the ENTIRE collection every time it's called -
+    meaning any two real, near-simultaneous writes (two different document-
+    creation routes firing close together, entirely plausible during real,
+    busy business use) could silently, completely erase each other's data.
+    Confirmed live: two real, freshly-created test records were destroyed
+    this way. Writes ONLY the one, specific record that actually changed,
+    using its own real, unique number as the document ID - never touches
+    any other document in the collection, so concurrent writes to
+    DIFFERENT records genuinely, safely never interfere with each other."""
+    try:
+        col = tenant_collection("records")
+        col.document(rec["number"]).set(rec)
+    except Exception as e:
+        print(f"Firestore save_single_record error: {e}")
+
 def next_record_number(doc_type="Quotation", token_override=None):
     if token_override:
         return token_override
@@ -523,7 +554,8 @@ def next_record_number(doc_type="Quotation", token_override=None):
     return generate_token(type_code)
 
 def save_record(record_type, client_name, client_email, amount, doc_number, result=None, extra=None, client_address=None, currency=None):
-    records = load_records()
+    # FIX: this only ever creates one, genuinely new record - never needs
+    # to load the whole collection just to append to it.
     rec = {
         "number": doc_number,
         "type": record_type,
@@ -553,8 +585,10 @@ def save_record(record_type, client_name, client_email, amount, doc_number, resu
     }
     if extra:
         rec.update(extra)
-    records.append(rec)
-    save_records(records)
+    # FIX: this only ever creates exactly one, genuinely new record - no
+    # longer needs load_records()/save_records()'s unsafe full-collection
+    # delete-then-recreate cycle at all.
+    save_single_record(rec)
 def check_geo_lock(lat, lon):
     geo = get_geo_lock()
     if not geo.get("enabled", True):
@@ -1691,7 +1725,12 @@ def pdf():
                 "notes": note or "",
                 "source": "admin"
             }
-            save_bookings(bookings)
+            # CRITICAL FIX: same severe, real bug already found and fixed
+            # for records - save_bookings() did a genuine, complete
+            # delete-then-recreate cycle across the ENTIRE collection,
+            # a real risk of silently destroying concurrently-created
+            # bookings. Now writes ONLY this one, specific new booking.
+            save_single_booking(doc_number, bookings[doc_number])
 
         import io
         response = send_file(io.BytesIO(pdf_bytes), as_attachment=False,
@@ -1796,7 +1835,9 @@ def pdf_all():
                 "notes": note or "",
                 "source": "admin"
             }
-            save_bookings(bookings)
+            # CRITICAL FIX: same severe, real bug already found and fixed
+            # for records - writes ONLY this one, specific new booking.
+            save_single_booking(doc_number, bookings[doc_number])
 
             generated.append({
                 "number": doc_number,
@@ -1922,7 +1963,9 @@ def booking_invoice():
         # client_id if this specific request doesn't resupply one.
         if client_id:
             bookings[source_token]["client_id"] = client_id
-        save_bookings(bookings)
+        # CRITICAL FIX: same severe, real bug already found and fixed for
+        # records - writes ONLY this one, specific booking.
+        save_single_booking(source_token, bookings[source_token])
 
         with open(out_path, "rb") as f:
             pdf_bytes = f.read()
@@ -2057,7 +2100,9 @@ def manual_invoice():
             bookings[source_token]["invoice_url"] = pdf_url or ""
             bookings[source_token]["status"] = "INVOICED"
             bookings[source_token]["updated_at"] = datetime.datetime.now().isoformat()
-            save_bookings(bookings)
+            # CRITICAL FIX: same severe, real bug already found and fixed
+            # for records - writes ONLY this one, specific booking.
+            save_single_booking(source_token, bookings[source_token])
         elif not source_token:
             bookings[doc_number] = {
                 "token": doc_number,
@@ -2100,7 +2145,9 @@ def manual_invoice():
                 "notes": note or "",
                 "source": "admin_manual"
             }
-            save_bookings(bookings)
+            # CRITICAL FIX: same severe, real bug already found and fixed
+            # for records - writes ONLY this one, specific new booking.
+            save_single_booking(doc_number, bookings[doc_number])
 
         response = send_file(out_path, as_attachment=False,
                              download_name=f"{doc_number}.pdf",
@@ -2215,8 +2262,14 @@ def batch_delete_records():
             r["deleted"] = True
             r["deleted_at"] = datetime.datetime.now().isoformat()
             write_audit_log("record_deleted", {"number": r.get("number"), "batch": True})
+            # CRITICAL FIX: save_records() did a genuine, complete
+            # delete-then-recreate cycle across the ENTIRE collection -
+            # confirmed live to silently destroy real, unrelated,
+            # concurrently-created records. Now writes ONLY this one,
+            # specific record that actually changed - never touches any
+            # other document, so no real race condition is possible.
+            save_single_record(r)
             deleted_count += 1
-    save_records(records)
     return jsonify({"success": True, "deleted_count": deleted_count})
 
 @app.route("/records/delete", methods=["POST"])
@@ -2237,17 +2290,21 @@ def delete_record_route():
         password_ok = (password == stored_pass)
     if not password_ok:
         return jsonify({"error": "Password required to delete a record."}), 403
-    for r in records:
-        if r.get("number") == number:
-            r["deleted"] = True
-            r["deleted_at"] = datetime.datetime.now().isoformat()
-            write_audit_log("record_deleted", {
-                "number": number,
-                "doc_type": r.get("doc_type", ""),
-                "client_name": r.get("client_name", ""),
-                "total_usd": r.get("total_usd", 0)
-            })
-    save_records(records)
+    if not rec:
+        return jsonify({"error": "Record not found"}), 404
+    rec["deleted"] = True
+    rec["deleted_at"] = datetime.datetime.now().isoformat()
+    write_audit_log("record_deleted", {
+        "number": number,
+        "doc_type": rec.get("doc_type", ""),
+        "client_name": rec.get("client_name", ""),
+        "total_usd": rec.get("total_usd", 0)
+    })
+    # CRITICAL FIX: was calling save_records(records) - a genuine,
+    # complete delete-then-recreate cycle across the ENTIRE collection,
+    # confirmed live to silently destroy real, unrelated, concurrently-
+    # created records. Now writes ONLY this one, specific record.
+    save_single_record(rec)
     return jsonify({"success": True})
 
 @app.route("/records/mark_paid", methods=["POST"])
@@ -2296,7 +2353,12 @@ def mark_paid():
         "recorded_at": datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
     })
 
-    save_records(records)
+    # CRITICAL FIX: was calling save_records(records) - a genuine,
+    # complete delete-then-recreate cycle across the ENTIRE collection,
+    # confirmed live to silently destroy real, unrelated, concurrently-
+    # created records. Now writes ONLY this one, specific real payment
+    # record - never touches any other document.
+    save_single_record(rec)
 
     # Sync CRM the moment full settlement actually happens - previously this only
     # happened inside generate_receipt, so an invoice could be fully paid in the Log
@@ -2313,7 +2375,9 @@ def mark_paid():
             bookings[matching_token]["payment_method"] = payment_mode
             bookings[matching_token]["payment_ref"] = payment_ref
             bookings[matching_token]["updated_at"] = datetime.datetime.now().isoformat()
-            save_bookings(bookings)
+            # CRITICAL FIX: same severe, real bug already found and fixed
+            # for records - writes ONLY this one, specific booking.
+            save_single_booking(matching_token, bookings[matching_token])
 
     return jsonify({"success": True, "balance": round(total - new_total_paid, 2),
                     "fully_paid": new_total_paid >= total})
@@ -2450,7 +2514,12 @@ def generate_receipt():
             "receipt": receipt_number
         })
 
-    save_records(records)
+    # CRITICAL FIX: was calling save_records(records) - a genuine,
+    # complete delete-then-recreate cycle across the ENTIRE collection,
+    # confirmed live to silently destroy real, unrelated, concurrently-
+    # created records. Now writes ONLY this one, specific real invoice
+    # record whose payment_log we just updated.
+    save_single_record(rec)
     save_record("Receipt", rec.get("client_name", ""), rec.get("client_email", ""),
                 paid_amount, receipt_number,
                 extra={"pdf_url": receipt_pdf_url or "",
@@ -2468,7 +2537,9 @@ def generate_receipt():
             bookings[matching_token]["payment_method"] = payment_mode
             bookings[matching_token]["payment_ref"] = payment_ref
             bookings[matching_token]["updated_at"] = datetime.datetime.now().isoformat()
-            save_bookings(bookings)
+            # CRITICAL FIX: same severe, real bug already found and fixed
+            # for records - writes ONLY this one, specific booking.
+            save_single_booking(matching_token, bookings[matching_token])
 
     response = send_file(out_path, as_attachment=False,
                          download_name=f"{receipt_number}.pdf",
@@ -2488,7 +2559,11 @@ def update_record_whatsapp():
     if not rec:
         return jsonify({"error": "Record not found"}), 404
     rec["client_whatsapp"] = whatsapp
-    save_records(records)
+    # CRITICAL FIX: was calling save_records(records) - a genuine,
+    # complete delete-then-recreate cycle across the ENTIRE collection,
+    # confirmed live to silently destroy real, unrelated, concurrently-
+    # created records. Now writes ONLY this one, specific record.
+    save_single_record(rec)
     return jsonify({"success": True})
 
 @app.route("/records/edit", methods=["POST"])
@@ -2520,7 +2595,11 @@ def edit_record():
     if data.get("date"):
         rec["date"] = data["date"]
 
-    save_records(records)
+    # CRITICAL FIX: was calling save_records(records) - a genuine,
+    # complete delete-then-recreate cycle across the ENTIRE collection,
+    # confirmed live to silently destroy real, unrelated, concurrently-
+    # created records. Now writes ONLY this one, specific record.
+    save_single_record(rec)
     return jsonify({"success": True})
 
 @app.route("/airports", methods=["GET"])
@@ -3352,7 +3431,9 @@ def booking_request():
             "payment_ref": "",
             "notes": ""
         }
-        save_bookings(bookings)
+        # CRITICAL FIX: same severe, real bug already found and fixed for
+        # records - writes ONLY this one, specific new booking.
+        save_single_booking(token, bookings[token])
         wa = get_whatsapp()
         notify_lines = [
             "NEW CHARTER REQUEST",
@@ -3461,7 +3542,9 @@ def booking_pdf():
         if token in bookings:
             bookings[token]["pdf_url"] = pdf_url or ""
             bookings[token]["updated_at"] = datetime.datetime.now().isoformat()
-            save_bookings(bookings)
+            # CRITICAL FIX: same severe, real bug already found and fixed
+            # for records - writes ONLY this one, specific booking.
+            save_single_booking(token, bookings[token])
         response = send_file(out_path, as_attachment=False,
                              download_name=f"{token}.pdf",
                              mimetype="application/pdf")
@@ -3507,7 +3590,9 @@ def booking_update():
         bookings[token]["payment_ref"] = data["payment_ref"]
     if data.get("payment_method"):
         bookings[token]["payment_method"] = data["payment_method"]
-    save_bookings(bookings)
+    # CRITICAL FIX: same severe, real bug already found and fixed for
+    # records - writes ONLY this one, specific booking.
+    save_single_booking(token, bookings[token])
     return jsonify({"success": True})
 
 @app.route("/bookings", methods=["GET"])
@@ -3538,7 +3623,9 @@ def booking_invoice_request():
     bookings[token]["invoice_requested"] = True
     bookings[token]["invoice_requested_at"] = datetime.datetime.now().isoformat()
     bookings[token]["updated_at"] = datetime.datetime.now().isoformat()
-    save_bookings(bookings)
+    # CRITICAL FIX: same severe, real bug already found and fixed for
+    # records - writes ONLY this one, specific booking.
+    save_single_booking(token, bookings[token])
     return jsonify({"success": True, "token": token})
 @app.route("/bookings/delete", methods=["POST"])
 @login_required
@@ -3562,7 +3649,11 @@ def delete_bookings():
                 "client_name": bookings[token].get("client_name", ""),
                 "total_usd": bookings[token].get("total_usd", 0)
             })
-    save_bookings(bookings)
+            # CRITICAL FIX: same severe, real bug already found and fixed
+            # for records - genuinely batch operation, writes each
+            # specific booking individually rather than the whole
+            # collection at once.
+            save_single_booking(token, bookings[token])
     return jsonify({"success": True, "deleted": deleted})
 @app.route("/debug/pdf_test", methods=["GET"])
 @login_required
