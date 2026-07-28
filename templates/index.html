@@ -4082,15 +4082,12 @@ async function confirmEdit() {
 }
 
 function promptDelete(number) {
-  let rec = allRecords.find(r => r.number === number);
-  if (rec && (rec.paid || parseFloat(rec.paid_amount || 0) > 0)) {
-    document.getElementById('delete-record-number').value = number;
-    document.getElementById('delete-password').value = '';
-    document.getElementById('delete-msg').innerHTML = '';
-    document.getElementById('delete-modal').classList.add('active');
-  } else {
-    if (confirm('⚠️ WARNING: Deleting this record is permanent and cannot be undone.\n\nThe document and all associated data will be lost forever.\n\nAre you sure?')) deleteRecord(number, '');
-  }
+  // FIX: per explicit decision, EVERY deletion now requires the real
+  // password, not just paid records - for a genuine, complete audit trail.
+  document.getElementById('delete-record-number').value = number;
+  document.getElementById('delete-password').value = '';
+  document.getElementById('delete-msg').innerHTML = '';
+  document.getElementById('delete-modal').classList.add('active');
 }
 
 function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('active'); }
