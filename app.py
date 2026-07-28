@@ -522,7 +522,7 @@ def next_record_number(doc_type="Quotation", token_override=None):
         type_code = "Q"
     return generate_token(type_code)
 
-def save_record(record_type, client_name, client_email, amount, doc_number, result=None, extra=None, client_address=None):
+def save_record(record_type, client_name, client_email, amount, doc_number, result=None, extra=None, client_address=None, currency=None):
     records = load_records()
     rec = {
         "number": doc_number,
@@ -534,6 +534,12 @@ def save_record(record_type, client_name, client_email, amount, doc_number, resu
         # places regardless of the tenant's actual currency precision -
         # same bug already found and fixed on QC Aero, never ported here.
         "amount": round_currency(float(amount)),
+        # FIX: same CRM math fix as record_currency on bookings - tag the
+        # real currency at creation time, so the Records tab can convert
+        # each record individually rather than sum/display raw numbers
+        # under a mismatched currency label. Untagged (pre-fix) records
+        # intentionally, safely have no such field.
+        "record_currency": currency or "",
         "date": datetime.date.today().strftime("%d/%m/%Y"),
         "timestamp": datetime.datetime.now().isoformat(),
         "result_summary": result or {},
@@ -1617,7 +1623,7 @@ def pdf():
             "pdf_url": pdf_url or "",
             "client_phone": client_phone,
             "client_whatsapp": client_phone
-        })
+        }, currency=currency)
         if True:
             bookings = load_bookings()
             route_summary = ""
@@ -1749,7 +1755,7 @@ def pdf_all():
             save_record(doc_type, client_name, client_email, total, doc_number, {
                 "ac_label": res.get("ac_label", ""),
                 "mission": actual.get("mission", "")
-            })
+            }, currency=payload.get("currency", ""))
 
             bookings = load_bookings()
             route_summary = ""
@@ -1905,7 +1911,7 @@ def booking_invoice():
         pdf_url = upload_pdf_to_firebase(out_path, doc_number)
 
         save_record("Invoice", client_name, client_email, final_total, doc_number,
-                    extra={"pdf_url": pdf_url or ""}, client_address=client_address)
+                    extra={"pdf_url": pdf_url or ""}, client_address=client_address, currency=payload.get("currency", ""))
 
         bookings[source_token]["invoice_number"] = doc_number
         bookings[source_token]["invoice_url"] = pdf_url or ""
@@ -2043,7 +2049,7 @@ def manual_invoice():
         hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_firebase(out_path, doc_number)
         save_record(doc_type, client_name, client_email, total, doc_number,
-                    extra={"pdf_url": pdf_url or ""}, client_address=client_address)
+                    extra={"pdf_url": pdf_url or ""}, client_address=client_address, currency=pri_cur)
 
         bookings = load_bookings()
         if source_token and source_token in bookings:
@@ -2413,7 +2419,7 @@ def generate_receipt():
     save_record("Receipt", rec.get("client_name", ""), rec.get("client_email", ""),
                 paid_amount, receipt_number,
                 extra={"pdf_url": receipt_pdf_url or "",
-                       "client_whatsapp": rec.get("client_whatsapp", "")})
+                       "client_whatsapp": rec.get("client_whatsapp", "")}, currency=pri_cur)
 
     if rec.get("paid"):
         bookings = load_bookings()
@@ -3415,7 +3421,7 @@ def booking_pdf():
             "ac_label": result.get("ac_label", ""),
             "mission": result.get("mission", ""),
             "source": "client"
-        }, client_address=client_address)
+        }, client_address=client_address, currency=payload.get("currency", ""))
         bookings = load_bookings()
         if token in bookings:
             bookings[token]["pdf_url"] = pdf_url or ""
