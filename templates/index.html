@@ -183,46 +183,54 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .search-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 .search-bar input { flex: 1; min-width: 200px; }
 
-/* RECORDS TAB REDESIGN - real, established QC Aero brand tokens:
-   #0a0a0a near-black, #1a56db accent blue, Inter body, Space Mono labels.
-   Entirely new, dedicated classes rather than overriding the shared
-   .card/.db-table/.filter-tab used elsewhere, avoiding any CSS
-   specificity conflict with other tabs. */
-.rec-panel { background:#0a0a0a; border-radius:14px; padding:20px 18px; margin-bottom:16px; color:#e8e8e8; }
-.rec-panel h3 { font-family:'Inter',sans-serif; font-size:0.95rem; font-weight:700; color:#fff; margin-bottom:4px; }
-.rec-subtitle { font-size:0.78rem; color:#888; margin-bottom:18px; line-height:1.5; }
+/* RECORDS TAB REDESIGN - genuinely black and white per direct feedback:
+   no blue, no dark panel background. Weight, borders, and opacity carry
+   the visual hierarchy instead of color. Entirely new, dedicated classes
+   rather than overriding the shared .card/.db-table/.filter-tab used
+   elsewhere, avoiding any CSS specificity conflict with other tabs. */
+.rec-panel { background:#fff; border:1.5px solid #0a0a0a; border-radius:14px; padding:20px 18px; margin-bottom:16px; color:#0a0a0a; }
+.rec-panel h3 { font-family:'Inter',sans-serif; font-size:0.95rem; font-weight:700; color:#0a0a0a; margin-bottom:4px; }
+.rec-subtitle { font-size:0.78rem; color:#666; margin-bottom:18px; line-height:1.5; }
 
-.rec-mq-toggle { cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#151515; border-radius:10px; border:1px solid #262626; margin-bottom:0; user-select:none; }
-.rec-mq-toggle-label { font-family:'Space Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.12em; color:#1a56db; font-weight:700; }
-.rec-mq-toggle-icon { color:#666; font-size:1.1rem; transition:transform 0.2s ease; display:inline-block; }
+.rec-mq-toggle { cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#f5f5f5; border-radius:10px; border:1px solid #0a0a0a; margin-bottom:0; user-select:none; }
+.rec-mq-toggle-label { font-family:'Space Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.12em; color:#0a0a0a; font-weight:700; }
+.rec-mq-toggle-icon { color:#0a0a0a; font-size:1.1rem; transition:transform 0.2s ease; display:inline-block; }
 .rec-mq-toggle.open .rec-mq-toggle-icon { transform:rotate(45deg); }
 .rec-mq-body { max-height:0; overflow:hidden; transition:max-height 0.25s ease; }
 .rec-mq-body.open { max-height:4000px; padding-top:18px; }
-.rec-mq-body .form-group label, .rec-mq-body .form-group-full label { color:#999; }
-.rec-mq-body input, .rec-mq-body textarea, .rec-mq-body select { background:#151515; border:1px solid #2a2a2a; color:#fff; }
-.rec-mq-body input::placeholder, .rec-mq-body textarea::placeholder { color:#555; }
-.rec-mq-body .toggle-row label { color:#ccc; }
+.rec-mq-body .form-group label, .rec-mq-body .form-group-full label { color:#333; }
+.rec-mq-body input, .rec-mq-body textarea, .rec-mq-body select { background:#fff; border:1px solid #ccc; color:#0a0a0a; }
+.rec-mq-body input::placeholder, .rec-mq-body textarea::placeholder { color:#999; }
+.rec-mq-body .toggle-row label { color:#333; }
 
 .rec-filter-tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
-.rec-filter-tab { padding:8px 14px; border-radius:20px; border:1.5px solid #262626; color:#999; background:#151515; cursor:pointer; font-size:0.8rem; font-weight:600; transition:all 0.2s; min-height:38px; font-family:'Inter',sans-serif; }
-.rec-filter-tab.active { background:#1a56db; color:#fff; border-color:#1a56db; }
+.rec-filter-tab { padding:8px 14px; border-radius:20px; border:1.5px solid #0a0a0a; color:#0a0a0a; background:#fff; cursor:pointer; font-size:0.8rem; font-weight:600; transition:all 0.2s; min-height:38px; font-family:'Inter',sans-serif; }
+.rec-filter-tab.active { background:#0a0a0a; color:#fff; border-color:#0a0a0a; }
 
 .rec-search-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
-.rec-search-bar input, .rec-search-bar select { background:#151515; border:1.5px solid #262626; color:#fff; flex:1; min-width:180px; }
-.rec-search-bar input::placeholder { color:#555; }
+.rec-search-bar input, .rec-search-bar select { background:#fff; border:1.5px solid #ccc; color:#0a0a0a; flex:1; min-width:180px; }
+.rec-search-bar input::placeholder { color:#999; }
 
-.rec-group-header td { font-family:'Space Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.18em; font-weight:700; padding:14px 4px 8px !important; border-bottom:1px solid #262626 !important; background:transparent !important; }
-.rec-group-header.attention td { color:#f59e0b; }
-.rec-group-header.quotations td { color:#888; }
-.rec-group-header.settled td { color:#4ade80; opacity:0.7; }
+.rec-group-header td { font-family:'Space Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.18em; font-weight:700; color:#0a0a0a; padding:14px 4px 8px !important; background:transparent !important; }
+.rec-group-header.attention td { border-bottom:2px solid #0a0a0a !important; }
+.rec-group-header.quotations td { border-bottom:1px solid #999 !important; color:#666; }
+.rec-group-header.settled td { border-bottom:1px solid #ccc !important; color:#999; }
 
 .rec-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 .rec-table { width:100%; border-collapse:collapse; font-size:0.84rem; min-width:500px; }
-.rec-table th { background:#151515; color:#888; font-family:'Space Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; padding:10px 12px; text-align:left; white-space:nowrap; border-bottom:1px solid #262626; }
-.rec-table td { padding:10px 12px; border-bottom:1px solid #1a1a1a; vertical-align:middle; color:#ddd; }
-.rec-table tr.rec-settled-row td { opacity:0.6; }
-.rec-table tr:hover td { background:#141414; }
+.rec-table th { background:#f5f5f5; color:#0a0a0a; font-family:'Space Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; padding:10px 12px; text-align:left; white-space:nowrap; border-bottom:1.5px solid #0a0a0a; }
+.rec-table td { padding:10px 12px; border-bottom:1px solid #eee; vertical-align:middle; color:#1a1a1a; }
+.rec-table tr.rec-settled-row td { opacity:0.55; }
+.rec-table tr:hover td { background:#f8f8f8; }
 .rec-mono { font-family:'Space Mono',monospace; }
+
+/* FIX: buttons on individual document rows were the same plain, generic
+.btn-outline/.btn-danger/.btn-sm styling as everywhere else in the app -
+worth a slightly cleaner, more deliberate treatment here specifically,
+since this is the densest, most action-heavy row in the whole product. */
+.rec-table .btn-sm { border-radius:6px; font-weight:600; }
+.rec-table .btn-outline { border:1.5px solid #0a0a0a; color:#0a0a0a; background:#fff; }
+.rec-table .btn-outline:hover { background:#0a0a0a; color:#fff; }
 
 /* LEG ROWS */
 .leg-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
@@ -3833,7 +3841,13 @@ async function loadRecords() {
 
 function filterRecordsByType(type, el) {
   currentRecordFilter = type;
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  // FIX: was querying the old '.filter-tab' class - the Records redesign
+  // renamed the real HTML class to '.rec-filter-tab' to avoid CSS
+  // specificity conflicts with other tabs, but this one selector never
+  // got updated to match. Silently found nothing, so 'active' never got
+  // removed from a previously-tapped tab - each tap just kept adding it
+  // to a new one, accumulating forever.
+  document.querySelectorAll('.rec-filter-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   filterRecords();
 }
@@ -3869,15 +3883,20 @@ function getPaymentActions(rec) {
   let paid = parseFloat(rec.paid_amount || 0);
   let fullyPaid = paid >= total && total > 0;
   let hasLog = (rec.payment_log || []).length > 0;
-  let viewBtn = hasLog ? `<button class="btn btn-info btn-sm" onclick="openLogModal('${rec.number}')">Log</button>` : '';
+  // FIX: "Log" had no explanation at all - easy to mistake for a way to
+  // record a NEW payment, when it actually only opens a read-only view of
+  // past payments already logged (openLogModal genuinely never writes
+  // anything). Real, accurate helper text via native title tooltip.
+  let viewBtn = hasLog ? `<button class="btn btn-info btn-sm" title="View payment history" onclick="openLogModal('${rec.number}')">Log</button>` : '';
   if (fullyPaid && rec.receipt_number) {
-    return `${viewBtn} <span style="font-size:0.75rem;color:#1b5e20;font-weight:700">${rec.receipt_number}</span>`;
+    return `${viewBtn} <span style="font-size:0.75rem;color:#1b5e20;font-weight:700" title="Receipt already generated">${rec.receipt_number}</span>`;
   }
   if (fullyPaid && !rec.receipt_number) {
-    return `${viewBtn} <button class="btn btn-success btn-sm" onclick="openPaidModal('${rec.number}')">Receipt</button>`;
+    return `${viewBtn} <button class="btn btn-success btn-sm" title="Generate the receipt for this fully-paid invoice" onclick="openPaidModal('${rec.number}')">Receipt</button>`;
   }
   let label = paid > 0 ? 'Update' : 'Pay';
-  return `${viewBtn} <button class="btn btn-amber btn-sm" onclick="openPaidModal('${rec.number}')">${label}</button>`;
+  let title = paid > 0 ? 'Record another payment toward the remaining balance' : 'Record a payment against this invoice';
+  return `${viewBtn} <button class="btn btn-amber btn-sm" title="${title}" onclick="openPaidModal('${rec.number}')">${label}</button>`;
 }
 
 // BATCH DELETE (item 8, updated bug list) - explicit decision: every
@@ -3964,9 +3983,9 @@ function buildRecordRow(r) {
       <td>${getPaymentBadge(r)}</td>
       <td style="white-space:nowrap">
         ${getPaymentActions(r)}
-        <button class="btn btn-outline btn-sm" style="background:#25D366;color:#fff;border:none" onclick="openShareModal('${r.number}','${r.pdf_url||''}','${r.number}','${r.type||'Document'}',{clientName:'${(r.client_name||'').replace(/'/g,'\\\'').replace(/"/g,'')}',finalTotal:${parseFloat(r.amount||0)},token:'${r.number}',clientEmail:'${(r.client_email||'').replace(/'/g,'\\\'').replace(/"/g,'')}',route:'${(r.route_summary||'').replace(/'/g,'\\\'').replace(/"/g,'')}',acLabel:'${(r.ac_label||'').replace(/'/g,'\\\'').replace(/"/g,'')}' })">📤</button>
-        <button class="btn btn-outline btn-sm" onclick="openEditModal('${r.number}')">Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.number}')">Del</button>
+        <button class="btn btn-outline btn-sm" title="Share via WhatsApp or email" style="background:#25D366;color:#fff;border:none" onclick="openShareModal('${r.number}','${r.pdf_url||''}','${r.number}','${r.type||'Document'}',{clientName:'${(r.client_name||'').replace(/'/g,'\\\'').replace(/"/g,'')}',finalTotal:${parseFloat(r.amount||0)},token:'${r.number}',clientEmail:'${(r.client_email||'').replace(/'/g,'\\\'').replace(/"/g,'')}',route:'${(r.route_summary||'').replace(/'/g,'\\\'').replace(/"/g,'')}',acLabel:'${(r.ac_label||'').replace(/'/g,'\\\'').replace(/"/g,'')}' })">📤</button>
+        <button class="btn btn-outline btn-sm" title="Edit client details or amount" onclick="openEditModal('${r.number}')">Edit</button>
+        <button class="btn btn-danger btn-sm" title="Permanently delete this record" onclick="promptDelete('${r.number}')">Del</button>
       </td>
     </tr>`;
 }
