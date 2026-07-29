@@ -6,7 +6,11 @@
 <title>{{ operator.company_name }} — Admin</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<!-- FIX: Space Mono was referenced throughout the codebase
+(.settings-group-label, .settings-badge-frontend) but never actually
+imported - silently falling back to generic monospace this whole time.
+Added here, ahead of the Records tab redesign which leans heavily on it. -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background: #f4f6f9; color: #1a1a1a; padding-bottom: 70px; }
@@ -178,6 +182,47 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 /* SEARCH BAR */
 .search-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 .search-bar input { flex: 1; min-width: 200px; }
+
+/* RECORDS TAB REDESIGN - real, established QC Aero brand tokens:
+   #0a0a0a near-black, #1a56db accent blue, Inter body, Space Mono labels.
+   Entirely new, dedicated classes rather than overriding the shared
+   .card/.db-table/.filter-tab used elsewhere, avoiding any CSS
+   specificity conflict with other tabs. */
+.rec-panel { background:#0a0a0a; border-radius:14px; padding:20px 18px; margin-bottom:16px; color:#e8e8e8; }
+.rec-panel h3 { font-family:'Inter',sans-serif; font-size:0.95rem; font-weight:700; color:#fff; margin-bottom:4px; }
+.rec-subtitle { font-size:0.78rem; color:#888; margin-bottom:18px; line-height:1.5; }
+
+.rec-mq-toggle { cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#151515; border-radius:10px; border:1px solid #262626; margin-bottom:0; user-select:none; }
+.rec-mq-toggle-label { font-family:'Space Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.12em; color:#1a56db; font-weight:700; }
+.rec-mq-toggle-icon { color:#666; font-size:1.1rem; transition:transform 0.2s ease; display:inline-block; }
+.rec-mq-toggle.open .rec-mq-toggle-icon { transform:rotate(45deg); }
+.rec-mq-body { max-height:0; overflow:hidden; transition:max-height 0.25s ease; }
+.rec-mq-body.open { max-height:4000px; padding-top:18px; }
+.rec-mq-body .form-group label, .rec-mq-body .form-group-full label { color:#999; }
+.rec-mq-body input, .rec-mq-body textarea, .rec-mq-body select { background:#151515; border:1px solid #2a2a2a; color:#fff; }
+.rec-mq-body input::placeholder, .rec-mq-body textarea::placeholder { color:#555; }
+.rec-mq-body .toggle-row label { color:#ccc; }
+
+.rec-filter-tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+.rec-filter-tab { padding:8px 14px; border-radius:20px; border:1.5px solid #262626; color:#999; background:#151515; cursor:pointer; font-size:0.8rem; font-weight:600; transition:all 0.2s; min-height:38px; font-family:'Inter',sans-serif; }
+.rec-filter-tab.active { background:#1a56db; color:#fff; border-color:#1a56db; }
+
+.rec-search-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.rec-search-bar input, .rec-search-bar select { background:#151515; border:1.5px solid #262626; color:#fff; flex:1; min-width:180px; }
+.rec-search-bar input::placeholder { color:#555; }
+
+.rec-group-header td { font-family:'Space Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.18em; font-weight:700; padding:14px 4px 8px !important; border-bottom:1px solid #262626 !important; background:transparent !important; }
+.rec-group-header.attention td { color:#f59e0b; }
+.rec-group-header.quotations td { color:#888; }
+.rec-group-header.settled td { color:#4ade80; opacity:0.7; }
+
+.rec-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.rec-table { width:100%; border-collapse:collapse; font-size:0.84rem; min-width:500px; }
+.rec-table th { background:#151515; color:#888; font-family:'Space Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; padding:10px 12px; text-align:left; white-space:nowrap; border-bottom:1px solid #262626; }
+.rec-table td { padding:10px 12px; border-bottom:1px solid #1a1a1a; vertical-align:middle; color:#ddd; }
+.rec-table tr.rec-settled-row td { opacity:0.6; }
+.rec-table tr:hover td { background:#141414; }
+.rec-mono { font-family:'Space Mono',monospace; }
 
 /* LEG ROWS */
 .leg-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
@@ -597,10 +642,14 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     All documents are stored securely on Google Firebase infrastructure with tenant-level data isolation. Your documents are never accessible to other operators on the platform.<br><br>
     <strong>Data security recommendations:</strong> Never share your admin password. Log out when using shared devices. Export important records periodically by downloading PDFs. Deletion of any record is permanent and irreversible — there is no recycle bin.
   </div>
-  <div class="card">
-    <h3>Create Manual Quote</h3>
-    <div style="font-size:0.78rem;color:#666;background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 14px;margin-bottom:16px;line-height:1.6">
-      This tool generates <strong>Quotations only</strong>. Every quote is saved to CRM automatically. To upgrade to an Invoice, navigate to <strong>Enquiries</strong> and use the Invoice Builder there.
+  <div class="rec-panel">
+    <div class="rec-mq-toggle" id="rec-mq-toggle" onclick="toggleManualQuote()">
+      <span class="rec-mq-toggle-label">+ Create Manual Quote</span>
+      <span class="rec-mq-toggle-icon">+</span>
+    </div>
+    <div class="rec-mq-body" id="rec-mq-body">
+    <div style="font-size:0.78rem;color:#999;background:#151515;border:1px solid #262626;border-radius:6px;padding:10px 14px;margin-bottom:16px;line-height:1.6">
+      This tool generates <strong style="color:#1a56db">Quotations only</strong>. Every quote is saved to CRM automatically. To upgrade to an Invoice, navigate to <strong>Enquiries</strong> and use the Invoice Builder there.
     </div>
     <!-- FIX (item 7, updated bug list): client tokenization - purely
     opt-in search, existing clients auto-fill the fields below. The
@@ -609,7 +658,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     <div class="form-group" style="position:relative">
       <label>Search Existing Client <span style="font-weight:400;color:#888">(optional)</span></label>
       <input type="text" id="mi-client-search" placeholder="Search by name, phone, or email..." autocomplete="off" oninput="searchClientsFor('mi')">
-      <div id="mi-client-results" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;display:none"></div>
+      <div id="mi-client-results" style="position:absolute;top:100%;left:0;right:0;background:#151515;border:1px solid #262626;border-top:none;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.4);max-height:220px;overflow-y:auto;display:none"></div>
     </div>
     <input type="hidden" id="mi-client-id" value="">
     <div class="form-row">
@@ -622,7 +671,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <input type="checkbox" id="mi-create-new-client" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
       <label for="mi-create-new-client" style="cursor:pointer">Create new client ID for this person</label>
     </div>
-    <div style="font-size:0.72rem;color:#888;margin-bottom:14px;line-height:1.5">Saves this client's details as a permanent record — lets you search and reuse them on future documents without retyping.</div>
+    <div style="font-size:0.72rem;color:#666;margin-bottom:14px;line-height:1.5">Saves this client's details as a permanent record — lets you search and reuse them on future documents without retyping.</div>
     <div style="margin-bottom:14px">
       <label style="margin-bottom:8px;display:block">Line Items</label>
       <div id="mi-items">
@@ -641,32 +690,34 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     <div class="form-group-full"><label>Terms & Conditions</label><textarea id="mi-terms" rows="8"></textarea></div>
     <button class="btn btn-block" id="mi-generate-btn" onclick="createManualInvoice()">Generate Quote PDF</button>
     <div id="mi-msg"></div>
+    </div>
   </div>
 
-  <div class="card">
+  <div class="rec-panel">
     <h3>All Records</h3>
-    <div class="filter-tabs">
-      <div class="filter-tab active" onclick="filterRecordsByType('all',this)">All</div>
-      <div class="filter-tab" onclick="filterRecordsByType('Quotation',this)">Quotes</div>
-      <div class="filter-tab" onclick="filterRecordsByType('Invoice',this)">Invoices</div>
-      <div class="filter-tab" onclick="filterRecordsByType('Receipt',this)">Receipts</div>
+    <div class="rec-subtitle">Every quotation, invoice, and receipt QC Aero has generated, grouped by what needs your attention first.</div>
+    <div class="rec-filter-tabs">
+      <div class="rec-filter-tab active" onclick="filterRecordsByType('all',this)">All</div>
+      <div class="rec-filter-tab" onclick="filterRecordsByType('Quotation',this)">Quotes</div>
+      <div class="rec-filter-tab" onclick="filterRecordsByType('Invoice',this)">Invoices</div>
+      <div class="rec-filter-tab" onclick="filterRecordsByType('Receipt',this)">Receipts</div>
     </div>
-    <div class="search-bar">
-      <input type="text" id="rec-search" placeholder="Search by client name or reference code..." oninput="filterRecords()" style="flex:2;min-width:0">
-      <select id="rec-sort" onchange="filterRecords()" style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;background:#fff;min-height:44px;min-width:150px">
+    <div class="rec-search-bar">
+      <input type="text" id="rec-search" placeholder="Search by client name or reference code..." oninput="filterRecords()">
+      <select id="rec-sort" onchange="filterRecords()" style="padding:10px;border-radius:10px;font-size:0.82rem;min-height:44px;min-width:150px">
         <option value="newest">Newest First</option>
         <option value="oldest">Oldest First</option>
         <option value="amount_desc">Highest Amount</option>
         <option value="amount_asc">Lowest Amount</option>
       </select>
     </div>
-    <div id="rec-batch-bar" style="display:none;align-items:center;gap:10px;background:#fdecea;border:1.5px solid #dc3545;border-radius:8px;padding:10px 14px;margin-bottom:12px">
-      <span id="rec-selected-count" style="font-size:0.82rem;color:#c62828;font-weight:600"></span>
+    <div id="rec-batch-bar" style="display:none;align-items:center;gap:10px;background:#2a1515;border:1.5px solid #dc3545;border-radius:8px;padding:10px 14px;margin-bottom:12px">
+      <span id="rec-selected-count" style="font-size:0.82rem;color:#ff6b6b;font-weight:600"></span>
       <button class="btn btn-danger btn-sm" onclick="promptBatchDelete()">Delete Selected</button>
       <button class="btn btn-outline btn-sm" onclick="toggleAllRecords(false)">Clear Selection</button>
     </div>
-    <div class="db-table-wrap">
-      <table class="db-table">
+    <div class="rec-table-wrap">
+      <table class="rec-table">
         <thead><tr><th style="width:36px"><input type="checkbox" id="rec-select-all" onchange="toggleAllRecords(this.checked)" style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox"></th><th>Number</th><th>Date</th><th>Type</th><th>Client</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="rec-tbody"></tbody>
       </table>
@@ -3863,17 +3914,32 @@ function promptBatchDelete() {
   document.getElementById('delete-modal').classList.add('active');
 }
 
+// FIX (Records tab redesign): the manual quote maker sitting inside the
+// records list was a real information-architecture problem - creating a
+// document and reviewing existing ones are different tasks. Collapsed by
+// default, expands in place.
+function toggleManualQuote() {
+  let body = document.getElementById('rec-mq-body');
+  let toggle = document.getElementById('rec-mq-toggle');
+  let isOpen = body.classList.toggle('open');
+  toggle.classList.toggle('open', isOpen);
+  toggle.querySelector('.rec-mq-toggle-label').textContent = isOpen ? '− Create Manual Quote' : '+ Create Manual Quote';
+}
+
 function renderRecords(records) {
   if (!records.length) {
     let q = document.getElementById('rec-search')?.value.trim();
     let msg = q
       ? `No records match "${q}". Try the client name or part of the reference code.`
-      : 'No records yet. Generated quotes, invoices, and receipts will appear here.';
+      : 'Nothing here yet. Generate a quote below and it will show up in this list automatically.';
     document.getElementById('rec-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px 16px;line-height:1.6">${msg}</td></tr>`;
     return;
   }
 
-  document.getElementById('rec-tbody').innerHTML = records.map(r => {
+  document.getElementById('rec-tbody').innerHTML = buildRecordsGrouped(records);
+}
+
+function buildRecordRow(r) {
     let typeKey = (r.type||'').toLowerCase();
     // FIX: batch delete, explicit decision - only unpaid records get a
     // real, tappable checkbox at all. Paid records show a disabled,
@@ -3884,16 +3950,17 @@ function renderRecords(records) {
     let checkboxHtml = isPaid
       ? `<input type="checkbox" disabled title="Has real payment history - delete individually" style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox;opacity:0.35;cursor:not-allowed">`
       : `<input type="checkbox" class="rec-checkbox" value="${r.number}" onchange="updateRecordSelectedCount()" style="width:18px;height:18px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">`;
-    return `<tr>
+    let rowClass = (r.type === 'Invoice' && isPaid) || r.type === 'Receipt' ? ' class="rec-settled-row"' : '';
+    return `<tr${rowClass}>
       <td>${checkboxHtml}</td>
       <td>
-        <strong style="white-space:nowrap">${r.number||'-'}</strong>
-        ${r.pdf_url ? `<a href="${r.pdf_url}" target="_blank" style="display:block;color:#0d47a1;font-size:0.72rem;text-decoration:none;margin-top:2px">📄 View</a>` : ''}
+        <strong class="rec-mono" style="white-space:nowrap">${r.number||'-'}</strong>
+        ${r.pdf_url ? `<a href="${r.pdf_url}" target="_blank" style="display:block;color:#4a90e2;font-size:0.72rem;text-decoration:none;margin-top:2px">📄 View</a>` : ''}
       </td>
-      <td style="white-space:nowrap">${r.date||'-'}</td>
+      <td class="rec-mono" style="white-space:nowrap">${r.date||'-'}</td>
       <td><span class="badge-${typeKey}">${r.type||'-'}</span></td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.client_name||'-'}</td>
-      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(convertToPrimary(r.amount, r.record_currency))}</td>
+      <td class="rec-mono" style="white-space:nowrap">${priCurrency} ${fmtAmt(convertToPrimary(r.amount, r.record_currency))}</td>
       <td>${getPaymentBadge(r)}</td>
       <td style="white-space:nowrap">
         ${getPaymentActions(r)}
@@ -3902,7 +3969,35 @@ function renderRecords(records) {
         <button class="btn btn-danger btn-sm" onclick="promptDelete('${r.number}')">Del</button>
       </td>
     </tr>`;
-  }).join('');
+}
+
+// FIX (Records tab redesign): flat list of every document, regardless of
+// state, made it hard to see what genuinely needed action. Groups records
+// into three real, meaningful sections by actual urgency - grounded in
+// the existing paid/paid_amount/type fields already in the data, not
+// just visual polish.
+function buildRecordsGrouped(records) {
+  let needsAttention = [], quotations = [], settled = [];
+  records.forEach(r => {
+    let fullyPaid = parseFloat(r.paid_amount || 0) >= parseFloat(r.amount || 0) && parseFloat(r.amount || 0) > 0;
+    if (r.type === 'Invoice' && !fullyPaid) needsAttention.push(r);
+    else if (r.type === 'Quotation') quotations.push(r);
+    else settled.push(r);
+  });
+  let html = '';
+  if (needsAttention.length) {
+    html += `<tr class="rec-group-header attention"><td colspan="8">Needs Attention — ${needsAttention.length}</td></tr>`;
+    html += needsAttention.map(buildRecordRow).join('');
+  }
+  if (quotations.length) {
+    html += `<tr class="rec-group-header quotations"><td colspan="8">Quotations — ${quotations.length}</td></tr>`;
+    html += quotations.map(buildRecordRow).join('');
+  }
+  if (settled.length) {
+    html += `<tr class="rec-group-header settled"><td colspan="8">Settled — ${settled.length}</td></tr>`;
+    html += settled.map(buildRecordRow).join('');
+  }
+  return html;
 }
 
 async function openPaidModal(number, lockToFull) {
