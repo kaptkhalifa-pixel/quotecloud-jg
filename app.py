@@ -2000,6 +2000,15 @@ def manual_invoice():
         line_items = data.get("line_items", [])
         doc_type = data.get("doc_type", "Invoice")
         source_token = data.get("source_token", "")
+        # CRITICAL FIX: real, explicit business rule - an Invoice must
+        # always originate from an existing Quotation, never be created
+        # standalone. Same real fix already proven live on QC Aero,
+        # found during stress testing there, where 60 "invoices" were
+        # accidentally created this exact way with zero real quote behind
+        # them. Blocked here, at the one real choke point every manual-
+        # document creation passes through.
+        if not source_token and doc_type == "Invoice":
+            return jsonify({"error": "An Invoice must be created from an existing Quotation. Create a Quotation first, then use the Invoice Builder in Enquiries to convert it."}), 400
         if doc_type in ("Quotation", "Quote"):
             type_code = "Q"
         elif doc_type == "Invoice":
