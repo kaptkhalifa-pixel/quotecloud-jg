@@ -484,7 +484,19 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           <option value="option_b">Option B — Pick & Drop</option>
         </select>
       </div>
-      <input type="hidden" id="pdf-currency" value="USD">
+      <!-- CRITICAL FIX: this was hardcoded to "USD" for every single
+      tenant, regardless of their real, configured primary currency.
+      Since JS reads this field FIRST (document.getElementById('pdf-
+      currency')?.value || priCurrency || 'USD'), the hardcoded, always-
+      truthy "USD" string silently defeated the correct priCurrency
+      fallback entirely - meaning any quote generated without touching
+      the one narrow currency-toggle code path that happened to reset
+      this field got permanently, silently mistagged as USD. Confirmed
+      live: two real KES quotes ended up tagged record_currency=USD,
+      severely distorting the CRM's real totals. Now correctly
+      initialized from the same, real, server-side-computed primary
+      currency used everywhere else on this page. -->
+      <input type="hidden" id="pdf-currency" value="{{ ((operator.get("fx") or {}).get("primary_currency") or (operator.get("quoting_rules") or {}).get("currency") or "USD") }}">
     </div>
     <!-- FIX (item 7, updated bug list): client tokenization, same pattern
     already proven on Manual Quote and Invoice Builder. -->
