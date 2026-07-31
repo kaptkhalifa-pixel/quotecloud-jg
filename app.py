@@ -1235,6 +1235,19 @@ def get_note_segments(result):
     segs = result.get("segments", [])
     return [s for s in segs if s.get("note") and not s.get("type")]
 
+def format_hours_friendly(hrs):
+    # FIX (bug list, item 1) - decimal hours ("1.5 hrs") in the WhatsApp
+    # message read as clinical/confusing to a real client. Friendlier,
+    # everyday format instead.
+    total_minutes = round(float(hrs) * 60)
+    h, m = divmod(total_minutes, 60)
+    if h and m:
+        return f"{h} hr {m} min"
+    elif h:
+        return f"{h} hr"
+    else:
+        return f"{m} min"
+
 def build_routing_lines(segments):
     lines = []
     for s in segments:
@@ -1248,7 +1261,7 @@ def build_routing_lines(segments):
         date = s.get("date", "")
         date_str = f"{date} " if date else ""
         lines.append(
-            f"{date_str}{origin} -> {dest} {float(hrs):.1f} hrs | {float(nm):.1f} NM ({seg_type})"
+            f"{date_str}{origin} -> {dest} {format_hours_friendly(hrs)} | {float(nm):.1f} NM ({seg_type})"
         )
     return lines
 
