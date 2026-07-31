@@ -5451,8 +5451,8 @@ function openInvoiceBuilder(enq) {
       <strong>👻 This quote was generated in Ghost Mode</strong><br>
       <span style="color:#555">The original quotation showed the client one bundled price with no rate breakdown. Choose how this invoice should be presented:</span>
       <div style="margin-top:8px;display:flex;gap:16px">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="ib-ghost-mode" value="1" checked> Keep Ghosted (one lump sum)</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="ib-ghost-mode" value="0"> Itemize this invoice</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0"><input type="radio" name="ib-ghost-mode" value="1" checked style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:radio;appearance:radio;flex-shrink:0"> Keep Ghosted (one lump sum)</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0"><input type="radio" name="ib-ghost-mode" value="0" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:radio;appearance:radio;flex-shrink:0"> Itemize this invoice</label>
       </div>`;
   } else if (ghostChoiceBox) {
     ghostChoiceBox.style.display = 'none';
