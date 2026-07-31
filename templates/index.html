@@ -1375,7 +1375,11 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
 let lastResults = [];
 let fxRates = {};
 let secCurrency = '';
-let _priRate = 1.0;
+// FIX: _priRate removed - genuinely dead code, always 1.0 and never
+// reassigned anywhere, meaning it silently did nothing for its entire
+// life. Its one real usage (the Enquiries per-row amount) is now
+// correctly replaced with convertToPrimary(), same fix already proven
+// live for the summary totals.
 let _fxReady = false;
 let priCurrency = '{{ ((operator.get("fx") or {}).get("primary_currency") or (operator.get("quoting_rules") or {}).get("currency") or "USD") }}';
 let priCurrencySymbol = '{{ ((operator.get("fx") or {}).get("primary_currency") or "USD") }}';
@@ -5345,7 +5349,7 @@ function renderEnquiries(enqs) {
           ${e.total_hrs ? fmtHours(e.total_hrs) : ''}${e.total_nm ? ' · ' + Math.round(e.total_nm) + ' nm' : ''}
         </div>
       </td>
-      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(parseFloat(e.total_usd||0) * _priRate)}</td>
+      <td style="white-space:nowrap">${priCurrency} ${fmtAmt(convertToPrimary(e.total_usd, e.record_currency))}</td>
       <td>${getEnqStatusBadge(e.status)}</td>
       <td style="white-space:nowrap;font-size:0.75rem;color:#4a148c;font-weight:600">
         ${e.invoice_number ? `<span>${e.invoice_number}</span>` : '-'}
