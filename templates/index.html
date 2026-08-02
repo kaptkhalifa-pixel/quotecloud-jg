@@ -484,7 +484,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
 
   <div class="card pdf-section" id="pdf-section" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-      <h3 style="margin:0">Generate Quotation</h3>
+      <h3 id="pdf-section-heading" style="margin:0">Generate Quotation</h3>
       <button class="btn btn-clear btn-sm" onclick="clearQuote()">Clear Quote</button>
     </div>
     <div style="font-size:0.78rem;color:#666;background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 14px;margin-bottom:16px;line-height:1.6">
@@ -1510,6 +1510,8 @@ function clearQuote() {
   let controls = document.getElementById('quote-result-controls');
   if (controls) controls.style.display = 'none';
   document.getElementById('pdf-section').style.display = 'none';
+  let heading1 = document.getElementById('pdf-section-heading');
+  if (heading1) heading1.textContent = 'Generate Quotation';
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','rt-depart','rt-return',
    'pdf-name','pdf-email','pdf-phone','pdf-discount','pdf-notes'].forEach(id => {
     let el = document.getElementById(id);
@@ -1794,6 +1796,8 @@ async function submitQuote(mission) {
     saveStateToStorage();
     renderResults(lastResults);
     document.getElementById('pdf-section').style.display = 'block';
+    let heading0 = document.getElementById('pdf-section-heading');
+    if (heading0) heading0.textContent = 'Generate Quotation';
     populatePdfAircraftSelector();
   } catch(e) {
     document.getElementById('quote-result').innerHTML = `<div class="error-box">Network error: ${e.message}</div>`;
@@ -2094,6 +2098,9 @@ function quickPDF(idx) {
   let sel = document.getElementById('pdf-aircraft-select');
   if (sel) { sel.value = idx; updateOptionSelector(); }
   document.getElementById('pdf-section').style.display = 'block';
+  let heading = document.getElementById('pdf-section-heading');
+  let acLabel = lastResults[idx]?.ac_label || '';
+  if (heading) heading.textContent = acLabel ? `Finalize the ${acLabel} quote below — enter your client's details, then generate the PDF` : 'Generate Quotation';
   document.getElementById('pdf-section').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
@@ -3086,6 +3093,11 @@ async function generatePDF(allAircraft) {
   genDiv.style.cssText = 'margin-top:10px;color:#888';
   genDiv.textContent = 'Generating...';
   document.getElementById('pdf-msg').appendChild(genDiv);
+  // pdfSucceeded only becomes true after the fetch itself succeeds (status ok
+  // and the PDF blob was read) - everything after that is display-only work,
+  // deliberately kept out of THIS try/catch below, so a glitch there can never
+  // again turn an already-successful PDF into a reported failure.
+  let pdfSucceeded = false, blob, docNumber, pdfUrl;
   try {
     let currency = document.getElementById('pdf-currency')?.value || priCurrency || 'USD';
     let kesRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
@@ -3094,62 +3106,82 @@ async function generatePDF(allAircraft) {
     let body = { doc_type: docType, client_name: clientName, client_address: clientAddress, client_email: clientEmail, client_phone: clientPhone, client_id: clientId, discount, note, result, extras, currency, kes_rate: kesRate, ghost_mode: ghostMode };
     let r = await fetch('/pdf', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     if (!r.ok) { let e = await r.json(); let ind2=document.getElementById('pdf-generating-indicator'); if(ind2)ind2.remove(); showMsg('pdf-msg',e.error||'Failed','error'); return; }
-    let pdfUrl = r.headers.get('X-PDF-URL') || '';
-    let docNumber = r.headers.get('X-DOC-NUMBER') || '';
-    let blob = await r.blob();
-    let blobUrl = URL.createObjectURL(blob);
-    try {
-      let a = document.createElement('a'); a.href = blobUrl; a.download = (docNumber||docType.toLowerCase())+'.pdf'; a.click();
-    } catch(dlErr) { console.log('Download error (non-fatal):', dlErr); }
-    let res2 = lastResults[parseInt(document.getElementById('pdf-aircraft-select').value)||0] || {};
-    let acLabel = res2.ac_label || '';
-    let msgIdx = parseInt(document.getElementById('pdf-aircraft-select').value)||0;
-    let msgIsKes = document.getElementById('adj-kes-mode-'+msgIdx)?.checked;
-    let msgKesRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
-    let wasAdj;
-    if (res2._adj_rate !== undefined) {
-      let rateUsdClean = Math.round(res2._adj_rate * 100) / 100;
-      wasAdj = msgIsKes && msgKesRate > 0
-        ? ` · Adjusted Rate: ${secCurrency} ${(Math.ceil(rateUsdClean*msgKesRate/1000)*1000).toLocaleString()}/hr`
-        : ` · Adjusted Rate: ${priCurrencySymbol}${rateUsdClean}/hr`;
-    } else {
-      wasAdj = ` · Rate: $${res2.rate_usd||''}/hr`;
-    }
-    let adjTotal;
-    if (res2._adj_total !== undefined) {
-      adjTotal = msgIsKes && msgKesRate > 0
-        ? ` · Total: ${secCurrency} ${(Math.ceil(res2._adj_total*msgKesRate/1000)*1000).toLocaleString()}`
-        : ` · Total: ${priCurrency} ${fmtAmt(res2._adj_total)}`;
-    } else {
-      adjTotal = '';
-    }
-    let clientWaVal = document.getElementById('pdf-phone')?.value.trim() || '';
-    let clientEmailVal = document.getElementById('pdf-email')?.value.trim() || '';
-    let clientNameVal = document.getElementById('pdf-name')?.value.trim() || '';
-    let totalVal = res2?._adj_total || res2?.total_usd || 0;
-    let routeVal = (res2?.segments||[]).filter(s=>s.type==='revenue').map(s=>`${s.origin} to ${s.destination}`).join(', ');
-    let shareBarHtml = renderShareBar({
-      docNumber, pdfUrl, docType: 'Quotation',
-      clientName: clientNameVal, clientWa: clientWaVal, clientEmail: clientEmailVal,
-      amount: totalVal, acLabel: acLabel, route: routeVal
-    });
-    let msgLines = [`✅ <strong>PDF Generation Complete</strong>`];
-    msgLines.push(`${docType} — ${acLabel}${wasAdj}${adjTotal}`);
-    msgLines.push(shareBarHtml);
-    let ind = document.getElementById('pdf-generating-indicator');
-    if (ind) ind.remove();
-    // Message is shown directly below - no reload happens here, so no need to also
-    // save to qc_pending_msg. Saving AND showing immediately caused a duplicate:
-    // any later DOMContentLoaded trigger (tab refocus, bfcache restore) would find
-    // this same message still sitting in localStorage and show it a second time.
-    appendPdfMsg(msgLines.join('<br>'));
-    loadEnquiries();
-    loadRecords();
-  } catch(e) { 
-    let ind3 = document.getElementById('pdf-generating-indicator'); 
+    pdfUrl = r.headers.get('X-PDF-URL') || '';
+    docNumber = r.headers.get('X-DOC-NUMBER') || '';
+    blob = await r.blob();
+    pdfSucceeded = true;
+  } catch(e) {
+    let ind3 = document.getElementById('pdf-generating-indicator');
     if (ind3) ind3.remove();
     console.error('PDF error:', e);
-    showMsg('pdf-msg','Error: '+e.message,'error'); 
+    showMsg('pdf-msg','Error: '+e.message,'error');
+  }
+
+  // The PDF is already confirmed generated and saved server-side here - the
+  // rest is cosmetic display/refresh work, isolated in its own boundary so a
+  // failure here can only ever degrade the confirmation shown, never turn a
+  // real success into a reported failure.
+  if (pdfSucceeded) {
+    try {
+      let blobUrl = URL.createObjectURL(blob);
+      try {
+        let a = document.createElement('a'); a.href = blobUrl; a.download = (docNumber||docType.toLowerCase())+'.pdf'; a.click();
+      } catch(dlErr) { console.log('Download error (non-fatal):', dlErr); }
+      let res2 = lastResults[parseInt(document.getElementById('pdf-aircraft-select').value)||0] || {};
+      let acLabel = res2.ac_label || '';
+      let msgIdx = parseInt(document.getElementById('pdf-aircraft-select').value)||0;
+      let msgIsKes = document.getElementById('adj-kes-mode-'+msgIdx)?.checked;
+      let msgKesRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
+      let wasAdj;
+      if (res2._adj_rate !== undefined) {
+        let rateUsdClean = Math.round(res2._adj_rate * 100) / 100;
+        wasAdj = msgIsKes && msgKesRate > 0
+          ? ` · Adjusted Rate: ${secCurrency} ${(Math.ceil(rateUsdClean*msgKesRate/1000)*1000).toLocaleString()}/hr`
+          : ` · Adjusted Rate: ${priCurrencySymbol}${rateUsdClean}/hr`;
+      } else {
+        wasAdj = ` · Rate: $${res2.rate_usd||''}/hr`;
+      }
+      let adjTotal;
+      if (res2._adj_total !== undefined) {
+        adjTotal = msgIsKes && msgKesRate > 0
+          ? ` · Total: ${secCurrency} ${(Math.ceil(res2._adj_total*msgKesRate/1000)*1000).toLocaleString()}`
+          : ` · Total: ${priCurrency} ${fmtAmt(res2._adj_total)}`;
+      } else {
+        adjTotal = '';
+      }
+      let clientWaVal = document.getElementById('pdf-phone')?.value.trim() || '';
+      let clientEmailVal = document.getElementById('pdf-email')?.value.trim() || '';
+      let clientNameVal = document.getElementById('pdf-name')?.value.trim() || '';
+      let totalVal = res2?._adj_total || res2?.total_usd || 0;
+      let routeVal = (res2?.segments||[]).filter(s=>s.type==='revenue').map(s=>`${s.origin} to ${s.destination}`).join(', ');
+      let shareBarHtml = renderShareBar({
+        docNumber, pdfUrl, docType: 'Quotation',
+        clientName: clientNameVal, clientWa: clientWaVal, clientEmail: clientEmailVal,
+        amount: totalVal, acLabel: acLabel, route: routeVal
+      });
+      let msgLines = [`✅ <strong>PDF Generation Complete</strong>`];
+      msgLines.push(`${docType} — ${acLabel}${wasAdj}${adjTotal}`);
+      msgLines.push(shareBarHtml);
+      let ind = document.getElementById('pdf-generating-indicator');
+      if (ind) ind.remove();
+      // Message is shown directly below - no reload happens here, so no need to also
+      // save to qc_pending_msg. Saving AND showing immediately caused a duplicate:
+      // any later DOMContentLoaded trigger (tab refocus, bfcache restore) would find
+      // this same message still sitting in localStorage and show it a second time.
+      appendPdfMsg(msgLines.join('<br>'));
+    } catch(displayErr) {
+      // The PDF already generated and downloaded successfully above - a
+      // failure building this display-only summary must never be shown as a
+      // generation error. Fall back to a minimal confirmation instead.
+      console.error('Post-PDF display error:', displayErr);
+      let ind = document.getElementById('pdf-generating-indicator');
+      if (ind) ind.remove();
+      appendPdfMsg(`✅ <strong>PDF Generation Complete</strong> — ${docNumber||''}`);
+    }
+    // Unrelated CRM-list refreshes - deliberately outside the display try
+    // above too, so a hiccup here can never mask the success confirmation
+    // that's already been shown by this point.
+    try { loadEnquiries(); loadRecords(); } catch(refreshErr) { console.error('Post-PDF refresh error:', refreshErr); }
   }
   } finally {
     pdfGenerating = false;
@@ -4235,7 +4267,10 @@ async function confirmMarkPaid(generateReceipt) {
       let pdfUrl = r.headers.get('X-PDF-URL') || '';
       let docNumber = r.headers.get('X-DOC-NUMBER') || '';
       await r.blob(); // consume response body only - matches invoice flow. Forcing a blob a.click() download here breaks SPA state on mobile Safari (it often navigates the tab instead of downloading). PDF is reachable via the permanent pdfUrl link in the share bar below.
-      await loadRecords();
+      // The receipt is already confirmed generated and saved server-side at this
+      // point (r.ok was true, blob was read) - isolated so a refresh hiccup here
+      // degrades to stale display data at worst, never a false failure report.
+      try { await loadRecords(); } catch(refreshErr) { console.error('Post-receipt refresh error:', refreshErr); }
       let recRec = allRecords.find(rr => rr.number === number) || {};
       let shareHtml = renderShareBar({
         docNumber, pdfUrl, docType: 'Receipt',
@@ -4265,7 +4300,10 @@ async function confirmMarkPaid(generateReceipt) {
         btn.disabled = false; btn.textContent = originalLabel;
         return;
       }
-      await loadRecords();
+      // The payment is already confirmed saved server-side at this point
+      // (data.success was true) - isolated so a refresh hiccup here degrades
+      // to stale display data at worst, never a false failure report.
+      try { await loadRecords(); } catch(refreshErr) { console.error('Post-payment refresh error:', refreshErr); }
       let updatedRec = allRecords.find(rr => rr.number === number) || {};
       let newTotal = parseFloat(updatedRec.amount || 0);
       let newPaid = parseFloat(updatedRec.paid_amount || 0);

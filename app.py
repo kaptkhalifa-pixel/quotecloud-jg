@@ -427,6 +427,18 @@ def save_single_booking(token, booking):
         col.document(token).set(booking)
     except Exception as e:
         print(f"Firestore save_single_booking error: {e}")
+
+def get_single_booking(token):
+    """Single-document read of just one booking by token - mirrors the
+    single-document write already used by save_single_booking(), instead of
+    load_bookings()'s full-collection scan just to read one known entry."""
+    try:
+        doc = tenant_collection("bookings").document(token).get()
+        return doc.to_dict() if doc.exists else None
+    except Exception as e:
+        print(f"Firestore get_single_booking error: {e}")
+        return None
+
 def write_audit_log(action, details={}):
     try:
         tenant_collection("audit").add({
@@ -1664,16 +1676,21 @@ def pdf():
         with open(out_path, "rb") as f:
             pdf_bytes = f.read()
 
-        total = calc_pdf_total(result, extra_items, discount)
-        save_record(doc_type, client_name, client_email, total, doc_number, extra={
-            "ac_label": result.get("ac_label", ""),
-            "mission": result.get("mission", ""),
-            "pdf_url": pdf_url or "",
-            "client_phone": client_phone,
-            "client_whatsapp": client_phone
-        }, currency=currency)
-        if True:
-            bookings = load_bookings()
+        # PDF is fully rendered and durably uploaded to Firebase Storage above -
+        # from here on, a failure is a CRM/booking bookkeeping problem, not a
+        # failed PDF. Isolated in its own non-fatal boundary so it can never
+        # turn an already-successful PDF into a reported failure for the user;
+        # logged via the same log_pdf_error() alerting used for real generation
+        # failures, so the operator still finds out even though the client doesn't.
+        try:
+            total = calc_pdf_total(result, extra_items, discount)
+            save_record(doc_type, client_name, client_email, total, doc_number, extra={
+                "ac_label": result.get("ac_label", ""),
+                "mission": result.get("mission", ""),
+                "pdf_url": pdf_url or "",
+                "client_phone": client_phone,
+                "client_whatsapp": client_phone
+            }, currency=currency)
             route_summary = ""
             segs = result.get("segments") or []
             if result.get("mission") == "pick_and_drop":
@@ -1686,7 +1703,10 @@ def pdf():
                 route_summary = ", ".join(f"{s.get('origin','')} to {s.get('destination','')}" + (f" on {s['date']}" if s.get('date') else "") for s in rev)
             total_hrs_val = round(sum(float(s.get("hours", 0)) for s in all_flight), 2)
             total_nm_val = round(sum(float(s.get("dist_nm", 0)) for s in all_flight))
-            bookings[doc_number] = {
+            # Brand-new booking for this doc_number - nothing existing to read,
+            # so this writes directly with no load_bookings() full-collection
+            # scan needed at all.
+            new_booking = {
                 "token": doc_number,
                 "status": "PENDING",
                 "client_name": client_name,
@@ -1744,7 +1764,9 @@ def pdf():
             # delete-then-recreate cycle across the ENTIRE collection,
             # a real risk of silently destroying concurrently-created
             # bookings. Now writes ONLY this one, specific new booking.
-            save_single_booking(doc_number, bookings[doc_number])
+            save_single_booking(doc_number, new_booking)
+        except Exception as post_e:
+            log_pdf_error("/pdf:post-save", post_e, data)
 
         import io
         response = send_file(io.BytesIO(pdf_bytes), as_attachment=False,
@@ -1804,54 +1826,64 @@ def pdf_all():
             out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
             hq.generate_pdf_weasy(payload, out_path)
 
-            total = calc_pdf_total(actual, extra_items, discount)
-            save_record(doc_type, client_name, client_email, total, doc_number, {
-                "ac_label": res.get("ac_label", ""),
-                "mission": actual.get("mission", "")
-            }, currency=payload.get("currency", ""))
+            # PDF is fully rendered above - a failure past this point is a
+            # CRM/booking bookkeeping problem for this one aircraft, not a
+            # failed PDF, and must never cost the other aircraft in this same
+            # batch their own already-generated PDFs. Isolated per-iteration,
+            # logged via log_pdf_error rather than raised.
+            try:
+                total = calc_pdf_total(actual, extra_items, discount)
+                save_record(doc_type, client_name, client_email, total, doc_number, {
+                    "ac_label": res.get("ac_label", ""),
+                    "mission": actual.get("mission", "")
+                }, currency=payload.get("currency", ""))
 
-            bookings = load_bookings()
-            route_summary = ""
-            segs = actual.get("segments") or []
-            if actual.get("mission") == "pick_and_drop":
-                segs = list(actual.get("drop", {}).get("segments", [])) + list(actual.get("pick", {}).get("segments", []))
-            rev = [s for s in segs if s.get("type") == "revenue"]
-            if rev:
-                route_summary = ", ".join(f"{s.get('origin','')} to {s.get('destination','')}" + (f" on {s['date']}" if s.get('date') else "") for s in rev)
-            bookings[doc_number] = {
-                "token": doc_number,
-                "status": "PENDING",
-                "client_name": client_name,
-                # CRITICAL FIX: same gap as pdf() - this booking dict never
-                # included client_address at all.
-                "client_address": client_address,
-                "client_id": client_id,
-                # FIX: same CRM math fix as pdf() - tag the real currency
-                # at creation time. payload["currency"] is genuinely,
-                # safely available here without touching
-                # build_pdf_payload_from_result's return signature at all.
-                "record_currency": payload.get("currency", ""),
-                "client_email": client_email,
-                "client_whatsapp": client_phone,
-                "ac_label": res.get("ac_label", ""),
-                "ac_key": res.get("ac_key", ""),
-                "total_usd": total,
-                "mission": actual.get("mission", ""),
-                "route_summary": route_summary,
-                "quote_snapshot": actual,
-                "pdf_url": "",
-                "invoice_number": "",
-                "invoice_url": "",
-                "created_at": datetime.datetime.now().isoformat(),
-                "updated_at": datetime.datetime.now().isoformat(),
-                "payment_method": "",
-                "payment_ref": "",
-                "notes": note or "",
-                "source": "admin"
-            }
-            # CRITICAL FIX: same severe, real bug already found and fixed
-            # for records - writes ONLY this one, specific new booking.
-            save_single_booking(doc_number, bookings[doc_number])
+                route_summary = ""
+                segs = actual.get("segments") or []
+                if actual.get("mission") == "pick_and_drop":
+                    segs = list(actual.get("drop", {}).get("segments", [])) + list(actual.get("pick", {}).get("segments", []))
+                rev = [s for s in segs if s.get("type") == "revenue"]
+                if rev:
+                    route_summary = ", ".join(f"{s.get('origin','')} to {s.get('destination','')}" + (f" on {s['date']}" if s.get('date') else "") for s in rev)
+                # Brand-new booking for this doc_number - nothing existing to
+                # read, so this writes directly with no load_bookings()
+                # full-collection scan needed at all.
+                new_booking = {
+                    "token": doc_number,
+                    "status": "PENDING",
+                    "client_name": client_name,
+                    # CRITICAL FIX: same gap as pdf() - this booking dict never
+                    # included client_address at all.
+                    "client_address": client_address,
+                    "client_id": client_id,
+                    # FIX: same CRM math fix as pdf() - tag the real currency
+                    # at creation time. payload["currency"] is genuinely,
+                    # safely available here without touching
+                    # build_pdf_payload_from_result's return signature at all.
+                    "record_currency": payload.get("currency", ""),
+                    "client_email": client_email,
+                    "client_whatsapp": client_phone,
+                    "ac_label": res.get("ac_label", ""),
+                    "ac_key": res.get("ac_key", ""),
+                    "total_usd": total,
+                    "mission": actual.get("mission", ""),
+                    "route_summary": route_summary,
+                    "quote_snapshot": actual,
+                    "pdf_url": "",
+                    "invoice_number": "",
+                    "invoice_url": "",
+                    "created_at": datetime.datetime.now().isoformat(),
+                    "updated_at": datetime.datetime.now().isoformat(),
+                    "payment_method": "",
+                    "payment_ref": "",
+                    "notes": note or "",
+                    "source": "admin"
+                }
+                # CRITICAL FIX: same severe, real bug already found and fixed
+                # for records - writes ONLY this one, specific new booking.
+                save_single_booking(doc_number, new_booking)
+            except Exception as post_e:
+                log_pdf_error("/pdf_all:post-save", post_e, data)
 
             generated.append({
                 "number": doc_number,
@@ -1896,8 +1928,7 @@ def booking_invoice():
         # operator is asked each time whether to keep it bundled or itemize.
         invoice_ghost_mode = bool(data.get("ghost_mode", False))
 
-        bookings = load_bookings()
-        booking = bookings.get(source_token)
+        booking = get_single_booking(source_token)
         if not booking:
             return jsonify({"error": "Booking not found"}), 404
 
@@ -1965,21 +1996,29 @@ def booking_invoice():
         hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_firebase(out_path, doc_number)
 
-        save_record("Invoice", client_name, client_email, final_total, doc_number,
-                    extra={"pdf_url": pdf_url or ""}, client_address=client_address, currency=payload.get("currency", ""))
+        # PDF is fully rendered and durably uploaded above - a failure past
+        # this point is a CRM/booking bookkeeping problem, not a failed
+        # invoice PDF. Isolated in its own non-fatal boundary, logged via
+        # log_pdf_error, so it can never turn an already-successful invoice
+        # into a reported failure for the user.
+        try:
+            save_record("Invoice", client_name, client_email, final_total, doc_number,
+                        extra={"pdf_url": pdf_url or ""}, client_address=client_address, currency=payload.get("currency", ""))
 
-        bookings[source_token]["invoice_number"] = doc_number
-        bookings[source_token]["invoice_url"] = pdf_url or ""
-        bookings[source_token]["status"] = "INVOICED"
-        bookings[source_token]["updated_at"] = datetime.datetime.now().isoformat()
-        # FIX (item 7, updated bug list): only update if a real, new value
-        # was genuinely provided - never silently erase an existing
-        # client_id if this specific request doesn't resupply one.
-        if client_id:
-            bookings[source_token]["client_id"] = client_id
-        # CRITICAL FIX: same severe, real bug already found and fixed for
-        # records - writes ONLY this one, specific booking.
-        save_single_booking(source_token, bookings[source_token])
+            booking["invoice_number"] = doc_number
+            booking["invoice_url"] = pdf_url or ""
+            booking["status"] = "INVOICED"
+            booking["updated_at"] = datetime.datetime.now().isoformat()
+            # FIX (item 7, updated bug list): only update if a real, new value
+            # was genuinely provided - never silently erase an existing
+            # client_id if this specific request doesn't resupply one.
+            if client_id:
+                booking["client_id"] = client_id
+            # CRITICAL FIX: same severe, real bug already found and fixed for
+            # records - writes ONLY this one, specific booking.
+            save_single_booking(source_token, booking)
+        except Exception as post_e:
+            log_pdf_error("/booking/invoice:post-save", post_e, data)
 
         with open(out_path, "rb") as f:
             pdf_bytes = f.read()
@@ -2114,63 +2153,73 @@ def manual_invoice():
         out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_firebase(out_path, doc_number)
-        save_record(doc_type, client_name, client_email, total, doc_number,
-                    extra={"pdf_url": pdf_url or ""}, client_address=client_address, currency=pri_cur)
 
-        bookings = load_bookings()
-        if source_token and source_token in bookings:
-            bookings[source_token]["invoice_number"] = doc_number
-            bookings[source_token]["invoice_url"] = pdf_url or ""
-            bookings[source_token]["status"] = "INVOICED"
-            bookings[source_token]["updated_at"] = datetime.datetime.now().isoformat()
-            # CRITICAL FIX: same severe, real bug already found and fixed
-            # for records - writes ONLY this one, specific booking.
-            save_single_booking(source_token, bookings[source_token])
-        elif not source_token:
-            bookings[doc_number] = {
-                "token": doc_number,
-                "status": "INVOICED" if doc_type == "Invoice" else "PENDING",
-                "client_name": client_name,
-                # FIX: this booking dict never included client_address at
-                # all, meaning even after wiring the invoice builder's own
-                # pre-fill logic, there was genuinely nothing to pre-fill
-                # FROM for a manually-created quote.
-                "client_address": client_address,
-                "client_id": client_id,
-                # FIX: same CRM math fix as pdf()/pdf_all() - tag the real
-                # currency at creation time, using pri_cur, already
-                # correctly computed earlier in this same function.
-                "record_currency": pri_cur,
-                "client_email": client_email,
-                "client_whatsapp": client_phone,
-                "ac_label": "",
-                "ac_key": "",
-                "total_usd": total,
-                "mission": "manual",
-                "route_summary": ", ".join(it.get("name","") for it in items)[:120],
-                # FIX: quote_snapshot was correctly empty (no real quote-engine
-                "quote_snapshot": {},
-                # result exists for a manually-typed quotation), but the actual,
-                # real line items were never saved anywhere else either - only
-                # a truncated, 120-char text summary above. This meant a manual
-                # quote could genuinely never become an invoice later, since
-                # there was nothing left to rebuild one from. Now genuinely
-                # persists the real items so booking_invoice() can reuse them.
-                "manual_items": items,
-                "manual_discount": disc,
-                "pdf_url": pdf_url or "",
-                "invoice_number": doc_number if doc_type == "Invoice" else "",
-                "invoice_url": pdf_url or "" if doc_type == "Invoice" else "",
-                "created_at": datetime.datetime.now().isoformat(),
-                "updated_at": datetime.datetime.now().isoformat(),
-                "payment_method": "",
-                "payment_ref": "",
-                "notes": note or "",
-                "source": "admin_manual"
-            }
-            # CRITICAL FIX: same severe, real bug already found and fixed
-            # for records - writes ONLY this one, specific new booking.
-            save_single_booking(doc_number, bookings[doc_number])
+        # PDF is fully rendered and durably uploaded above - a failure past
+        # this point is a CRM/booking bookkeeping problem, not a failed
+        # document. Isolated in its own non-fatal boundary, logged via
+        # log_pdf_error, so it can never turn an already-successful document
+        # into a reported failure for the user.
+        try:
+            save_record(doc_type, client_name, client_email, total, doc_number,
+                        extra={"pdf_url": pdf_url or ""}, client_address=client_address, currency=pri_cur)
+
+            if source_token:
+                booking = get_single_booking(source_token)
+                if booking:
+                    booking["invoice_number"] = doc_number
+                    booking["invoice_url"] = pdf_url or ""
+                    booking["status"] = "INVOICED"
+                    booking["updated_at"] = datetime.datetime.now().isoformat()
+                    # CRITICAL FIX: same severe, real bug already found and fixed
+                    # for records - writes ONLY this one, specific booking.
+                    save_single_booking(source_token, booking)
+            else:
+                new_booking = {
+                    "token": doc_number,
+                    "status": "INVOICED" if doc_type == "Invoice" else "PENDING",
+                    "client_name": client_name,
+                    # FIX: this booking dict never included client_address at
+                    # all, meaning even after wiring the invoice builder's own
+                    # pre-fill logic, there was genuinely nothing to pre-fill
+                    # FROM for a manually-created quote.
+                    "client_address": client_address,
+                    "client_id": client_id,
+                    # FIX: same CRM math fix as pdf()/pdf_all() - tag the real
+                    # currency at creation time, using pri_cur, already
+                    # correctly computed earlier in this same function.
+                    "record_currency": pri_cur,
+                    "client_email": client_email,
+                    "client_whatsapp": client_phone,
+                    "ac_label": "",
+                    "ac_key": "",
+                    "total_usd": total,
+                    "mission": "manual",
+                    "route_summary": ", ".join(it.get("name","") for it in items)[:120],
+                    # FIX: quote_snapshot was correctly empty (no real quote-engine
+                    "quote_snapshot": {},
+                    # result exists for a manually-typed quotation), but the actual,
+                    # real line items were never saved anywhere else either - only
+                    # a truncated, 120-char text summary above. This meant a manual
+                    # quote could genuinely never become an invoice later, since
+                    # there was nothing left to rebuild one from. Now genuinely
+                    # persists the real items so booking_invoice() can reuse them.
+                    "manual_items": items,
+                    "manual_discount": disc,
+                    "pdf_url": pdf_url or "",
+                    "invoice_number": doc_number if doc_type == "Invoice" else "",
+                    "invoice_url": pdf_url or "" if doc_type == "Invoice" else "",
+                    "created_at": datetime.datetime.now().isoformat(),
+                    "updated_at": datetime.datetime.now().isoformat(),
+                    "payment_method": "",
+                    "payment_ref": "",
+                    "notes": note or "",
+                    "source": "admin_manual"
+                }
+                # CRITICAL FIX: same severe, real bug already found and fixed
+                # for records - writes ONLY this one, specific new booking.
+                save_single_booking(doc_number, new_booking)
+        except Exception as post_e:
+            log_pdf_error("/manual_invoice:post-save", post_e, data)
 
         response = send_file(out_path, as_attachment=False,
                              download_name=f"{doc_number}.pdf",
@@ -2179,6 +2228,7 @@ def manual_invoice():
         response.headers["X-DOC-NUMBER"] = doc_number
         return response
     except Exception as e:
+        log_pdf_error("/manual_invoice", e, data)
         return jsonify({"error": str(e)}), 400
 
 @app.route("/records", methods=["GET"])
@@ -2409,167 +2459,195 @@ def mark_paid():
 @login_required
 def generate_receipt():
     data = request.get_json()
-    number = data.get("number", "")
-    paid_amount = float(data.get("paid_amount", 0))
-    paid_date = data.get("paid_date", datetime.date.today().strftime("%d/%m/%Y"))
-    payment_mode = data.get("payment_mode", "")
-    payment_ref = data.get("payment_ref", "")
+    try:
+        number = data.get("number", "")
+        paid_amount = float(data.get("paid_amount", 0))
+        paid_date = data.get("paid_date", datetime.date.today().strftime("%d/%m/%Y"))
+        payment_mode = data.get("payment_mode", "")
+        payment_ref = data.get("payment_ref", "")
 
-    records = load_records()
-    rec = next((r for r in records if r.get("number") == number), None)
-    if not rec:
-        return jsonify({"error": "Record not found"}), 404
+        records = load_records()
+        rec = next((r for r in records if r.get("number") == number), None)
+        if not rec:
+            return jsonify({"error": "Record not found"}), 404
 
-    # FIX: same requirement as mark_paid, previously only enforced by the
-    # browser's own JS - this is a genuinely separate route that can also
-    # record a payment, and had zero backend validation of its own.
-    if payment_mode and payment_mode != "Cash" and not payment_ref.strip():
-        return jsonify({"error": f"Reference/Transaction ID is required for {payment_mode} payments (audit trail)."}), 400
+        # FIX: same requirement as mark_paid, previously only enforced by the
+        # browser's own JS - this is a genuinely separate route that can also
+        # record a payment, and had zero backend validation of its own.
+        if payment_mode and payment_mode != "Cash" and not payment_ref.strip():
+            return jsonify({"error": f"Reference/Transaction ID is required for {payment_mode} payments (audit trail)."}), 400
 
-    total = float(rec.get("amount", 0))
-    receipt_number = inherit_token(number, "R")
+        total = float(rec.get("amount", 0))
+        receipt_number = inherit_token(number, "R")
 
-    to_block = "\n".join(filter(None, [
-        rec.get("client_name", ""),
-        rec.get("client_phone", ""),
-        rec.get("client_email", ""),
-    ]))
+        to_block = "\n".join(filter(None, [
+            rec.get("client_name", ""),
+            rec.get("client_phone", ""),
+            rec.get("client_email", ""),
+        ]))
 
-    # Show the FULL payment trail from payment_log, not just this single request's
-    # payment - an invoice settled across multiple partial payments (e.g. M-Pesa then
-    # Bank Transfer then Cash) previously only showed the LAST payment's mode/reference
-    # on the receipt, silently hiding the earlier ones from the audit trail.
-    payment_desc_lines = ["Amount Invoiced", f"Invoice Ref: {number}", ""]
-    payment_log = rec.get("payment_log", [])
-    if payment_log:
-        # FIX: was interpolating round_currency()'s raw numeric return value
-        # directly into the string, showing a completely unformatted Python
-        # number (e.g. "765000.0", no comma separator, no currency label) -
-        # round_currency() returns a NUMBER, not a display string. Now uses
-        # hq._fmt_money() to genuinely format it, matching the same currency-
-        # aware formatting already applied to every other amount on this
-        # receipt. Found via testing the same fix on QC Aero.
-        _cur_ph = OPERATOR.get("fx", {}).get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
-        payment_desc_lines.append("Payment History:")
-        for entry in payment_log:
-            line = f"  {entry.get('date', '')} — {hq._fmt_money(float(entry.get('amount', 0)), _cur_ph)}"
-            if entry.get("mode"):
-                line += f" via {entry['mode']}"
-            if entry.get("ref"):
-                line += f" (Ref: {entry['ref']})"
-            payment_desc_lines.append(line)
-    else:
-        # Fallback for records with no payment_log yet (older records, or edge case)
-        if payment_mode:
-            payment_desc_lines.append(f"Mode: {payment_mode}")
-        if payment_ref:
-            payment_desc_lines.append(f"Reference: {payment_ref}")
-        payment_desc_lines.append(f"Date: {paid_date}")
+        # Show the FULL payment trail from payment_log, not just this single request's
+        # payment - an invoice settled across multiple partial payments (e.g. M-Pesa then
+        # Bank Transfer then Cash) previously only showed the LAST payment's mode/reference
+        # on the receipt, silently hiding the earlier ones from the audit trail.
+        payment_desc_lines = ["Amount Invoiced", f"Invoice Ref: {number}", ""]
+        payment_log = rec.get("payment_log", [])
+        if payment_log:
+            # FIX: was interpolating round_currency()'s raw numeric return value
+            # directly into the string, showing a completely unformatted Python
+            # number (e.g. "765000.0", no comma separator, no currency label) -
+            # round_currency() returns a NUMBER, not a display string. Now uses
+            # hq._fmt_money() to genuinely format it, matching the same currency-
+            # aware formatting already applied to every other amount on this
+            # receipt. Found via testing the same fix on QC Aero.
+            _cur_ph = OPERATOR.get("fx", {}).get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+            payment_desc_lines.append("Payment History:")
+            for entry in payment_log:
+                line = f"  {entry.get('date', '')} — {hq._fmt_money(float(entry.get('amount', 0)), _cur_ph)}"
+                if entry.get("mode"):
+                    line += f" via {entry['mode']}"
+                if entry.get("ref"):
+                    line += f" (Ref: {entry['ref']})"
+                payment_desc_lines.append(line)
+        else:
+            # Fallback for records with no payment_log yet (older records, or edge case)
+            if payment_mode:
+                payment_desc_lines.append(f"Mode: {payment_mode}")
+            if payment_ref:
+                payment_desc_lines.append(f"Reference: {payment_ref}")
+            payment_desc_lines.append(f"Date: {paid_date}")
 
-    items = [{
-        "name": "\n".join(payment_desc_lines),
-        "quantity": "1",
-        "unit_cost": str(round_currency(total))
-    }]
+        items = [{
+            "name": "\n".join(payment_desc_lines),
+            "quantity": "1",
+            "unit_cost": str(round_currency(total))
+        }]
 
-    # Receipts never show bank details or terms - payment already confirmed
-    pri_cur = OPERATOR.get("fx", {}).get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+        # Receipts never show bank details or terms - payment already confirmed
+        pri_cur = OPERATOR.get("fx", {}).get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
 
-    payload = {
-        "logo": OPERATOR.get("logo_url", ""),
-        "from": get_company_from_block(),
-        "to": to_block,
-        "number": receipt_number,
-        "date": datetime.date.today().strftime("%d %b %Y"),
-        "due_date": datetime.date.today().strftime("%d %b %Y"),
-        "items": items,
-        "discounts": 0,
-        "fields": {"tax": False, "discounts": False, "shipping": False},
-        "notes": "",
-        "notes_title": "",
-        "terms": "",
-        "terms_title": "",
-        "currency": pri_cur,
-        "header": "Receipt"
-    }
+        payload = {
+            "logo": OPERATOR.get("logo_url", ""),
+            "from": get_company_from_block(),
+            "to": to_block,
+            "number": receipt_number,
+            "date": datetime.date.today().strftime("%d %b %Y"),
+            "due_date": datetime.date.today().strftime("%d %b %Y"),
+            "items": items,
+            "discounts": 0,
+            "fields": {"tax": False, "discounts": False, "shipping": False},
+            "notes": "",
+            "notes_title": "",
+            "terms": "",
+            "terms_title": "",
+            "currency": pri_cur,
+            "header": "Receipt"
+        }
 
-    out_path = f"/tmp/{safe_doc_number(receipt_number)}.pdf"
-    hq.generate_pdf_weasy(payload, out_path)
-    receipt_pdf_url = upload_pdf_to_firebase(out_path, receipt_number)
+        out_path = f"/tmp/{safe_doc_number(receipt_number)}.pdf"
+        hq.generate_pdf_weasy(payload, out_path)
+        receipt_pdf_url = upload_pdf_to_firebase(out_path, receipt_number)
 
-    rec["paid"] = paid_amount >= total
-    rec["paid_amount"] = round_currency(paid_amount)
-    rec["paid_date"] = paid_date
-    rec["payment_mode"] = payment_mode
-    rec["payment_ref"] = payment_ref
-    rec["receipt_number"] = receipt_number
-    rec["receipt_url"] = receipt_pdf_url or ""
+        # PDF is fully rendered and durably uploaded above - a failure past
+        # this point is a CRM/booking bookkeeping problem, not a failed
+        # receipt. Isolated in its own non-fatal boundary, logged via
+        # log_pdf_error, so it can never turn an already-successful receipt
+        # into a reported failure for the user.
+        try:
+            rec["paid"] = paid_amount >= total
+            rec["paid_amount"] = round_currency(paid_amount)
+            rec["paid_date"] = paid_date
+            rec["payment_mode"] = payment_mode
+            rec["payment_ref"] = payment_ref
+            rec["receipt_number"] = receipt_number
+            rec["receipt_url"] = receipt_pdf_url or ""
 
-    # CRITICAL FIX: was always appending a brand-new payment_log entry,
-    # even when this exact payment had already been logged moments earlier
-    # by mark_paid() - which happens whenever the CRM's "Pay" shortcut
-    # settles an invoice in full, since that flow calls mark_paid() and
-    # then immediately generate_receipt() for the same, single real
-    # payment. Confirmed live: two genuinely identical entries (same
-    # amount, mode, ref, recorded_at) for one real cash payment. Now
-    # checks whether the most recent existing entry already matches this
-    # exact payment, and if so, updates it in place with the receipt
-    # reference instead of creating a genuine duplicate.
-    if "payment_log" not in rec:
-        rec["payment_log"] = []
-    existing_entry = rec["payment_log"][-1] if rec["payment_log"] else None
-    is_same_payment = (
-        existing_entry
-        and abs(float(existing_entry.get("amount", 0)) - round_currency(paid_amount)) < 0.01
-        and existing_entry.get("mode", "") == payment_mode
-        and existing_entry.get("ref", "") == payment_ref
-        and not existing_entry.get("receipt")
-    )
-    if is_same_payment:
-        existing_entry["receipt"] = receipt_number
-    else:
-        rec["payment_log"].append({
-            "date": paid_date,
-            "amount": round_currency(paid_amount),
-            "mode": payment_mode,
-            "ref": payment_ref,
-            "recorded_at": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
-            "receipt": receipt_number
-        })
+            # CRITICAL FIX: was always appending a brand-new payment_log entry,
+            # even when this exact payment had already been logged moments earlier
+            # by mark_paid() - which happens whenever the CRM's "Pay" shortcut
+            # settles an invoice in full, since that flow calls mark_paid() and
+            # then immediately generate_receipt() for the same, single real
+            # payment. Confirmed live: two genuinely identical entries (same
+            # amount, mode, ref, recorded_at) for one real cash payment. Now
+            # checks whether the most recent existing entry already matches this
+            # exact payment, and if so, updates it in place with the receipt
+            # reference instead of creating a genuine duplicate.
+            if "payment_log" not in rec:
+                rec["payment_log"] = []
+            existing_entry = rec["payment_log"][-1] if rec["payment_log"] else None
+            is_same_payment = (
+                existing_entry
+                and abs(float(existing_entry.get("amount", 0)) - round_currency(paid_amount)) < 0.01
+                and existing_entry.get("mode", "") == payment_mode
+                and existing_entry.get("ref", "") == payment_ref
+                and not existing_entry.get("receipt")
+            )
+            if is_same_payment:
+                existing_entry["receipt"] = receipt_number
+            else:
+                rec["payment_log"].append({
+                    "date": paid_date,
+                    "amount": round_currency(paid_amount),
+                    "mode": payment_mode,
+                    "ref": payment_ref,
+                    "recorded_at": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
+                    "receipt": receipt_number
+                })
 
-    # CRITICAL FIX: was calling save_records(records) - a genuine,
-    # complete delete-then-recreate cycle across the ENTIRE collection,
-    # confirmed live to silently destroy real, unrelated, concurrently-
-    # created records. Now writes ONLY this one, specific real invoice
-    # record whose payment_log we just updated.
-    save_single_record(rec)
-    save_record("Receipt", rec.get("client_name", ""), rec.get("client_email", ""),
-                paid_amount, receipt_number,
-                extra={"pdf_url": receipt_pdf_url or "",
-                       "client_whatsapp": rec.get("client_whatsapp", "")}, currency=pri_cur)
+            # CRITICAL FIX: was calling save_records(records) - a genuine,
+            # complete delete-then-recreate cycle across the ENTIRE collection,
+            # confirmed live to silently destroy real, unrelated, concurrently-
+            # created records. Now writes ONLY this one, specific real invoice
+            # record whose payment_log we just updated.
+            save_single_record(rec)
+            save_record("Receipt", rec.get("client_name", ""), rec.get("client_email", ""),
+                        paid_amount, receipt_number,
+                        extra={"pdf_url": receipt_pdf_url or "",
+                               "client_whatsapp": rec.get("client_whatsapp", "")}, currency=pri_cur)
 
-    if rec.get("paid"):
-        bookings = load_bookings()
-        matching_token = None
-        for tok, b in bookings.items():
-            if b.get("invoice_number") == number:
-                matching_token = tok
-                break
-        if matching_token:
-            bookings[matching_token]["status"] = "PAID"
-            bookings[matching_token]["payment_method"] = payment_mode
-            bookings[matching_token]["payment_ref"] = payment_ref
-            bookings[matching_token]["updated_at"] = datetime.datetime.now().isoformat()
-            # CRITICAL FIX: same severe, real bug already found and fixed
-            # for records - writes ONLY this one, specific booking.
-            save_single_booking(matching_token, bookings[matching_token])
+            if rec.get("paid"):
+                # Most invoice numbers are directly derived from their source
+                # booking token via inherit_token() (same type-letter swap used
+                # to create them) - try that direct, single-document read
+                # first. If the invoice number itself wasn't in the standard
+                # 4-segment format, inherit_token() returns a freshly-generated
+                # random token instead of reversing it, which is guaranteed not
+                # to exist in Firestore - get_single_booking() then correctly
+                # returns None and we fall back to the full scan below, which
+                # finds the real booking by its actual invoice_number field
+                # regardless of what that booking's own token looks like.
+                matching_token = None
+                matching_booking = None
+                derived_token = inherit_token(number, "Q")
+                derived_booking = get_single_booking(derived_token)
+                if derived_booking and derived_booking.get("invoice_number") == number:
+                    matching_token, matching_booking = derived_token, derived_booking
+                else:
+                    bookings = load_bookings()
+                    for tok, b in bookings.items():
+                        if b.get("invoice_number") == number:
+                            matching_token, matching_booking = tok, b
+                            break
+                if matching_token:
+                    matching_booking["status"] = "PAID"
+                    matching_booking["payment_method"] = payment_mode
+                    matching_booking["payment_ref"] = payment_ref
+                    matching_booking["updated_at"] = datetime.datetime.now().isoformat()
+                    # CRITICAL FIX: same severe, real bug already found and fixed
+                    # for records - writes ONLY this one, specific booking.
+                    save_single_booking(matching_token, matching_booking)
+        except Exception as post_e:
+            log_pdf_error("/records/generate_receipt:post-save", post_e, data)
 
-    response = send_file(out_path, as_attachment=False,
-                         download_name=f"{receipt_number}.pdf",
-                         mimetype="application/pdf")
-    response.headers["X-PDF-URL"] = receipt_pdf_url or ""
-    response.headers["X-DOC-NUMBER"] = receipt_number
-    return response
+        response = send_file(out_path, as_attachment=False,
+                             download_name=f"{receipt_number}.pdf",
+                             mimetype="application/pdf")
+        response.headers["X-PDF-URL"] = receipt_pdf_url or ""
+        response.headers["X-DOC-NUMBER"] = receipt_number
+        return response
+    except Exception as e:
+        log_pdf_error("/records/generate_receipt", e, data)
+        return jsonify({"error": str(e)}), 400
 
 @app.route("/records/update_whatsapp", methods=["POST"])
 @login_required
@@ -3503,10 +3581,12 @@ def booking_pdf():
         # than expect a fresh resend, fall back to whatever's already
         # stored on the real booking record.
         client_address = data.get("client_address", "")
+        # Single-document read, reused below for the pdf_url update too,
+        # instead of two separate full-collection load_bookings() scans for
+        # the same one, already-known token.
+        existing_booking = get_single_booking(token)
         if not client_address:
-            _existing_bookings = load_bookings()
-            _existing_booking = _existing_bookings.get(token, {})
-            client_address = _existing_booking.get("client_address", "")
+            client_address = (existing_booking or {}).get("client_address", "")
 
         fx_config = OPERATOR.get("fx", {})
         pri_cur = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
@@ -3550,24 +3630,33 @@ def booking_pdf():
         out_path = f"/tmp/{safe_doc_number(token)}.pdf"
         hq.generate_pdf_weasy(payload, out_path)
         pdf_url = upload_pdf_to_firebase(out_path, token)
-        total = float(result.get("total_usd", 0))
-        if result.get("mission") == "return_both":
-            total = float((result.get("option_a") or {}).get("total_usd", 0))
-        save_record("Quotation", client_name, client_email, total, token, extra={
-            "pdf_url": pdf_url or "",
-            "client_phone": client_phone,
-            "client_whatsapp": client_phone,
-            "ac_label": result.get("ac_label", ""),
-            "mission": result.get("mission", ""),
-            "source": "client"
-        }, client_address=client_address, currency=payload.get("currency", ""))
-        bookings = load_bookings()
-        if token in bookings:
-            bookings[token]["pdf_url"] = pdf_url or ""
-            bookings[token]["updated_at"] = datetime.datetime.now().isoformat()
-            # CRITICAL FIX: same severe, real bug already found and fixed
-            # for records - writes ONLY this one, specific booking.
-            save_single_booking(token, bookings[token])
+
+        # PDF is fully rendered and durably uploaded above - a failure past
+        # this point is a CRM/booking bookkeeping problem, not a failed
+        # quotation PDF. Isolated in its own non-fatal boundary, logged via
+        # log_pdf_error, so it can never turn an already-successful PDF into
+        # a reported failure for the client.
+        try:
+            total = float(result.get("total_usd", 0))
+            if result.get("mission") == "return_both":
+                total = float((result.get("option_a") or {}).get("total_usd", 0))
+            save_record("Quotation", client_name, client_email, total, token, extra={
+                "pdf_url": pdf_url or "",
+                "client_phone": client_phone,
+                "client_whatsapp": client_phone,
+                "ac_label": result.get("ac_label", ""),
+                "mission": result.get("mission", ""),
+                "source": "client"
+            }, client_address=client_address, currency=payload.get("currency", ""))
+            if existing_booking:
+                existing_booking["pdf_url"] = pdf_url or ""
+                existing_booking["updated_at"] = datetime.datetime.now().isoformat()
+                # CRITICAL FIX: same severe, real bug already found and fixed
+                # for records - writes ONLY this one, specific booking.
+                save_single_booking(token, existing_booking)
+        except Exception as post_e:
+            log_pdf_error("/booking/pdf:post-save", post_e, data)
+
         response = send_file(out_path, as_attachment=False,
                              download_name=f"{token}.pdf",
                              mimetype="application/pdf")
