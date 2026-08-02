@@ -1071,7 +1071,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
 
     return result
 
-def get_active_aircraft(ac_type_filter="all"):
+def get_active_aircraft(ac_type_filter="all", include_offmarket=False):
     aircraft_cfg = load_aircraft()
     mode = get_aircraft_mode()
     if mode == "helicopter":
@@ -1082,9 +1082,10 @@ def get_active_aircraft(ac_type_filter="all"):
         type_filter = ac_type_filter
     return {k: v for k, v in aircraft_cfg.items()
             if v.get("active") and
+            (include_offmarket or not v.get("offmarket")) and
             (type_filter == "all" or v.get("type", "helicopter") == type_filter)}
 
-def run_quote_engine(data):
+def run_quote_engine(data, include_offmarket=False):
     mission = data.get("mission")
     rules = get_quoting_rules()
     ac_type_filter = data.get("ac_type_filter", "all")
@@ -1092,7 +1093,7 @@ def run_quote_engine(data):
     if force_ac:
         active = force_ac
     else:
-        active = get_active_aircraft(ac_type_filter)
+        active = get_active_aircraft(ac_type_filter, include_offmarket=include_offmarket)
     if not active:
         return {"error": "No aircraft available for the selected type."}, 400
 
@@ -1507,7 +1508,7 @@ _quote_rate = {}
 @login_required
 def admin_quote():
     data = request.get_json()
-    result, status = run_quote_engine(data)
+    result, status = run_quote_engine(data, include_offmarket=True)
     return jsonify(result), status
 
 
