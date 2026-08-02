@@ -465,6 +465,21 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
   <div id="quote-result-top-actions" style="display:none;justify-content:flex-end;margin-bottom:8px">
     <button class="btn btn-clear btn-sm" onclick="clearQuote()">Clear Quote</button>
   </div>
+  <div id="quote-result-controls" style="display:none;flex-wrap:wrap;gap:16px;margin-bottom:10px;align-items:center">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span style="font-size:0.72rem;color:#888;align-self:center;margin-right:2px">Sort:</span>
+      <div class="otab active" style="flex:none;padding:6px 12px" onclick="setResultSort('default',this)">Default</div>
+      <div class="otab" style="flex:none;padding:6px 12px" onclick="setResultSort('cheapest',this)">Cheapest First</div>
+      <div class="otab" style="flex:none;padding:6px 12px" onclick="setResultSort('fastest',this)">Fastest First</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span style="font-size:0.72rem;color:#888;align-self:center;margin-right:2px">Show:</span>
+      <div class="otab active" style="flex:none;padding:6px 12px" onclick="setResultFilter('all',this)">All</div>
+      <div class="otab" style="flex:none;padding:6px 12px" onclick="setResultFilter('helicopter',this)">Helicopters</div>
+      <div class="otab" style="flex:none;padding:6px 12px" onclick="setResultFilter('fixed_wing',this)">Fixed Wing</div>
+    </div>
+  </div>
+  <div id="quote-result-empty" style="display:none;font-size:0.85rem;color:#888;padding:16px;text-align:center">No aircraft match this filter.</div>
   <div id="quote-result" class="result-box"></div>
 
   <div class="card pdf-section" id="pdf-section" style="display:none">
@@ -1492,6 +1507,8 @@ function clearQuote() {
   document.getElementById('quote-result').innerHTML = '';
   let topActions = document.getElementById('quote-result-top-actions');
   if (topActions) topActions.style.display = 'none';
+  let controls = document.getElementById('quote-result-controls');
+  if (controls) controls.style.display = 'none';
   document.getElementById('pdf-section').style.display = 'none';
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','rt-depart','rt-return',
    'pdf-name','pdf-email','pdf-phone','pdf-discount','pdf-notes'].forEach(id => {
@@ -2002,6 +2019,52 @@ function switchOtab(el, id) {
   document.getElementById(id).classList.add('active');
 }
 
+let resultSort = 'default';
+let resultFilter = 'all';
+
+function getResultTotal(res) {
+  if (res.error) return Infinity;
+  return res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
+}
+
+function setResultSort(mode, el) {
+  resultSort = mode;
+  el.parentElement.querySelectorAll('.otab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  applyResultView();
+}
+
+function setResultFilter(mode, el) {
+  resultFilter = mode;
+  el.parentElement.querySelectorAll('.otab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  applyResultView();
+}
+
+// Visual-only reorder/hide of the already-rendered .ac-card elements, keyed by their
+// original lastResults index. Never reorders lastResults itself - every card's buttons
+// and inputs (quickPDF(i), calcReverse(idx), etc.) are wired to that original index, so
+// changing array order out from under them would silently point controls at the wrong
+// aircraft.
+function applyResultView() {
+  let indices = lastResults.map((_, i) => i)
+    .filter(i => resultFilter === 'all' || lastResults[i].ac_type === resultFilter);
+  if (resultSort === 'cheapest') {
+    indices.sort((a, b) => getResultTotal(lastResults[a]) - getResultTotal(lastResults[b]));
+  } else if (resultSort === 'fastest') {
+    indices.sort((a, b) => getTotalHours(lastResults[a]) - getTotalHours(lastResults[b]));
+  }
+  let visible = new Set(indices);
+  lastResults.forEach((res, i) => {
+    let card = document.getElementById('ac-card-'+i);
+    if (!card) return;
+    card.style.display = visible.has(i) ? '' : 'none';
+    card.style.order = indices.indexOf(i);
+  });
+  let emptyMsg = document.getElementById('quote-result-empty');
+  if (emptyMsg) emptyMsg.style.display = (lastResults.length && !indices.length) ? 'block' : 'none';
+}
+
 function renderResults(results) {
   lastResults = results;
   let html = results.map((res, i) => `
@@ -2015,8 +2078,15 @@ function renderResults(results) {
       </div>
     </div>`).join('');
   document.getElementById('quote-result').innerHTML = html;
+  document.getElementById('quote-result').style.display = 'flex';
+  document.getElementById('quote-result').style.flexDirection = 'column';
   let topActions = document.getElementById('quote-result-top-actions');
   if (topActions) topActions.style.display = results.length ? 'flex' : 'none';
+  let controls = document.getElementById('quote-result-controls');
+  if (controls) controls.style.display = results.length ? 'flex' : 'none';
+  resultSort = 'default'; resultFilter = 'all';
+  if (controls) controls.querySelectorAll('.otab').forEach((t,i) => t.classList.toggle('active', i===0 || i===3));
+  applyResultView();
   loadPresetChips();
 }
 
