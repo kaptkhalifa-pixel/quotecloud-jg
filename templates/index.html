@@ -491,6 +491,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     <div style="font-size:0.78rem;color:#666;background:#f0f4ff;border:1px solid #c7d7ff;border-radius:6px;padding:10px 14px;margin-bottom:16px;line-height:1.6">
       This tool generates <strong>Quotations only</strong>. To issue an Invoice, first generate a Quotation here, then navigate to <strong>Enquiries</strong> to upgrade the document to an Invoice.
     </div>
+    <div id="pdf-section-subheading" style="font-size:0.88rem;font-weight:700;color:#0d47a1;margin-bottom:14px;display:none"></div>
     <div class="form-row">
       <div class="form-group"><label>Select Aircraft</label><select id="pdf-aircraft-select" onchange="updateOptionSelector()"></select></div>
       <div class="form-group" id="pdf-option-group" style="display:none">
@@ -1511,8 +1512,8 @@ function clearQuote() {
   let controls = document.getElementById('quote-result-controls');
   if (controls) controls.style.display = 'none';
   document.getElementById('pdf-section').style.display = 'none';
-  let heading1 = document.getElementById('pdf-section-heading');
-  if (heading1) heading1.textContent = 'Generate Quotation';
+  let subheading1 = document.getElementById('pdf-section-subheading');
+  if (subheading1) { subheading1.textContent = ''; subheading1.style.display = 'none'; }
   ['ow-pickup','ow-dropoff','rt-pickup','rt-dropoff','rt-depart','rt-return',
    'pdf-name','pdf-email','pdf-phone','pdf-discount','pdf-notes'].forEach(id => {
     let el = document.getElementById(id);
@@ -1797,8 +1798,8 @@ async function submitQuote(mission) {
     saveStateToStorage();
     renderResults(lastResults);
     document.getElementById('pdf-section').style.display = 'block';
-    let heading0 = document.getElementById('pdf-section-heading');
-    if (heading0) heading0.textContent = 'Generate Quotation';
+    let subheading0 = document.getElementById('pdf-section-subheading');
+    if (subheading0) { subheading0.textContent = ''; subheading0.style.display = 'none'; }
     populatePdfAircraftSelector();
   } catch(e) {
     document.getElementById('quote-result').innerHTML = `<div class="error-box">Network error: ${e.message}</div>`;
@@ -2099,9 +2100,17 @@ function quickPDF(idx) {
   let sel = document.getElementById('pdf-aircraft-select');
   if (sel) { sel.value = idx; updateOptionSelector(); }
   document.getElementById('pdf-section').style.display = 'block';
-  let heading = document.getElementById('pdf-section-heading');
+  let subheading = document.getElementById('pdf-section-subheading');
   let acLabel = lastResults[idx]?.ac_label || '';
-  if (heading) heading.textContent = acLabel ? `Finalize the ${acLabel} quote below — enter your client's details, then generate the PDF` : 'Generate Quotation';
+  if (subheading) {
+    if (acLabel) {
+      subheading.textContent = `Finalize the ${acLabel} quote below — enter your client's details, then generate the PDF`;
+      subheading.style.display = 'block';
+    } else {
+      subheading.textContent = '';
+      subheading.style.display = 'none';
+    }
+  }
   document.getElementById('pdf-section').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
