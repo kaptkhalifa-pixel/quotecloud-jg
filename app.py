@@ -2273,14 +2273,17 @@ def search_clients():
 def create_client():
     data = request.get_json()
     name = (data.get("name") or "").strip()
+    phone = (data.get("phone") or "").strip()
     if not name:
         return jsonify({"error": "Client name required"}), 400
+    if not phone:
+        return jsonify({"error": "Client phone/WhatsApp number required"}), 400
     try:
         client_id = generate_token("C")
         client_record = {
             "client_id": client_id,
             "name": name,
-            "phone": (data.get("phone") or "").strip(),
+            "phone": phone,
             "email": (data.get("email") or "").strip(),
             "address": (data.get("address") or "").strip(),
             "created_at": datetime.datetime.now().isoformat()
