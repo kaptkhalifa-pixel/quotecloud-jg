@@ -2861,18 +2861,6 @@ def get_config_public():
     }
     return jsonify(safe)
 
-@app.route("/settings/save", methods=["POST"])
-@login_required
-def save_settings():
-    global OPERATOR
-    data = request.get_json()
-    try:
-        save_operator_config(data)
-        OPERATOR = data
-        return jsonify({"success": True})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 # ─── PER-SECTION SETTINGS SAVES ───
 
 @app.route("/settings/save/branding", methods=["POST"])
@@ -2881,9 +2869,27 @@ def save_branding():
     global OPERATOR
     data = request.get_json()
     try:
-        fields = ["company_name", "tagline", "logo_url", "footer_tagline", "branding", "trust_bar", "social", "contact"]
-        update = {k: data[k] for k in fields if k in data}
-        OPERATOR.update(update)
+        fields = ["company_name", "tagline", "logo_url", "footer_tagline", "branding", "trust_bar", "social", "contact", "base_airport"]
+        # CRITICAL FIX: this whole card is shared by 6 real sub-sections
+        # (Name/Tagline, Logo, Colors, Trust Bar, Social, Contact), but only
+        # branding/contact/social are themselves nested dicts. A plain
+        # OPERATOR.update() replaced those nested dicts wholesale with
+        # whatever the triggering section happened to send - confirmed live
+        # against real operator data: branding.button_color/button_text
+        # (which style every button across the whole admin panel) would be
+        # silently destroyed the next time ANY of these 6 sections saved,
+        # since none of their payloads include those two fields. Now merges
+        # into the existing nested dict instead of replacing it.
+        merge_fields = ("branding", "contact", "social")
+        for k in fields:
+            if k not in data:
+                continue
+            if k in merge_fields and isinstance(data[k], dict):
+                if not isinstance(OPERATOR.get(k), dict):
+                    OPERATOR[k] = {}
+                OPERATOR[k].update(data[k])
+            else:
+                OPERATOR[k] = data[k]
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:
@@ -2909,7 +2915,19 @@ def save_geo_lock():
     global OPERATOR
     data = request.get_json()
     try:
-        OPERATOR["geo_lock"] = data.get("geo_lock", {})
+        geo = data.get("geo_lock", {})
+        # FIX: no range validation existed at all - an enabled lock with a
+        # garbage lat/lon/radius would save successfully and silently break
+        # the quote engine's location check for every real client.
+        if geo.get("enabled"):
+            lat, lon, radius = geo.get("center_lat"), geo.get("center_lon"), geo.get("radius_km")
+            if lat is None or not (-90 <= float(lat) <= 90):
+                return jsonify({"error": "Center latitude must be between -90 and 90."}), 400
+            if lon is None or not (-180 <= float(lon) <= 180):
+                return jsonify({"error": "Center longitude must be between -180 and 180."}), 400
+            if radius is None or float(radius) <= 0:
+                return jsonify({"error": "Radius must be a positive number of kilometers."}), 400
+        OPERATOR["geo_lock"] = geo
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:
@@ -2921,7 +2939,16 @@ def save_quoting_rules():
     global OPERATOR
     data = request.get_json()
     try:
-        OPERATOR["quoting_rules"] = data.get("quoting_rules", {})
+        # CRITICAL FIX: this card's "Core Rules" sub-section is one of three
+        # independent save buttons sharing the same quoting_rules dict
+        # (Extra Time and Client Display are the other two). A full replace
+        # here silently destroyed show_rate_breakdown - confirmed live: this
+        # operator's real config has it explicitly set to false (rate
+        # breakdown hidden from clients), which the next Core Rules save
+        # would have silently reset to true. Now merges instead of replacing.
+        if "quoting_rules" not in OPERATOR:
+            OPERATOR["quoting_rules"] = {}
+        OPERATOR["quoting_rules"].update(data.get("quoting_rules", {}))
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:
@@ -2966,7 +2993,15 @@ def save_bank():
     global OPERATOR
     data = request.get_json()
     try:
-        OPERATOR["bank"] = data.get("bank", {})
+        # FIX: same full-replace shape as branding/quoting_rules - not
+        # currently destructive since the one shared JS function always
+        # sends the complete bank object regardless of which of this card's
+        # two sections (Account Details / Invoice Settings) triggered it,
+        # but that's fragile the moment they're ever split apart. Merging
+        # defensively now, matching the fix applied everywhere else.
+        if "bank" not in OPERATOR:
+            OPERATOR["bank"] = {}
+        OPERATOR["bank"].update(data.get("bank", {}))
         if "invoice" not in OPERATOR: OPERATOR["invoice"] = {}
         if "terms" in data: OPERATOR["invoice"]["terms"] = data["terms"]
         if "terms_on_quote" in data: OPERATOR["invoice"]["terms_on_quote"] = data["terms_on_quote"]
@@ -3276,21 +3311,28 @@ def fx_save():
         existing_fx = OPERATOR.get("fx", {})
         pri_cur = existing_fx.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
         sec_cur = existing_fx.get("secondary_currency") or OPERATOR.get("secondary_currency") or ""
-        rates = {}
+        # CRITICAL FIX: this route runs on every currency settings save and
+        # was rebuilding "rates" from scratch each time, containing only the
+        # currently-selected secondary currency - any manual rate
+        # previously saved for a different currency pair was silently
+        # discarded. Now merges into whatever rates already exist.
+        rates = dict(existing_fx.get("rates", {}) or {})
         if sec_cur and data.get(sec_cur):
             rates[sec_cur] = float(data.get(sec_cur, 0))
         # FIX (item 4, updated bug list): "Disable secondary currency
         # entirely" existed in the HTML but was never actually wired to
         # any real logic anywhere - genuinely dead markup. Now a real,
         # persisted setting.
-        OPERATOR["fx"] = {
+        if "fx" not in OPERATOR:
+            OPERATOR["fx"] = {}
+        OPERATOR["fx"].update({
             "mode": data.get("mode", "auto"),
             "show_kes": data.get("show_kes", True),
             "disabled": data.get("disabled", False),
             "primary_currency": pri_cur,
             "secondary_currency": sec_cur,
             "rates": rates
-        }
+        })
         save_operator_config(OPERATOR)
         return jsonify({"success": True})
     except Exception as e:

@@ -4960,6 +4960,7 @@ async function saveSectionBranding() {
 
 async function saveSectionCompany() {
   let data = {
+    base_airport: document.getElementById('s-base-airport')?.value || '',
     contact: {
       phone: document.getElementById('s-phone')?.value || '',
       whatsapp: document.getElementById('s-whatsapp')?.value || '',
@@ -5214,113 +5215,6 @@ async function saveSectionCurrency() {
     if (d.success) showSectionMsg('msg-currency','✓ Saved','ok');
     else showSectionMsg('msg-currency', d.error || 'Error', 'err');
   } catch(e) { showSectionMsg('msg-currency','Network error','err'); }
-}
-
-async function saveBranding() { await saveSectionBranding(); }
-async function saveCompany() { await saveSectionCompany(); }
-async function saveGeoLock() { await saveSectionGeoLock(); }
-async function saveQuotingRules() { await saveSectionQuotingRules(); }
-async function saveBank() { await saveSectionBank(); }
-
-async function saveBranding() {
-
-  operatorConfig.company_name = document.getElementById('s-company-name').value;
-  operatorConfig.tagline = document.getElementById('s-tagline').value;
-  operatorConfig.logo_url = document.getElementById('s-logo-url').value;
-  operatorConfig.footer_tagline = document.getElementById('s-footer-tagline').value;
-  operatorConfig.aircraft_mode = document.getElementById('s-aircraft-mode').value;
-  operatorConfig.landing_field_disclaimer = document.getElementById('s-disclaimer').value;
-  operatorConfig.branding = operatorConfig.branding || {};
-  operatorConfig.branding.primary_color = document.getElementById('s-primary-color-hex').value || document.getElementById('s-primary-color').value;
-  operatorConfig.branding.accent_color = document.getElementById('s-accent-color-hex').value || document.getElementById('s-accent-color').value;
-  operatorConfig.trust_bar = Array.from(document.querySelectorAll('.trust-bar-input')).map(i => i.value.trim());
-  operatorConfig.social = { website: document.getElementById('s-website').value, instagram: document.getElementById('s-instagram').value, facebook: document.getElementById('s-facebook').value, twitter: document.getElementById('s-twitter').value };
-  await saveConfig('branding-msg');
-}
-
-async function saveCompany() {
-  operatorConfig.contact = operatorConfig.contact || {};
-  operatorConfig.contact.phone = document.getElementById('s-phone').value;
-  operatorConfig.contact.whatsapp = document.getElementById('s-whatsapp').value;
-  operatorConfig.contact.whatsapp_greeting = document.getElementById('s-whatsapp-greeting').value;
-  operatorConfig.contact.email = document.getElementById('s-email').value;
-  operatorConfig.contact.address = document.getElementById('s-address').value;
-  operatorConfig.base_airport = document.getElementById('s-base-airport').value;
-  await saveConfig('company-msg');
-}
-
-async function resolveGeoCenter() {
-  let pin = document.getElementById('s-geo-maps-pin').value.trim();
-  let status = document.getElementById('s-geo-status');
-  if (!pin) { status.textContent = 'Enter a Maps pin first.'; return; }
-  status.textContent = 'Resolving...';
-  try {
-    let r = await fetch('/resolve_pin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url:pin}) });
-    let data = await r.json();
-    if (data.found) {
-      document.getElementById('s-geo-center-lat').value = data.lat;
-      document.getElementById('s-geo-center-lon').value = data.lon;
-      status.textContent = '✅ Center set: ' + data.lat.toFixed(5) + ', ' + data.lon.toFixed(5);
-      status.style.color = '#1b5e20';
-    } else { status.textContent = '❌ Could not resolve pin.'; status.style.color = '#c00'; }
-  } catch(e) { status.textContent = '❌ Error: ' + e.message; status.style.color = '#c00'; }
-}
-
-async function saveGeoLock() {
-  operatorConfig.geo_lock = {
-    enabled: document.getElementById('s-geo-enabled').checked,
-    mode: 'radius',
-    region_name: document.getElementById('s-geo-region-name').value,
-    center_lat: parseFloat(document.getElementById('s-geo-center-lat').value) || -0.023,
-    center_lon: parseFloat(document.getElementById('s-geo-center-lon').value) || 37.906,
-    radius_km: parseFloat(document.getElementById('s-geo-radius-km').value) || 500
-  };
-  await saveConfig('geo-msg');
-}
-
-async function saveQuotingRules() {
-  operatorConfig.quoting_rules = operatorConfig.quoting_rules || {};
-  operatorConfig.quoting_rules.min_flight_hours = parseFloat(document.getElementById('s-min-hours').value) || 1.0;
-  operatorConfig.quoting_rules.max_nights_before_pickup_drop = parseInt(document.getElementById('s-max-nights').value) || 3;
-  operatorConfig.quoting_rules.max_flight_hours_per_day = parseFloat(document.getElementById('s-max-hours-day').value) || 10;
-  operatorConfig.quoting_rules.max_idle_days_between_legs = parseInt(document.getElementById('s-max-idle-days').value) || 1;
-  operatorConfig.quoting_rules.quote_validity_hours = parseInt(document.getElementById('s-quote-validity').value) || 48;
-  operatorConfig.quoting_rules.ground_time_buffer_enabled = document.getElementById('s-buffer-enabled').checked;
-  operatorConfig.quoting_rules.ground_time_buffer_minutes = parseFloat(document.getElementById('s-buffer-minutes').value) || 0;
-  operatorConfig.quoting_rules.show_distance_to_client = document.getElementById('s-show-nm').checked;
-  operatorConfig.quoting_rules.show_rate_breakdown = document.getElementById('s-show-rate-breakdown').checked;
-  await saveConfig('rules-msg');
-}
-
-async function saveBank() {
-  operatorConfig.bank = operatorConfig.bank || {};
-  operatorConfig.bank.account_name = document.getElementById('s-bank-name').value;
-  operatorConfig.bank.bank_name = document.getElementById('s-bank-bank').value;
-  operatorConfig.bank.kes_account = document.getElementById('s-bank-kes').value;
-  operatorConfig.bank.kes_currency = document.getElementById('s-bank-kes-currency').value || 'KES';
-  operatorConfig.bank.usd_account = document.getElementById('s-bank-usd').value;
-  operatorConfig.bank.usd_currency = document.getElementById('s-bank-usd-currency').value || 'USD';
-  operatorConfig.bank.swift = document.getElementById('s-bank-swift').value;
-  operatorConfig.bank.branch = document.getElementById('s-bank-branch').value;
-  operatorConfig.bank.paybill = document.getElementById('s-bank-paybill') ? document.getElementById('s-bank-paybill').value : '';
-  operatorConfig.invoice = operatorConfig.invoice || {};
-  operatorConfig.invoice.prefix = document.getElementById('s-invoice-prefix').value;
-  operatorConfig.invoice.terms = document.getElementById('s-invoice-terms').value;
-  await saveConfig('bank-msg');
-}
-
-async function saveConfig(msgId) {
-  let btn = document.querySelector(`#${msgId}`).previousElementSibling;
-  if (btn && btn.tagName === 'BUTTON') btnFeedback(btn, 'loading');
-  try {
-    let r = await fetch('/settings/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(operatorConfig) });
-    let data = await r.json();
-    if (btn && btn.tagName === 'BUTTON') btnFeedback(btn, data.success?'success':'error', data.success?'Saved':'Failed');
-    showMsg(msgId, data.success?'Saved.':(data.error||'Error'), data.success?'success':'error');
-  } catch(e) {
-    if (btn && btn.tagName === 'BUTTON') btnFeedback(btn, 'error', 'Network Error');
-    showMsg(msgId,'Network error.','error');
-  }
 }
 
 async function changePassword() {
