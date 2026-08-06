@@ -5478,7 +5478,7 @@ function openInvoiceBuilder(enq) {
   // client DB in the first place, so there's nothing redundant to grey out.
   setClientAutofillLock('ib', !!enq.client_id);
   document.getElementById('ib-discount').value = '0';
-  document.getElementById('ib-notes').value = '';
+  document.getElementById('ib-notes').value = enq.notes || '';
   document.getElementById('ib-uplift-items').innerHTML = '';
   document.getElementById('ib-msg').innerHTML = '';
 
