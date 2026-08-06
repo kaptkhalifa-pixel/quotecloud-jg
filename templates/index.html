@@ -1859,8 +1859,13 @@ function getSelectedResult() {
     actual = res;
   }
   actual.rate_usd = res._adj_rate || res.rate_usd;
-  actual.overnight_rate_usd = res.overnight_rate_usd;
-  actual.idle_day_rate_usd = res.idle_day_rate_usd;
+  // overnight_rate_usd/idle_day_rate_usd are deliberately NOT overwritten here -
+  // build_pdf_payload_from_result() divides overnight_usd/waiting_usd by the
+  // ORIGINAL rate to recover the real night/idle-day count. The adjusted rate
+  // (_adj_overnight_rate/_adj_idle_rate) rides along unchanged on this same
+  // object already (recalcAdjuster wrote it directly onto lastResults[idx],
+  // and actual IS res for the common case), so consumers can price with it
+  // without disturbing that count.
   actual.pax_fee_usd_display = res._adj_pax !== undefined ? res._adj_pax : res.pax_fee_usd_display;
   actual.ac_label = res.ac_label;
   actual.ac_key = res.ac_key;
@@ -2135,14 +2140,23 @@ function quickWA(idx) {
   let revSegs2 = allSegs2.filter(s => ['revenue','positioning','depositioning'].includes(s.type));
   let totalHrs2 = allSegs2.reduce((sum, s) => sum + parseFloat(s.hours||0), 0);
   let rate2 = res._adj_rate || res.rate_usd || 0;
-  let pax2 = res.pax_fee_usd || res.pax_fee_usd_display || 0;
-  let paxLabel2 = res.pax_label || 'Mission Fixed Costs';
+  // CRITICAL FIX: never checked res._adj_pax or res._adj_pax_label, so an
+  // edited/renamed pax fee silently reverted to the original in the actual
+  // message sent to a real client.
+  let pax2 = res._adj_pax !== undefined ? res._adj_pax : (res.pax_fee_usd || res.pax_fee_usd_display || 0);
+  let paxLabel2 = res._adj_pax_label || res.pax_label || 'Mission Fixed Costs';
   // Was reading res.nights/res.idle_days directly - those keys never exist on the
   // result object (only overnight_usd/waiting_usd totals do). Same fix already proven
   // correct elsewhere in this file (adjustRevenue) - cost / rate, not a non-existent count field.
   let baseOv2 = res.overnight_usd || (res.mission==='return_both' ? res.option_a?.overnight_usd : 0) || 0;
-  let ovRate2 = res.overnight_rate_usd || 0;
-  let nights2 = ovRate2 > 0 && baseOv2 > 0 ? Math.round(baseOv2 / ovRate2) : 0;
+  // CRITICAL FIX: only ever read the original overnight_rate_usd, ignoring
+  // any edit made in the Quote Modifier tool. Night count must still be
+  // derived from the ORIGINAL rate (that's what the banked overnight_usd
+  // total was actually computed from) - only the per-night price used for
+  // the line item should reflect the adjustment.
+  let ovRateOrig2 = res.overnight_rate_usd || 0;
+  let ovRate2 = res._adj_overnight_rate || ovRateOrig2;
+  let nights2 = ovRateOrig2 > 0 && baseOv2 > 0 ? Math.round(baseOv2 / ovRateOrig2) : 0;
   let company2 = operatorConfig?.company_name || operatorConfig?.company || 'us';
   let phone2 = operatorConfig.contact?.phone || '';
   let validity2 = (operatorConfig.quoting_rules?.quote_validity_hours || 48);
@@ -2186,8 +2200,11 @@ function quickWA(idx) {
     if (rate2 > 0 && totalHrs2 > 0) costLines.push('Base Charter Cost: ' + priCurrency + ' ' + fmtAmt(rate2 * totalHrs2));
     if (nights2 > 0 && ovRate2 > 0) costLines.push('Overnight: ' + priCurrency + ' ' + fmtAmt(ovRate2 * nights2));
     let baseIdle2 = res.waiting_usd || (res.mission==='return_both' ? res.option_a?.waiting_usd : 0) || 0;
-    let idleRate2 = res.idle_day_rate_usd || 0;
-    let idleDays2 = idleRate2 > 0 && baseIdle2 > 0 ? Math.round(baseIdle2 / idleRate2) : 0;
+    // CRITICAL FIX: same gap as overnight above - idle-day count must come
+    // from the original rate, price from the adjusted one.
+    let idleRateOrig2 = res.idle_day_rate_usd || 0;
+    let idleRate2 = res._adj_idle_rate || idleRateOrig2;
+    let idleDays2 = idleRateOrig2 > 0 && baseIdle2 > 0 ? Math.round(baseIdle2 / idleRateOrig2) : 0;
     if (idleDays2 > 0 && idleRate2 > 0) costLines.push('Idle Day: ' + priCurrency + ' ' + fmtAmt(idleRate2 * idleDays2));
     if (pax2 > 0) costLines.push(paxLabel2 + ': ' + priCurrency + ' ' + fmtAmt(pax2));
     costSection = ['COST BREAKDOWN', ...costLines, '', 'GRAND TOTAL: ' + priCurrency + ' ' + fmtAmt(total)];
@@ -2347,6 +2364,13 @@ function recalcAdjuster(idx) {
   lastResults[idx]._adj_rate = rateUsd;
   lastResults[idx]._adj_pax = paxUsd;
   lastResults[idx]._adj_total = total;
+  // CRITICAL FIX: edited overnight/idle rates were only ever folded into
+  // the rolled-up _adj_total and then discarded - never persisted as their
+  // own named value, so every downstream consumer (PDF line items,
+  // WhatsApp breakdown) fell back to the original, unedited rate. Persisted
+  // the same way _adj_rate/_adj_pax already are.
+  lastResults[idx]._adj_overnight_rate = ovRateAdj;
+  lastResults[idx]._adj_idle_rate = idleRateAdj;
   let liveTotalEl = document.getElementById('adj-live-total-'+idx);
   if (liveTotalEl) {
     if (isKes && kesRate > 0) {

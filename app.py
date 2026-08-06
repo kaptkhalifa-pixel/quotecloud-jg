@@ -1285,8 +1285,19 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     items = []
     ac_label = result.get("ac_label", "Aircraft")
     rate = result.get("rate_usd", 0)
-    overnight_rate = result.get("overnight_rate_usd", 0)
-    idle_day_rate = result.get("idle_day_rate_usd", 0)
+    # CRITICAL FIX: only ever read the original overnight/idle-day rate,
+    # silently ignoring any edit made in the Quote Modifier tool - and since
+    # this PDF's total is a genuine sum of these line items (no independent
+    # total field backs it up), the printed total was actually wrong, not
+    # just internally inconsistent. The *_orig variables stay original
+    # because the night/idle-day count must be derived from the rate the
+    # banked overnight_usd/waiting_usd total was actually computed from;
+    # only the per-unit price used for the line item should reflect the
+    # adjustment.
+    overnight_rate_orig = result.get("overnight_rate_usd", 0)
+    overnight_rate = result.get("_adj_overnight_rate") or overnight_rate_orig
+    idle_day_rate_orig = result.get("idle_day_rate_usd", 0)
+    idle_day_rate = result.get("_adj_idle_rate") or idle_day_rate_orig
 
     mission = result.get("mission", "")
     if mission == "pick_and_drop":
@@ -1379,8 +1390,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
 
     if not ghost_mode:
         overnight_usd = result.get("overnight_usd") or result.get("overnight_cost_usd") or 0
-        if overnight_usd > 0 and overnight_rate > 0:
-            nights = round(float(overnight_usd) / float(overnight_rate))
+        if overnight_usd > 0 and overnight_rate_orig > 0:
+            nights = round(float(overnight_usd) / float(overnight_rate_orig))
             if nights > 0:
                 items.append({
                     "name": f"Overnight Per Diem\n{nights} night{'s' if nights != 1 else ''} away from base",
@@ -1389,8 +1400,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
                 })
 
         waiting_usd = result.get("waiting_usd") or result.get("idle_cost_usd") or 0
-        if waiting_usd > 0 and idle_day_rate > 0:
-            idle_days = round(float(waiting_usd) / float(idle_day_rate))
+        if waiting_usd > 0 and idle_day_rate_orig > 0:
+            idle_days = round(float(waiting_usd) / float(idle_day_rate_orig))
             if idle_days > 0:
                 idle_label = result.get("idle_day_label") or "Idle Day Charge"
                 items.append({
