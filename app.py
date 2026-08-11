@@ -3890,6 +3890,13 @@ def share_email():
         route = data.get("route", "")
         company_name = OPERATOR.get("company_name", "Jetman Global")
         contact_phone = OPERATOR.get("contact", {}).get("phone", "+254 701 007 777")
+        # FIX: hardcoded "USD $" regardless of the real, configured primary
+        # currency (KES) - same class of bug already found and fixed on QC
+        # Aero, in the pdf-currency hidden field bug, and in the CRM
+        # record_currency bug earlier tonight. Real amounts were already
+        # correct - only the currency label was wrong.
+        fx_config = OPERATOR.get("fx", {})
+        pri_currency = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
         is_invoice = doc_type == "Invoice"
         pdf_btn = f'<a href="{pdf_url}" style="display:inline-block;background:#000;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;margin:20px 0">View {doc_type} →</a>' if pdf_url else ""
         payment_section = """
@@ -3914,7 +3921,7 @@ def share_email():
           <p style="font-size:14px;color:#555;line-height:1.7;margin-bottom:4px">Please find herein your {doc_type.lower()} from {company_name}.</p>
           {f'<p style="font-size:13px;color:#555;margin-bottom:4px">Aircraft: <strong>{ac_label}</strong></p>' if ac_label else ''}
           {f'<p style="font-size:13px;color:#555;margin-bottom:4px">Route: <strong>{route}</strong></p>' if route else ''}
-          <p style="font-size:16px;font-weight:700;color:#000;margin:16px 0">Total: USD ${amount:,.2f}</p>
+          <p style="font-size:16px;font-weight:700;color:#000;margin:16px 0">Total: {pri_currency} {amount:,.2f}</p>
           {pdf_btn}
           {payment_section}
           <p style="font-size:13px;color:#555;line-height:1.7">For any queries, reach us anytime:<br>
