@@ -913,6 +913,76 @@ def validate_safari_legs(legs, rules):
             prev_date = d
     return None
 
+FX_CACHE_MAX_AGE_HOURS = 12
+
+def get_cached_fx_rate(base_currency):
+    """JG is single-tenant (one TENANT_ID, one Firestore doc tree) so there's
+    no separate platform-level collection anywhere in this codebase - real-world
+    exchange rates live under the same tenant_collection() every other
+    persisted thing here uses. That's fine: with only one tenant ever writing
+    or reading it, tenant_collection("fx_cache") is already the global, shared,
+    12-hour cache QC Aero's platform_col("fx_cache") is for a multi-tenant app.
+
+    CRITICAL: a failed refresh must never block quoting or silently fall
+    through to "no conversion at all" - always returns the best rate data
+    available: fresh if the cache is missing/stale and the live fetch
+    succeeds, otherwise whatever was last known-good, even if stale.
+    Returns (rates_dict, fetched_at_iso_string_or_None).
+    """
+    doc_ref = tenant_collection("fx_cache").document(base_currency)
+    cached = None
+    try:
+        snap = doc_ref.get()
+        if snap.exists:
+            cached = snap.to_dict()
+    except Exception:
+        cached = None
+
+    if cached:
+        try:
+            fetched_at = datetime.datetime.fromisoformat((cached.get("fetched_at") or "").replace("Z", ""))
+            age_hours = (datetime.datetime.utcnow() - fetched_at).total_seconds() / 3600.0
+        except Exception:
+            age_hours = FX_CACHE_MAX_AGE_HOURS + 1
+        if age_hours < FX_CACHE_MAX_AGE_HOURS:
+            return cached.get("rates", {}), cached.get("fetched_at")
+
+    # Cache missing or stale - this one request pays the refresh cost;
+    # every other request in the meantime just reads Firestore.
+    try:
+        import requests as req
+        r = req.get(f"https://open.er-api.com/v6/latest/{base_currency}", timeout=5)
+        rdata = r.json()
+        if rdata.get("result") == "success":
+            fresh_rates = rdata.get("rates", {})
+            fetched_at_iso = datetime.datetime.utcnow().isoformat() + "Z"
+            try:
+                doc_ref.set({"base": base_currency, "rates": fresh_rates, "fetched_at": fetched_at_iso})
+            except Exception:
+                pass  # cache write failing is non-fatal - this request still got a fresh rate
+            return fresh_rates, fetched_at_iso
+    except Exception:
+        pass
+
+    # Refresh failed - fall back to the last known-good cached rate, even if
+    # stale, rather than silently applying no conversion at all.
+    if cached:
+        return cached.get("rates", {}), cached.get("fetched_at")
+
+    # No cache has ever existed for this currency AND the live fetch just
+    # failed - genuinely nothing to fall back to.
+    return {}, None
+
+def format_fx_disclosure(iso_timestamp):
+    """'Rate as at 11:30Z, 16 Feb 2025' - or '' if no conversion happened."""
+    if not iso_timestamp:
+        return ""
+    try:
+        dt = datetime.datetime.fromisoformat(iso_timestamp.replace("Z", ""))
+        return f"Rate as at {dt.strftime('%H:%M')}Z, {dt.strftime('%d %b %Y')}"
+    except Exception:
+        return ""
+
 def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
                           depart=None, ret=None, legs=None, display_map=None):
     rules = get_quoting_rules()
@@ -924,6 +994,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
     # Convert all aircraft costs to primary currency if rate_currency differs
     rate_currency = ac_cfg.get("rate_currency", "USD")
     _cf = 1.0
+    fx_rate_timestamp = None  # set only when a real cross-currency conversion happened
     fx_cfg = OPERATOR.get("fx", {})
     pri_cur = fx_cfg.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
     if rate_currency != pri_cur and rate > 0:
@@ -934,11 +1005,21 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
                 usd_to_pri = fx_rates.get(pri_cur, 1.0)
                 _cf = rate_to_usd * usd_to_pri
             else:
-                import requests as req
-                r = req.get(f"https://open.er-api.com/v6/latest/{rate_currency}", timeout=5)
-                rdata = r.json()
-                if rdata.get("result") == "success":
-                    _cf = float(rdata.get("rates", {}).get(pri_cur, 1.0))
+                # CRITICAL FIX: was a live, uncached, per-request call to the
+                # external FX API on EVERY quote calculation - two temporally-
+                # separated calls for the identical route/aircraft could
+                # genuinely price differently as the real exchange rate
+                # drifted between them. On any failure, silently fell through
+                # to _cf = 1.0 (no conversion at all) - far more dangerous
+                # than a stale rate. Now reads a 12-hour, Firestore-backed
+                # cache - refreshed by whichever request happens to be first
+                # after it goes stale, every other request just reads
+                # Firestore, and a failed refresh falls back to the last
+                # known-good rate.
+                cached_rates, fetched_at = get_cached_fx_rate(rate_currency)
+                if cached_rates:
+                    _cf = float(cached_rates.get(pri_cur, 1.0))
+                    fx_rate_timestamp = fetched_at
             rate = round_currency(rate * _cf)
             overnight_rate = round_currency(overnight_rate * _cf)
             idle_day_rate = round_currency(idle_day_rate * _cf)
@@ -1046,6 +1127,7 @@ def compute_for_aircraft(mission, ac_key, ac_cfg, pickup_coord, dropoff_coord,
         result["ac_type"] = ac_cfg.get("type", "helicopter")
         result["home_airstrip"] = ac_cfg.get("home_airstrip", "")
         result["rate_usd"] = rate
+        result["fx_rate_timestamp"] = fx_rate_timestamp
         overnight_enabled = ac_cfg.get("overnight_enabled", True)
         result["overnight_rate_usd"] = overnight_rate if overnight_enabled else 0.0
         result["idle_day_rate_usd"] = idle_day_rate
@@ -1458,11 +1540,9 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
             if fx_cfg.get("mode") == "manual":
                 sec_rate = float(fx_cfg.get("rates", {}).get(sec_currency, 0))
             else:
-                import requests as req
-                r = req.get(f"https://open.er-api.com/v6/latest/{pdf_currency}", timeout=5)
-                rdata = r.json()
-                if rdata.get("result") == "success":
-                    sec_rate = float(rdata.get("rates", {}).get(sec_currency, 0))
+                cached_rates, _ = get_cached_fx_rate(pdf_currency)
+                if cached_rates:
+                    sec_rate = float(cached_rates.get(sec_currency, 0))
         except Exception:
             sec_rate = 0.0
 
@@ -1506,6 +1586,11 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         # main quote-PDF route (build_pdf_payload_from_result) was missed
         # at the time.
         payload["kes_note"] = f"≈ {sec_currency} {sec_total:,}  ({hq.format_fx_rate_display(pdf_currency, sec_currency, sec_rate)})"
+
+    if result.get("fx_rate_timestamp"):
+        _disclosure = format_fx_disclosure(result.get("fx_rate_timestamp"))
+        if _disclosure:
+            payload["kes_note"] = (payload.get("kes_note", "") + ("  ·  " if payload.get("kes_note") else "") + _disclosure)
 
     return payload, doc_number
 
@@ -1749,6 +1834,7 @@ def pdf():
                 "ac_label": result.get("ac_label", ""),
                 "ac_key": result.get("ac_key", ""),
                 "total_usd": total,
+                "fx_rate_timestamp": result.get("fx_rate_timestamp"),
                 "mission": result.get("mission", ""),
                 "route_summary": route_summary,
                 "total_hrs": total_hrs_val,
@@ -2112,11 +2198,9 @@ def manual_invoice():
                 if fx_config.get("mode") == "manual":
                     kes_rate_inv = float(fx_config.get("rates", {}).get(sec_currency, 0))
                 else:
-                    import requests as req
-                    r = req.get(f"https://open.er-api.com/v6/latest/{pri_cur}", timeout=5)
-                    rdata = r.json()
-                    if rdata.get("result") == "success":
-                        kes_rate_inv = float(rdata.get("rates", {}).get(sec_currency, 0))
+                    cached_rates, _ = get_cached_fx_rate(pri_cur)
+                    if cached_rates:
+                        kes_rate_inv = float(cached_rates.get(sec_currency, 0))
             except Exception:
                 kes_rate_inv = 0
             if kes_rate_inv > 0:
@@ -3565,6 +3649,7 @@ def booking_request():
             "ac_label": quote_snapshot.get("ac_label", ""),
             "ac_key": quote_snapshot.get("ac_key", ""),
             "total_usd": data.get("selected_total") or quote_snapshot.get("total_usd") or float((quote_snapshot.get("option_a") or {}).get("total_usd", 0)),
+            "fx_rate_timestamp": quote_snapshot.get("fx_rate_timestamp"),
             "mission": quote_snapshot.get("mission", ""),
             "route_summary": route_summary,
             "total_hrs": round(sum(float(s.get("hours", 0)) for s in [seg for segs in [
@@ -3657,11 +3742,9 @@ def booking_pdf():
                 if fx_config.get("mode") == "manual":
                     kes_rate_for_pdf = float(fx_config.get("rates", {}).get(sec_currency, 0))
                 else:
-                    import requests as req
-                    r = req.get(f"https://open.er-api.com/v6/latest/{pri_cur}", timeout=5)
-                    rdata = r.json()
-                    if rdata.get("result") == "success":
-                        kes_rate_for_pdf = float(rdata.get("rates", {}).get(sec_currency, 0))
+                    cached_rates, _ = get_cached_fx_rate(pri_cur)
+                    if cached_rates:
+                        kes_rate_for_pdf = float(cached_rates.get(sec_currency, 0))
             except Exception:
                 kes_rate_for_pdf = 0
 
@@ -3679,7 +3762,17 @@ def booking_pdf():
             # in a fixed direction that could produce an unreadable tiny
             # decimal. Now uses the real currencies and the readable
             # display direction.
-            payload["kes_note"] = f"{sec_currency} {kes_total_val:,} (rate {hq.format_fx_rate_display(pri_cur, sec_currency, kes_rate_for_pdf)}, date {today_str})"
+            # CRITICAL FIX: this was unconditionally overwriting the
+            # kes_note that build_pdf_payload_from_result() had just set a
+            # few lines above (which, after the fx_rate_timestamp fix,
+            # includes the "Rate as at ..." disclosure) - silently
+            # destroying that disclosure specifically on this regenerated-
+            # PDF path. Now recomputes the KES line (needed since this
+            # route's total can differ from the original quote's) but
+            # re-appends the same disclosure instead of dropping it.
+            _kes_note_val = f"{sec_currency} {kes_total_val:,} (rate {hq.format_fx_rate_display(pri_cur, sec_currency, kes_rate_for_pdf)}, date {today_str})"
+            _fx_disclosure_pdf = format_fx_disclosure(result.get("fx_rate_timestamp"))
+            payload["kes_note"] = _kes_note_val + ("  ·  " + _fx_disclosure_pdf if _fx_disclosure_pdf else "")
         payload["number"] = token
         payload["notes"] = ""
         payload["notes_title"] = ""
@@ -3897,6 +3990,10 @@ def share_email():
         # correct - only the currency label was wrong.
         fx_config = OPERATOR.get("fx", {})
         pri_currency = fx_config.get("primary_currency") or OPERATOR.get("quoting_rules", {}).get("currency") or "USD"
+        fx_disclosure_html = ""
+        _fx_disclosure = format_fx_disclosure(data.get("fx_rate_timestamp"))
+        if _fx_disclosure:
+            fx_disclosure_html = f'<p style="font-size:11px;color:#999;margin-top:-4px">{_fx_disclosure}</p>'
         is_invoice = doc_type == "Invoice"
         pdf_btn = f'<a href="{pdf_url}" style="display:inline-block;background:#000;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;margin:20px 0">View {doc_type} →</a>' if pdf_url else ""
         payment_section = """
@@ -3922,6 +4019,7 @@ def share_email():
           {f'<p style="font-size:13px;color:#555;margin-bottom:4px">Aircraft: <strong>{ac_label}</strong></p>' if ac_label else ''}
           {f'<p style="font-size:13px;color:#555;margin-bottom:4px">Route: <strong>{route}</strong></p>' if route else ''}
           <p style="font-size:16px;font-weight:700;color:#000;margin:16px 0">Total: {pri_currency} {amount:,.2f}</p>
+          {fx_disclosure_html}
           {pdf_btn}
           {payment_section}
           <p style="font-size:13px;color:#555;line-height:1.7">For any queries, reach us anytime:<br>

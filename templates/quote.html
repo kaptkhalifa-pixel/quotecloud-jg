@@ -400,6 +400,13 @@ let fxRates = {};
 let priCurrency = '{{ ((operator.get("fx") or {}).get("primary_currency") or (operator.get("quoting_rules") or {}).get("currency") or "USD") }}';
 let secCurrency = '{{ ((operator.get("fx") or {}).get("secondary_currency") or operator.get("secondary_currency") or "") }}';
 let priCurrencySymbol = priCurrency;
+function formatFxTimestamp(iso) {
+  if (!iso) return '';
+  let d = new Date(iso);
+  let hh = String(d.getUTCHours()).padStart(2,'0'), mm = String(d.getUTCMinutes()).padStart(2,'0');
+  let months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `Rate as at ${hh}:${mm}Z, ${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
 const WHOLE_NUMBER_CURRENCIES = new Set(['KES','COP','TZS','UGX','NGN','GHS','RWF','ETB','IDR','JPY','KRW','VND','CLP']);
 function fmtAmt(amount) {
   let decimals = WHOLE_NUMBER_CURRENCIES.has(priCurrency) ? 0 : 2;
@@ -896,7 +903,8 @@ function renderBilling(res) {
   let kesRate = fxRates['KES'] || 0;
   let secRate = fxRates[secCurrency] || 0;
   let kesFx = (showKes && secCurrency && secRate > 0) ? `<div style="font-family:'DM Sans',sans-serif;font-size:0.62rem;color:var(--grey-500);text-align:right;margin-top:4px;letter-spacing:0.3px">≈ ${secCurrency} ${Math.round((res.total_usd||0) * secRate).toLocaleString()}</div>` : '';
-  return `<div class="billing">${rows}<div class="billing-total"><span>Total Estimate</span><span>${priCurrency} ${fmtAmt(res.total_usd||0)}</span></div>${kesFx}</div>`;
+  let fxDisclosure = res.fx_rate_timestamp ? `<div style="font-family:'DM Sans',sans-serif;font-size:0.62rem;color:var(--grey-500);text-align:right;margin-top:2px">${formatFxTimestamp(res.fx_rate_timestamp)}</div>` : '';
+  return `<div class="billing">${rows}<div class="billing-total"><span>Total Estimate</span><span>${priCurrency} ${fmtAmt(res.total_usd||0)}</span></div>${kesFx}${fxDisclosure}</div>`;
 }
 
 function renderOneAc(res, showDist, isDark) {

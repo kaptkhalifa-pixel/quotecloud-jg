@@ -1943,6 +1943,14 @@ function fmtHours(h) {
   return hrs + ' hr ' + mins + ' mins';
 }
 
+function formatFxTimestamp(iso) {
+  if (!iso) return '';
+  let d = new Date(iso);
+  let hh = String(d.getUTCHours()).padStart(2,'0'), mm = String(d.getUTCMinutes()).padStart(2,'0');
+  let months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `Rate as at ${hh}:${mm}Z, ${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
 function calcTotalHours(segs) {
   let total = 0;
   (segs||[]).forEach(s => { if (s.hours && s.type) total += parseFloat(s.hours); });
@@ -2208,6 +2216,9 @@ function quickWA(idx) {
     if (idleDays2 > 0 && idleRate2 > 0) costLines.push('Idle Day: ' + priCurrency + ' ' + fmtAmt(idleRate2 * idleDays2));
     if (pax2 > 0) costLines.push(paxLabel2 + ': ' + priCurrency + ' ' + fmtAmt(pax2));
     costSection = ['COST BREAKDOWN', ...costLines, '', 'GRAND TOTAL: ' + priCurrency + ' ' + fmtAmt(total)];
+  }
+  if (res.fx_rate_timestamp) {
+    costSection.push('(' + formatFxTimestamp(res.fx_rate_timestamp) + ')');
   }
 
   let lines = [
@@ -3223,7 +3234,7 @@ async function generatePDF(allAircraft) {
       let shareBarHtml = renderShareBar({
         docNumber, pdfUrl, docType: 'Quotation',
         clientName: clientNameVal, clientWa: clientWaVal, clientEmail: clientEmailVal,
-        amount: totalVal, acLabel: acLabel, route: routeVal
+        amount: totalVal, acLabel: acLabel, route: routeVal, fxRateTimestamp: res2?.fx_rate_timestamp || null
       });
       let msgLines = [`✅ <strong>PDF Generation Complete</strong>`];
       msgLines.push(`${docType} — ${acLabel}${wasAdj}${adjTotal}`);
@@ -4345,7 +4356,8 @@ async function confirmMarkPaid(generateReceipt) {
         clientEmail: recRec.client_email || '',
         amount: paidAmount,
         acLabel: recRec.ac_label || '',
-        route: recRec.route_summary || ''
+        route: recRec.route_summary || '',
+        fxRateTimestamp: null
       });
       document.getElementById('btn-save-payment').style.display = 'none';
       document.getElementById('btn-gen-receipt').style.display = 'none';
@@ -4577,7 +4589,7 @@ async function createManualInvoice() {
       clientName: document.getElementById('mi-name')?.value.trim() || '',
       clientWa: document.getElementById('mi-phone')?.value.trim() || '',
       clientEmail: document.getElementById('mi-email')?.value.trim() || '',
-      amount: Math.max(miTotal, 0), acLabel: '', route: ''
+      amount: Math.max(miTotal, 0), acLabel: '', route: '', fxRateTimestamp: null
     });
     loadRecords();
     loadEnquiries();
@@ -5825,7 +5837,8 @@ async function generateAndSendInvoice() {
       clientEmail: document.getElementById('ib-email')?.value.trim() || '',
       amount: finalTotal,
       acLabel: enq.ac_label || '',
-      route: enq.route_summary || ''
+      route: enq.route_summary || '',
+      fxRateTimestamp: enq?.fx_rate_timestamp || null
     }) + `<div style="margin-top:8px"><button class="btn btn-grey btn-sm" onclick="closeInvoiceBuilder()">✕ Close</button></div>`;
     document.getElementById('ib-msg').innerHTML = successHtml;
   } catch(e) {
@@ -6000,7 +6013,8 @@ async function shareBarEmail(id) {
         pdf_url: p.pdfUrl || '',
         amount: parseFloat(p.amount || 0),
         ac_label: p.acLabel || '',
-        route: p.route || ''
+        route: p.route || '',
+        fx_rate_timestamp: p.fxRateTimestamp || null
       })
     });
     let data = await r.json();
