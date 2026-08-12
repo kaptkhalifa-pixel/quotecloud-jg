@@ -50,7 +50,15 @@ def upload_pdf_to_firebase(pdf_path, doc_number):
         blob.make_public()
         return blob.public_url
     except Exception as e:
-        print(f"Firebase Storage upload error: {e}")
+        # CRITICAL FIX: was a bare print() - invisible to Sentry, the
+        # operator's WhatsApp alerts, and the Firestore pdf_errors
+        # monitoring collection every other real failure in this codebase
+        # already surfaces through. A failed upload here (e.g. the real,
+        # live billing-account-suspension 403 confirmed during a live
+        # audit) was silently degrading every share mechanism's PDF link
+        # with zero visibility to anyone. Now routed through the same
+        # log_pdf_error() every other route already uses.
+        log_pdf_error(f"upload_pdf_to_firebase:{doc_number}", e, {"doc_number": doc_number, "pdf_path": pdf_path})
         return None
 
 TENANT_ID = os.environ.get("TENANT_ID", "jetman-global")
