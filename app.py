@@ -1291,13 +1291,16 @@ def log_pdf_error(route, error, data=None):
         db.collection("tenants").document(TENANT_ID).collection("pdf_errors").add(entry)
         # Also notify via print for Render logs
         print(f"PDF_ERROR [{route}]: {error}")
-        # WhatsApp alert to operator
+        # Pre-formatted WhatsApp link, logged for manual reference only -
+        # this does not send anything. It's a clickable wa.me link; someone
+        # reading server logs would still need to open it and hit send
+        # themselves. Not an active notification of any kind.
         wa = get_whatsapp()
         if wa:
             msg = f"⚠️ PDF Error on {route}: {str(error)[:100]}"
             encoded = msg.replace(' ', '%20')
 
-            print(f"WA_ALERT: https://wa.me/{wa}?text={encoded}")
+            print(f"WA_LINK (manual, not auto-sent): https://wa.me/{wa}?text={encoded}")
     except Exception as e:
         print(f"log_pdf_error failed: {e}")
 
