@@ -2329,9 +2329,23 @@ function applyReverseRate(idx, rate, pax) {
 }
 
 function getTotalHours(res) {
-  let segs = res.segments || [];
-
-  if (res.mission === 'return_both') segs = res.option_a?.segments || [];
+  let target = res;
+  if (res.mission === 'return_both') {
+    let wd = res.wait_days || 0;
+    let maxN = res.max_nights || 3;
+    if (wd >= maxN) {
+      target = res.option_b;
+    } else {
+      let optSel = document.getElementById('pdf-option-select')?.value;
+      target = optSel === 'option_b' ? res.option_b : res.option_a;
+    }
+  }
+  let segs;
+  if (target?.mission === 'pick_and_drop') {
+    segs = [...(target.drop?.segments || []), ...(target.pick?.segments || [])];
+  } else {
+    segs = target?.segments || [];
+  }
   let t = 0;
   segs.forEach(s => { if (s.hours && s.type) t += parseFloat(s.hours); });
   return Math.round(t * 10) / 10;
@@ -4357,6 +4371,9 @@ async function confirmMarkPaid(generateReceipt) {
         amount: paidAmount,
         acLabel: recRec.ac_label || '',
         route: recRec.route_summary || '',
+        paidDate: recRec.paid_date || paidDate,
+        paymentMode: recRec.payment_mode || paymentMode,
+        paymentRef: recRec.payment_ref || paymentRef,
         fxRateTimestamp: null
       });
       document.getElementById('btn-save-payment').style.display = 'none';
@@ -4823,6 +4840,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!operatorConfig.company_name) {
     fetch('/settings/config').then(r => r.json()).then(d => { operatorConfig = d; }).catch(() => {});
   }
+  // Same class of bug as above, for msgTemplates: previously only loaded when Settings
+  // was opened, so the first share of a session (inline bar or Records modal) fell back
+  // to a hardcoded generic message instead of the operator's real template - and the two
+  // entry points' fallback strings differed slightly from each other and from the real
+  // template, an avoidable inconsistency once the real template is always available.
+  loadMessageTemplates();
   loadFX();
   try {
     let pendingMsg = localStorage.getItem('qc_pending_msg');
@@ -5916,7 +5939,10 @@ async function sendShareEmail() {
         pdf_url: d.pdfUrl || '',
         amount: parseFloat(rec.amount || d.extra?.finalTotal || 0),
         ac_label: d.extra?.acLabel || rec.ac_label || '',
-        route: d.extra?.route || ''
+        route: d.extra?.route || '',
+        paid_date: rec.paid_date || '',
+        payment_mode: rec.payment_mode || '',
+        payment_ref: rec.payment_ref || ''
       })
     });
     let data = await r.json();
@@ -5986,7 +6012,11 @@ function shareBarWa(id) {
       .replace(/{currency}/g, priCurrency)
       .replace(/{pdf_url}/g, p.pdfUrl || '')
       .replace(/{ac_label}/g, p.acLabel || '')
-      .replace(/{route}/g, p.route || '');
+      .replace(/{route}/g, p.route || '')
+      .replace(/{validity}/g, (operatorConfig.quoting_rules||{}).quote_validity_hours || 48)
+      .replace(/{payment_date}/g, p.paidDate || '')
+      .replace(/{payment_method}/g, p.paymentMode || '')
+      .replace(/{payment_reference}/g, p.paymentRef || '');
   } else {
     message = `Hello ${p.clientName||'Valued Client'},\n\nPlease find your ${p.docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n'+pdfLine : ''}\n\nRef: ${p.docNumber}\nAmount: ${priCurrency} ${fmtAmt(p.amount||0)}\n\nFor queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
   }
@@ -6014,6 +6044,9 @@ async function shareBarEmail(id) {
         amount: parseFloat(p.amount || 0),
         ac_label: p.acLabel || '',
         route: p.route || '',
+        paid_date: p.paidDate || '',
+        payment_mode: p.paymentMode || '',
+        payment_ref: p.paymentRef || '',
         fx_rate_timestamp: p.fxRateTimestamp || null
       })
     });
@@ -6071,7 +6104,11 @@ function buildAndOpenWa() {
       .replace(/{currency}/g, priCurrency)
       .replace(/{pdf_url}/g, pdfUrl || '')
       .replace(/{ac_label}/g, extra.acLabel || rec.ac_label || '')
-      .replace(/{route}/g, extra.route || rec.route_summary || '');
+      .replace(/{route}/g, extra.route || rec.route_summary || '')
+      .replace(/{validity}/g, (operatorConfig.quoting_rules||{}).quote_validity_hours || 48)
+      .replace(/{payment_date}/g, rec.paid_date || '')
+      .replace(/{payment_method}/g, rec.payment_mode || '')
+      .replace(/{payment_reference}/g, rec.payment_ref || '');
   } else {
     message = `Hello ${clientName},\n\nPlease find herein your ${docType.toLowerCase()} from ${company}.\n${pdfLine ? '\n' + pdfLine : ''}\n\nRef: ${extra.token || docNumber}\nAmount: ${priCurrency} ${amount}\n\nFor any queries:\n📞 ${phone}\n\nWarm regards,\n${company} Reservations Team`;
   }
@@ -6177,12 +6214,9 @@ async function loadMessageTemplates() {
   try {
     let r = await fetch('/settings/message_templates');
     let data = await r.json();
-    var defaultQuote = "Dear {client_name},\n\nPlease find attached your quotation Ref {ref} from {company_name}.\n\nTotal: {amount}\n\nThis quote is valid for 48 hours. To confirm your booking, please reply to this message or call us directly.\n\nKind regards,\n{company_name}";
-    var defaultInvoice = "Dear {client_name},\n\nPlease find attached your invoice Ref {ref} from {company_name}.\n\nAmount Due: {amount}\n\nKindly make payment as per the bank details on the invoice. Please share proof of payment once done.\n\nKind regards,\n{company_name}";
-    var defaultReceipt = "Dear {client_name},\n\nThank you for your payment. Please find attached your receipt Ref {ref} from {company_name}.\n\nAmount Received: {amount}\n\nWe look forward to flying with you. Safe travels!\n\nKind regards,\n{company_name}";
-    msgTemplates.quote = data.quote || defaultQuote;
-    msgTemplates.invoice = data.invoice || defaultInvoice;
-    msgTemplates.receipt = data.receipt || defaultReceipt;
+    msgTemplates.quote = data.quote || '';
+    msgTemplates.invoice = data.invoice || '';
+    msgTemplates.receipt = data.receipt || '';
     if (document.getElementById('s-msg-quote')) document.getElementById('s-msg-quote').value = msgTemplates.quote;
     if (document.getElementById('s-msg-invoice')) document.getElementById('s-msg-invoice').value = msgTemplates.invoice;
     if (document.getElementById('s-msg-receipt')) document.getElementById('s-msg-receipt').value = msgTemplates.receipt;
