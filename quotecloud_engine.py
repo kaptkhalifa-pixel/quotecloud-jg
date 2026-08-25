@@ -808,7 +808,8 @@ def _build_pdf_html(payload):
     else:
         total_label, date_label2, date_val2 = "Total Estimate", "Valid Until", due_date
         show_bank, show_terms, bill_label = False, bool(terms), "Prepared For"
-        footer_right = "Quote valid for 48 hours from date of issue."
+        _footer_validity_hrs = payload.get("quote_validity_hours", 48)
+        footer_right = f"Quote valid for {_footer_validity_hrs} hours from date of issue."
     try:
         import pytz, datetime as _dt
         _eat = pytz.timezone("Africa/Nairobi")

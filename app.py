@@ -1581,7 +1581,8 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
         "terms": terms,
         "terms_title": "TERMS & CONDITIONS",
         "currency": pdf_currency,
-        "header": doc_type
+        "header": doc_type,
+        "quote_validity_hours": _validity_hrs
     }
 
     # Add secondary currency reference line
@@ -2198,6 +2199,7 @@ def manual_invoice():
         to_block = "\n".join(filter(None, [client_name, client_address, client_phone, client_email]))
         bank_block = bank_override if bank_override else get_bank_details_block()
         terms = terms_override if terms_override else OPERATOR.get("invoice", {}).get("terms", "")
+        _validity_hrs = OPERATOR.get("quoting_rules", {}).get("quote_validity_hours", 48)
 
         kes_note = ""
         fx_config = OPERATOR.get("fx", {})
@@ -2253,7 +2255,8 @@ def manual_invoice():
             # already correctly computed above from the real fx settings.
             "currency": pri_cur,
             "kes_note": kes_note,
-            "header": doc_type
+            "header": doc_type,
+            "quote_validity_hours": _validity_hrs
         }
 
         out_path = f"/tmp/{safe_doc_number(doc_number)}.pdf"
@@ -3948,7 +3951,7 @@ def wipe_data():
     return jsonify({"success": True, "message": "Wiped."})
 DEFAULT_MSG_TEMPLATES = {
     "quote": "Hello {client_name},\n\nPlease find herein your quotation from {company}.\n\n📄 View Quote: {pdf_url}\n\nRef: {ref}\nAmount: {currency} {amount}\n\nTO CONFIRM YOUR BOOKING:\n• This quote is valid for {validity} hours.\n• To proceed, please confirm and we will issue a formal invoice.\n• Kindly have passenger IDs and passports ready upon booking.\n\nFor any queries, reach us anytime:\n📞 {phone}\n\nThank you for choosing {company}.\n\nWarm regards,\n{company} Reservations Team",
-    "invoice": "Hello {client_name},\n\nPlease find herein your invoice from {company}.\n\n📄 View Invoice: {pdf_url}\n\nRef: {ref}\nAmount: {currency} {amount}\n\nPAYMENT TERMS:\n• A deposit of 50% is required to secure your booking.\n• Full balance must be cleared prior to departure.\n• Kindly share copies of all passenger IDs and passports upon confirmation.\n\nFor any queries, reach us anytime:\n📞 {phone}\n\nThank you for choosing {company}.\n\nWarm regards,\n{company} Reservations Team",
+    "invoice": "Hello {client_name},\n\nPlease find herein your invoice from {company}.\n\n📄 View Invoice: {pdf_url}\n\nRef: {ref}\nAmount: {currency} {amount}\n\nPAYMENT TERMS:\n• Full payment terms are detailed in the attached Invoice.\n• Full balance must be cleared prior to departure.\n• Kindly share copies of all passenger IDs and passports upon confirmation.\n\nFor any queries, reach us anytime:\n📞 {phone}\n\nThank you for choosing {company}.\n\nWarm regards,\n{company} Reservations Team",
     "receipt": "Dear {client_name},\n\nThank you for your payment. Please find attached your receipt from {company}.\n\n📄 View Receipt: {pdf_url}\n\nRef: {ref}\nAmount Received: {currency} {amount}\nPaid via {payment_method} on {payment_date} (Ref: {payment_reference})\n\nYOUR FLIGHT IS CONFIRMED:\n• Our airport team will be in touch ahead of departure.\n• Please have your ID/Passport ready for check-in.\n• Arrive at least 30 minutes before scheduled departure.\n• Luggage allowance will be confirmed by our team.\n\nFor assistance anytime:\n📞 {phone}\n\nWe look forward to flying with you.\n\nWarm regards,\n{company} Reservations Team"
 }
 
@@ -4023,7 +4026,7 @@ def share_email():
             payment_section = """
         <div style="background:#f8f8f8;border-left:3px solid #000;padding:16px 20px;margin:20px 0;border-radius:0 4px 4px 0">
           <p style="font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px">Payment Terms</p>
-          <p style="margin:4px 0;font-size:13px;color:#333">• A deposit of 40% is required to secure your booking.</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• Full payment terms are detailed in the attached Invoice.</p>
           <p style="margin:4px 0;font-size:13px;color:#333">• Full balance must be cleared prior to departure.</p>
           <p style="margin:4px 0;font-size:13px;color:#333">• Kindly share copies of all passenger IDs and passports upon confirmation.</p>
         </div>"""
