@@ -3949,7 +3949,7 @@ def wipe_data():
 DEFAULT_MSG_TEMPLATES = {
     "quote": "Hello {client_name},\n\nPlease find herein your quotation from {company}.\n\n📄 View Quote: {pdf_url}\n\nRef: {ref}\nAmount: {currency} {amount}\n\nTO CONFIRM YOUR BOOKING:\n• This quote is valid for {validity} hours.\n• To proceed, please confirm and we will issue a formal invoice.\n• Kindly have passenger IDs and passports ready upon booking.\n\nFor any queries, reach us anytime:\n📞 {phone}\n\nThank you for choosing {company}.\n\nWarm regards,\n{company} Reservations Team",
     "invoice": "Hello {client_name},\n\nPlease find herein your invoice from {company}.\n\n📄 View Invoice: {pdf_url}\n\nRef: {ref}\nAmount: {currency} {amount}\n\nPAYMENT TERMS:\n• A deposit of 50% is required to secure your booking.\n• Full balance must be cleared prior to departure.\n• Kindly share copies of all passenger IDs and passports upon confirmation.\n\nFor any queries, reach us anytime:\n📞 {phone}\n\nThank you for choosing {company}.\n\nWarm regards,\n{company} Reservations Team",
-    "receipt": "Dear {client_name},\n\nThank you for your payment. Please find attached your receipt from {company}.\n\n📄 View Receipt: {pdf_url}\n\nRef: {ref}\nAmount Received: {currency} {amount}\n\nYOUR FLIGHT IS CONFIRMED:\n• Our airport team will be in touch ahead of departure.\n• Please have your ID/Passport ready for check-in.\n• Arrive at least 30 minutes before scheduled departure.\n• Luggage allowance will be confirmed by our team.\n\nFor assistance anytime:\n📞 {phone}\n\nWe look forward to flying with you.\n\nWarm regards,\n{company} Reservations Team"
+    "receipt": "Dear {client_name},\n\nThank you for your payment. Please find attached your receipt from {company}.\n\n📄 View Receipt: {pdf_url}\n\nRef: {ref}\nAmount Received: {currency} {amount}\nPaid via {payment_method} on {payment_date} (Ref: {payment_reference})\n\nYOUR FLIGHT IS CONFIRMED:\n• Our airport team will be in touch ahead of departure.\n• Please have your ID/Passport ready for check-in.\n• Arrive at least 30 minutes before scheduled departure.\n• Luggage allowance will be confirmed by our team.\n\nFor assistance anytime:\n📞 {phone}\n\nWe look forward to flying with you.\n\nWarm regards,\n{company} Reservations Team"
 }
 
 @app.route("/settings/message_templates", methods=["GET"])
@@ -3992,6 +3992,9 @@ def share_email():
         amount = float(data.get("amount", 0))
         ac_label = data.get("ac_label", "")
         route = data.get("route", "")
+        paid_date = data.get("paid_date", "")
+        payment_mode = data.get("payment_mode", "")
+        payment_ref = data.get("payment_ref", "")
         company_name = OPERATOR.get("company_name", "Jetman Global")
         contact_phone = OPERATOR.get("contact", {}).get("phone", "+254 701 007 777")
         # FIX: hardcoded "USD $" regardless of the real, configured primary
@@ -4005,18 +4008,38 @@ def share_email():
         _fx_disclosure = format_fx_disclosure(data.get("fx_rate_timestamp"))
         if _fx_disclosure:
             fx_disclosure_html = f'<p style="font-size:11px;color:#999;margin-top:-4px">{_fx_disclosure}</p>'
-        is_invoice = doc_type == "Invoice"
         pdf_btn = f'<a href="{pdf_url}" style="display:inline-block;background:#000;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;margin:20px 0">View {doc_type} →</a>' if pdf_url else ""
-        payment_section = """
+        # FIX: was a two-way `is_invoice` boolean, so a Receipt (doc_type ==
+        # "Receipt") fell through to the Quote-oriented "else" branch below -
+        # a real client's payment-confirmation email told them their booking
+        # was still pending confirmation and their quote "valid for 48 hours",
+        # confirmed live for a payment that had already been made in full.
+        # Receipt now gets its own branch using the real payment fields
+        # captured at Mark as Paid / Generate Receipt time, instead of
+        # reusing Invoice or Quote copy. The "48 hours" was also hardcoded,
+        # ignoring the tenant's real quote_validity_hours setting.
+        validity_hrs = OPERATOR.get("quoting_rules", {}).get("quote_validity_hours", 48)
+        if doc_type == "Invoice":
+            payment_section = """
         <div style="background:#f8f8f8;border-left:3px solid #000;padding:16px 20px;margin:20px 0;border-radius:0 4px 4px 0">
           <p style="font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px">Payment Terms</p>
           <p style="margin:4px 0;font-size:13px;color:#333">• A deposit of 40% is required to secure your booking.</p>
           <p style="margin:4px 0;font-size:13px;color:#333">• Full balance must be cleared prior to departure.</p>
           <p style="margin:4px 0;font-size:13px;color:#333">• Kindly share copies of all passenger IDs and passports upon confirmation.</p>
-        </div>""" if is_invoice else """
+        </div>"""
+        elif doc_type == "Receipt":
+            payment_section = f"""
+        <div style="background:#f8f8f8;border-left:3px solid #000;padding:16px 20px;margin:20px 0;border-radius:0 4px 4px 0">
+          <p style="font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px">Payment Received</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• Paid via {payment_mode or 'N/A'}{f' (Ref: {payment_ref})' if payment_ref else ''}{f' on {paid_date}' if paid_date else ''}.</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• Your flight is confirmed - our team will be in touch ahead of departure.</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• Please have your ID/Passport ready for check-in.</p>
+        </div>"""
+        else:
+            payment_section = f"""
         <div style="background:#f8f8f8;border-left:3px solid #000;padding:16px 20px;margin:20px 0;border-radius:0 4px 4px 0">
           <p style="font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px">To Confirm Your Booking</p>
-          <p style="margin:4px 0;font-size:13px;color:#333">• This quote is valid for 48 hours.</p>
+          <p style="margin:4px 0;font-size:13px;color:#333">• This quote is valid for {validity_hrs} hours.</p>
           <p style="margin:4px 0;font-size:13px;color:#333">• To proceed, confirm and we will issue a formal invoice.</p>
           <p style="margin:4px 0;font-size:13px;color:#333">• Kindly have passenger IDs and passports ready upon booking.</p>
         </div>"""
