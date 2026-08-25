@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <!-- FIX: Space Mono was referenced throughout the codebase
-(.settings-group-label, .settings-badge-frontend) but never actually
+(.settings-group-label, .settings-badge-client-page) but never actually
 imported - silently falling back to generic monospace this whole time.
 Added here, ahead of the Records tab redesign which leans heavily on it. -->
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -244,7 +244,7 @@ since this is the densest, most action-heavy row in the whole product. */
 .settings-section h4 { font-size: 0.85rem; font-weight: 700; color: #333; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
 
 .settings-group-label { font-family:'Space Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.22em; color:#0a0a0a; font-weight:700; margin-bottom:14px; margin-top:36px; padding-left:12px; border-left:3px solid #0a0a0a; line-height:1.4; }
-.settings-badge-frontend { font-family:'Space Mono',monospace; font-size:0.52rem; background:#f0f4ff; color:#1a56db; padding:2px 7px; border-radius:3px; letter-spacing:0.08em; font-weight:700; margin-left:8px; text-transform:uppercase; vertical-align:middle; }
+.settings-badge-client-page { font-family:'Space Mono',monospace; font-size:0.52rem; background:#f0f4ff; color:#1a56db; padding:2px 7px; border-radius:3px; letter-spacing:0.08em; font-weight:700; margin-left:8px; text-transform:uppercase; vertical-align:middle; }
 .settings-card-collapsible > h3 { font-size:0.95rem; font-weight:700; color:#0a0a0a; letter-spacing:-0.01em; padding:18px 20px; margin:0; cursor:pointer; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid transparent; transition:border-color 0.2s; }
 .settings-card-collapsible > h3::after { content:'▼'; font-size:0.6rem; color:#0a0a0a; transition:transform 0.25s; font-weight:900; }
 .settings-card-collapsible.collapsed > h3::after { content:'▶'; transform:none; }
@@ -768,7 +768,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
 
   <div style="background:#0a0a0a;color:#fff;border-radius:8px;padding:14px 16px;margin-bottom:20px;font-size:0.82rem;line-height:1.6">
     <strong style="display:block;margin-bottom:4px;font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase">Settings</strong>
-    Settings marked <span style="background:#333;color:#aaa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:2px 6px;border-radius:4px">Pro — Client Page</span> control your client-facing quote page. The client page is available on the Pro plan — coming soon.
+    Settings marked <span class="settings-badge-client-page">Client Page</span> control your client-facing quote page. The client page is live today — it's not gated behind any plan.
   </div>
 
 
@@ -781,7 +781,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     <h3 onclick="toggleSettingsCard(this)">Company Details</h3>
     <div class="card-body">
       <div class="settings-section collapsed">
-        <h4 onclick="toggleSettingsSection(this)">Name &amp; Tagline</h4>
+        <h4 onclick="toggleSettingsSection(this)">Name &amp; Tagline <span class="settings-badge-client-page">Client Page</span></h4>
         <div class="form-row">
           <div class="form-group"><label>Company Name</label><input type="text" id="s-company-name"></div>
           <div class="form-group"><label>Front Page Tagline</label><input type="text" id="s-tagline"></div>
@@ -790,7 +790,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-name-tagline"></span></div>
       </div>
       <div class="settings-section collapsed">
-        <h4 onclick="toggleSettingsSection(this)">Company Logo</h4>
+        <h4 onclick="toggleSettingsSection(this)">Company Logo <span class="settings-badge-client-page">Client Page</span></h4>
         <div class="form-group-full">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input type="text" id="s-logo-url" oninput="previewLogo()" placeholder="Paste URL or upload" style="flex:1">
@@ -805,7 +805,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-logo"></span></div>
       </div>
       <div class="settings-section collapsed">
-        <h4 onclick="toggleSettingsSection(this)">Brand Colors <span class="settings-badge-frontend">Front End</span></h4>
+        <h4 onclick="toggleSettingsSection(this)">Brand Colors</h4>
         <div class="form-row">
           <div class="form-group"><label>Primary Color</label>
             <div class="color-row"><input type="color" id="s-primary-color"><input type="text" id="s-primary-color-hex" placeholder="#0D47A1" oninput="syncColor('primary')"></div>
@@ -817,13 +817,13 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-colors"></span></div>
       </div>
       <div class="settings-section collapsed">
-        <h4 onclick="toggleSettingsSection(this)">Trust Bar <span class="settings-badge-frontend">Front End</span></h4>
+        <h4 onclick="toggleSettingsSection(this)">Trust Bar <span class="settings-badge-client-page">Client Page</span></h4>
         <div style="font-size:0.72rem;color:#888;margin-bottom:10px">Displayed at the bottom of your client quote page. Add short trust signals.</div>
         <div class="trust-bar-editor" id="trust-bar-editor"></div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-trust-bar"></span></div>
       </div>
       <div class="settings-section collapsed">
-        <h4 onclick="toggleSettingsSection(this)">Social Links <span class="settings-badge-frontend">Front End</span></h4>
+        <h4 onclick="toggleSettingsSection(this)">Social Links</h4>
         <div class="form-row">
           <div class="form-group"><label>Website</label><input type="text" id="s-website"></div>
           <div class="form-group"><label>Instagram</label><input type="text" id="s-instagram"></div>
@@ -835,7 +835,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionBranding()">Save ✓</button><span class="section-save-msg" id="msg-social"></span></div>
       </div>
       <div class="settings-section collapsed">
-        <h4 onclick="toggleSettingsSection(this)">Contact &amp; Address</h4>
+        <h4 onclick="toggleSettingsSection(this)">Contact &amp; Address <span class="settings-badge-client-page">Client Page</span></h4>
         <div class="form-row">
           <div class="form-group"><label>Phone</label><input type="tel" id="s-phone"></div>
           <div class="form-group"><label>WhatsApp (digits only)</label><input type="tel" id="s-whatsapp"></div>
@@ -869,7 +869,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           </select>
         </div>
         <div id="disclaimer-field">
-          <div class="form-group-full"><label>Fixed Wing Landing Field Disclaimer <span style="font-family:'Space Mono',monospace;font-size:0.52rem;background:#f0f4ff;color:#1a56db;padding:2px 5px;border-radius:3px;margin-left:4px">Pro</span></label><textarea id="s-disclaimer" rows="3"></textarea></div>
+          <div class="form-group-full"><label>Fixed Wing Landing Field Disclaimer <span class="settings-badge-client-page">Client Page</span></label><textarea id="s-disclaimer" rows="3"></textarea></div>
         </div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionAircraftMode()">Save ✓</button><span class="section-save-msg" id="msg-aircraft-mode"></span></div>
       </div>
@@ -917,7 +917,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
           <div class="form-group"><label>Max Nights Before Pickup/Drop</label><input type="number" id="s-max-nights" step="1" placeholder="3"></div>
           <div class="form-group"><label>Max Idle Days Between Legs</label><input type="number" id="s-max-idle-days" step="1" placeholder="1"></div>
         </div>
-        <div class="form-group"><label>Quote Validity (hours)</label><input type="number" id="s-quote-validity" step="1" placeholder="48"></div>
+        <div class="form-group"><label>Quote Validity (hours) <span class="settings-badge-client-page">Client Page</span></label><input type="number" id="s-quote-validity" step="1" placeholder="48"></div>
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionQuotingRules()">Save ✓</button><span class="section-save-msg" id="msg-quoting-rules"></span></div>
       </div>
       <div class="settings-section collapsed">
@@ -937,7 +937,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         <div class="section-save-row"><button class="btn-save-section" onclick="saveSectionExtraTime()">Save ✓</button><span class="section-save-msg" id="msg-extra-time"></span></div>
       </div>
       <div class="settings-section collapsed">
-        <h4 onclick="toggleSettingsSection(this)">Client Display <span class="settings-badge-frontend">Front End</span></h4>
+        <h4 onclick="toggleSettingsSection(this)">Client Display <span class="settings-badge-client-page">Client Page</span></h4>
         <div class="toggle-row" style="margin-bottom:12px">
           <input type="checkbox" id="s-show-distance" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
           <label for="s-show-distance" style="font-weight:600">Show flight distance to client</label>
@@ -1143,7 +1143,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
         </div>
         <div class="toggle-row" style="margin-bottom:10px">
           <input type="checkbox" id="s-fx-show-kes" {% if (operator.get("fx") or {}).get("show_kes", False) %}checked{% endif %} style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
-          <label for="s-fx-show-kes" style="cursor:pointer">Show secondary currency on client-facing page <span style="font-family:'Space Mono',monospace;font-size:0.52rem;background:#f0f4ff;color:#1a56db;padding:2px 5px;border-radius:3px;margin-left:4px">Pro</span></label>
+          <label for="s-fx-show-kes" style="cursor:pointer">Show secondary currency on client-facing page <span class="settings-badge-client-page">Client Page</span></label>
         </div>
         <div class="toggle-row" style="margin-bottom:10px">
           <input type="checkbox" id="s-fx-disabled" onchange="applyFxDisabledFreeze(this.checked)" style="width:20px;height:20px;min-height:unset;padding:0;-webkit-appearance:checkbox;appearance:checkbox">
