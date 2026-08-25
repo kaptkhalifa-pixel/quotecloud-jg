@@ -112,6 +112,13 @@ def load_operator_config_from_file():
 
 OPERATOR = load_operator_config()
 
+try:
+    import importlib.metadata as _im
+    print(f"[STARTUP DIAGNOSTIC] google-cloud-firestore version: {_im.version('google-cloud-firestore')}", flush=True)
+    print(f"[STARTUP DIAGNOSTIC] firebase-admin version: {_im.version('firebase-admin')}", flush=True)
+except Exception as _e:
+    print(f"[STARTUP DIAGNOSTIC] failed to read package versions: {_e}", flush=True)
+
 if not OPERATOR.get("branding"):
     OPERATOR["branding"] = {"primary_color": "#1a56db", "accent_color": "#f59e0b", "button_color": "#f59e0b", "button_text": "#ffffff"}
 if not OPERATOR.get("company_name"):
