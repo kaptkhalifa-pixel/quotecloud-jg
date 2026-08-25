@@ -4845,7 +4845,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // to a hardcoded generic message instead of the operator's real template - and the two
   // entry points' fallback strings differed slightly from each other and from the real
   // template, an avoidable inconsistency once the real template is always available.
-  loadMessageTemplates();
+  // Captured (not fire-and-forget) so shareBarWa()/buildAndOpenWa() can await it - closes
+  // the remaining race where a share triggered before this fetch resolves (cold start /
+  // slow connection) still silently fell back to the generic message.
+  window.messageTemplatesReady = loadMessageTemplates();
   loadFX();
   try {
     let pendingMsg = localStorage.getItem('qc_pending_msg');
@@ -5991,7 +5994,8 @@ function renderShareBar(p) {
     </div>`;
 }
 
-function shareBarWa(id) {
+async function shareBarWa(id) {
+  await (window.messageTemplatesReady || Promise.resolve());
   let p = shareBarData[id] || {};
   let wa = (document.getElementById(id+'-wa')?.value||'').trim().replace(/\D/g,'');
   if (!wa) { showMsg(id+'-msg','Enter WhatsApp number.','error'); return; }
@@ -6077,7 +6081,8 @@ async function saveAndShareWa() {
   buildAndOpenWa();
 }
 
-function buildAndOpenWa() {
+async function buildAndOpenWa() {
+  await (window.messageTemplatesReady || Promise.resolve());
   let wa = document.getElementById('share-wa-input').value.trim().replace(/\D/g,'');
   if (!wa) { showMsg('share-msg','Enter a WhatsApp number.','error'); return; }
   let d = currentShareData || {};
