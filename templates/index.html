@@ -1984,8 +1984,8 @@ function renderBilling(res, extraSegs) {
     rows += `<div class="billing-row"><span>Idle Day Charge (${idleDays} day${idleDays!==1?'s':''} @ ${priCurrencySymbol}${idleRate.toLocaleString()}/day)</span><span>${priCurrency} ${fmtAmt(waitingUsd)}</span></div>`;
   }
   let secRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
-  let kesFx = (secRate > 0 && secCurrency) ? `<div style="font-size:0.72rem;color:#888;text-align:right;margin-top:4px">≈ ${secCurrency} ${Math.round((res.total_usd||0)*secRate).toLocaleString()}</div>` : '';
-   let displayTotal = res.total_usd || 0;
+  let kesFx = (secRate > 0 && secCurrency) ? `<div style="font-size:0.72rem;color:#888;text-align:right;margin-top:4px">≈ ${secCurrency} ${Math.round(getResultTotal(res)*secRate).toLocaleString()}</div>` : '';
+   let displayTotal = getResultTotal(res);
   return `<div class="billing">${rows}<div class="billing-total"><span>TOTAL ESTIMATE</span><span>${priCurrency} ${fmtAmt(displayTotal)}</span></div>${kesFx}</div>`;
 }
 
@@ -2041,9 +2041,18 @@ function switchOtab(el, id) {
 let resultSort = 'default';
 let resultFilter = 'all';
 
+function resolveActiveOption(res) {
+  if (res.mission !== 'return_both') return res;
+  let wd = res.wait_days || 0;
+  let maxN = res.max_nights || 3;
+  if (wd >= maxN) return res.option_b;
+  let optSel = document.getElementById('pdf-option-select')?.value;
+  return optSel === 'option_b' ? res.option_b : res.option_a;
+}
+
 function getResultTotal(res) {
   if (res.error) return Infinity;
-  return res.mission === 'return_both' ? (res.option_a?.total_usd || 0) : (res.total_usd || 0);
+  return resolveActiveOption(res)?.total_usd || 0;
 }
 
 function setResultSort(mode, el) {
@@ -2132,8 +2141,7 @@ function quickWA(idx) {
   if (!res) return;
   let wa = prompt('WhatsApp number (with country code):');
   if (!wa) return;
-  let total = res._adj_total || res.total_usd || 0;
-  if (res.mission === 'return_both') total = res._adj_total || res.option_a?.total_usd || 0;
+  let total = res._adj_total || getResultTotal(res);
   let segs = res.segments || res.option_a?.segments || [];
   let route = segs.filter(s=>s.type==='revenue').map(s=>s.origin+' → '+s.destination+(s.date?' on '+s.date:'')).join(', ');
   // Build full legs breakdown
@@ -2156,7 +2164,7 @@ function quickWA(idx) {
   // Was reading res.nights/res.idle_days directly - those keys never exist on the
   // result object (only overnight_usd/waiting_usd totals do). Same fix already proven
   // correct elsewhere in this file (adjustRevenue) - cost / rate, not a non-existent count field.
-  let baseOv2 = res.overnight_usd || (res.mission==='return_both' ? res.option_a?.overnight_usd : 0) || 0;
+  let baseOv2 = res.overnight_usd || resolveActiveOption(res)?.overnight_usd || 0;
   // CRITICAL FIX: only ever read the original overnight_rate_usd, ignoring
   // any edit made in the Quote Modifier tool. Night count must still be
   // derived from the ORIGINAL rate (that's what the banked overnight_usd
@@ -2207,7 +2215,7 @@ function quickWA(idx) {
     let costLines = [];
     if (rate2 > 0 && totalHrs2 > 0) costLines.push('Base Charter Cost: ' + priCurrency + ' ' + fmtAmt(rate2 * totalHrs2));
     if (nights2 > 0 && ovRate2 > 0) costLines.push('Overnight: ' + priCurrency + ' ' + fmtAmt(ovRate2 * nights2));
-    let baseIdle2 = res.waiting_usd || (res.mission==='return_both' ? res.option_a?.waiting_usd : 0) || 0;
+    let baseIdle2 = res.waiting_usd || resolveActiveOption(res)?.waiting_usd || 0;
     // CRITICAL FIX: same gap as overnight above - idle-day count must come
     // from the original rate, price from the adjusted one.
     let idleRateOrig2 = res.idle_day_rate_usd || 0;
@@ -2277,7 +2285,7 @@ function toggleAdjKesMode(idx) {
     if (paxRevLabel) paxRevLabel.textContent = 'Keep Pax/Admin (KES)';
     let origRateVal = res.rate_usd || 0;
     let origPaxVal = res.pax_fee_usd || res.pax_fee_usd_display || 0;
-    let origTotalVal = res.total_usd || 0;
+    let origTotalVal = getResultTotal(res);
     if (origRate) origRate.textContent = `${priCurrencySymbol}${origRateVal}/hr`;
     if (origPax) origPax.textContent = `${priCurrencySymbol}${origPaxVal}`;
     if (origTotal) origTotal.textContent = `KES ${(Math.ceil(origTotalVal*kesRate/1000)*1000).toLocaleString()}`;
@@ -2298,7 +2306,7 @@ function toggleAdjKesMode(idx) {
     if (paxRevLabel) paxRevLabel.textContent = 'Keep Pax/Admin (' + priCurrency + ')';
     let origRateVal = res.rate_usd || 0;
     let origPaxVal = res.pax_fee_usd || res.pax_fee_usd_display || 0;
-    let origTotalVal = res.total_usd || 0;
+    let origTotalVal = getResultTotal(res);
     if (origRate) origRate.textContent = `${priCurrencySymbol}${origRateVal}/hr`;
     if (origPax) origPax.textContent = `${priCurrencySymbol}${origPaxVal}`;
     if (origTotal) origTotal.textContent = `${priCurrency} ${fmtAmt(origTotalVal)}`;
@@ -2366,8 +2374,8 @@ function recalcAdjuster(idx) {
   let flightCost = Math.round(hrs * rate * 100) / 100;
   let ovRateAdj = parseFloat(document.getElementById('adj-ov-rate-'+idx)?.value) || 0;
   let idleRateAdj = parseFloat(document.getElementById('adj-idle-rate-'+idx)?.value) || 0;
-  let baseOvUsd = res.overnight_usd || (res.mission==='return_both' ? res.option_a?.overnight_usd : 0) || 0;
-  let baseIdleUsd = res.waiting_usd || (res.mission==='return_both' ? res.option_a?.waiting_usd : 0) || 0;
+  let baseOvUsd = res.overnight_usd || resolveActiveOption(res)?.overnight_usd || 0;
+  let baseIdleUsd = res.waiting_usd || resolveActiveOption(res)?.waiting_usd || 0;
   let ovRateOrig = res.overnight_rate_usd || 0;
   let idleRateOrig = res.idle_day_rate_usd || 0;
   let nightsAdj = ovRateOrig > 0 && baseOvUsd > 0 ? Math.round(baseOvUsd / ovRateOrig) : 0;
@@ -2435,7 +2443,7 @@ function confirmApply(idx) {
   let rateUsd = res._adj_rate || 0;
   let paxUsd = res._adj_pax || 0;
   let total = res._adj_total || 0;
-  let origTotal = res.total_usd || 0;
+  let origTotal = getResultTotal(res);
 
   // Enforce exact total — no drift
   res._adj_total = total;
@@ -2523,18 +2531,23 @@ function calcReverse(idx) {
   // Strip ALL fixed costs from target before calculating implied rate
   let ovRateRev = parseFloat(document.getElementById('adj-ov-rate-rev-'+idx)?.value) || 0;
   let idleRateRev = parseFloat(document.getElementById('adj-idle-rate-rev-'+idx)?.value) || 0;
-  let baseOv = res.overnight_usd || (res.mission==='return_both' ? res.option_a?.overnight_usd : 0) || 0;
-  let baseIdle = res.waiting_usd || (res.mission==='return_both' ? res.option_a?.waiting_usd : 0) || 0;
+  let baseOv = res.overnight_usd || resolveActiveOption(res)?.overnight_usd || 0;
+  let baseIdle = res.waiting_usd || resolveActiveOption(res)?.waiting_usd || 0;
   let ovRateOrig = res.overnight_rate_usd || 0;
   let idleRateOrig = res.idle_day_rate_usd || 0;
   let nights2 = ovRateOrig > 0 && baseOv > 0 ? Math.round(baseOv / ovRateOrig) : 0;
   let idleDays2 = idleRateOrig > 0 && baseIdle > 0 ? Math.round(baseIdle / idleRateOrig) : 0;
   let overnight = ovRateRev > 0 ? nights2 * ovRateRev : baseOv;
   let idle = idleRateRev > 0 ? idleDays2 * idleRateRev : baseIdle;
-  // For return_both use option_a
+  // Use whichever option the real priced document will actually be built from - same
+  // wd >= maxN resolution getTotalHours()/getSelectedResult() already use, not
+  // unconditionally option_a. option_b (pick_and_drop) has no overnight/idle concept
+  // at all, so subtracting option_a's costs when option_b is what's actually priced
+  // strips fixed costs from the target the real document never has.
   if (res.mission === 'return_both') {
-    overnight = res.option_a?.overnight_usd || 0;
-    idle = res.option_a?.waiting_usd || 0;
+    let resolved = resolveActiveOption(res);
+    overnight = resolved?.overnight_usd || 0;
+    idle = resolved?.waiting_usd || 0;
   }
   let fixedCosts = pax + overnight + idle;
   let impliedFlight = roundCurrency(target - fixedCosts);
@@ -2582,9 +2595,9 @@ function renderAdjuster(res, idx) {
   let rate = res.rate_usd || 0;
   let speed = res.speed_ktas || res.speed || 120;
   let pax = res.pax_fee_usd || res.pax_fee_usd_display || 0;
-  let overnight = res.overnight_usd || (res.mission==='return_both' ? res.option_a?.overnight_usd : 0) || 0;
+  let overnight = res.overnight_usd || resolveActiveOption(res)?.overnight_usd || 0;
   let ovRate = res.overnight_rate_usd || 0;
-  let idle = res.waiting_usd || (res.mission==='return_both' ? res.option_a?.waiting_usd : 0) || 0;
+  let idle = res.waiting_usd || resolveActiveOption(res)?.waiting_usd || 0;
   let idleRate = res.idle_day_rate_usd || 0;
   let nights = ovRate > 0 && overnight > 0 ? Math.round(overnight / ovRate) : 0;
   let idleDays = idleRate > 0 && idle > 0 ? Math.round(idle / idleRate) : 0;
@@ -2599,7 +2612,7 @@ function renderAdjuster(res, idx) {
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
         <span style="color:#888">⏱ ${hrs} hrs total</span>
         <span style="color:#888">💺 ${res.ac_label||''}</span>
-        <span style="font-weight:700;color:#0d47a1">Base total: ${priCurrency} ${fmtAmt(res.total_usd||0)}</span>
+        <span style="font-weight:700;color:#0d47a1">Base total: ${priCurrency} ${fmtAmt(getResultTotal(res))}</span>
       </div>
     </div>`;
 
@@ -2646,7 +2659,7 @@ function renderAdjuster(res, idx) {
         </div>
       </div>` : `<input type="hidden" id="adj-pax-name-${idx}" value=""><input type="hidden" id="adj-pax-${idx}" value="0">`}
       <div id="adj-live-total-${idx}" style="background:#0d47a1;color:#fff;border-radius:8px;padding:12px 14px;font-size:1rem;font-weight:700;text-align:right;margin-bottom:10px">
-        ${priCurrency} ${fmtAmt(res.total_usd||0)}
+        ${priCurrency} ${fmtAmt(getResultTotal(res))}
       </div>
       <div id="adj-summary-${idx}" style="margin-bottom:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:0.82rem;color:#155724;display:none"></div>
       <div class="preset-row" id="preset-chips-${idx}"></div>
@@ -2724,7 +2737,7 @@ function switchAdjTab(idx, tab) {
     let adjSummary = document.getElementById('adj-summary-'+idx);
     if (adjSummary) { adjSummary.style.display = 'none'; adjSummary.innerHTML = ''; }
     let liveTotalEl = document.getElementById('adj-live-total-'+idx);
-    if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${fmtAmt(res.total_usd||0)}`; }
+    if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${fmtAmt(getResultTotal(res))}`; }
     let lockWarn = document.getElementById('adj-lock-warn-'+idx);
     if (lockWarn) lockWarn.remove();
     let applyBtn = document.getElementById('adj-rev-apply-'+idx);
@@ -2792,7 +2805,7 @@ function resetAdjuster(idx) {
   let adjSummary = document.getElementById('adj-summary-'+idx);
   if (adjSummary) { adjSummary.style.display = 'none'; adjSummary.innerHTML = ''; }
   let liveTotalEl = document.getElementById('adj-live-total-'+idx);
-  if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${fmtAmt(res.total_usd||0)}`; }
+  if (liveTotalEl) { liveTotalEl.style.background = '#0d47a1'; liveTotalEl.textContent = `${priCurrency} ${fmtAmt(getResultTotal(res))}`; }
   let applyBtn = document.getElementById('adj-rev-apply-'+idx);
   if (applyBtn) { applyBtn.style.display = 'none'; applyBtn.innerHTML = `<button class="btn btn-success" onclick="applyFromReverse(${idx})">Apply Implied Rate →</button>`; }
   let revResult = document.getElementById('adj-rev-result-'+idx);
@@ -2852,7 +2865,7 @@ function applyFromReverse(idx) {
   let targetRaw = parseFloat(document.getElementById('adj-target-'+idx)?.value) || 0;
   let pax = parseFloat(document.getElementById('adj-rev-pax-'+idx)?.value) || 0;
   if (!impliedRate) return;
-  let origTotal = res.total_usd || 0;
+  let origTotal = getResultTotal(res);
   res._adj_rate = impliedRate;
   res._adj_pax = pax;
   res._adj_total = targetRaw;
@@ -6183,8 +6196,7 @@ function updateCurrencyDisplay() {
     let idx = card.id.replace('ac-card-','');
     let res = lastResults[parseInt(idx)];
     if (!res) return;
-    let total = res._adj_total || res.total_usd || 0;
-    if (res.mission === 'return_both') total = res._adj_total || res.option_a?.total_usd || 0;
+    let total = res._adj_total || getResultTotal(res);
     if (currency === 'KES' && kesRate > 0) {
       let kes = Math.ceil((total * kesRate) / 1000) * 1000;
       totalEl.textContent = 'KES ' + kes.toLocaleString();
