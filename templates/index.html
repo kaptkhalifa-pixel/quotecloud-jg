@@ -3204,7 +3204,7 @@ async function generatePDF(allAircraft) {
   // and the PDF blob was read) - everything after that is display-only work,
   // deliberately kept out of THIS try/catch below, so a glitch there can never
   // again turn an already-successful PDF into a reported failure.
-  let pdfSucceeded = false, blob, docNumber, pdfUrl;
+  let pdfSucceeded = false, blob, docNumber, pdfUrl, docTotal;
   try {
     let currency = document.getElementById('pdf-currency')?.value || priCurrency || 'USD';
     let kesRate = secCurrency ? (fxRates[secCurrency] || 0) : 0;
@@ -3215,6 +3215,7 @@ async function generatePDF(allAircraft) {
     if (!r.ok) { let e = await r.json(); let ind2=document.getElementById('pdf-generating-indicator'); if(ind2)ind2.remove(); showMsg('pdf-msg',e.error||'Failed','error'); return; }
     pdfUrl = r.headers.get('X-PDF-URL') || '';
     docNumber = r.headers.get('X-DOC-NUMBER') || '';
+    docTotal = r.headers.get('X-DOC-TOTAL') || '';
     blob = await r.blob();
     pdfSucceeded = true;
   } catch(e) {
@@ -3259,7 +3260,7 @@ async function generatePDF(allAircraft) {
       let clientWaVal = document.getElementById('pdf-phone')?.value.trim() || '';
       let clientEmailVal = document.getElementById('pdf-email')?.value.trim() || '';
       let clientNameVal = document.getElementById('pdf-name')?.value.trim() || '';
-      let totalVal = res2?._adj_total || res2?.total_usd || 0;
+      let totalVal = docTotal !== '' ? parseFloat(docTotal) : (res2?._adj_total || res2?.total_usd || 0);
       let routeVal = (res2?.segments||[]).filter(s=>s.type==='revenue').map(s=>`${s.origin} to ${s.destination}`).join(', ');
       let shareBarHtml = renderShareBar({
         docNumber, pdfUrl, docType: 'Quotation',

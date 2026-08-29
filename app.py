@@ -1596,8 +1596,17 @@ def build_pdf_payload_from_result(doc_type, result, client_name, client_email,
     if sec_currency and sec_rate > 0:
         import datetime as _dt
         today_str = _dt.date.today().strftime("%d %b %Y")
-        total_usd = float(result.get("total_usd", 0))
-        sec_total = round(total_usd * sec_rate)
+        # CRITICAL FIX: was float(result.get("total_usd", 0)) - the raw,
+        # undiscounted quote total, ignoring both the discount and the
+        # extras already folded into `items` below. Confirmed live: this FX
+        # line sat right next to the PDF's own correctly-discounted total
+        # but showed a stale, pre-discount figure. Now mirrors the exact
+        # same subtotal(items) - discount basis quotecloud_engine.py uses
+        # for the PDF's own printed total, so this line always matches
+        # what actually appears on the document.
+        items_subtotal = sum(float(it.get("quantity", 1)) * float(it.get("unit_cost", 0)) for it in items)
+        final_total = round(items_subtotal - disc, 2)
+        sec_total = round(final_total * sec_rate)
         # FIX: was always displayed as "1 {pdf_currency} = {rate} {sec}",
         # meaning a rate under 1 showed a hard-to-read tiny decimal instead
         # of the readable direction any real FX quote would use - same fix
@@ -1791,6 +1800,8 @@ def pdf():
         with open(out_path, "rb") as f:
             pdf_bytes = f.read()
 
+        total = calc_pdf_total(result, extra_items, discount)
+
         # PDF is fully rendered and durably uploaded to Firebase Storage above -
         # from here on, a failure is a CRM/booking bookkeeping problem, not a
         # failed PDF. Isolated in its own non-fatal boundary so it can never
@@ -1798,7 +1809,6 @@ def pdf():
         # logged via the same log_pdf_error() alerting used for real generation
         # failures, so the operator still finds out even though the client doesn't.
         try:
-            total = calc_pdf_total(result, extra_items, discount)
             save_record(doc_type, client_name, client_email, total, doc_number, extra={
                 "ac_label": result.get("ac_label", ""),
                 "mission": result.get("mission", ""),
@@ -1890,6 +1900,7 @@ def pdf():
                              mimetype="application/pdf")
         response.headers["X-PDF-URL"] = pdf_url or ""
         response.headers["X-DOC-NUMBER"] = doc_number
+        response.headers["X-DOC-TOTAL"] = str(total)
         return response
 
     except Exception as e:
