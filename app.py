@@ -2446,14 +2446,21 @@ def batch_delete_records():
     to_delete = [r for r in records if r.get("number") in numbers]
     paid_ones = [r.get("number") for r in to_delete if r.get("paid") or float(r.get("paid_amount", 0)) > 0]
     if paid_ones:
-        return jsonify({"error": f"{len(paid_ones)} selected record(s) have real payment history and cannot be batch-deleted: {', '.join(paid_ones[:5])}{'...' if len(paid_ones) > 5 else ''}. Delete these individually instead."}), 403
+        return jsonify({"error": f"{len(paid_ones)} selected record(s) have real payment history and cannot be batch-processed: {', '.join(paid_ones[:5])}{'...' if len(paid_ones) > 5 else ''}. Void these individually instead."}), 403
 
     deleted_count = 0
     for r in records:
         if r.get("number") in numbers:
-            r["deleted"] = True
-            r["deleted_at"] = datetime.datetime.now().isoformat()
-            write_audit_log("record_deleted", {"number": r.get("number"), "batch": True})
+            if r.get("type") == "Invoice":
+                r["status"] = "VOIDED"
+                r["voided"] = True
+                r["voided_at"] = datetime.datetime.now().isoformat()
+                write_audit_log("record_voided", {"number": r.get("number"), "batch": True})
+                _sync_booking_voided(r.get("number"))
+            else:
+                r["deleted"] = True
+                r["deleted_at"] = datetime.datetime.now().isoformat()
+                write_audit_log("record_deleted", {"number": r.get("number"), "batch": True})
             # CRITICAL FIX: save_records() did a genuine, complete
             # delete-then-recreate cycle across the ENTIRE collection -
             # confirmed live to silently destroy real, unrelated,
@@ -2481,9 +2488,27 @@ def delete_record_route():
     else:
         password_ok = (password == stored_pass)
     if not password_ok:
-        return jsonify({"error": "Password required to delete a record."}), 403
+        return jsonify({"error": "Password required to void a record."}), 403
     if not rec:
         return jsonify({"error": "Record not found"}), 404
+
+    if rec.get("type") == "Invoice":
+        # Voiding never deletes: record stays visible in Records with its
+        # number preserved, marked VOIDED instead of hidden - distinct from
+        # PENDING/INVOICED/PAID. Replaces the old hard-delete for invoices.
+        rec["status"] = "VOIDED"
+        rec["voided"] = True
+        rec["voided_at"] = datetime.datetime.now().isoformat()
+        write_audit_log("record_voided", {
+            "number": number,
+            "client_name": rec.get("client_name", ""),
+            "amount": rec.get("amount", 0),
+            "was_paid": bool(rec.get("paid") or float(rec.get("paid_amount", 0)) > 0)
+        })
+        save_single_record(rec)
+        _sync_booking_voided(number)
+        return jsonify({"success": True, "voided": True})
+
     rec["deleted"] = True
     rec["deleted_at"] = datetime.datetime.now().isoformat()
     write_audit_log("record_deleted", {
@@ -2498,6 +2523,23 @@ def delete_record_route():
     # created records. Now writes ONLY this one, specific record.
     save_single_record(rec)
     return jsonify({"success": True})
+
+def _sync_booking_voided(invoice_number):
+    # Records and bookings are separate documents - CRM totals are computed
+    # client-side from the bookings collection (renderEnquirySummary), not
+    # from records. Without this, a voided invoice's value would keep
+    # counting in Total Invoiced / Total Paid / conversion rate forever.
+    # Same invoice_number match already used by mark_paid().
+    bookings = load_bookings()
+    matching_token = None
+    for tok, b in bookings.items():
+        if b.get("invoice_number") == invoice_number:
+            matching_token = tok
+            break
+    if matching_token:
+        bookings[matching_token]["status"] = "VOIDED"
+        bookings[matching_token]["updated_at"] = datetime.datetime.now().isoformat()
+        save_single_booking(matching_token, bookings[matching_token])
 
 @app.route("/records/mark_paid", methods=["POST"])
 @login_required
