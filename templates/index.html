@@ -4569,7 +4569,7 @@ async function deleteRecord(number, password, btn) {
   let data = await r.json();
   if (data.success) {
     btnFeedback(btn, 'success', data.voided ? 'Voided' : 'Deleted');
-    setTimeout(() => { closeDeleteModal(); loadRecords(); }, 900);
+    setTimeout(() => { closeDeleteModal(); loadRecords(); loadEnquiries(); }, 900);
   } else {
     btnFeedback(btn, 'error', 'Failed');
     showMsg('delete-msg', data.error||'Error', 'error');
@@ -5560,6 +5560,7 @@ function renderEnquiries(enqs) {
         </select>
         <button class="btn btn-success btn-sm" onclick="openInvoiceBuilder(${JSON.stringify(e).replace(/"/g,'&quot;')})">📄 Invoice</button>
         ${e.status === 'INVOICED' && e.invoice_number ? `<button class="btn btn-amber btn-sm" onclick="goToRecordPayment('${e.invoice_number}')">💳 Pay</button>` : ''}
+        ${(e.status === 'INVOICED' || e.status === 'PAID') && e.invoice_number ? `<button class="btn btn-danger btn-sm" title="Void this invoice" onclick="promptVoid('${e.invoice_number}', ${e.status === 'PAID'})">🚫 Void</button>` : ''}
       </td>
     </tr>`;
   }).join('');
