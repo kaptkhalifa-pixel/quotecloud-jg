@@ -3661,6 +3661,7 @@ function renderAircraft() {
         <input type="hidden" class="ac-active" value="${ac.active ? 'true' : 'false'}">
         <div class="btn-row">
           <button class="btn btn-success" onclick="saveAircraft(this)">💾 Save Aircraft Details</button>
+          <button class="btn btn-sm ${ac.active ? 'btn-amber' : 'btn-success'}" onclick="toggleAcActive('${key}')">${ac.active ? 'Deactivate' : 'Activate'}</button>
           <button class="btn btn-grey btn-sm" onclick="toggleAcEdit('${key}')">Cancel</button>
         </div>
       </div>
