@@ -476,6 +476,21 @@ def safe_doc_number(doc_number):
     import re as _re
     return _re.sub(r'[^A-Za-z0-9\-]', '', str(doc_number))[:100]
 
+def normalize_phone(phone):
+    """Duplicate-client detection needs one canonical form per real phone
+    number. A Kenyan local number's leading 0 must be REPLACED with 254,
+    not kept alongside it - the common mistake produces a malformed
+    13-digit '2540...' string (leading 0 kept AND 254 prepended), which is
+    handled explicitly here so it still normalizes to the same real
+    number as the correct 254... and 0... forms."""
+    import re as _re
+    digits = _re.sub(r'\D', '', str(phone or ''))
+    if digits.startswith('2540') and len(digits) == 13:
+        digits = '254' + digits[4:]
+    elif digits.startswith('0') and len(digits) == 10:
+        digits = '254' + digits[1:]
+    return digits
+
 def is_safe_logo_url(url):
     """Prevents SSRF: only allows fetching logo images from our own known,
     trusted storage hosts. Without this, a raw user-supplied URL would let
@@ -2444,6 +2459,25 @@ def create_client():
     if not phone:
         return jsonify({"error": "Client phone/WhatsApp number required"}), 400
     try:
+        # Phone-based duplicate detection, deliberately scoped to phone
+        # number matching only (no fuzzy name-matching - avoids false
+        # positives between different people who share a common name).
+        # Non-blocking: the operator explicitly confirms via force_create
+        # before a second, genuinely separate client record is created for
+        # a number that already matches an existing one.
+        if not data.get("force_create"):
+            norm_new = normalize_phone(phone)
+            if norm_new:
+                existing = [d.to_dict() for d in tenant_collection("clients").stream()]
+                match = next((c for c in existing if normalize_phone(c.get("phone", "")) == norm_new), None)
+                if match:
+                    return jsonify({"duplicate": True, "existing_client": {
+                        "client_id": match.get("client_id", ""),
+                        "name": match.get("name", ""),
+                        "phone": match.get("phone", ""),
+                        "email": match.get("email", ""),
+                        "address": match.get("address", "")
+                    }})
         client_id = generate_token("C")
         client_record = {
             "client_id": client_id,

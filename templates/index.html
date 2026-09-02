@@ -204,6 +204,14 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .rec-mq-body input, .rec-mq-body textarea, .rec-mq-body select { background:#fff; border:1px solid #ccc; color:#0a0a0a; }
 .rec-mq-body input::placeholder, .rec-mq-body textarea::placeholder { color:#999; }
 .rec-mq-body .toggle-row label { color:#333; }
+.section { margin-bottom:16px; }
+.section-header { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; background:#fff; border:1px solid #eee; border-radius:8px; cursor:pointer; }
+.section-header.open { border-radius:8px 8px 0 0; border-bottom:none; }
+.section-header h2 { font-size:0.88rem; font-weight:700; margin:0; }
+.chevron { font-size:0.7rem; color:#888; transition:transform 0.15s; display:inline-block; }
+.chevron.collapsed { transform:rotate(-90deg); }
+.section-body { border:1px solid #eee; border-top:none; border-radius:0 0 8px 8px; padding:16px; background:#fff; }
+.section-body.collapsed { display:none; }
 
 .rec-filter-tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
 .rec-filter-tab { padding:8px 14px; border-radius:20px; border:1.5px solid #0a0a0a; color:#0a0a0a; background:#fff; cursor:pointer; font-size:0.8rem; font-weight:600; transition:all 0.2s; min-height:38px; font-family:'Inter',sans-serif; }
@@ -627,7 +635,16 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
       <h3 style="margin:0">Enquiries</h3>
       <button class="btn btn-outline btn-sm" onclick="loadEnquiries()">↻ Refresh</button>
     </div>
-    <div id="enq-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px"></div>
+    <div id="enq-summary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+    <div class="section" id="section-ac-breakdown">
+      <div class="section-header" onclick="toggleSection('ac-breakdown')">
+        <h2>Quotes &amp; Invoices by Aircraft</h2>
+        <span class="chevron collapsed" id="chevron-ac-breakdown">▾</span>
+      </div>
+      <div class="section-body collapsed" id="body-ac-breakdown">
+        <div id="ac-breakdown-table"></div>
+      </div>
+    </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
       <select id="enq-filter-status" onchange="filterEnquiries()" style="padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:0.82rem;background:#fff;min-height:44px">
         <option value="all">All Status</option>
@@ -3275,13 +3292,8 @@ async function generatePDF(allAircraft) {
       showMsg('pdf-msg', 'A phone/WhatsApp number is required to create a new client record.', 'error');
       return;
     }
-    try {
-      let clientR = await fetch('/clients/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
-        name: clientName, phone: clientPhone, email: clientEmail, address: clientAddress
-      })});
-      let clientData = await clientR.json();
-      if (clientData.success) document.getElementById('pdf-client-id').value = clientData.client.client_id;
-    } catch(e) { /* non-fatal - the actual document still generates even if client creation fails */ }
+    let newClientId = await createNewClientWithDupeCheck(clientName, clientPhone, clientEmail, clientAddress);
+    if (newClientId) document.getElementById('pdf-client-id').value = newClientId;
   }
   let clientId = document.getElementById('pdf-client-id')?.value || '';
 
@@ -4753,16 +4765,13 @@ async function createManualInvoice() {
       if (miBtn) { miBtn.disabled = false; miBtn.textContent = 'Generate Quote PDF'; }
       return;
     }
-    try {
-      let clientR = await fetch('/clients/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
-        name: document.getElementById('mi-name').value,
-        phone: document.getElementById('mi-phone').value,
-        email: document.getElementById('mi-email').value,
-        address: document.getElementById('mi-address')?.value || ''
-      })});
-      let clientData = await clientR.json();
-      if (clientData.success) document.getElementById('mi-client-id').value = clientData.client.client_id;
-    } catch(e) { /* non-fatal - the actual document still generates even if client creation fails */ }
+    let newClientId = await createNewClientWithDupeCheck(
+      document.getElementById('mi-name').value,
+      document.getElementById('mi-phone').value,
+      document.getElementById('mi-email').value,
+      document.getElementById('mi-address')?.value || ''
+    );
+    if (newClientId) document.getElementById('mi-client-id').value = newClientId;
   }
   let body = { client_name: document.getElementById('mi-name').value, client_address: document.getElementById('mi-address')?.value || '', client_email: document.getElementById('mi-email').value, client_phone: document.getElementById('mi-phone').value, client_id: document.getElementById('mi-client-id')?.value || '', discount: document.getElementById('mi-discount').value || 0, note: document.getElementById('mi-notes').value, bank_block: document.getElementById('mi-bank').value, terms: document.getElementById('mi-terms').value, doc_type: 'Quotation', line_items: lineItems };
   try {
@@ -5510,8 +5519,79 @@ async function loadEnquiries() {
     let r = await fetch('/bookings');
     allEnquiries = await r.json();
     renderEnquirySummary(allEnquiries);
+    renderAircraftBreakdown(allEnquiries);
     filterEnquiries();
   } catch(e) { console.log('Enquiries error:', e); }
+}
+
+function toggleSection(name) {
+  document.getElementById('body-' + name).classList.toggle('collapsed');
+  document.getElementById('chevron-' + name).classList.toggle('collapsed');
+}
+
+// Phone-based duplicate-client detection: on a likely match, shows the
+// operator the existing client's real details and asks them to confirm
+// this is genuinely a new, different person before a second record is
+// created for the same real number. Non-blocking - Cancel simply skips
+// client creation (same as leaving the checkbox unchecked) rather than
+// stopping the document being generated.
+async function createNewClientWithDupeCheck(name, phone, email, address) {
+  let body = { name, phone, email, address };
+  try {
+    let r = await fetch('/clients/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    let data = await r.json();
+    if (data.duplicate) {
+      let ex = data.existing_client;
+      let proceed = confirm(`A client with this phone number already exists:\n\n${ex.name}\n${ex.phone}\n${ex.address || ''}\n\nIs this genuinely a different person?\n\nOK = create a new, separate client record.\nCancel = don't create a new record (use the existing client instead).`);
+      if (!proceed) return '';
+      let r2 = await fetch('/clients/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...body, force_create: true})});
+      let data2 = await r2.json();
+      return data2.success ? data2.client.client_id : '';
+    }
+    return data.success ? data.client.client_id : '';
+  } catch(e) { return ''; }
+}
+
+// New analytics breakdown: for each aircraft, how many quotes and invoices
+// have been generated for it. Grouped by ac_key (the reliable identifier)
+// rather than ac_label, since two different aircraft could share a
+// display label - falls back to ac_label only for the row's display text.
+// Bookings with no ac_key (manually created enquiries, source
+// 'admin_manual', which never had an aircraft selector) are deliberately
+// bucketed separately rather than dropped or miscounted as a data error.
+function renderAircraftBreakdown(enqs) {
+  let container = document.getElementById('ac-breakdown-table');
+  if (!container) return;
+  let byAc = {};
+  let manual = { quotes: 0, invoices: 0 };
+  enqs.filter(e => e.status !== 'VOIDED').forEach(e => {
+    if (!e.ac_key) {
+      manual.quotes++;
+      if (e.status === 'INVOICED' || e.status === 'PAID') manual.invoices++;
+      return;
+    }
+    if (!byAc[e.ac_key]) byAc[e.ac_key] = { label: e.ac_label || e.ac_key, quotes: 0, invoices: 0 };
+    byAc[e.ac_key].quotes++;
+    if (e.status === 'INVOICED' || e.status === 'PAID') byAc[e.ac_key].invoices++;
+  });
+  let rows = Object.values(byAc).sort((a, b) => b.quotes - a.quotes);
+  if (!rows.length && !manual.quotes) {
+    container.innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;font-size:0.82rem">No enquiries yet.</div>';
+    return;
+  }
+  let html = '<div class="table-scroll" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr>'
+    + '<th style="text-align:left;padding:8px 10px;font-size:0.68rem;color:#888;border-bottom:1px solid #eee">Aircraft</th>'
+    + '<th style="text-align:right;padding:8px 10px;font-size:0.68rem;color:#888;border-bottom:1px solid #eee">Quotes</th>'
+    + '<th style="text-align:right;padding:8px 10px;font-size:0.68rem;color:#888;border-bottom:1px solid #eee">Invoices</th>'
+    + '</tr></thead><tbody>';
+  rows.forEach(r => {
+    html += `<tr><td style="padding:9px 10px;font-size:0.82rem;border-bottom:1px solid #f5f5f5">${r.label}</td><td style="padding:9px 10px;font-size:0.82rem;text-align:right;border-bottom:1px solid #f5f5f5">${r.quotes}</td><td style="padding:9px 10px;font-size:0.82rem;text-align:right;border-bottom:1px solid #f5f5f5">${r.invoices}</td></tr>`;
+  });
+  if (manual.quotes > 0) {
+    html += `<tr><td style="padding:9px 10px;font-size:0.82rem;color:#888;border-bottom:1px solid #f5f5f5">Manual / Unspecified Aircraft</td><td style="padding:9px 10px;font-size:0.82rem;text-align:right;color:#888;border-bottom:1px solid #f5f5f5">${manual.quotes}</td><td style="padding:9px 10px;font-size:0.82rem;text-align:right;color:#888;border-bottom:1px solid #f5f5f5">${manual.invoices}</td></tr>`;
+  }
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
 }
 
 // FIX: CRM math rewrite - convert EACH record individually, using its own
@@ -5568,27 +5648,27 @@ function renderEnquirySummary(enqs) {
 
   document.getElementById('enq-summary').innerHTML = `
     <div style="background:#f8f9fa;border-radius:10px;padding:14px;text-align:center;border:1px solid #eee">
-      <div style="font-size:1.4rem;font-weight:700;color:#333">${total}</div>
+      <div style="font-size:1.05rem;font-weight:700;color:#333">${total}</div>
       <div style="font-size:0.75rem;color:#888;margin-top:4px">Total Enquiries</div>
     </div>
     <div style="background:#fff3e0;border-radius:10px;padding:14px;text-align:center;border:1px solid #ffe082">
-      <div style="font-size:1.4rem;font-weight:700;color:#e65100">${pending}</div>
+      <div style="font-size:1.05rem;font-weight:700;color:#e65100">${pending}</div>
       <div style="font-size:0.75rem;color:#888;margin-top:4px">Pending</div>
     </div>
     <div style="background:#e8f5e9;border-radius:10px;padding:14px;text-align:center;border:1px solid #a5d6a7">
-      <div style="font-size:1.4rem;font-weight:700;color:#1b5e20">${priCurrency} ${fmtAmt(quotesTotal)}</div>
+      <div style="font-size:1.05rem;font-weight:700;color:#1b5e20">${priCurrency} ${fmtAmt(quotesTotal)}</div>
       <div style="font-size:0.75rem;color:#888;margin-top:4px">Total Value of Quotes</div>
     </div>
     <div style="background:#e3f2fd;border-radius:10px;padding:14px;text-align:center;border:1px solid #90caf9">
-      <div style="font-size:1.4rem;font-weight:700;color:#0d47a1">${priCurrency} ${fmtAmt(invoicedTotal)}</div>
+      <div style="font-size:1.05rem;font-weight:700;color:#0d47a1">${priCurrency} ${fmtAmt(invoicedTotal)}</div>
       <div style="font-size:0.75rem;color:#888;margin-top:4px">Total Invoiced</div>
     </div>
     <div style="background:#f3e5f5;border-radius:10px;padding:14px;text-align:center;border:1px solid #ce93d8">
-      <div style="font-size:1.4rem;font-weight:700;color:#4a148c">${priCurrency} ${fmtAmt(paidTotal)}</div>
+      <div style="font-size:1.05rem;font-weight:700;color:#4a148c">${priCurrency} ${fmtAmt(paidTotal)}</div>
       <div style="font-size:0.75rem;color:#888;margin-top:4px">Total Paid</div>
     </div>
     <div style="background:#fce4ec;border-radius:10px;padding:14px;text-align:center;border:1px solid #f48fb1">
-      <div style="font-size:1.4rem;font-weight:700;color:#880e4f">${conversionRate}%</div>
+      <div style="font-size:1.05rem;font-weight:700;color:#880e4f">${conversionRate}%</div>
       <div style="font-size:0.75rem;color:#888;margin-top:4px">Quotes → Paid Business</div>
     </div>
     ${(untaggedCount > 0 || voidedCount > 0) ? `<div style="grid-column:1/-1;font-size:0.7rem;color:#aaa;text-align:center;padding-top:4px">${[untaggedCount > 0 ? `${untaggedCount} older record(s) not included - see the operator notice about the new CRM figures.` : '', voidedCount > 0 ? `${voidedCount} voided invoice(s) excluded from these totals.` : ''].filter(Boolean).join(' ')}</div>` : ''}`;
@@ -5984,13 +6064,8 @@ async function generateAndSendInvoice() {
   // FIX (item 7, updated bug list): purely opt-in - only ever creates a
   // real client record when the operator explicitly checked the box.
   if (document.getElementById('ib-create-new-client')?.checked) {
-    try {
-      let clientR = await fetch('/clients/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
-        name: clientName, phone: clientWaRaw, email: clientEmail, address: clientAddress
-      })});
-      let clientData = await clientR.json();
-      if (clientData.success) document.getElementById('ib-client-id').value = clientData.client.client_id;
-    } catch(e) { /* non-fatal - the actual invoice still generates even if client creation fails */ }
+    let newClientId = await createNewClientWithDupeCheck(clientName, clientWaRaw, clientEmail, clientAddress);
+    if (newClientId) document.getElementById('ib-client-id').value = newClientId;
   }
   let base = parseFloat(enq.total_usd || 0);
   let upliftItems = [];
