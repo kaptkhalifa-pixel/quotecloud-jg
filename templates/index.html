@@ -310,6 +310,17 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
 .modal-overlay.active { display: flex; }
 .modal { background: #fff; border-radius: 20px 20px 0 0; padding: 24px 20px 32px; width: 100%; max-width: 560px; box-shadow: 0 -8px 32px rgba(0,0,0,0.2); max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .modal-handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 20px; }
+.ac-image-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.ac-image-thumb { width: 72px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; cursor: pointer; transition: opacity 0.15s; }
+.ac-image-thumb:hover { opacity: 0.8; }
+.ac-image-lightbox-overlay { align-items: center; }
+.ac-image-lightbox { position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; }
+.ac-image-lightbox img { max-width: 90vw; max-height: 75vh; border-radius: 8px; object-fit: contain; background: #111; }
+.ac-lightbox-close { position: absolute; top: -40px; right: 0; background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer; padding: 6px; line-height: 1; }
+.ac-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.4rem; cursor: pointer; }
+.ac-lightbox-prev { left: -8px; }
+.ac-lightbox-next { right: -8px; }
+.ac-lightbox-footer { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: #fff; font-size: 0.8rem; }
 .modal h4 { font-size: 1rem; font-weight: 700; color: {{ operator.branding.primary_color }}; margin-bottom: 16px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
 .modal-actions .btn { flex: 1; min-width: 100px; }
@@ -1237,6 +1248,19 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     <div id="share-msg"></div>
   </div>
 </div>
+<!-- AIRCRAFT IMAGE LIGHTBOX -->
+<div class="modal-overlay ac-image-lightbox-overlay" id="ac-image-lightbox" onclick="if(event.target===this) closeAcImageLightbox()">
+  <div class="ac-image-lightbox">
+    <button class="ac-lightbox-close" onclick="closeAcImageLightbox()">✕</button>
+    <button class="ac-lightbox-nav ac-lightbox-prev" onclick="acLightboxNav(-1)">‹</button>
+    <img id="ac-lightbox-img" src="" alt="Aircraft photo">
+    <button class="ac-lightbox-nav ac-lightbox-next" onclick="acLightboxNav(1)">›</button>
+    <div class="ac-lightbox-footer">
+      <span id="ac-lightbox-counter"></span>
+      <button class="btn btn-sm" onclick="downloadAcLightboxImage()">⬇ Download</button>
+    </div>
+  </div>
+</div>
 <!-- INVOICE BUILDER MODAL -->
 <div class="modal-overlay" id="invoice-builder-modal">
   <div class="modal">
@@ -2101,6 +2125,7 @@ function renderResults(results) {
   let html = results.map((res, i) => `
     <div class="ac-card" id="ac-card-${i}">
       <div class="ac-title">${res.ac_label||''}</div>
+      ${(res.images && res.images.length) ? `<div class="ac-image-strip">${res.images.map((url, imgIdx) => `<img src="${url}" class="ac-image-thumb" onclick="openAcImageLightbox(${i}, ${imgIdx})" alt="Aircraft photo">`).join('')}</div>` : ''}
       ${renderOneAc(res)}
       ${renderAdjuster(res, i)}
       <div class="btn-row" style="margin-top:10px">
@@ -2120,6 +2145,63 @@ function renderResults(results) {
   applyResultView();
   loadPresetChips();
 }
+
+let acLightboxImages = [];
+let acLightboxIndex = 0;
+
+function openAcImageLightbox(acIdx, imgIdx) {
+  let res = lastResults[acIdx];
+  if (!res || !res.images || !res.images.length) return;
+  acLightboxImages = res.images;
+  acLightboxIndex = imgIdx;
+  updateAcLightboxImage();
+  document.getElementById('ac-image-lightbox').classList.add('active');
+}
+
+function updateAcLightboxImage() {
+  document.getElementById('ac-lightbox-img').src = acLightboxImages[acLightboxIndex] || '';
+  document.getElementById('ac-lightbox-counter').textContent = acLightboxImages.length ? (acLightboxIndex + 1) + ' / ' + acLightboxImages.length : '';
+  let multi = acLightboxImages.length > 1;
+  let prevBtn = document.querySelector('.ac-lightbox-prev');
+  let nextBtn = document.querySelector('.ac-lightbox-next');
+  if (prevBtn) prevBtn.style.display = multi ? '' : 'none';
+  if (nextBtn) nextBtn.style.display = multi ? '' : 'none';
+}
+
+function acLightboxNav(dir) {
+  if (!acLightboxImages.length) return;
+  acLightboxIndex = (acLightboxIndex + dir + acLightboxImages.length) % acLightboxImages.length;
+  updateAcLightboxImage();
+}
+
+function closeAcImageLightbox() {
+  document.getElementById('ac-image-lightbox').classList.remove('active');
+}
+
+async function downloadAcLightboxImage() {
+  let url = acLightboxImages[acLightboxIndex];
+  if (!url) return;
+  try {
+    let r = await fetch(url);
+    let blob = await r.blob();
+    let blobUrl = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'aircraft-photo-' + (acLightboxIndex + 1) + '.jpg';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+  } catch (e) {
+    window.open(url, '_blank');
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  let overlay = document.getElementById('ac-image-lightbox');
+  if (!overlay || !overlay.classList.contains('active')) return;
+  if (e.key === 'Escape') closeAcImageLightbox();
+  else if (e.key === 'ArrowLeft') acLightboxNav(-1);
+  else if (e.key === 'ArrowRight') acLightboxNav(1);
+});
 
 function quickPDF(idx) {
   let sel = document.getElementById('pdf-aircraft-select');
