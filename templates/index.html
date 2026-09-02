@@ -1258,6 +1258,7 @@ input, textarea, select { -webkit-user-select: text !important; user-select: tex
     <div class="ac-lightbox-footer">
       <span id="ac-lightbox-counter"></span>
       <button class="btn btn-sm" onclick="downloadAcLightboxImage()">⬇ Download</button>
+      <button class="btn btn-outline btn-sm ac-lightbox-download-all" onclick="downloadAllAcImages()">⬇ Download All</button>
     </div>
   </div>
 </div>
@@ -2164,8 +2165,10 @@ function updateAcLightboxImage() {
   let multi = acLightboxImages.length > 1;
   let prevBtn = document.querySelector('.ac-lightbox-prev');
   let nextBtn = document.querySelector('.ac-lightbox-next');
+  let downloadAllBtn = document.querySelector('.ac-lightbox-download-all');
   if (prevBtn) prevBtn.style.display = multi ? '' : 'none';
   if (nextBtn) nextBtn.style.display = multi ? '' : 'none';
+  if (downloadAllBtn) downloadAllBtn.style.display = multi ? '' : 'none';
 }
 
 function acLightboxNav(dir) {
@@ -2192,6 +2195,32 @@ async function downloadAcLightboxImage() {
     setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
   } catch (e) {
     window.open(url, '_blank');
+  }
+}
+
+async function downloadAllAcImages() {
+  if (!acLightboxImages.length) return;
+  // Individual files, not a zip - same blob-fetch-and-trigger pattern as
+  // downloadAcLightboxImage() above, just looped. Sequential with a short
+  // gap between each .click(), matching the same proven approach already
+  // used for the "download all aircraft" PDF loop elsewhere in this app -
+  // firing several triggered downloads back to back with no gap risks the
+  // browser silently dropping all but the first.
+  for (let i = 0; i < acLightboxImages.length; i++) {
+    let url = acLightboxImages[i];
+    try {
+      let r = await fetch(url);
+      let blob = await r.blob();
+      let blobUrl = URL.createObjectURL(blob);
+      let a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'aircraft-photo-' + (i + 1) + '.jpg';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+    } catch (e) {
+      window.open(url, '_blank');
+    }
+    if (i < acLightboxImages.length - 1) await new Promise(res => setTimeout(res, 800));
   }
 }
 
@@ -3736,7 +3765,7 @@ function renderAircraft() {
           </div>
           <label class="btn btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
             📷 Upload Image
-            <input type="file" accept="image/*" style="display:none" onchange="uploadAcImage(this)">
+            <input type="file" accept="image/*" multiple style="display:none" onchange="uploadAcImage(this)">
           </label>
           <span class="ac-upload-status" style="font-size:0.75rem;color:#888;margin-left:8px"></span>
         </div>
@@ -3838,27 +3867,47 @@ async function uploadAcImage(input) {
   let status = card.querySelector('.ac-upload-status');
   let preview = card.querySelector('.ac-images-preview');
   let key = card.dataset.key;
+  let files = Array.from(input.files || []);
+  if (!files.length) return;
   let current = aircraftData[key]?.images || [];
-  if (current.length >= 10) { status.textContent = 'Max 10 images reached.'; return; }
-  status.textContent = 'Uploading...';
-  let formData = new FormData();
-  formData.append('image', input.files[0]);
-  try {
-    let r = await fetch('/upload_image', { method:'POST', body: formData });
-    let data = await r.json();
-    if (data.success) {
-      if (!aircraftData[key].images) aircraftData[key].images = [];
-      aircraftData[key].images.push(data.url);
-      let div = document.createElement('div');
-      div.style.cssText = 'position:relative';
-      div.innerHTML = `<img src="${data.url}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #ddd">
-        <button onclick="removeAcImage(this,'${data.url}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#dc3545;color:#fff;border:none;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;padding:0">✕</button>`;
-      preview.appendChild(div);
-      status.textContent = `${aircraftData[key].images.length}/10 images`;
-    } else {
-      status.textContent = 'Upload failed.';
+  let remaining = 10 - current.length;
+  if (remaining <= 0) { status.textContent = 'Max 10 images reached.'; input.value = ''; return; }
+  let trimmedNote = '';
+  if (files.length > remaining) {
+    trimmedNote = ` (only ${remaining} slot${remaining !== 1 ? 's' : ''} available - uploaded first ${remaining})`;
+    files = files.slice(0, remaining);
+  }
+  // Sequential, not concurrent - matches the same one-at-a-time pattern
+  // already proven for multi-file downloads elsewhere in this app (the
+  // "download all aircraft" PDF loop). Keeps upload progress genuinely
+  // linear and easy to report ("2 of 5"), and avoids firing several of
+  // upload_image's real per-request work (Pillow re-encode, white-
+  // background removal, Firebase Storage write) at the server at once.
+  let failed = 0;
+  for (let i = 0; i < files.length; i++) {
+    status.textContent = `Uploading ${i + 1} of ${files.length}...`;
+    let formData = new FormData();
+    formData.append('image', files[i]);
+    try {
+      let r = await fetch('/upload_image', { method:'POST', body: formData });
+      let data = await r.json();
+      if (data.success) {
+        if (!aircraftData[key].images) aircraftData[key].images = [];
+        aircraftData[key].images.push(data.url);
+        let div = document.createElement('div');
+        div.style.cssText = 'position:relative';
+        div.innerHTML = `<img src="${data.url}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #ddd">
+          <button onclick="removeAcImage(this,'${data.url}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#dc3545;color:#fff;border:none;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;padding:0">✕</button>`;
+        preview.appendChild(div);
+      } else {
+        failed++;
+      }
+    } catch (e) {
+      failed++;
     }
-  } catch(e) { status.textContent = 'Error: ' + e.message; }
+  }
+  let count = (aircraftData[key]?.images || []).length;
+  status.textContent = (failed ? `${files.length - failed}/${files.length} uploaded, ${failed} failed.` : `${count}/10 images`) + trimmedNote;
   input.value = '';
 }
 
