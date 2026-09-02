@@ -2340,17 +2340,17 @@ function applyReverseRate(idx, rate, pax) {
 }
 
 function getTotalHours(res) {
-  let target = res;
-  if (res.mission === 'return_both') {
-    let wd = res.wait_days || 0;
-    let maxN = res.max_nights || 3;
-    if (wd >= maxN) {
-      target = res.option_b;
-    } else {
-      let optSel = document.getElementById('pdf-option-select')?.value;
-      target = optSel === 'option_b' ? res.option_b : res.option_a;
-    }
-  }
+  let target = resolveActiveOption(res);
+  // Trust the engine's own authoritative billed_hours when present - the
+  // same field build_pdf_payload_from_result() already trusts server-side.
+  // Naively re-summing and rounding raw segment hours here can silently
+  // diverge from it (JS Math.round vs the engine's ceil_0_1), which
+  // corrupts Reverse Mode: calcReverse()'s implied rate is only correct
+  // for the hours figure it was computed against - confirmed live on
+  // YFLI0V (safari mission): this returned 2.2 hrs while billed_hours was
+  // 2.3, so the printed invoice (rate x billed_hours) came out 10,500
+  // higher than the CRM's correct, target-locked total.
+  if (target?.billed_hours) return parseFloat(target.billed_hours);
   let segs;
   if (target?.mission === 'pick_and_drop') {
     segs = [...(target.drop?.segments || []), ...(target.pick?.segments || [])];

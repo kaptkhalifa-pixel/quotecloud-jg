@@ -2033,6 +2033,39 @@ def pdf_download_temp():
     return send_file(path, as_attachment=True,
                      download_name=name, mimetype="application/pdf")
 
+def resolve_booking_option(booking, snap):
+    """Python mirror of the frontend's resolveActiveOption()/getSelectedResult()
+    resolution for a return_both mission. Needed here because quote_snapshot
+    can genuinely still be the raw, unresolved return_both wrapper (option_a
+    AND option_b both nested) - true for a booking submitted via the public
+    /booking/request page (quote.html sends quote_snapshot: res, the raw
+    wrapper, with only the correctly-resolved total kept separately as
+    selected_total). The admin /pdf path never has this problem, since
+    getSelectedResult() already resolves to a single option before saving -
+    but booking_invoice() is reachable from either origin and was previously
+    hardcoding option_a's total_usd regardless of which option a return_both
+    booking actually resolved to, the same bug class already fixed for the
+    frontend adjuster tools (6f65a21), found here as a third, separate,
+    still-open occurrence. wd >= max_nights is a forced, deterministic
+    resolution to option_b, matching the frontend's own identical check
+    exactly. Below that threshold the client had a genuine choice that isn't
+    itself persisted as an explicit field, so the booking's own top-level
+    total_usd (reliably correct - saved from the client's already-resolved
+    selected_total at request time) is used as ground truth to pick whichever
+    option actually matches it, rather than defaulting to either."""
+    if snap.get("mission") != "return_both":
+        return snap
+    option_a = snap.get("option_a") or {}
+    option_b = snap.get("option_b") or {}
+    wd = snap.get("wait_days", 0) or 0
+    max_n = snap.get("max_nights", 3) or 3
+    if wd >= max_n:
+        return option_b
+    booking_total = float(booking.get("total_usd", 0))
+    if abs(float(option_b.get("total_usd", 0)) - booking_total) < abs(float(option_a.get("total_usd", 0)) - booking_total):
+        return option_b
+    return option_a
+
 @app.route("/booking/invoice", methods=["POST"])
 @login_required
 def booking_invoice():
@@ -2104,17 +2137,22 @@ def booking_invoice():
         elif not snap:
             return jsonify({"error": "No quote data found for this booking"}), 400
         else:
+            # Resolve BEFORE building the PDF payload, not just before reading
+            # the total - a raw, unresolved return_both snapshot has no
+            # top-level segments at all (only option_a/option_b do), so
+            # passing it straight to build_pdf_payload_from_result() would
+            # have produced an invoice with no line items, not just a wrong
+            # total, for a return-trip booking submitted via the public page.
+            resolved_snap = resolve_booking_option(booking, snap)
             payload, doc_number = build_pdf_payload_from_result(
-                "Invoice", snap, client_name, client_email, client_phone, note, "0", uplift_items,
+                "Invoice", resolved_snap, client_name, client_email, client_phone, note, "0", uplift_items,
                 ghost_mode=invoice_ghost_mode, client_address=client_address)
 
             payload["number"] = inherit_token(source_token, "I")
             doc_number = payload["number"]
 
             disc = float(discount) if discount else 0
-            base_total = float(snap.get("total_usd", 0))
-            if snap.get("mission") == "return_both":
-                base_total = float((snap.get("option_a") or {}).get("total_usd", 0))
+            base_total = float(resolved_snap.get("total_usd", 0))
             uplift_total = sum(float(it.get("quantity", 1)) * float(it.get("unit_cost", 0)) for it in uplift_items)
             final_total = round(base_total + uplift_total - disc, 2)
             payload["discounts"] = disc
